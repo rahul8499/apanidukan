@@ -59,6 +59,16 @@ export default function SellerChat() {
     }
   }
 
+  const totalUnreadCount = conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0)
+
+  useEffect(() => {
+    if (!storeId) return
+    try {
+      localStorage.setItem(`unread_chat_count_${storeId}`, String(totalUnreadCount))
+      window.dispatchEvent(new Event('unread_chat_updated'))
+    } catch { }
+  }, [totalUnreadCount, storeId])
+
   useEffect(() => {
     loadStoreAndConversations()
   }, [storeId, location.search])
@@ -245,6 +255,11 @@ export default function SellerChat() {
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   <h2 className="text-sm font-extrabold text-white">WhatsApp Inbox</h2>
+                  {totalUnreadCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] px-1.5 shadow-md shadow-emerald-500/40 border border-emerald-400 animate-pulse">
+                      {totalUnreadCount}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button
@@ -344,7 +359,7 @@ export default function SellerChat() {
                             {c.last_message || 'Chat started'}
                           </p>
                           {c.unread_count > 0 && (
-                            <span className="rounded-full bg-teal-600 px-1.5 py-0.2 text-[10px] font-extrabold text-white animate-pulse shrink-0">
+                            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] px-1.5 shadow-md shadow-emerald-500/30 border border-emerald-400 animate-pulse shrink-0">
                               {c.unread_count}
                             </span>
                           )}

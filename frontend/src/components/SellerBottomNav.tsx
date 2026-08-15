@@ -13,6 +13,33 @@ interface SellerBottomNavProps {
 }
 
 export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavProps) {
+  const [unreadCount, setUnreadCount] = React.useState<number>(() => {
+    try {
+      const cached = localStorage.getItem(`unread_chat_count_${storeId}`)
+      return cached ? parseInt(cached, 10) : 0
+    } catch {
+      return 0
+    }
+  })
+
+  React.useEffect(() => {
+    if (!storeId) return
+
+    const updateFromCache = () => {
+      try {
+        const cached = localStorage.getItem(`unread_chat_count_${storeId}`)
+        setUnreadCount(cached ? parseInt(cached, 10) : 0)
+      } catch {}
+    }
+
+    updateFromCache()
+    window.addEventListener('unread_chat_updated', updateFromCache)
+
+    return () => {
+      window.removeEventListener('unread_chat_updated', updateFromCache)
+    }
+  }, [storeId])
+
   const tabs = [
     {
       key: 'setup',
@@ -81,12 +108,18 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
                   strokeWidth={isActive ? 2.5 : 1.8}
                 />
 
-                {/* Badge dot */}
-                {tab.badge && (
-                  <span className="absolute -right-1.5 -top-1 sm:-right-2 sm:-top-1 flex h-2.5 w-2.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75"></span>
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-teal-400 border border-slate-950 shadow-[0_0_6px_#14b8a6]"></span>
+                {/* WhatsApp-Style Unread Counter Badge */}
+                {tab.key === 'chat' && unreadCount > 0 ? (
+                  <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-slate-950 font-black text-[9px] px-1 border border-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
+                ) : (
+                  tab.badge && unreadCount === 0 && (
+                    <span className="absolute -right-1.5 -top-1 sm:-right-2 sm:-top-1 flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75"></span>
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-teal-400 border border-slate-950 shadow-[0_0_6px_#14b8a6]"></span>
+                    </span>
+                  )
                 )}
               </div>
 

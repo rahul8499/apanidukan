@@ -51,20 +51,17 @@ function Storefront() {
     } catch { }
   }
 
-  const { setActiveStoreId } = useNotifications()
-
   useEffect(() => {
     if (!storeSlug) return
     api.get(`/public/stores/${storeSlug}/`).then(res => {
       const data = res.data.data || res.data
       setStore(data)
-      if (data?.id) setActiveStoreId(data.id)
     }).catch((error) => {
       setLoadError(error?.response?.status === 404 ? 'This store is not live yet. Please ask the seller to publish it first.' : 'Store could not be opened. Please try again.')
     })
     api.get(`/public/stores/${storeSlug}/products/`).then(res => setProducts(res.data)).catch(() => { })
     api.get(`/public/stores/${storeSlug}/categories/`).then(res => setCategories(res.data)).catch(() => { })
-  }, [storeSlug, setActiveStoreId])
+  }, [storeSlug])
 
   // Customer Real-Time Notification Center State
   const [notifications, setNotifications] = useState<{ id: string; title: string; body: string; time: string; read: boolean; action?: () => void }[]>([
@@ -270,7 +267,6 @@ function Storefront() {
           {store.logo ? <img src={mediaUrl(store.logo)} alt="" className="h-10 w-10 rounded-full object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 font-bold">{store.name[0]?.toUpperCase()}</span>}
           <div className="min-w-0"><h1 className="truncate text-xl font-bold">{store.name}</h1><p className="truncate text-xs text-slate-300">{store.description || 'Online Store'}</p></div>
           <div className="ml-auto flex items-center gap-2">
-            <NotificationBellHeader />
             <InstallAppButton storeSlug={storeSlug} />
           </div>
         </header>

@@ -90,9 +90,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [auth.user, activeStoreId])
 
-  // Persistent Global WebSocket connection for active store
+  // Persistent Global WebSocket connection for active store (Seller Only)
   useEffect(() => {
-    if (!activeStoreId) return
+    if (!auth.user || !activeStoreId) return
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = `${window.location.hostname}:8000`
     const wsUrl = `${protocol}//${host}/ws/store/${activeStoreId}/`
@@ -165,18 +165,63 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return () => { socket?.close() }
   }, [activeStoreId])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPermission(Notification.permission)
+    }
+  }, [])
+
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications])
 
   async function requestPermission() {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      const perm = await Notification.requestPermission()
-      setPermission(perm)
-      if (perm === 'granted') {
-        new Notification('🔔 Notifications Enabled!', {
-          body: 'You will receive real-time alerts everywhere in the application.',
-          icon: '/icons/multistore-icon.svg'
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      alert('⚠️ Push Notifications are not supported by this browser.')
+      return
+    }
+
+    const currentStatus = Notification.permission
+    if (currentStatus === 'denied') {
+      setPermission('denied')
+      alert('⚠️ Notifications are blocked in your browser settings.\n\nTo enable:\n1. Click the 🔒 lock icon next to the website address (URL).\n2. Change Notifications setting from "Block" to "Allow".\n3. Refresh the page.')
+      return
+    }
+
+    try {
+      let finalPermission: NotificationPermission = 'default'
+
+      // Safari/Callback & Modern Promise compatibility
+      if (typeof Notification.requestPermission === 'function') {
+        const result = Notification.requestPermission((p) => {
+          if (p) {
+            finalPermission = p
+            setPermission(p)
+            if (p === 'granted') {
+              playNotificationAudio('seller')
+              new Notification('🔔 Notifications Enabled!', {
+                body: 'You will receive real-time order & chat alerts everywhere.',
+                icon: '/icons/multistore-icon.svg'
+              })
+            }
+          }
         })
+
+        if (result && typeof (result as any).then === 'function') {
+          const resPermission = await result
+          finalPermission = resPermission
+          setPermission(resPermission)
+          if (resPermission === 'granted') {
+            playNotificationAudio('seller')
+            new Notification('🔔 Notifications Enabled!', {
+              body: 'You will receive real-time order & chat alerts everywhere.',
+              icon: '/icons/multistore-icon.svg'
+            })
+          } else if (resPermission === 'denied') {
+            alert('⚠️ Permission was blocked. Please click the 🔒 lock icon near the address bar to allow notifications.')
+          }
+        }
       }
+    } catch (e) {
+      console.error('Error requesting notification permission:', e)
     }
   }
 

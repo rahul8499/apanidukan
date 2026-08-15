@@ -62,14 +62,28 @@ export default function NotificationBellHeader({ className = '' }: { className?:
             </div>
 
             {permission !== 'granted' && (
-              <div className="mt-3 flex items-center justify-between rounded-xl bg-amber-50 p-2.5 border border-amber-200">
-                <p className="text-xs font-bold text-amber-900">Enable PWA & Browser Push</p>
-                <button
-                  onClick={requestPermission}
-                  className="rounded-lg bg-amber-600 px-2.5 py-1 text-[10px] font-bold text-white shadow-xs hover:bg-amber-700 cursor-pointer"
-                >
-                  Enable 🔔
-                </button>
+              <div className={`mt-3 flex flex-col gap-1.5 rounded-xl p-2.5 border transition-all ${
+                permission === 'denied' ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <p className={`text-xs font-bold ${permission === 'denied' ? 'text-rose-900' : 'text-amber-900'}`}>
+                    {permission === 'denied' ? '⚠️ Notifications Blocked' : 'Enable PWA & Browser Push'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={requestPermission}
+                    className={`rounded-lg px-2.5 py-1 text-[10px] font-extrabold text-white shadow-xs transition-all cursor-pointer ${
+                      permission === 'denied' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-amber-600 hover:bg-amber-700'
+                    }`}
+                  >
+                    {permission === 'denied' ? 'Fix Block 🔒' : 'Enable 🔔'}
+                  </button>
+                </div>
+                {permission === 'denied' && (
+                  <p className="text-[10px] font-medium text-rose-700 leading-snug">
+                    Click 🔒 icon near address bar ➔ Site Settings ➔ Allow Notifications ➔ Refresh page.
+                  </p>
+                )}
               </div>
             )}
 

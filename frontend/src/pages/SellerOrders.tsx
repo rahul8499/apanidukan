@@ -141,7 +141,7 @@ export default function SellerOrders() {
   const validOrders = orders.filter(o => o.status?.toUpperCase() !== 'CANCELLED')
   const totalSalesVolume = validOrders.reduce((sum, o) => sum + Number(o.total || 0), 0)
   const newOrdersCount = orders.filter(o => o.status?.toUpperCase() === 'NEW').length
-  const completedCount = orders.filter(o => ['DELIVERED', 'PAID'].includes(o.status?.toUpperCase())).length
+  const completedCount = orders.filter(o => o.status?.toUpperCase() === 'DELIVERED').length
   const avgOrderValue = validOrders.length > 0 ? (totalSalesVolume / validOrders.length) : 0
 
   // Filter & Search & Sort logic

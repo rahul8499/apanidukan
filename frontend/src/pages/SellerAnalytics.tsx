@@ -99,7 +99,10 @@ export default function SellerAnalytics() {
 
   // Executive KPI Calculations
   const validOrders = useMemo(() => {
-    return filteredOrders.filter((o) => o.status !== 'CANCELLED' && o.status !== 'DECLINED')
+    return filteredOrders.filter((o) => {
+      const st = (o.status || '').toUpperCase()
+      return st !== 'CANCELLED' && st !== 'DECLINED'
+    })
   }, [filteredOrders])
 
   const grossSales = useMemo(() => {
@@ -107,11 +110,17 @@ export default function SellerAnalytics() {
   }, [validOrders])
 
   const pendingCount = useMemo(() => {
-    return filteredOrders.filter((o) => o.status === 'PENDING' || o.status === 'PLACED').length
+    return filteredOrders.filter((o) => {
+      const st = (o.status || '').toUpperCase()
+      return st === 'NEW' || st === 'PENDING' || st === 'PLACED'
+    }).length
   }, [filteredOrders])
 
   const completedCount = useMemo(() => {
-    return filteredOrders.filter((o) => o.status === 'DELIVERED' || o.status === 'PAID' || o.status === 'COMPLETED').length
+    return filteredOrders.filter((o) => {
+      const st = (o.status || '').toUpperCase()
+      return st === 'DELIVERED' || st === 'COMPLETED'
+    }).length
   }, [filteredOrders])
 
   const avgOrderValue = useMemo(() => {
@@ -274,7 +283,11 @@ export default function SellerAnalytics() {
         {/* 🌟 ULTRA-PREMIUM DYNAMIC EXECUTIVE KPI SUMMARY BAR */}
         <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* Gross Sales Volume */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs hover:shadow-md transition-all">
+          <div
+            onClick={() => navigate(`/stores/${store.id}/orders`)}
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group"
+            title="Click to view all orders"
+          >
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Gross Sales</span>
               <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-teal-50 text-teal-600 text-xs font-bold">
@@ -282,28 +295,32 @@ export default function SellerAnalytics() {
               </span>
             </div>
             <p className="mt-2 text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              ₹{(grossSales || 4807).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              ₹{grossSales.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </p>
             <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="font-semibold text-emerald-600">Valid Orders ({validOrders.length})</span>
-              <span className="text-slate-400">Total revenue</span>
+              <span className="font-semibold text-emerald-600">Valid ({validOrders.length})</span>
+              <span className="text-teal-600 font-bold group-hover:underline">View ➔</span>
             </div>
           </div>
 
           {/* New Pending (Action Needed) */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs hover:shadow-md transition-all">
+          <div
+            onClick={() => navigate(`/stores/${store.id}/orders?status=NEW`)}
+            className="rounded-2xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/50 p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group"
+            title="Click to review new pending orders"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">New Pending</span>
-              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-50 text-amber-600 text-xs font-bold animate-pulse">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800">New Pending</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-100 text-amber-700 text-xs font-bold animate-pulse">
                 ⏳
               </span>
             </div>
             <p className="mt-2 text-xl sm:text-2xl font-black text-amber-600 tracking-tight">
-              {pendingCount || 6}
+              {pendingCount}
             </p>
             <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="font-extrabold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded">Action Needed</span>
-              <span className="text-slate-400">Needs review</span>
+              <span className="font-extrabold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded">Action Needed</span>
+              <span className="text-amber-700 font-bold group-hover:underline">Review ➔</span>
             </div>
           </div>
 
@@ -320,7 +337,7 @@ export default function SellerAnalytics() {
               </span>
             </div>
             <p className="mt-2 text-xl sm:text-2xl font-black text-rose-700 tracking-tight">
-              {productRequests.length || totalProductRequests || 0}
+              {productRequests.length || totalProductRequests}
             </p>
             <div className="mt-1 flex items-center justify-between text-[11px]">
               <span className="font-extrabold text-rose-600 bg-rose-100/80 px-1.5 py-0.2 rounded">Unmet Requests</span>
@@ -329,10 +346,14 @@ export default function SellerAnalytics() {
           </div>
 
           {/* Completed Orders */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs hover:shadow-md transition-all">
+          <div
+            onClick={() => navigate(`/stores/${store.id}/orders?status=DELIVERED`)}
+            className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-white to-indigo-50/50 p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group"
+            title="Click to view delivered completed orders"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Completed</span>
-              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 text-xs font-bold">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-800">Completed</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 text-xs font-bold">
                 ✅
               </span>
             </div>
@@ -340,8 +361,8 @@ export default function SellerAnalytics() {
               {completedCount}
             </p>
             <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="font-semibold text-indigo-600">Paid / Delivered</span>
-              <span className="text-slate-400">Fulfilled</span>
+              <span className="font-semibold text-indigo-700">Fully Delivered</span>
+              <span className="text-indigo-600 font-bold group-hover:underline">Orders ➔</span>
             </div>
           </div>
 
@@ -354,7 +375,7 @@ export default function SellerAnalytics() {
               </span>
             </div>
             <p className="mt-2 text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              ₹{(avgOrderValue || 687).toLocaleString('en-IN')}
+              ₹{avgOrderValue.toLocaleString('en-IN')}
             </p>
             <div className="mt-1 flex items-center justify-between text-[11px]">
               <span className="font-semibold text-purple-700">Per Order Average</span>

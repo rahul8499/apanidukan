@@ -285,19 +285,33 @@ function playOrderUpdateChime() {
           )}
         </section>
 
-        {/* Store WhatsApp Contact Button */}
-        {order.store_phone && (
-          <a
-            href={`https://wa.me/${order.store_phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-              `Hi! I'm checking about my Order #${order.reference}`
-            )}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full rounded-2xl bg-[#25D366] px-5 py-3.5 font-bold text-white shadow-lg shadow-emerald-200 hover:bg-[#1fba58] transition-all"
+        {/* Store WhatsApp Contact & Share Tracking Link Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {order.store_phone && (
+            <a
+              href={`https://wa.me/${order.store_phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                `Hi! Checking status for Order #${order.reference}:\n${window.location.origin}/store/${storeSlug}/order/${order.reference}`
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-3 font-extrabold text-xs text-white shadow-md hover:bg-[#1fba58] transition-all"
+            >
+              <span>💬</span> Message Seller ↗
+            </a>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              const url = `${window.location.origin}/store/${storeSlug}/order/${order.reference}`
+              const shareMsg = `📦 Track my Order #${order.reference} live here:\n${url}`
+              window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg)}`, '_blank')
+            }}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 font-extrabold text-xs text-white shadow-md hover:bg-slate-800 transition-all cursor-pointer"
           >
-            <span>💬</span> Message Seller on WhatsApp ↗
-          </a>
-        )}
+            <span>📲</span> Share Order Link on WhatsApp
+          </button>
+        </div>
 
         <button
           type="button"

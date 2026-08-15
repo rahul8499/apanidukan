@@ -784,40 +784,51 @@ Bluetooth Wireless Earbuds - 1299 - 15`
     <SellerHeader store={store} activeTabTitle="Store Setup" onStoreUpdate={load} />
 
     <div className="space-y-5 p-4 sm:p-6">
-      {/* Enterprise Store Status Banner — Ultra-Premium Express Launcher */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-5 sm:p-6 text-white shadow-2xl border border-indigo-500/30 backdrop-blur-xl">
+      {/* Enterprise Store Status Banner — Compact & Powerful Mobile Express Launcher */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3.5 sm:p-6 text-white shadow-xl sm:shadow-2xl border border-indigo-500/30 backdrop-blur-xl">
         {/* Glow & Sparkle Accents */}
-        <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -top-20 -right-20 h-36 sm:h-56 w-36 sm:w-56 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 h-36 sm:h-56 w-36 sm:w-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-3 py-0.5 text-[10px] font-black uppercase text-emerald-300 border border-emerald-400/40 tracking-wider shadow-xs">
-                ⚡ 1-SECOND STORE LAUNCHER
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+          <div className="space-y-1 sm:space-y-1.5">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase text-emerald-300 border border-emerald-400/40 tracking-wider shadow-xs">
+                ⚡ 1-SEC LAUNCHER
               </span>
-              <span className="text-xs font-extrabold text-amber-300">
-                1-Min Express Setup
+              <span className="text-[10px] sm:text-xs font-extrabold text-amber-300">
+                1-Min Setup
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-200 tracking-tight">
-              Aapki Online Dukaan Express Setup Ready Hai! 🚀
+
+            {/* Mobile vs Desktop Title */}
+            <h1 className="text-base sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-200 tracking-tight leading-tight">
+              <span className="sm:hidden">1-Click Online Dukaan Ready! 🚀</span>
+              <span className="hidden sm:inline">Aapki Online Dukaan Express Setup Ready Hai! 🚀</span>
             </h1>
-            <p className="text-xs text-slate-300 font-medium max-w-xl leading-relaxed">
-              Bas 1-Click mein products & multi-images import karein, WhatsApp number connect karein aur instant customer link share karke order lena shuru karein!
+
+            {/* Mobile vs Desktop Sub-text */}
+            <p className="text-[11px] sm:text-xs text-slate-300 font-medium max-w-xl leading-snug sm:leading-relaxed">
+              <span className="sm:hidden">Bas 1-Click mein products & multi-images import karein aur instant orders lena shuru karein!</span>
+              <span className="hidden sm:inline">Bas 1-Click mein products & multi-images import karein, WhatsApp number connect karein aur instant customer link share karke order lena shuru karein!</span>
             </p>
           </div>
 
-          <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2.5 shrink-0 border-t border-white/10 sm:border-t-0 pt-3 sm:pt-0">
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-black uppercase tracking-wider shadow-md ${
-              store.is_published
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-emerald-950/40'
-                : 'bg-amber-500/20 text-amber-300 border border-amber-400/40 shadow-amber-950/40'
-            }`}>
-              <span className={`h-2 w-2 rounded-full ${store.is_published ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
-              {store.is_published ? 'LIVE STORE ACTIVE' : 'DRAFT MODE'}
-            </span>
-            <span className="text-[11px] font-extrabold text-indigo-300">
+          <div className="flex items-center sm:flex-col sm:items-end justify-between gap-1.5 sm:gap-2.5 shrink-0 border-t border-white/10 sm:border-t-0 pt-2 sm:pt-0">
+            <button
+              type="button"
+              onClick={publish}
+              title={store.is_published ? "Store is LIVE (Click to set Draft)" : "Click to Make Store LIVE"}
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                store.is_published
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30 shadow-emerald-950/40'
+                  : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border border-emerald-300 shadow-emerald-900/50 hover:from-emerald-600 hover:to-teal-700 animate-pulse'
+              }`}
+            >
+              <span className={`h-1.5 sm:h-2 w-1.5 sm:w-2 rounded-full ${store.is_published ? 'bg-emerald-400 animate-ping' : 'bg-white'}`} />
+              <span>{store.is_published ? '🟢 LIVE STORE' : '🚀 MAKE STORE LIVE'}</span>
+            </button>
+            <span className="text-[10px] sm:text-[11px] font-extrabold text-indigo-300">
               ⚡ 1-Click Order Link Ready
             </span>
           </div>

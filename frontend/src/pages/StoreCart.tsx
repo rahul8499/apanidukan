@@ -90,14 +90,17 @@ function CartContent(){
       const entry = { reference: order.reference, total: order.total, status: order.status, created_at: order.created_at }
       localStorage.setItem(orderHistoryKey, JSON.stringify([entry, ...savedOrders.filter((item: any) => item.reference !== order.reference)].slice(0, 30)))
       const paymentLabel = order.payment_type === 'ONLINE' ? 'Online Payment' : 'COD'
+      const trackingUrl = `${window.location.origin}/store/${storeSlug}/order/${order.reference}`
       const lines = [
-        `New ${paymentLabel} Order #${order.reference}`,
+        `🛒 New ${paymentLabel} Order #${order.reference}`,
         `Customer: ${order.customer_name || 'Not provided'}`,
         ...(order.customer_phone ? [`Phone: ${order.customer_phone}`] : []),
         `Items: ${order.items.map((item: any) => `${item.name} × ${item.quantity}`).join(', ')}`,
         `Total: ₹${order.total}`,
         ...(order.delivery_address ? [`Delivery Address: ${order.delivery_address}`] : []),
         ...(order.location_url ? [`Location: ${order.location_url}`] : []),
+        `\n📌 Track Order Live & Invoice:`,
+        `${trackingUrl}`
       ]
       window.open(`https://wa.me/${number}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer')
       

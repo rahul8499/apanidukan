@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
+import { SlidersHorizontal, X } from 'lucide-react'
 
 const statuses = ['NEW', 'CONFIRMED', 'PAID', 'DELIVERED', 'CANCELLED']
 
@@ -19,6 +20,7 @@ export default function SellerOrders() {
   const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'highest_price'>('latest')
   const [copiedRef, setCopiedRef] = useState<string | null>(null)
   const [isRefreshingData, setIsRefreshingData] = useState(false)
+  const [showFilterModal, setShowFilterModal] = useState(false)
   const auth = useAuth()
   const navigate = useNavigate()
 
@@ -205,126 +207,166 @@ export default function SellerOrders() {
       <SellerHeader store={store} activeTabTitle="Orders Management" onStoreUpdate={load} />
 
       <div className="space-y-4 p-4 sm:p-6">
-        {/* Enterprise Dark Hero Header */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-5 text-white shadow-md border border-indigo-900/40">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-teal-300 border border-teal-400/30 tracking-wider">
-                Real-Time Orders Control
+        {/* Enterprise Dark Hero Header — Modernized & Compact for Mobile */}
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3.5 sm:p-5 text-white shadow-xl border border-indigo-500/30 backdrop-blur-xl">
+          {/* Neon Glow background reflections */}
+          <div className="absolute -top-12 -right-12 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 space-y-3">
+            {/* Top Bar: Status Badge + Refresh + Connection Pill */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-teal-500/20 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30 tracking-wider shadow-xs">
+                ⚡ ORDERS CONTROL
               </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={async () => {
-                  setIsRefreshingData(true)
-                  await load()
-                  setTimeout(() => setIsRefreshingData(false), 500)
-                }}
-                className="flex items-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-900/60 px-3 py-1.5 text-xs font-extrabold text-teal-200 hover:bg-teal-800 hover:text-white transition-all cursor-pointer shadow-xs"
-                title="Click to fetch live fresh orders data"
-              >
-                <span className={`text-sm ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
-                <span>Refresh Orders</span>
-              </button>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                  wsConnected
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
-                    : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
-                }`}
-              >
+
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsRefreshingData(true)
+                    await load()
+                    setTimeout(() => setIsRefreshingData(false), 500)
+                  }}
+                  className="flex items-center gap-1 rounded-xl border border-teal-500/40 bg-teal-950/70 px-2.5 py-1 text-[11px] sm:text-xs font-extrabold text-teal-300 hover:bg-teal-900 transition-all cursor-pointer shadow-xs active:scale-95"
+                  title="Refresh live orders"
+                >
+                  <span className={`text-xs ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
+                  <span className="font-extrabold">Refresh</span>
+                </button>
+
                 <span
-                  className={`h-2 w-2 rounded-full ${
-                    wsConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                  className={`inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold ${
+                    wsConnected
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
                   }`}
-                />
-                {wsConnected ? 'Live Connection' : 'Sync Active'}
-              </span>
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      wsConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
+                    }`}
+                  />
+                  <span>{wsConnected ? 'LIVE' : 'SYNC'}</span>
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-3 flex items-baseline justify-between">
-            <div>
-              <p className="text-3xl font-black text-white">{orders.length}</p>
-              <p className="text-xs text-indigo-200 font-medium">Total Orders Received</p>
-            </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-indigo-200">In-App Control:</span>
-              <span
-                className={`font-black px-2.5 py-1 rounded-lg text-white text-[11px] shadow-2xs ${
-                  isManageInAppOn ? 'bg-teal-600' : 'bg-slate-800 border border-slate-700'
-                }`}
-              >
-                {isManageInAppOn ? '✓ ACTIVE' : 'OFF'}
-              </span>
+            {/* Main Stats Row */}
+            <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/10">
+              <div className="flex items-baseline gap-3">
+                <div>
+                  <p className="text-2xl sm:text-3xl font-black text-white leading-none">{orders.length}</p>
+                  <p className="text-[10px] sm:text-xs text-indigo-200/90 font-bold mt-0.5">Total Received</p>
+                </div>
+                <div className="h-7 w-[1px] bg-slate-800 mx-1 hidden xs:block" />
+                <div className="hidden xs:block">
+                  <p className="text-lg sm:text-2xl font-black text-emerald-300 leading-none">₹{totalSalesVolume.toFixed(0)}</p>
+                  <p className="text-[10px] sm:text-xs text-slate-300 font-bold mt-0.5">Total Revenue</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider text-indigo-200">Mode</span>
+                <span
+                  className={`font-black px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] border shadow-sm ${
+                    isManageInAppOn
+                      ? 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+                      : 'bg-slate-900 text-slate-300 border-slate-700'
+                  }`}
+                >
+                  {isManageInAppOn ? '🟢 IN-APP' : '⚪ WHATSAPP'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Top Executive KPI Metrics Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs">
-            <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Gross Sales</span>
-            <p className="mt-0.5 text-base font-black text-slate-900">₹{totalSalesVolume.toFixed(2)}</p>
-            <span className="text-[10px] text-emerald-600 font-bold">Valid Orders</span>
+        {/* Top Executive KPI Metrics Summary Cards — Web Large / Mobile Compact */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <div className="rounded-2xl border border-slate-200/80 bg-white py-2 px-3 sm:p-4 shadow-2xs flex flex-col justify-between">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-wider">Gross Sales</span>
+            <p className="my-0.5 text-sm sm:text-2xl font-black text-slate-900 truncate">₹{totalSalesVolume.toFixed(2)}</p>
+            <span className="text-[9px] sm:text-xs text-emerald-600 font-bold">Valid Orders</span>
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-3.5 shadow-2xs">
+          <div className="rounded-2xl border border-amber-200/80 bg-amber-50/50 py-2 px-3 sm:p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-extrabold uppercase text-amber-800 tracking-wider">New Pending</span>
-              {newOrdersCount > 0 && <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>}
+              <span className="text-[9px] sm:text-[10px] font-black uppercase text-amber-800 tracking-wider">New Pending</span>
+              {newOrdersCount > 0 && <span className="h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>}
             </div>
-            <p className="mt-0.5 text-base font-black text-amber-950">{newOrdersCount}</p>
-            <span className="text-[10px] text-amber-700 font-bold">Action Needed</span>
+            <p className="my-0.5 text-sm sm:text-2xl font-black text-amber-950">{newOrdersCount}</p>
+            <span className="text-[9px] sm:text-xs text-amber-700 font-bold">Action Needed</span>
           </div>
 
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3.5 shadow-2xs">
-            <span className="text-[10px] font-extrabold uppercase text-emerald-800 tracking-wider">Completed</span>
-            <p className="mt-0.5 text-base font-black text-emerald-950">{completedCount}</p>
-            <span className="text-[10px] text-emerald-700 font-bold">Paid / Delivered</span>
+          <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/50 py-2 px-3 sm:p-4 shadow-2xs flex flex-col justify-between">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-800 tracking-wider">Completed</span>
+            <p className="my-0.5 text-sm sm:text-2xl font-black text-emerald-950">{completedCount}</p>
+            <span className="text-[9px] sm:text-xs text-emerald-700 font-bold">Paid / Delivered</span>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs">
-            <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Avg Order Value</span>
-            <p className="mt-0.5 text-base font-black text-slate-900">₹{avgOrderValue.toFixed(0)}</p>
-            <span className="text-[10px] text-slate-500 font-bold">Per Order</span>
+          <div className="rounded-2xl border border-slate-200/80 bg-white py-2 px-3 sm:p-4 shadow-2xs flex flex-col justify-between">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-wider">Avg Order Value</span>
+            <p className="my-0.5 text-sm sm:text-2xl font-black text-slate-900 truncate">₹{avgOrderValue.toFixed(0)}</p>
+            <span className="text-[9px] sm:text-xs text-slate-500 font-bold">Per Order</span>
           </div>
         </div>
 
-        {/* Live Search & Smart Sort Bar */}
-        <div className="flex flex-col sm:flex-row items-center gap-2">
-          <div className="relative flex-1 w-full">
-            <span className="absolute left-3 top-2.5 text-xs text-slate-400">🔍</span>
+        {/* Single Line Search & Filter Controls Bar */}
+        <div className="flex items-center gap-2">
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-0">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">🔍</span>
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by Order #, Customer Name or Phone..."
+              placeholder="Search by Order #, Customer or Phone..."
               className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs font-medium text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:outline-none shadow-2xs"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-700 font-bold"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 font-bold"
               >
                 ✕
               </button>
             )}
           </div>
 
+          {/* Filter Sheet Trigger Button */}
+          <button
+            type="button"
+            onClick={() => setShowFilterModal(true)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer shrink-0 shadow-2xs ${
+              statusFilter !== 'ALL' || sortBy !== 'latest'
+                ? 'bg-indigo-600 text-white border-indigo-700'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+            }`}
+            title="Open Filter & Sort Options"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <span className="hidden xs:inline">Filter</span>
+            {statusFilter !== 'ALL' && (
+              <span className="rounded-full bg-white/20 px-1.5 py-0.2 text-[9px] font-black uppercase">
+                {statusFilter}
+              </span>
+            )}
+          </button>
+
+          {/* Quick Sort Selector */}
           <select
             value={sortBy}
             onChange={e => setSortBy(e.target.value as any)}
-            className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white py-2 px-3 text-xs font-bold text-slate-800 focus:outline-none shadow-2xs cursor-pointer"
+            className="hidden sm:block rounded-xl border border-slate-200 bg-white py-2 px-3 text-xs font-bold text-slate-800 focus:outline-none shadow-2xs cursor-pointer shrink-0"
           >
-            <option value="latest">Sort: Latest First</option>
-            <option value="oldest">Sort: Oldest First</option>
+            <option value="latest">Sort: Latest</option>
+            <option value="oldest">Sort: Oldest</option>
             <option value="highest_price">Sort: Highest Price</option>
           </select>
         </div>
 
-        {/* Status Filter Tabs */}
+        {/* Quick Horizontal Status Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {['ALL', ...statuses].map(st => {
             const count = st === 'ALL' ? orders.length : orders.filter(o => o.status?.toUpperCase() === st).length
@@ -333,7 +375,7 @@ export default function SellerOrders() {
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}
-                className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`rounded-xl px-2.5 py-1 text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                   isActive
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -395,40 +437,36 @@ export default function SellerOrders() {
             return (
               <article
                 key={order.id}
-                className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-xs hover:border-slate-300 transition-all space-y-3.5 ${getStatusLeftBorder(order.status)}`}
+                className={`rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-2xs hover:shadow-md transition-all space-y-2.5 ${getStatusLeftBorder(order.status)}`}
               >
-                {/* Card Header: Order Reference & Status Controls */}
-                <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => copyRefToClipboard(order.reference)}
-                        className="rounded-lg bg-indigo-50 border border-indigo-100 px-2.5 py-1 text-[11px] font-mono font-bold text-indigo-700 hover:bg-indigo-100 transition-all flex items-center gap-1 cursor-pointer"
-                        title="Click to Copy Order #"
-                      >
-                        <span>#{order.reference}</span>
-                        <span className="text-[10px] text-indigo-400">{copiedRef === order.reference ? '✓ Copied' : '📋'}</span>
-                      </button>
-                      <span className="text-[11px] font-medium text-slate-400">
-                        {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-xl font-black text-slate-900">
-                      ₹{order.total}
-                    </p>
+                {/* 1. Header: Order Ref + Time + Amount + Status Dropdown/Badge */}
+                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => copyRefToClipboard(order.reference)}
+                      className="rounded-lg bg-indigo-50 border border-indigo-100/80 px-2 py-0.5 text-[11px] font-mono font-black text-indigo-700 hover:bg-indigo-100 transition-all flex items-center gap-1 cursor-pointer"
+                      title="Click to Copy Order #"
+                    >
+                      <span>#{order.reference}</span>
+                      <span className="text-[10px] text-indigo-400">{copiedRef === order.reference ? '✓' : '📋'}</span>
+                    </button>
+                    <span className="text-[10px] font-medium text-slate-400">
+                      {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
 
-                  {/* Status selector (when Manage in App is ON) or Static Badge (when OFF) */}
-                  {isManageInAppOn ? (
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                        Update Status
-                      </span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base sm:text-lg font-black text-slate-900">
+                      ₹{order.total}
+                    </span>
+
+                    {/* Status dropdown or badge */}
+                    {isManageInAppOn ? (
                       <select
                         value={order.status}
                         onChange={(e) => updateStatus(order.id, e.target.value)}
-                        className="rounded-xl border border-slate-300 bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none cursor-pointer"
+                        className="rounded-xl border border-slate-300 bg-slate-900 px-2 py-1 text-[11px] font-bold text-white shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none cursor-pointer"
                       >
                         {statuses.map((status) => (
                           <option key={status} value={status} className="bg-white text-slate-900 font-bold">
@@ -436,94 +474,93 @@ export default function SellerOrders() {
                           </option>
                         ))}
                       </select>
-                    </div>
-                  ) : (
-                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-extrabold border ${getStatusBadgeStyle(order.status)}`}>
-                      {order.status}
-                    </span>
-                  )}
+                    ) : (
+                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-black border ${getStatusBadgeStyle(order.status)}`}>
+                        {order.status}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Visual Order Progress Timeline Bar */}
-                {currentStatusUpper !== 'CANCELLED' && (
-                  <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 space-y-1">
-                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
-                      <span className={currentStatusUpper === 'NEW' ? 'text-amber-600 font-black' : 'text-slate-600'}>1. Placed</span>
-                      <span className={currentStatusUpper === 'CONFIRMED' ? 'text-indigo-600 font-black' : 'text-slate-600'}>2. Confirmed</span>
-                      <span className={['PAID', 'DELIVERED'].includes(currentStatusUpper) ? 'text-emerald-600 font-black' : 'text-slate-600'}>3. Paid / Delivered</span>
-                    </div>
-                    <div className="flex h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          currentStatusUpper === 'NEW' ? 'w-1/3 bg-amber-500' :
-                          currentStatusUpper === 'CONFIRMED' ? 'w-2/3 bg-indigo-600' :
-                          'w-full bg-emerald-500'
-                        }`}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Customer Details with Initial Avatar */}
-                <div className="rounded-xl bg-slate-50/70 p-3 text-xs text-slate-700 space-y-2 border border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-xs shadow-2xs shrink-0">
+                {/* 2. Compact Customer & Payment Row */}
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-[10px] shrink-0">
                       {getInitials(order.customer_name)}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-extrabold text-slate-900 truncate">
+                    <div className="min-w-0">
+                      <span className="font-extrabold text-slate-900 truncate block text-xs">
                         {order.customer_name || 'Customer'}
-                      </p>
+                      </span>
                       {order.customer_phone && (
-                        <p className="font-mono text-[11px] text-indigo-700 font-bold">
+                        <a href={`tel:${order.customer_phone}`} className="font-mono text-[10px] text-indigo-700 font-bold hover:underline">
                           📞 {order.customer_phone}
-                        </p>
+                        </a>
                       )}
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-200/60 space-y-1">
-                    {order.payment_type && (
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-semibold text-slate-500">Payment:</span>
-                        <span className="font-bold text-slate-900">{order.payment_type === 'COD' ? '💵 Cash on Delivery' : '💳 Online Payment'}</span>
-                      </div>
-                    )}
-                    {order.delivery_address && (
-                      <div className="text-[11px]">
-                        <span className="font-semibold text-slate-500 block">Delivery Address:</span>
-                        <span className="font-medium text-slate-800">{order.delivery_address}</span>
-                      </div>
-                    )}
-                  </div>
+                  <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md shrink-0">
+                    {order.payment_type === 'COD' ? '💵 COD' : '💳 Online'}
+                  </span>
                 </div>
 
-                {/* Order Items Breakdown */}
-                <div className="rounded-xl bg-slate-50 p-3 text-xs border border-slate-100 space-y-1">
-                  <p className="font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-1">Items ({order.items?.length || 0}):</p>
+                {/* 3. Delivery Address (If Present) */}
+                {order.delivery_address && (
+                  <p className="text-[11px] text-slate-600 font-medium bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 truncate">
+                    <span className="font-bold text-slate-700">📍 </span>{order.delivery_address}
+                  </p>
+                )}
+
+                {/* 4. Compact Purchased Items List */}
+                <div className="rounded-xl bg-slate-50/80 p-2.5 text-xs border border-slate-100 space-y-1">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                    <span>Items ({order.items?.length || 0})</span>
+                    <span>Qty × Price</span>
+                  </div>
                   {Array.isArray(order.items) &&
                     order.items.map((item: any, idx: number) => (
-                      <div key={idx} className="flex justify-between items-center text-slate-700 py-0.5">
-                        <span className="font-medium">• {item.name || item.product_name || 'Product'} × {item.quantity}</span>
-                        <span className="font-extrabold text-slate-900">₹{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</span>
+                      <div key={idx} className="flex justify-between items-center text-slate-800 text-[11px]">
+                        <span className="font-semibold truncate">• {item.name || item.product_name || 'Product'}</span>
+                        <span className="font-black shrink-0 ml-2">×{item.quantity} (₹{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(0)})</span>
                       </div>
                     ))}
                 </div>
 
-                {/* Action Toolbar: Live Chat, WhatsApp, Phone Call, Live Tracking */}
-                <div className="flex flex-wrap items-center gap-2 pt-1">
+                {/* 5. Progress Bar (Ultra Slim 4-Stage Tracker) */}
+                {currentStatusUpper !== 'CANCELLED' && (
+                  <div className="flex items-center gap-2 text-[9px] font-extrabold text-slate-500 pt-0.5">
+                    <span className={currentStatusUpper === 'NEW' ? 'text-amber-600 font-black' : 'text-slate-400'}>Placed</span>
+                    <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          currentStatusUpper === 'NEW' ? 'w-1/4 bg-amber-500' :
+                          currentStatusUpper === 'CONFIRMED' ? 'w-2/4 bg-indigo-600' :
+                          currentStatusUpper === 'PAID' ? 'w-3/4 bg-teal-500' :
+                          'w-full bg-emerald-500'
+                        }`}
+                      />
+                    </div>
+                    <span className={currentStatusUpper === 'DELIVERED' ? 'text-emerald-600 font-black' : currentStatusUpper === 'PAID' ? 'text-teal-600 font-black' : 'text-slate-400'}>
+                      {currentStatusUpper === 'PAID' ? 'Paid (75%)' : currentStatusUpper === 'DELIVERED' ? 'Delivered ✓' : 'Delivered'}
+                    </span>
+                  </div>
+                )}
+
+                {/* 6. Clean Action Toolbar */}
+                <div className="grid grid-cols-2 sm:flex items-center gap-1.5 pt-1">
                   <button
                     type="button"
                     onClick={() => startDirectChat(order)}
-                    className="flex-1 rounded-xl bg-indigo-600 py-2.5 px-3 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="rounded-xl bg-indigo-600 py-1.5 px-2.5 text-[11px] font-bold text-white shadow-2xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-1 cursor-pointer"
                   >
-                    💬 Live Chat
+                    💬 Chat
                   </button>
 
-                  {order.customer_phone && (
+                  {order.customer_phone ? (
                     <>
                       <a
-                        className="rounded-xl bg-emerald-600 py-2.5 px-3 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all flex items-center gap-1 cursor-pointer"
+                        className="rounded-xl bg-emerald-600 py-1.5 px-2.5 text-[11px] font-bold text-white shadow-2xs hover:bg-emerald-700 transition-all flex items-center justify-center gap-1 cursor-pointer"
                         href={`https://wa.me/${order.customer_phone.replace(/\D/g, '')}`}
                         target="_blank"
                         rel="noreferrer"
@@ -531,20 +568,20 @@ export default function SellerOrders() {
                         WhatsApp ↗
                       </a>
                       <a
-                        className="rounded-xl bg-slate-100 border border-slate-200 py-2.5 px-3 text-xs font-bold text-slate-800 hover:bg-slate-200 transition-all flex items-center gap-1 cursor-pointer"
+                        className="rounded-xl bg-slate-100 border border-slate-200 py-1.5 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center gap-1 cursor-pointer"
                         href={`tel:${order.customer_phone}`}
                       >
                         📞 Call
                       </a>
                     </>
-                  )}
+                  ) : null}
 
                   <Link
                     to={`/store/${store.slug}/order/${order.reference}`}
                     target="_blank"
-                    className="rounded-xl bg-slate-900 py-2.5 px-3 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition-all flex items-center gap-1"
+                    className="rounded-xl bg-slate-900 py-1.5 px-2.5 text-[11px] font-bold text-white shadow-2xs hover:bg-slate-800 transition-all flex items-center justify-center gap-1 col-span-2 sm:col-span-1"
                   >
-                    Tracking ↗
+                    Track ↗
                   </Link>
                 </div>
               </article>
@@ -555,6 +592,102 @@ export default function SellerOrders() {
 
       {/* Unified Seller Bottom Navigation Bar */}
       <SellerBottomNav storeId={store.id} activeTab="orders" />
+
+      {/* Filter & Sort Bottom Sheet Modal Dialogue */}
+      {showFilterModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-5 text-slate-900 animate-in slide-in-from-bottom-5 sm:zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+                <h3 className="text-base font-black text-slate-900">Filter & Sort Orders</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFilterModal(false)}
+                className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Status Filters */}
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Order Status</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['ALL', ...statuses].map(st => {
+                  const count = st === 'ALL' ? orders.length : orders.filter(o => o.status?.toUpperCase() === st).length
+                  const isActive = statusFilter === st
+                  return (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setStatusFilter(st)}
+                      className={`rounded-xl px-2.5 py-2 text-xs font-bold transition-all flex items-center justify-between cursor-pointer border ${
+                        isActive
+                          ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="truncate">{st}</span>
+                      <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-extrabold ${isActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Sort Options */}
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Sort By</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'latest', label: 'Latest First' },
+                  { id: 'oldest', label: 'Oldest First' },
+                  { id: 'highest_price', label: 'Highest Amount' },
+                ].map(opt => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setSortBy(opt.id as any)}
+                    className={`rounded-xl px-2.5 py-2 text-xs font-bold transition-all text-center cursor-pointer border ${
+                      sortBy === opt.id
+                        ? 'bg-slate-900 text-white border-slate-950 shadow-sm'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter('ALL')
+                  setSortBy('latest')
+                  setSearchQuery('')
+                }}
+                className="w-full py-2.5 rounded-xl border border-slate-200 bg-slate-100 font-extrabold text-xs text-slate-700 hover:bg-slate-200 transition-all cursor-pointer text-center"
+              >
+                Reset All
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowFilterModal(false)}
+                className="w-full py-2.5 rounded-xl bg-indigo-600 font-extrabold text-xs text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-md text-center"
+              >
+                Apply Filters ({processedOrders.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

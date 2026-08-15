@@ -232,8 +232,41 @@ function Storefront() {
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-md bg-white pb-32 lg:max-w-none lg:w-full">
-      {!store ? <div className="p-6">{loadError || 'Loading store...'}</div> : <>
-        <header className="flex items-center gap-3 bg-slate-950 px-5 py-5 text-white">
+      {!store ? (
+        <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
+          <div className="w-full max-w-sm rounded-3xl bg-slate-900 p-6 text-white shadow-2xl border border-slate-800 space-y-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400 mx-auto text-2xl">
+              🏪
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-lg font-black text-white">Store Temporarily Offline</h2>
+              <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                {loadError || 'Dukaan filhal temporary maintenance & stock update ke liye offline hai. Naye orders pause hain.'}
+              </p>
+            </div>
+
+            {/* Reassurance Alert Box */}
+            <div className="rounded-2xl bg-emerald-950/60 border border-emerald-500/40 p-3.5 text-left text-xs text-emerald-200 space-y-1">
+              <p className="font-black text-emerald-300 flex items-center gap-1.5">
+                <span>🛡️</span>
+                <span>Pehle se kiye gaye Orders Safe Hain!</span>
+              </p>
+              <p className="text-[11px] text-emerald-200/90 leading-snug">
+                Agar aapne is store par order diya hai, toh seller dwara aapka order normally process ho raha hai.
+              </p>
+            </div>
+
+            <Link
+              to="/orders/track"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-3 text-xs font-black text-white hover:bg-indigo-500 transition-all shadow-md"
+            >
+              <span>🔍 Track Existing Order</span>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <>
+          <header className="flex items-center gap-3 bg-slate-950 px-5 py-5 text-white">
           {store.logo ? <img src={mediaUrl(store.logo)} alt="" className="h-10 w-10 rounded-full object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 font-bold">{store.name[0]?.toUpperCase()}</span>}
           <div className="min-w-0"><h1 className="truncate text-xl font-bold">{store.name}</h1><p className="truncate text-xs text-slate-300">{store.description || 'Online Store'}</p></div>
           <div className="ml-auto flex items-center gap-2">
@@ -359,7 +392,7 @@ function Storefront() {
         <CustomerBottomNav storeSlug={storeSlug!} active="home" />
         <CustomerChatWidget storeSlug={storeSlug!} />
         <AiAssistantWidget />
-      </>}
+      </>)}
     </div>
   )
 }

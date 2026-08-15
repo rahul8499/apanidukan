@@ -23,7 +23,8 @@ import {
   Edit3,
   Camera,
   Check,
-  MapPin
+  MapPin,
+  AlertTriangle
 } from 'lucide-react'
 
 interface SellerHeaderProps {
@@ -43,6 +44,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [logoPreview, setLogoPreview] = useState<string | null>(store?.logo || null)
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [isProfileEditing, setIsProfileEditing] = useState(false)
+  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false)
   const [message, setMessage] = useState('')
   const navigate = useNavigate()
 
@@ -88,13 +90,22 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
     }
   }
 
-  async function publishStore() {
+  function handleLiveToggleClick() {
+    if (store?.is_published) {
+      setShowUnpublishConfirm(true)
+    } else {
+      executePublish(true)
+    }
+  }
+
+  async function executePublish(nextState: boolean) {
     try {
-      await api.patch(`/stores/${store.id}/`, { is_published: true })
-      setMessage('✓ Store is now LIVE!')
+      await api.patch(`/stores/${store.id}/`, { is_published: nextState })
+      setMessage(nextState ? '🟢 Store is now LIVE!' : '⚪ Store is now in DRAFT mode (Offline).')
+      setShowUnpublishConfirm(false)
       if (onStoreUpdate) onStoreUpdate()
     } catch {
-      setMessage('Failed to publish store.')
+      setMessage('Failed to update store status.')
     }
   }
 
@@ -147,93 +158,86 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3">
           {/* Left Brand Identity Card */}
-          <div className="flex items-center gap-3.5 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
             {/* Logo Avatar with Radial Ambient Glow */}
-            <div className="relative group flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 via-teal-950/80 to-slate-900 text-teal-300 border border-teal-500/40 shadow-[0_0_20px_rgba(20,184,166,0.25)] transition-transform duration-300 group-hover:scale-105 overflow-hidden">
+            <div className="relative group flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 via-teal-950/80 to-slate-900 text-teal-300 border border-teal-500/40 shadow-[0_0_20px_rgba(20,184,166,0.25)] transition-transform duration-300 group-hover:scale-105 overflow-hidden">
               {currentLogoUrl ? (
                 <img src={currentLogoUrl} alt={store.name} className="h-full w-full object-cover rounded-2xl" />
               ) : (
-                <Store className="relative h-5.5 w-5.5 sm:h-6 sm:w-6 text-teal-300 drop-shadow-[0_0_12px_rgba(20,184,166,0.9)]" />
+                <Store className="relative h-5 w-5 sm:h-6 sm:w-6 text-teal-300 drop-shadow-[0_0_12px_rgba(20,184,166,0.9)]" />
               )}
 
               {/* Status Ping Dot */}
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 sm:h-3.5 sm:w-3.5">
                 <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${store.is_published ? 'bg-teal-400' : 'bg-amber-400'}`}></span>
-                <span className={`relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-teal-400 shadow-[0_0_8px_#14b8a6]' : 'bg-amber-400'}`}></span>
+                <span className={`relative inline-flex h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-teal-400 shadow-[0_0_8px_#14b8a6]' : 'bg-amber-400'}`}></span>
               </span>
             </div>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-cyan-300 to-indigo-300 truncate">
-                  <Sparkles className="h-3 w-3 text-teal-400 shrink-0 inline" />
-                  <span>{activeTabTitle || 'Seller Workspace'}</span>
-                </span>
-
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black shrink-0 border transition-all ${
-                  store.is_published
-                    ? 'bg-gradient-to-r from-teal-500/20 to-emerald-500/20 text-teal-200 border-teal-500/40 shadow-[0_0_12px_rgba(20,184,166,0.3)]'
-                    : 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-200 border-amber-500/40'
-                }`}>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-sm sm:text-lg md:text-xl font-black text-white truncate tracking-tight max-w-[130px] xs:max-w-[170px] sm:max-w-xs drop-shadow-sm">
+                  {store.name}
+                </h1>
+                <button
+                  type="button"
+                  onClick={handleLiveToggleClick}
+                  title={store.is_published ? "Store is LIVE (Click to set to Draft)" : "Click to Make Store LIVE"}
+                  className={`inline-flex items-center gap-1 rounded-xl px-2 py-0.5 text-[9px] sm:text-[10px] font-black shrink-0 border transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs ${
+                    store.is_published
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+                      : 'bg-gradient-to-r from-amber-500 to-emerald-600 text-white border-emerald-400 shadow-md animate-pulse hover:from-amber-600 hover:to-emerald-700'
+                  }`}
+                >
                   {store.is_published ? (
                     <>
-                      <CheckCircle2 className="h-3 w-3 text-teal-400" />
-                      <span className="font-extrabold tracking-wide">LIVE</span>
+                      <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-400" />
+                      <span className="font-extrabold tracking-wide">● LIVE</span>
                     </>
                   ) : (
                     <>
-                      <Clock className="h-3 w-3 text-amber-400" />
-                      <span className="font-extrabold tracking-wide">DRAFT</span>
+                      <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white" />
+                      <span className="font-extrabold tracking-wide">🚀 MAKE LIVE</span>
                     </>
                   )}
-                </span>
+                </button>
               </div>
 
-              <h1 className="mt-0.5 text-base sm:text-lg md:text-xl font-black text-white truncate tracking-tight max-w-[150px] sm:max-w-xs md:max-w-md drop-shadow-sm">
-                {store.name}
-              </h1>
+              {/* Subtitle visible on desktop */}
+              <p className="hidden sm:flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-teal-300/80 truncate mt-0.5">
+                <Sparkles className="h-3 w-3 text-teal-400 shrink-0 inline" />
+                <span>{activeTabTitle || 'Seller Workspace'}</span>
+              </p>
             </div>
           </div>
 
           {/* Right Action Tools Toolbar */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Real-time Notification Bell */}
             <NotificationBellHeader />
 
-            {/* Customer Storefront Preview Button with Shimmer Sweep */}
+            {/* Customer Storefront Preview Button */}
             {store.slug && (
               <Link
                 to={`/store/${store.slug}`}
                 target="_blank"
-                className="group relative overflow-hidden flex items-center gap-1.5 rounded-xl sm:rounded-2xl border border-teal-500/40 bg-gradient-to-r from-teal-500/20 via-cyan-500/15 to-indigo-500/20 px-3.5 py-2 text-xs font-black text-teal-200 hover:text-white hover:border-teal-400/80 hover:shadow-[0_0_20px_rgba(20,184,166,0.4)] transition-all duration-300 cursor-pointer"
+                className="flex h-9 w-9 sm:h-10 sm:w-auto items-center justify-center gap-1.5 rounded-xl sm:rounded-2xl border border-teal-500/40 bg-teal-500/10 sm:px-3.5 text-xs font-black text-teal-300 hover:bg-teal-500/20 hover:border-teal-400 transition-all cursor-pointer"
                 title="Preview Customer Storefront"
               >
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 ease-in-out pointer-events-none" />
-                <ExternalLink className="h-4 w-4 text-teal-300 transition-transform duration-300 group-hover:scale-110 group-hover:text-cyan-200" />
-                <span className="hidden sm:inline tracking-wide font-extrabold">Storefront</span>
+                <ExternalLink className="h-4 w-4 text-teal-300" />
+                <span className="hidden sm:inline font-extrabold tracking-wide">Storefront ↗</span>
               </Link>
             )}
 
-            {/* Gear Settings Button */}
+            {/* Gear Settings Button (Opens Profile Drawer) */}
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
-              className="group flex items-center gap-1.5 rounded-xl sm:rounded-2xl border border-slate-800 bg-slate-900/90 px-3.5 py-2 text-xs font-bold text-slate-200 hover:border-teal-500/50 hover:bg-slate-850 hover:text-teal-300 hover:shadow-[0_0_15px_rgba(20,184,166,0.2)] transition-all duration-300 cursor-pointer shadow-inner"
+              className="flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-xl sm:rounded-2xl border border-slate-800 bg-slate-900 px-2.5 sm:px-3.5 text-xs font-extrabold text-slate-200 hover:border-teal-500/50 hover:bg-slate-850 hover:text-teal-300 transition-all cursor-pointer shadow-inner"
               title="Open Store Settings & Profile Controls"
             >
-              <Settings className="h-4 w-4 text-slate-400 transition-transform duration-700 group-hover:rotate-180 group-hover:text-teal-400" />
+              <Settings className="h-4 w-4 text-slate-300 transition-transform duration-500 hover:rotate-90" />
               <span className="hidden sm:inline font-extrabold tracking-wide">Settings</span>
-            </button>
-
-            {/* Logout Button */}
-            <button
-              type="button"
-              onClick={() => { auth.logout(); navigate('/login') }}
-              className="group flex items-center justify-center p-2 sm:px-3.5 sm:py-2 rounded-xl sm:rounded-2xl border border-slate-800 bg-slate-950/80 text-slate-400 hover:border-rose-500/50 hover:bg-rose-950/40 hover:text-rose-200 hover:shadow-[0_0_15px_rgba(244,63,94,0.25)] transition-all duration-300 cursor-pointer"
-              title="Logout from Seller Workspace"
-            >
-              <LogOut className="h-4 w-4 transition-transform duration-300 group-hover:scale-110 group-hover:text-rose-400" />
-              <span className="hidden sm:inline ml-1.5 text-xs font-extrabold">Logout</span>
             </button>
           </div>
         </div>
@@ -521,20 +525,15 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <div className="flex items-center justify-between border-t border-slate-200/60 pt-3">
               <span className="text-xs font-bold text-slate-900">Store Visibility:</span>
               <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black ${
-                  store.is_published ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-                }`}>
-                  {store.is_published ? '● LIVE' : '○ DRAFT'}
-                </span>
-                {!store.is_published && (
-                  <button
-                    type="button"
-                    onClick={publishStore}
-                    className="rounded-lg bg-indigo-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-indigo-700 transition-all cursor-pointer"
-                  >
-                    Publish
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleLiveToggleClick}
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black cursor-pointer transition-all ${
+                    store.is_published ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-200'
+                  }`}
+                >
+                  {store.is_published ? '● LIVE (Click to Draft)' : '🚀 Make Store Live'}
+                </button>
               </div>
             </div>
           </div>
@@ -561,6 +560,41 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </button>
         </div>
       </aside>
+
+      {/* Unpublish Confirmation Dialogue Modal */}
+      {showUnpublishConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 text-slate-900 animate-in zoom-in-95">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 mx-auto">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+
+            <div className="text-center space-y-1">
+              <h3 className="text-base font-black text-slate-900">Take Store Offline?</h3>
+              <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                Aapki online dukaan DRAFT mode mein chali jayegi aur customers website link se store access nahi kar payenge. Kya aap offline karna chahte hain?
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowUnpublishConfirm(false)}
+                className="w-full py-2.5 rounded-xl border border-slate-200 bg-slate-100 font-extrabold text-xs text-slate-700 hover:bg-slate-200 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => executePublish(false)}
+                className="w-full py-2.5 rounded-xl bg-amber-600 font-extrabold text-xs text-white hover:bg-amber-700 transition-all cursor-pointer shadow-md"
+              >
+                Yes, Set to Draft
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

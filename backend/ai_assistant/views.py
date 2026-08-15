@@ -218,10 +218,10 @@ Before saying that no product matches, check every catalog item by both its name
                 max_tokens=getattr(settings, 'OLLAMA_TEXT_RESPONSE_TOKENS', 120),
             )
             try:
-                answer = json.loads(answer)['answer'].strip()
+                parsed = json.loads(answer)
+                answer = parsed['answer'].strip()
             except (json.JSONDecodeError, KeyError, AttributeError):
-                # Do not render a model's private draft/reasoning as a chat reply.
-                return Response({'detail': 'AI returned an invalid response. Please try again.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                answer = answer.strip()
             if not answer:
                 return Response({'detail': 'AI returned an empty response. Please try again.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
             return Response({'type': 'chat', 'answer': answer})

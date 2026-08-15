@@ -40,3 +40,16 @@ class AssistantChatViewTests(TestCase):
         messages = mocked_chat.call_args.kwargs['messages']
         self.assertEqual(messages[1]['content'], 'Kya new product add hua hai?')
         self.assertEqual(messages[2]['content'], 'Baby Shampoo aur Baby Diapers recently add hue hain.')
+
+    @patch('ai_assistant.views.chat', return_value='Sabse mehnga product Demo Premium Item hai, ₹999.00 mein.')
+    def test_invalid_json_fallback_uses_raw_content(self, mocked_chat):
+        request = APIRequestFactory().post(
+            '/api/v1/ai/assistant/',
+            {'message': 'sabse mehnga product konsa hai'},
+            format='json',
+        )
+
+        response = AssistantChatView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['answer'], 'Sabse mehnga product Demo Premium Item hai, ₹999.00 mein.')

@@ -4,6 +4,7 @@ import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
+import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
 
 export default function SellerAnalytics() {
   const { storeId } = useParams()
@@ -362,6 +363,56 @@ export default function SellerAnalytics() {
           </div>
         </section>
 
+        {/* 📱 APP USAGE, STORE VISITORS & PRODUCT VIEWS */}
+        <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-4 text-white shadow-md space-y-3">
+          <div className="flex items-center justify-between border-b border-indigo-800/60 pb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-teal-500/20 text-teal-300 font-black text-sm border border-teal-500/30">
+                📲
+              </span>
+              <div>
+                <h2 className="text-xs sm:text-sm font-extrabold text-white">App Visitors & Product Engagement</h2>
+                <p className="text-[10px] text-teal-300 font-medium">Real-time buyer app traffic & storefront views</p>
+              </div>
+            </div>
+            <span className="rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider">
+              Live Engagement
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Total Storefront Visitors */}
+            <div className="rounded-xl bg-slate-800/80 p-3 border border-slate-700/80 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase text-slate-400">👀 Storefront Visitors</p>
+              <p className="text-xl sm:text-2xl font-black text-white">{visits.toLocaleString()}</p>
+              <p className="text-[10px] text-teal-400 font-bold">Total app visits</p>
+            </div>
+
+            {/* Total Product Views */}
+            <div className="rounded-xl bg-slate-800/80 p-3 border border-slate-700/80 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase text-slate-400">🛍️ Product Page Views</p>
+              <p className="text-xl sm:text-2xl font-black text-indigo-300">{productViews.toLocaleString()}</p>
+              <p className="text-[10px] text-indigo-400 font-bold">Product opens</p>
+            </div>
+
+            {/* Total Unique Buyers */}
+            <div className="rounded-xl bg-slate-800/80 p-3 border border-slate-700/80 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase text-slate-400">👥 Active App Buyers</p>
+              <p className="text-xl sm:text-2xl font-black text-emerald-400">{uniqueCustomers.toLocaleString()}</p>
+              <p className="text-[10px] text-emerald-400 font-bold">Unique customers</p>
+            </div>
+
+            {/* Store Conversion Rate */}
+            <div className="rounded-xl bg-slate-800/80 p-3 border border-slate-700/80 space-y-1">
+              <p className="text-[10px] font-extrabold uppercase text-slate-400">📈 Visitor Conversion</p>
+              <p className="text-xl sm:text-2xl font-black text-amber-400">
+                {visits > 0 ? ((validOrders.length / visits) * 100).toFixed(1) : '0.0'}%
+              </p>
+              <p className="text-[10px] text-amber-400 font-bold">Visitors to orders</p>
+            </div>
+          </div>
+        </section>
+
         {/* Payment & Order Velocity Breakdown */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* Payment Method Distribution */}
@@ -569,10 +620,10 @@ export default function SellerAnalytics() {
                     </div>
                     {request.customerPhone && (
                       <a
-                        href={`https://wa.me/${String(request.customerPhone).replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${request.customerName || 'Customer'}, thanks for requesting ${request.productName}. We will contact you soon.`)}`}
+                        href={`https://wa.me/${formatPhoneForWhatsApp(request.customerPhone)}?text=${encodeURIComponent(`Hi ${request.customerName || 'Customer'}, thanks for requesting ${request.productName}. We will contact you soon.`)}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded-lg bg-[#25D366] px-2.5 py-1 text-[10px] font-extrabold text-white shadow-2xs"
+                        className="rounded-lg bg-[#25D366] px-2.5 py-1 text-[10px] font-extrabold text-white shadow-2xs hover:bg-emerald-600 transition-all"
                       >
                         Reply WA
                       </a>

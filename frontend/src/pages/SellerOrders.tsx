@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
+import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
 import { SlidersHorizontal, X } from 'lucide-react'
 
 const statuses = ['NEW', 'CONFIRMED', 'PAID', 'DELIVERED', 'CANCELLED']
@@ -561,7 +562,7 @@ export default function SellerOrders() {
                     <>
                       <a
                         className="rounded-xl bg-emerald-600 py-1.5 px-2.5 text-[11px] font-bold text-white shadow-2xs hover:bg-emerald-700 transition-all flex items-center justify-center gap-1 cursor-pointer"
-                        href={`https://wa.me/${order.customer_phone.replace(/\D/g, '')}`}
+                        href={`https://wa.me/${formatPhoneForWhatsApp(order.customer_phone)}`}
                         target="_blank"
                         rel="noreferrer"
                       >

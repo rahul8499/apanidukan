@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
+import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
 
 export default function SellerChat() {
   const { storeId } = useParams()
@@ -396,7 +397,7 @@ export default function SellerChat() {
 
                   {selectedConv.customer_phone && (
                     <a
-                      href={`https://wa.me/${selectedConv.customer_phone.replace(/\D/g, '')}`}
+                      href={`https://wa.me/${formatPhoneForWhatsApp(selectedConv.customer_phone)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer"

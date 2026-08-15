@@ -4,6 +4,7 @@ import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
+import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
 
 export default function SellerRequests() {
   const { storeId } = useParams()
@@ -67,8 +68,10 @@ export default function SellerRequests() {
         message: msgText
       })
       
-      const phoneClean = String(request.customerPhone || '').replace(/\D/g, '')
-      window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(msgText)}`, '_blank')
+      const phoneClean = formatPhoneForWhatsApp(request.customerPhone)
+      if (phoneClean) {
+        window.open(`https://wa.me/${phoneClean}?text=${encodeURIComponent(msgText)}`, '_blank')
+      }
       
       navigate(`/stores/${storeId}/chat?convId=${res.data.id}`)
     } catch (err) {

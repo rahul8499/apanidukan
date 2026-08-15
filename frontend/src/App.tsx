@@ -27,6 +27,7 @@ import SellerChat from './pages/SellerChat'
 import SellerRequests from './pages/SellerRequests'
 import SellerAnalytics from './pages/SellerAnalytics'
 import SellerCatalog from './pages/SellerCatalog'
+import SellerSubscription from './pages/SellerSubscription'
 import { AuthProvider } from './context/AuthContext'
 
 import { NotificationProvider } from './context/NotificationContext'
@@ -83,6 +84,7 @@ function AppContent(){
         <Route path="/stores/:storeId/chat" element={<SellerChat/>} />
         <Route path="/stores/:storeId/requests" element={<SellerRequests/>} />
         <Route path="/stores/:storeId/analytics" element={<SellerAnalytics/>} />
+        <Route path="/stores/:storeId/subscription" element={<SellerSubscription/>} />
         <Route path="/start" element={<StartStore/>} />
         <Route path="/platform" element={<PlatformDashboard/>} />
         <Route path="/cart" element={<Cart/>} />

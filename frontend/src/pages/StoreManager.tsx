@@ -820,8 +820,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
               onClick={publish}
               title={store.is_published ? "Store is LIVE (Click to set Draft)" : "Click to Make Store LIVE"}
               className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${store.is_published
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30 shadow-emerald-950/40'
-                  : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border border-emerald-300 shadow-emerald-900/50 hover:from-emerald-600 hover:to-teal-700 animate-pulse'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30 shadow-emerald-950/40'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border border-emerald-300 shadow-emerald-900/50 hover:from-emerald-600 hover:to-teal-700 animate-pulse'
                 }`}
             >
               <span className={`h-1.5 sm:h-2 w-1.5 sm:w-2 rounded-full ${store.is_published ? 'bg-emerald-400 animate-ping' : 'bg-white'}`} />
@@ -952,8 +952,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                   type="button"
                   onClick={() => setBulkMode('matrix')}
                   className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${bulkMode === 'matrix'
-                      ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                     }`}
                 >
                   📝 Form Grid
@@ -962,8 +962,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                   type="button"
                   onClick={() => setBulkMode('text')}
                   className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${bulkMode === 'text'
-                      ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                     }`}
                 >
                   ✨ Text Import
@@ -972,8 +972,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                   type="button"
                   onClick={() => setBulkMode('csv')}
                   className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${bulkMode === 'csv'
-                      ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                     }`}
                 >
                   📁 CSV File

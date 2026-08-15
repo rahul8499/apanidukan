@@ -23,6 +23,7 @@ import {
   Edit3,
   Camera,
   Check,
+  Crown,
   MapPin,
   AlertTriangle,
   Bell
@@ -81,6 +82,15 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       }
     }
   }, [store])
+
+  const [subStatus, setSubStatus] = useState<any>(null)
+
+  useEffect(() => {
+    if (!store?.id) return
+    api.get(`/payments/subscriptions/status/?store_id=${store.id}`)
+      .then(res => setSubStatus(res.data))
+      .catch(() => {})
+  }, [store?.id])
 
   const currentLogoUrl = logoPreview || store?.logo || null
 
@@ -196,39 +206,43 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               </span>
             </div>
 
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="text-sm sm:text-lg md:text-xl font-black text-white truncate tracking-tight max-w-[130px] xs:max-w-[170px] sm:max-w-xs drop-shadow-sm">
+            <div className="min-w-0 flex-1">
+              {/* Row 1: Store Name & Badges */}
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h1 className="text-base sm:text-lg md:text-xl font-black text-white truncate tracking-tight drop-shadow-sm max-w-[140px] xs:max-w-[180px] sm:max-w-xs">
                   {store.name}
                 </h1>
-                <button
-                  type="button"
-                  onClick={handleLiveToggleClick}
-                  title={store.is_published ? "Store is LIVE (Click to set to Draft)" : "Click to Make Store LIVE"}
-                  className={`inline-flex items-center gap-1 rounded-xl px-2 py-0.5 text-[9px] sm:text-[10px] font-black shrink-0 border transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs ${
-                    store.is_published
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
-                      : 'bg-gradient-to-r from-amber-500 to-emerald-600 text-white border-emerald-400 shadow-md animate-pulse hover:from-amber-600 hover:to-emerald-700'
-                  }`}
-                >
-                  {store.is_published ? (
-                    <>
-                      <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-400" />
-                      <span className="font-extrabold tracking-wide">● LIVE</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white" />
-                      <span className="font-extrabold tracking-wide">🚀 MAKE LIVE</span>
-                    </>
-                  )}
-                </button>
+
+                {/* Active Plan Badge */}
+                {subStatus && (
+                  <Link
+                    to={`/stores/${store.id}/subscription`}
+                    title={`Current Plan: ${subStatus.plan_name} (${subStatus.status})`}
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black shrink-0 border transition-all cursor-pointer hover:scale-105 shadow-xs ${
+                      subStatus.plan_name === 'PREMIUM'
+                        ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 hover:border-amber-300'
+                        : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500'
+                    }`}
+                  >
+                    {subStatus.plan_name === 'PREMIUM' ? (
+                      <>
+                        <Crown className="h-3 w-3 text-amber-400" />
+                        <span className="tracking-wide">PREMIUM</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-2.5 w-2.5 text-slate-400" />
+                        <span className="tracking-wide">BASIC</span>
+                      </>
+                    )}
+                  </Link>
+                )}
               </div>
 
-              {/* Subtitle visible on desktop */}
-              <p className="hidden sm:flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-teal-300/80 truncate mt-0.5">
-                <Sparkles className="h-3 w-3 text-teal-400 shrink-0 inline" />
-                <span>{activeTabTitle || 'Seller Workspace'}</span>
+              {/* Row 2: Module Title / Breadcrumb */}
+              <p className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold tracking-wider text-teal-300/90 truncate mt-0.5">
+                <Sparkles className="h-3 w-3 text-teal-400 shrink-0" />
+                <span>{activeTabTitle || 'Store Manager'}</span>
               </p>
             </div>
           </div>
@@ -546,17 +560,27 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
             <div className="flex items-center justify-between border-t border-slate-200/60 pt-3">
               <span className="text-xs font-bold text-slate-900">Store Visibility:</span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleLiveToggleClick}
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black cursor-pointer transition-all ${
-                    store.is_published ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-200'
-                  }`}
-                >
-                  {store.is_published ? '● LIVE (Click to Draft)' : '🚀 Make Store Live'}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleLiveToggleClick}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black cursor-pointer transition-all shadow-xs ${
+                  store.is_published
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200'
+                    : 'bg-gradient-to-r from-amber-500 to-emerald-600 text-white border border-emerald-400 hover:from-amber-600 hover:to-emerald-700 shadow-md animate-pulse'
+                }`}
+              >
+                {store.is_published ? (
+                  <>
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>● LIVE (Click to Draft)</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-3.5 w-3.5 text-white" />
+                    <span>🚀 MAKE STORE LIVE</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
@@ -600,7 +624,36 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             </div>
           </div>
 
-          {/* SECTION 4: 🔗 Customer Link & Logout */}
+          {/* SECTION 5: 💳 Active Subscription & Razorpay Billing Card */}
+          <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-4 space-y-3 shadow-md text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-amber-400" />
+                <span className="text-xs font-black uppercase text-indigo-200">Active Subscription</span>
+              </div>
+              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                {subStatus?.plan_name || 'BASIC'} PLAN
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 font-medium leading-relaxed">
+              {subStatus?.plan_name === 'PREMIUM'
+                ? '⭐ Premium Store Active: Executive Audit Reports & Multi-Admin Access'
+                : 'Standard Store Active. Upgrade to Premium for Executive Audit PDF & Priority Support.'}
+            </p>
+            <Link
+              to={`/stores/${store.id}/subscription`}
+              onClick={() => setIsSettingsOpen(false)}
+              className="w-full flex items-center justify-between rounded-xl bg-indigo-600/60 hover:bg-indigo-600 border border-indigo-500/40 p-2.5 text-xs font-black text-white transition-all shadow-xs"
+            >
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-teal-300" />
+                <span>Manage Subscription & Receipts</span>
+              </div>
+              <span className="text-[10px] font-extrabold text-teal-300">Open ➔</span>
+            </Link>
+          </div>
+
+          {/* SECTION 6: 🔗 Customer Link & Logout */}
           {store.slug && (
             <Link
               to={`/store/${store.slug}`}

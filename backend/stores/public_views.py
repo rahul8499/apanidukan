@@ -11,6 +11,8 @@ from products.serializers import PublicProductSerializer
 
 from django.db import models
 
+from config.websocket import broadcast_order_event_sync
+
 class PublicStoreDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = PublicStoreSerializer
@@ -20,6 +22,10 @@ class PublicStoreDetailView(generics.RetrieveAPIView):
         store = get_object_or_404(Store, slug=slug, is_published=True)
         Store.objects.filter(id=store.id).update(visits_count=models.F('visits_count') + 1)
         store.refresh_from_db(fields=['visits_count'])
+        try:
+            broadcast_order_event_sync(f"store_{store.id}", {'type': 'store_visit', 'store_id': store.id})
+        except Exception:
+            pass
         return store
 
 
@@ -61,6 +67,10 @@ class PublicProductDetailView(generics.RetrieveAPIView):
         product = get_object_or_404(Product, store=store, slug=product_slug, is_published=True)
         Product.objects.filter(id=product.id).update(views_count=models.F('views_count') + 1)
         product.refresh_from_db(fields=['views_count'])
+        try:
+            broadcast_order_event_sync(f"store_{store.id}", {'type': 'product_view', 'product_id': product.id})
+        except Exception:
+            pass
         return product
 
 

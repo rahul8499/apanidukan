@@ -819,11 +819,10 @@ Bluetooth Wireless Earbuds - 1299 - 15`
               type="button"
               onClick={publish}
               title={store.is_published ? "Store is LIVE (Click to set Draft)" : "Click to Make Store LIVE"}
-              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                store.is_published
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${store.is_published
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30 shadow-emerald-950/40'
                   : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border border-emerald-300 shadow-emerald-900/50 hover:from-emerald-600 hover:to-teal-700 animate-pulse'
-              }`}
+                }`}
             >
               <span className={`h-1.5 sm:h-2 w-1.5 sm:w-2 rounded-full ${store.is_published ? 'bg-emerald-400 animate-ping' : 'bg-white'}`} />
               <span>{store.is_published ? '🟢 LIVE STORE' : '🚀 MAKE STORE LIVE'}</span>
@@ -952,33 +951,30 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                 <button
                   type="button"
                   onClick={() => setBulkMode('matrix')}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${
-                    bulkMode === 'matrix'
+                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${bulkMode === 'matrix'
                       ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   📝 Form Grid
                 </button>
                 <button
                   type="button"
                   onClick={() => setBulkMode('text')}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${
-                    bulkMode === 'text'
+                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${bulkMode === 'text'
                       ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   ✨ Text Import
                 </button>
                 <button
                   type="button"
                   onClick={() => setBulkMode('csv')}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${
-                    bulkMode === 'csv'
+                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${bulkMode === 'csv'
                       ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   📁 CSV File
                 </button>
@@ -1006,7 +1002,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     </p>
                     <p className="text-[11px] font-mono text-slate-600 mt-0.5">Category, Product Name, Price, Stock, Description, Image URL</p>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
@@ -1016,7 +1012,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     >
                       <span>📖 Multi-Image Guide</span>
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={downloadSampleCsv}
@@ -1118,7 +1114,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     </p>
                     <p className="text-[11px] font-mono text-slate-600 mt-0.5">Format: Product Name - Price - Stock Quantity</p>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
@@ -1128,7 +1124,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     >
                       <span>📖 Text Guide</span>
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={downloadSampleText}
@@ -1205,7 +1201,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     </p>
                     <p className="text-[11px] text-slate-600 mt-0.5 font-medium">Add multiple items with custom price, stock & photos directly!</p>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
@@ -1215,7 +1211,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     >
                       <span>📖 Form Guide</span>
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={downloadSampleCsv}
@@ -1432,7 +1428,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                 {productImages.length} Photos Selected
               </span>
             </div>
-            
+
             <input
               type="file"
               accept="image/*"
@@ -1456,9 +1452,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                         key={idx}
                         type="button"
                         onClick={() => setProductPrimaryIndex(idx)}
-                        className={`relative h-16 rounded-xl border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${
-                          isPrimary ? 'border-teal-600 ring-2 ring-teal-300' : 'border-slate-200 opacity-70'
-                        }`}
+                        className={`relative h-16 rounded-xl border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${isPrimary ? 'border-teal-600 ring-2 ring-teal-300' : 'border-slate-200 opacity-70'
+                          }`}
                       >
                         <img src={URL.createObjectURL(imgFile)} alt="preview" className="h-10 w-full object-cover rounded" />
                         <span className={`text-[8px] font-black text-center py-0.5 rounded ${isPrimary ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
@@ -1567,15 +1562,15 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     {guideModalType === 'csv'
                       ? 'CSV Multi-Image Import Guide'
                       : guideModalType === 'text'
-                      ? 'Text List Import Guide'
-                      : 'Multi-Row Form Grid Guide'}
+                        ? 'Text List Import Guide'
+                        : 'Multi-Row Form Grid Guide'}
                   </h3>
                   <p className="text-xs text-slate-500">
                     {guideModalType === 'csv'
                       ? 'Learn how to bulk import multiple product photos via CSV'
                       : guideModalType === 'text'
-                      ? 'Learn how to bulk paste products using text format'
-                      : 'Learn how to quickly add multiple items via form rows'}
+                        ? 'Learn how to bulk paste products using text format'
+                        : 'Learn how to quickly add multiple items via form rows'}
                   </p>
                 </div>
               </div>
@@ -1632,9 +1627,9 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                 <div className="space-y-2">
                   <h4 className="font-extrabold text-slate-900 text-xs">Copyable Text Example:</h4>
                   <div className="bg-slate-900 text-emerald-300 p-3.5 rounded-xl font-mono text-[11px] leading-relaxed border border-slate-800 select-all">
-                    Full Face Riding Helmet - 1850 - 50<br/>
-                    Engine Oil 1L - 450 - 20<br/>
-                    Chain Lube & Cleaner Spray - 399 - 100<br/>
+                    Full Face Riding Helmet - 1850 - 50<br />
+                    Engine Oil 1L - 450 - 20<br />
+                    Chain Lube & Cleaner Spray - 399 - 100<br />
                     Waterproof Bike Cover - 499 - 35
                   </div>
                   <p className="text-[11px] text-slate-500">Tip: Stock quantity optional hai, nahi denge toh default stock 100 auto-apply ho jayega.</p>

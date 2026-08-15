@@ -24,7 +24,8 @@ import {
   Camera,
   Check,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  Bell
 } from 'lucide-react'
 
 interface SellerHeaderProps {
@@ -47,6 +48,27 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false)
   const [message, setMessage] = useState('')
   const navigate = useNavigate()
+
+  // Real-Time Web Push & PWA Notification Settings
+  const [notificationPermission, setNotificationPermission] = useState<string>(
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+  )
+
+  async function requestNotificationPermission() {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      const perm = await Notification.requestPermission()
+      setNotificationPermission(perm)
+      if (perm === 'granted') {
+        new Notification('🔔 Notifications Activated!', {
+          body: 'You will receive real-time push alerts for orders & low stock items.',
+          icon: '/favicon.ico',
+        })
+        setMessage('🔔 Web Push Notifications Enabled! You will receive alerts on Web & PWA.')
+      } else {
+        setMessage('⚠️ Notification permission was denied in browser settings.')
+      }
+    }
+  }
 
   useEffect(() => {
     if (store) {
@@ -535,6 +557,46 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   {store.is_published ? '● LIVE (Click to Draft)' : '🚀 Make Store Live'}
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* SECTION 4: 🔔 Real-Time Web Push & PWA Notifications Toggle */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
+                  <Bell className="h-4 w-4 text-indigo-600" />
+                  <span>Real-Time Push Alerts</span>
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${
+                    notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                  }`}>
+                    {notificationPermission === 'granted' ? 'ACTIVE (ON)' : 'DISABLED (OFF)'}
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 font-medium">Instant alerts on Mobile App (PWA) & Browser</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 gap-2">
+              <div className="text-[11px] text-slate-700 font-medium leading-relaxed">
+                {notificationPermission === 'granted'
+                  ? '✅ Push notifications active hain. Instant order & stock alerts milenge.'
+                  : '⚠️ Notifications disabled hain. Browser push permission enable karein.'}
+              </div>
+
+              {notificationPermission !== 'granted' ? (
+                <button
+                  type="button"
+                  onClick={requestNotificationPermission}
+                  className="shrink-0 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-xs"
+                >
+                  Enable Alerts 🔔
+                </button>
+              ) : (
+                <span className="shrink-0 text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                  Active ✓
+                </span>
+              )}
             </div>
           </div>
 

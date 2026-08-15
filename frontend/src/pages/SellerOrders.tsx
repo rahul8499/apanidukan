@@ -2,16 +2,23 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import NotificationBellHeader from '../components/NotificationBellHeader'
+import SellerHeader from '../components/SellerHeader'
+import SellerBottomNav from '../components/SellerBottomNav'
+import { getCachedStore, setCachedStore } from '../utils/storeCache'
 
 const statuses = ['NEW', 'CONFIRMED', 'PAID', 'DELIVERED', 'CANCELLED']
 
 export default function SellerOrders() {
   const { storeId } = useParams()
-  const [store, setStore] = useState<any>(null)
+  const [store, setStore] = useState<any>(() => getCachedStore(storeId))
   const [orders, setOrders] = useState<any[]>([])
   const [wsConnected, setWsConnected] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('ALL')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'highest_price'>('latest')
+  const [copiedRef, setCopiedRef] = useState<string | null>(null)
+  const [isRefreshingData, setIsRefreshingData] = useState(false)
   const auth = useAuth()
   const navigate = useNavigate()
 
@@ -20,6 +27,7 @@ export default function SellerOrders() {
       const stores = await api.get('/stores/')
       const found = stores.data.find((x: any) => String(x.id) === storeId)
       if (!found) return navigate('/dashboard')
+      setCachedStore(found)
       setStore(found)
 
       const response = await api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
@@ -114,247 +122,439 @@ export default function SellerOrders() {
     }
   }
 
-  if (!store) return <div className="p-6">Loading store orders...</div>
+  const copyRefToClipboard = async (refStr: string) => {
+    try {
+      await navigator.clipboard.writeText(refStr)
+      setCopiedRef(refStr)
+      setTimeout(() => setCopiedRef(null), 2000)
+    } catch {}
+  }
+
+  if (!store) return <div className="p-6 text-xs text-slate-500 font-bold">Loading store orders...</div>
 
   const isManageInAppOn = Boolean(store.manage_in_app)
 
-  return (
-    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50 pb-24 lg:max-w-none lg:w-full">
-      <header className="flex items-center justify-between bg-slate-950 px-5 py-5 text-white">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300">
-            Seller workspace
-          </p>
-          <h1 className="mt-1 text-xl font-bold">{store.name}</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <NotificationBellHeader />
-          <button
-            onClick={() => {
-              auth.logout()
-              navigate('/login')
-            }}
-            className="rounded-lg border border-slate-700 px-3 py-2 text-sm"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+  // Executive KPI Calculations
+  const validOrders = orders.filter(o => o.status?.toUpperCase() !== 'CANCELLED')
+  const totalSalesVolume = validOrders.reduce((sum, o) => sum + Number(o.total || 0), 0)
+  const newOrdersCount = orders.filter(o => o.status?.toUpperCase() === 'NEW').length
+  const completedCount = orders.filter(o => ['DELIVERED', 'PAID'].includes(o.status?.toUpperCase())).length
+  const avgOrderValue = validOrders.length > 0 ? (totalSalesVolume / validOrders.length) : 0
 
-      <div className="space-y-4 p-4">
-        {/* Header Stats & Live Badge */}
-        <div className="rounded-2xl bg-gradient-to-br from-indigo-700 to-violet-600 p-5 text-white shadow-lg shadow-indigo-200">
+  // Filter & Search & Sort logic
+  let processedOrders = orders.filter(o => {
+    const matchesStatus = statusFilter === 'ALL' || o.status?.toUpperCase() === statusFilter
+    const query = searchQuery.trim().toLowerCase()
+    const matchesSearch = !query ||
+      (o.reference && o.reference.toLowerCase().includes(query)) ||
+      (o.customer_name && o.customer_name.toLowerCase().includes(query)) ||
+      (o.customer_phone && o.customer_phone.includes(query))
+    return matchesStatus && matchesSearch
+  })
+
+  if (sortBy === 'latest') {
+    processedOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  } else if (sortBy === 'oldest') {
+    processedOrders.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  } else if (sortBy === 'highest_price') {
+    processedOrders.sort((a, b) => Number(b.total || 0) - Number(a.total || 0))
+  }
+
+  const getStatusLeftBorder = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'PAID':
+      case 'DELIVERED':
+        return 'border-l-4 border-l-emerald-500'
+      case 'CONFIRMED':
+        return 'border-l-4 border-l-indigo-500'
+      case 'NEW':
+        return 'border-l-4 border-l-amber-500'
+      case 'CANCELLED':
+        return 'border-l-4 border-l-rose-500'
+      default:
+        return 'border-l-4 border-l-slate-300'
+    }
+  }
+
+  const getStatusBadgeStyle = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'PAID':
+      case 'DELIVERED':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+      case 'CONFIRMED':
+        return 'bg-teal-50 text-teal-700 border-teal-200'
+      case 'NEW':
+        return 'bg-amber-50 text-amber-700 border-amber-200'
+      case 'CANCELLED':
+        return 'bg-rose-50 text-rose-700 border-rose-200'
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200'
+    }
+  }
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'C'
+    const parts = name.trim().split(' ')
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+    return name.slice(0, 2).toUpperCase()
+  }
+
+  return (
+    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50/80 pb-28 lg:max-w-none lg:w-full">
+      {/* Unified Seller Header */}
+      <SellerHeader store={store} activeTabTitle="Orders Management" onStoreUpdate={load} />
+
+      <div className="space-y-4 p-4 sm:p-6">
+        {/* Enterprise Dark Hero Header */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-5 text-white shadow-md border border-indigo-900/40">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-indigo-100">
-              Customer Orders
-            </p>
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                wsConnected
-                  ? 'bg-emerald-400/20 text-emerald-200 border border-emerald-400/30'
-                  : 'bg-amber-400/20 text-amber-200 border border-amber-400/30'
-              }`}
-            >
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-teal-300 border border-teal-400/30 tracking-wider">
+                Real-Time Orders Control
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsRefreshingData(true)
+                  await load()
+                  setTimeout(() => setIsRefreshingData(false), 500)
+                }}
+                className="flex items-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-900/60 px-3 py-1.5 text-xs font-extrabold text-teal-200 hover:bg-teal-800 hover:text-white transition-all cursor-pointer shadow-xs"
+                title="Click to fetch live fresh orders data"
+              >
+                <span className={`text-sm ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
+                <span>Refresh Orders</span>
+              </button>
               <span
-                className={`h-2 w-2 rounded-full ${
-                  wsConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                  wsConnected
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                    : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
                 }`}
-              />
-              {wsConnected ? 'Live Real-time' : 'Polling Sync'}
-            </span>
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    wsConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                  }`}
+                />
+                {wsConnected ? 'Live Connection' : 'Sync Active'}
+              </span>
+            </div>
           </div>
-          <p className="mt-2 text-3xl font-extrabold">{orders.length} total</p>
-          <div className="mt-3 flex items-center gap-2 text-xs font-medium text-indigo-100">
-            <span>Manage in App mode:</span>
-            <span
-              className={`font-bold px-2 py-0.5 rounded-md text-white ${
-                isManageInAppOn ? 'bg-emerald-500' : 'bg-slate-700'
-              }`}
-            >
-              {isManageInAppOn ? 'ON' : 'OFF'}
-            </span>
+
+          <div className="mt-3 flex items-baseline justify-between">
+            <div>
+              <p className="text-3xl font-black text-white">{orders.length}</p>
+              <p className="text-xs text-indigo-200 font-medium">Total Orders Received</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-indigo-200">In-App Control:</span>
+              <span
+                className={`font-black px-2.5 py-1 rounded-lg text-white text-[11px] shadow-2xs ${
+                  isManageInAppOn ? 'bg-teal-600' : 'bg-slate-800 border border-slate-700'
+                }`}
+              >
+                {isManageInAppOn ? '✓ ACTIVE' : 'OFF'}
+              </span>
+            </div>
           </div>
+        </div>
+
+        {/* Top Executive KPI Metrics Summary Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+            <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Gross Sales</span>
+            <p className="mt-0.5 text-base font-black text-slate-900">₹{totalSalesVolume.toFixed(2)}</p>
+            <span className="text-[10px] text-emerald-600 font-bold">Valid Orders</span>
+          </div>
+
+          <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-3.5 shadow-2xs">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-extrabold uppercase text-amber-800 tracking-wider">New Pending</span>
+              {newOrdersCount > 0 && <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>}
+            </div>
+            <p className="mt-0.5 text-base font-black text-amber-950">{newOrdersCount}</p>
+            <span className="text-[10px] text-amber-700 font-bold">Action Needed</span>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3.5 shadow-2xs">
+            <span className="text-[10px] font-extrabold uppercase text-emerald-800 tracking-wider">Completed</span>
+            <p className="mt-0.5 text-base font-black text-emerald-950">{completedCount}</p>
+            <span className="text-[10px] text-emerald-700 font-bold">Paid / Delivered</span>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+            <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Avg Order Value</span>
+            <p className="mt-0.5 text-base font-black text-slate-900">₹{avgOrderValue.toFixed(0)}</p>
+            <span className="text-[10px] text-slate-500 font-bold">Per Order</span>
+          </div>
+        </div>
+
+        {/* Live Search & Smart Sort Bar */}
+        <div className="flex flex-col sm:flex-row items-center gap-2">
+          <div className="relative flex-1 w-full">
+            <span className="absolute left-3 top-2.5 text-xs text-slate-400">🔍</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by Order #, Customer Name or Phone..."
+              className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs font-medium text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:outline-none shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-700 font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value as any)}
+            className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white py-2 px-3 text-xs font-bold text-slate-800 focus:outline-none shadow-2xs cursor-pointer"
+          >
+            <option value="latest">Sort: Latest First</option>
+            <option value="oldest">Sort: Oldest First</option>
+            <option value="highest_price">Sort: Highest Price</option>
+          </select>
+        </div>
+
+        {/* Status Filter Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {['ALL', ...statuses].map(st => {
+            const count = st === 'ALL' ? orders.length : orders.filter(o => o.status?.toUpperCase() === st).length
+            const isActive = statusFilter === st
+            return (
+              <button
+                key={st}
+                onClick={() => setStatusFilter(st)}
+                className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isActive
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                <span>{st}</span>
+                <span className={`rounded-full px-1.5 py-0.2 text-[10px] ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
         {/* Error notification if any */}
         {errorMsg && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 font-medium">
-            {errorMsg}
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold text-rose-900 shadow-2xs flex items-center justify-between animate-in fade-in">
+            <span>⚠️ {errorMsg}</span>
+            <button onClick={() => setErrorMsg('')} className="text-rose-500 hover:text-rose-800 font-extrabold">✕</button>
           </div>
         )}
 
         {/* Manage in App OFF Alert Banner */}
         {!isManageInAppOn && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900 shadow-sm">
+          <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-4 text-amber-950 shadow-2xs">
             <div className="flex items-start gap-3">
-              <span className="text-xl">⚠️</span>
+              <span className="text-xl">💡</span>
               <div>
-                <p className="font-bold text-sm">Manage in App is OFF</p>
-                <p className="mt-1 text-xs text-amber-800 leading-relaxed">
-                  Status updates are currently disabled. To manage status changes & enable live updates for customers, turn ON <strong>'Manage in App'</strong> in{' '}
-                  <Link
-                    to={`/stores/${store.id}/manage`}
-                    className="font-bold underline text-indigo-700"
-                  >
-                    Store setup
-                  </Link>
-                  .
+                <p className="font-extrabold text-xs text-amber-950">In-App Status Control Disabled</p>
+                <p className="mt-0.5 text-xs text-amber-800 leading-relaxed font-medium">
+                  Enable <strong>'Manage in App'</strong> in Store Setup to directly change order status, trigger customer updates & live chat.
                 </p>
+                <Link
+                  to={`/stores/${store.id}/manage`}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 underline"
+                >
+                  Go to Store Setup ➔
+                </Link>
               </div>
             </div>
           </div>
         )}
 
         {/* Orders List */}
-        {orders.length === 0 ? (
-          <div className="premium-card p-8 text-center">
+        {processedOrders.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xs">
             <div className="text-4xl">📦</div>
-            <h2 className="mt-4 font-bold text-slate-800">No orders yet</h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Orders placed by customers on your store storefront will appear here live in real-time.
+            <h2 className="mt-3 text-base font-extrabold text-slate-900">
+              {searchQuery ? 'No matching orders found' : statusFilter === 'ALL' ? 'No Orders Yet' : `No ${statusFilter} Orders`}
+            </h2>
+            <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+              Customer orders placed on your storefront link will appear here instantly in real-time.
             </p>
           </div>
         ) : (
-          orders.map((order) => (
-            <article key={order.id} className="premium-card p-5">
-              <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-                    Order #{order.reference}
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">
-                    ₹{order.total}
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {new Date(order.created_at).toLocaleString()}
-                  </p>
+          processedOrders.map((order) => {
+            const currentStatusUpper = order.status?.toUpperCase() || 'NEW'
+
+            return (
+              <article
+                key={order.id}
+                className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-xs hover:border-slate-300 transition-all space-y-3.5 ${getStatusLeftBorder(order.status)}`}
+              >
+                {/* Card Header: Order Reference & Status Controls */}
+                <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => copyRefToClipboard(order.reference)}
+                        className="rounded-lg bg-indigo-50 border border-indigo-100 px-2.5 py-1 text-[11px] font-mono font-bold text-indigo-700 hover:bg-indigo-100 transition-all flex items-center gap-1 cursor-pointer"
+                        title="Click to Copy Order #"
+                      >
+                        <span>#{order.reference}</span>
+                        <span className="text-[10px] text-indigo-400">{copiedRef === order.reference ? '✓ Copied' : '📋'}</span>
+                      </button>
+                      <span className="text-[11px] font-medium text-slate-400">
+                        {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-xl font-black text-slate-900">
+                      ₹{order.total}
+                    </p>
+                  </div>
+
+                  {/* Status selector (when Manage in App is ON) or Static Badge (when OFF) */}
+                  {isManageInAppOn ? (
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        Update Status
+                      </span>
+                      <select
+                        value={order.status}
+                        onChange={(e) => updateStatus(order.id, e.target.value)}
+                        className="rounded-xl border border-slate-300 bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none cursor-pointer"
+                      >
+                        {statuses.map((status) => (
+                          <option key={status} value={status} className="bg-white text-slate-900 font-bold">
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-extrabold border ${getStatusBadgeStyle(order.status)}`}>
+                      {order.status}
+                    </span>
+                  )}
                 </div>
 
-                {/* Status selector (when Manage in App is ON) or Static Badge (when OFF) */}
-                {isManageInAppOn ? (
-                  <div className="flex flex-col items-end">
-                    <label className="text-[10px] uppercase font-bold text-slate-400 mb-1">
-                      Update status
-                    </label>
-                    <select
-                      value={order.status}
-                      onChange={(e) => updateStatus(order.id, e.target.value)}
-                      className="rounded-xl border border-indigo-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    >
-                      {statuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
+                {/* Visual Order Progress Timeline Bar */}
+                {currentStatusUpper !== 'CANCELLED' && (
+                  <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 space-y-1">
+                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                      <span className={currentStatusUpper === 'NEW' ? 'text-amber-600 font-black' : 'text-slate-600'}>1. Placed</span>
+                      <span className={currentStatusUpper === 'CONFIRMED' ? 'text-indigo-600 font-black' : 'text-slate-600'}>2. Confirmed</span>
+                      <span className={['PAID', 'DELIVERED'].includes(currentStatusUpper) ? 'text-emerald-600 font-black' : 'text-slate-600'}>3. Paid / Delivered</span>
+                    </div>
+                    <div className="flex h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          currentStatusUpper === 'NEW' ? 'w-1/3 bg-amber-500' :
+                          currentStatusUpper === 'CONFIRMED' ? 'w-2/3 bg-indigo-600' :
+                          'w-full bg-emerald-500'
+                        }`}
+                      />
+                    </div>
                   </div>
-                ) : (
-                  <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">
-                    {order.status}
-                  </span>
                 )}
-              </div>
 
-              {/* Customer Details */}
-              <div className="mt-3 text-xs text-slate-600 space-y-1">
-                {order.customer_name && (
-                  <p>
-                    <span className="font-semibold text-slate-800">Customer:</span>{' '}
-                    {order.customer_name}
-                  </p>
-                )}
-                {order.customer_phone && (
-                  <p>
-                    <span className="font-semibold text-slate-800">Phone:</span>{' '}
-                    {order.customer_phone}
-                  </p>
-                )}
-                {order.payment_type && (
-                  <p>
-                    <span className="font-semibold text-slate-800">Payment:</span>{' '}
-                    {order.payment_type === 'COD' ? 'Cash on Delivery' : 'Online Payment'}
-                  </p>
-                )}
-                {order.delivery_address && (
-                  <p className="truncate">
-                    <span className="font-semibold text-slate-800">Address:</span>{' '}
-                    {order.delivery_address}
-                  </p>
-                )}
-              </div>
+                {/* Customer Details with Initial Avatar */}
+                <div className="rounded-xl bg-slate-50/70 p-3 text-xs text-slate-700 space-y-2 border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-xs shadow-2xs shrink-0">
+                      {getInitials(order.customer_name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-extrabold text-slate-900 truncate">
+                        {order.customer_name || 'Customer'}
+                      </p>
+                      {order.customer_phone && (
+                        <p className="font-mono text-[11px] text-indigo-700 font-bold">
+                          📞 {order.customer_phone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
-              {/* Order Items */}
-              <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs border border-slate-100">
-                <p className="font-bold text-slate-700 mb-1">Items:</p>
-                {Array.isArray(order.items) &&
-                  order.items.map((item: any, idx: number) => (
-                    <p key={idx} className="text-slate-600">
-                      • {item.name || item.product_name || 'Product'} × {item.quantity}
-                    </p>
-                  ))}
-              </div>
+                  <div className="pt-2 border-t border-slate-200/60 space-y-1">
+                    {order.payment_type && (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-slate-500">Payment:</span>
+                        <span className="font-bold text-slate-900">{order.payment_type === 'COD' ? '💵 Cash on Delivery' : '💳 Online Payment'}</span>
+                      </div>
+                    )}
+                    {order.delivery_address && (
+                      <div className="text-[11px]">
+                        <span className="font-semibold text-slate-500 block">Delivery Address:</span>
+                        <span className="font-medium text-slate-800">{order.delivery_address}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-              {/* Actions: Direct Link to Customer Tracking, WhatsApp Message & Live Chat */}
-              <div className="mt-4 flex flex-wrap items-center gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => startDirectChat(order)}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
-                >
-                  💬 Start Live Chat
-                </button>
-                {order.customer_phone && (
-                  <a
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#25D366]/10 px-3 py-2 text-xs font-bold text-[#1fba58] border border-[#25D366]/20 hover:bg-[#25D366]/20"
-                    href={`https://wa.me/${order.customer_phone.replace(/\D/g, '')}`}
-                    target="_blank"
-                    rel="noreferrer"
+                {/* Order Items Breakdown */}
+                <div className="rounded-xl bg-slate-50 p-3 text-xs border border-slate-100 space-y-1">
+                  <p className="font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-1">Items ({order.items?.length || 0}):</p>
+                  {Array.isArray(order.items) &&
+                    order.items.map((item: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center text-slate-700 py-0.5">
+                        <span className="font-medium">• {item.name || item.product_name || 'Product'} × {item.quantity}</span>
+                        <span className="font-extrabold text-slate-900">₹{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</span>
+                      </div>
+                    ))}
+                </div>
+
+                {/* Action Toolbar: Live Chat, WhatsApp, Phone Call, Live Tracking */}
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => startDirectChat(order)}
+                    className="flex-1 rounded-xl bg-indigo-600 py-2.5 px-3 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    WhatsApp ↗
-                  </a>
-                )}
-                <Link
-                  to={`/store/${store.slug}/order/${order.reference}`}
-                  target="_blank"
-                  className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-                >
-                  🔍 Live Tracking ↗
-                </Link>
-              </div>
-            </article>
-          ))
+                    💬 Live Chat
+                  </button>
+
+                  {order.customer_phone && (
+                    <>
+                      <a
+                        className="rounded-xl bg-emerald-600 py-2.5 px-3 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all flex items-center gap-1 cursor-pointer"
+                        href={`https://wa.me/${order.customer_phone.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        WhatsApp ↗
+                      </a>
+                      <a
+                        className="rounded-xl bg-slate-100 border border-slate-200 py-2.5 px-3 text-xs font-bold text-slate-800 hover:bg-slate-200 transition-all flex items-center gap-1 cursor-pointer"
+                        href={`tel:${order.customer_phone}`}
+                      >
+                        📞 Call
+                      </a>
+                    </>
+                  )}
+
+                  <Link
+                    to={`/store/${store.slug}/order/${order.reference}`}
+                    target="_blank"
+                    className="rounded-xl bg-slate-900 py-2.5 px-3 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition-all flex items-center gap-1"
+                  >
+                    Tracking ↗
+                  </Link>
+                </div>
+              </article>
+            )
+          })
         )}
       </div>
 
-      <nav className="fixed bottom-0 left-1/2 z-20 flex w-full max-w-md -translate-x-1/2 gap-1 border-t bg-white p-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] lg:left-0 lg:right-0 lg:max-w-none lg:-translate-x-0 lg:mx-auto lg:w-full">
-        <Link
-          to={`/stores/${store.id}/manage`}
-          className="flex-1 rounded-xl px-2 py-2 text-center text-xs font-semibold text-slate-500"
-        >
-          Setup
-        </Link>
-        <span className="flex-1 rounded-xl bg-indigo-50 px-2 py-2 text-center text-xs font-bold text-indigo-700">
-          Orders
-        </span>
-        <Link
-          to={`/stores/${store.id}/payments`}
-          className="flex-1 rounded-xl px-2 py-2 text-center text-xs font-semibold text-slate-500"
-        >
-          Payments
-        </Link>
-        <Link
-          to={`/stores/${store.id}/chat`}
-          className="flex-1 rounded-xl px-2 py-2 text-center text-xs font-semibold text-slate-500"
-        >
-          Chat
-        </Link>
-        <Link
-          to={`/stores/${store.id}/requests`}
-          className="flex-1 rounded-xl px-2 py-2 text-center text-xs font-semibold text-slate-500"
-        >
-          Requests
-        </Link>
-      <Link to={`/stores/${storeId}/analytics`} className="flex-1 rounded-xl px-2 py-2 text-center text-xs font-semibold text-slate-500">Analytics</Link></nav>
+      {/* Unified Seller Bottom Navigation Bar */}
+      <SellerBottomNav storeId={store.id} activeTab="orders" />
     </main>
   )
 }

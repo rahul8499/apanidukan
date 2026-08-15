@@ -116,6 +116,8 @@ function Storefront() {
     }
   }
 
+  const { addNotification } = useNotifications()
+
   // Real-time WebSocket connection for New Product / Offer Arrival notifications
   useEffect(() => {
     if (!store?.id) return
@@ -132,14 +134,12 @@ function Storefront() {
           if (data.type === 'new_product_added' && data.product) {
             playCustomerChime()
             api.get(`/public/stores/${storeSlug}/products/`).then(res => setProducts(res.data)).catch(() => { })
-            const newNotif = {
-              id: String(Date.now()),
+            addNotification({
+              type: 'product',
               title: `🎁 New Arrival: ${data.product.name}`,
               body: `Now available in store for ₹${data.product.price}!`,
-              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              read: false
-            }
-            setNotifications(prev => [newNotif, ...prev])
+              link: `/store/${storeSlug}/product/${data.product.slug}`
+            })
             if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
               if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.ready.then(reg => {
@@ -161,7 +161,7 @@ function Storefront() {
       }
     } catch { }
     return () => { socket?.close() }
-  }, [store?.id, storeSlug])
+  }, [store?.id, storeSlug, addNotification])
 
   useEffect(() => {
     const handler = setTimeout(() => {

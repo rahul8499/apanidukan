@@ -125,10 +125,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             body = `Requested by ${data.customer_name || 'Customer'} (${data.customer_phone || 'No phone'})`
             notifType = 'request'
             link = `/stores/${activeStoreId}/requests`
-          } else if (data.type === 'new_product_added' && data.product) {
-            title = `🎁 New Arrival: ${data.product.name}`
-            body = `Now available for ₹${data.product.price}!`
-            notifType = 'product'
           }
 
           if (title) {

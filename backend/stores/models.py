@@ -29,6 +29,7 @@ class Store(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
+    address = models.TextField(blank=True, null=True)
     phone_number = models.CharField(max_length=40, blank=True, null=True)
     logo = models.ImageField(upload_to='stores/logos/', null=True, blank=True)
     theme = models.JSONField(default=dict, blank=True)

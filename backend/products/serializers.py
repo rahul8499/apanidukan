@@ -1,16 +1,22 @@
 from rest_framework import serializers
 from django.utils.text import slugify
-from .models import Product
+from .models import Product, ProductImage
 from categories.models import Category
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ('id', 'image', 'created_at')
+
+
 class ProductSerializer(serializers.ModelSerializer):
-    # Generated from the product name when the seller does not enter one.
     slug = serializers.SlugField(required=False)
+    images = ProductImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ('id', 'store', 'category', 'name', 'slug', 'short_description', 'description', 'image', 'price', 'currency', 'stock_quantity', 'digital_file', 'file_size', 'is_published', 'created_at', 'updated_at')
+        fields = ('id', 'store', 'category', 'name', 'slug', 'short_description', 'description', 'image', 'images', 'price', 'currency', 'stock_quantity', 'digital_file', 'file_size', 'is_published', 'created_at', 'updated_at')
         read_only_fields = ('file_size', 'created_at', 'updated_at')
 
     def to_internal_value(self, data):
@@ -54,12 +60,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class PublicProductSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
+    images = ProductImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ('id', 'name', 'slug', 'short_description', 'description', 'image', 'price', 'currency', 'stock_quantity', 'category')
+        fields = ('id', 'name', 'slug', 'short_description', 'description', 'image', 'images', 'price', 'currency', 'stock_quantity', 'category')
 
     def get_category(self, obj):
         if obj.category:
             return {'id': obj.category.id, 'name': obj.category.name, 'slug': obj.category.slug}
         return None
+

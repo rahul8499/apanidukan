@@ -10,11 +10,11 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from stores.models import Store
-from .models import Product
-from .serializers import ProductSerializer
-
+from .models import Product, ProductImage
+from .serializers import ProductSerializer, ProductImageSerializer
 
 from config.websocket import broadcast_order_event_sync
+
 
 class IsStoreOwner(permissions.BasePermission):
 
@@ -34,6 +34,21 @@ class ProductViewSet(viewsets.ModelViewSet):
         if not store or store.owner != self.request.user:
             raise PermissionDenied('You can only add products to your own store.')
         product = serializer.save()
+
+        # Handle multiple uploaded image files
+        uploaded_files = self.request.FILES.getlist('images') or self.request.FILES.getlist('extra_images')
+        for idx, img_file in enumerate(uploaded_files):
+            ProductImage.objects.create(product=product, image=img_file)
+            if idx == 0 and not product.image:
+                product.image = img_file
+                product.save(update_fields=['image'])
+
+        # Also check indexed image keys (e.g. image_0, image_1)
+        for key in self.request.FILES:
+            if key.startswith('image_') or key.startswith('extra_image_'):
+                img_file = self.request.FILES[key]
+                ProductImage.objects.create(product=product, image=img_file)
+
         try:
             broadcast_order_event_sync(f"store_{store.id}", {
                 "type": "new_product_added",
@@ -46,12 +61,65 @@ class ProductViewSet(viewsets.ModelViewSet):
         store = serializer.validated_data.get('store', serializer.instance.store)
         if store.owner != self.request.user:
             raise PermissionDenied('You can only use your own store.')
-        serializer.save()
+        product = serializer.save()
+
+        # Handle deletion of specific gallery images if requested
+        delete_ids = self.request.data.getlist('delete_image_ids') if hasattr(self.request.data, 'getlist') else self.request.data.get('delete_image_ids', [])
+        if isinstance(delete_ids, str):
+            try:
+                delete_ids = json.loads(delete_ids)
+            except Exception:
+                delete_ids = [x.strip() for x in delete_ids.split(',') if x.strip()]
+        if delete_ids:
+            ProductImage.objects.filter(product=product, id__in=delete_ids).delete()
+
+        # Handle multiple uploaded image files on update
+        uploaded_files = self.request.FILES.getlist('images') or self.request.FILES.getlist('extra_images')
+        for img_file in uploaded_files:
+            ProductImage.objects.create(product=product, image=img_file)
+
+        for key in self.request.FILES:
+            if key.startswith('extra_image_') or key.startswith('gallery_image_'):
+                img_file = self.request.FILES[key]
+                ProductImage.objects.create(product=product, image=img_file)
 
     def get_permissions(self):
         if self.action in ['retrieve', 'list']:
             return [permissions.IsAuthenticated()]
         return super().get_permissions()
+
+    @action(detail=True, methods=['post', 'delete', 'patch'], url_path='images')
+    def manage_product_images(self, request, pk=None):
+        product = self.get_object()
+
+        if request.method == 'PATCH' or (request.method == 'POST' and request.data.get('action') == 'set_primary'):
+            image_id = request.data.get('image_id') or request.data.get('set_primary_id')
+            if image_id:
+                pi = ProductImage.objects.filter(product=product, id=image_id).first()
+                if pi and pi.image:
+                    product.image = pi.image
+                    product.save(update_fields=['image'])
+                    return Response({'success': True, 'message': 'Primary card image updated!', 'product': ProductSerializer(product).data})
+            return Response({'detail': 'Valid image_id required to set as primary.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.method == 'POST':
+            images = request.FILES.getlist('images') or request.FILES.getlist('image')
+            created = []
+            for idx, img in enumerate(images):
+                pi = ProductImage.objects.create(product=product, image=img)
+                created.append(ProductImageSerializer(pi).data)
+                if (idx == 0 and not product.image) or request.data.get('set_primary') == 'true':
+                    product.image = pi.image
+                    product.save(update_fields=['image'])
+            return Response({'success': True, 'images': created, 'product': ProductSerializer(product).data}, status=status.HTTP_201_CREATED)
+
+        elif request.method == 'DELETE':
+            image_id = request.data.get('image_id')
+            if image_id:
+                ProductImage.objects.filter(product=product, id=image_id).delete()
+                return Response({'success': True, 'deleted_id': image_id})
+            return Response({'detail': 'image_id required.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
     @action(detail=False, methods=['post'], url_path='bulk-create')
     def bulk_create_products(self, request):
@@ -74,7 +142,6 @@ class ProductViewSet(viewsets.ModelViewSet):
             from categories.models import Category
             default_category = Category.objects.filter(id=category_id, store=store).first()
 
-        # Pre-fetch existing product slugs for the store to prevent UNIQUE constraint collisions
         existing_slugs = set(Product.objects.filter(store=store).values_list('slug', flat=True))
         
         created_objs = []
@@ -91,7 +158,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                 except Exception:
                     price_val = Decimal('0.00')
 
-                # Check if item provides item-specific category_name
                 item_cat_name = (item.get('category_name') or item.get('category') or '').strip()
                 target_category = default_category
 
@@ -146,34 +212,66 @@ class ProductViewSet(viewsets.ModelViewSet):
                     is_published=True
                 )
 
-                # 1. Local Image Upload from request.FILES
-                image_key = item.get('image_key')
-                if image_key and image_key in request.FILES:
-                    product_obj.image = request.FILES[image_key]
+                # Primary & Multiple Images Extraction
+                image_urls_raw = item.get('images') or item.get('image_urls') or item.get('image_list') or item.get('photos') or []
+                if isinstance(image_urls_raw, str):
+                    image_urls_list = [x.strip() for x in image_urls_raw.split(',') if x.strip()]
+                elif isinstance(image_urls_raw, list):
+                    image_urls_list = image_urls_raw
+                else:
+                    image_urls_list = []
 
-                # 2. Or Image URL from web link
-                elif not product_obj.image:
-                    image_url = (item.get('image_url') or item.get('image') or item.get('photo') or item.get('pic') or '').strip()
-                    if image_url and (image_url.startswith('http://') or image_url.startswith('https://')):
+                # Add primary image_url if provided
+                primary_url = (item.get('image_url') or item.get('image') or item.get('photo') or item.get('pic') or '').strip()
+                if primary_url and primary_url not in image_urls_list:
+                    image_urls_list.insert(0, primary_url)
+
+                # Local image keys check (single or array of keys)
+                raw_image_keys = item.get('image_keys') or item.get('image_key_list') or ([item.get('image_key')] if item.get('image_key') else [])
+                if isinstance(raw_image_keys, str):
+                    raw_image_keys = [raw_image_keys]
+                
+                file_objs = [request.FILES[k] for k in raw_image_keys if k in request.FILES]
+                if file_objs:
+                    product_obj.image = file_objs[0]
+                elif image_urls_list:
+                    first_url = image_urls_list[0]
+                    if first_url.startswith('http://') or first_url.startswith('https://'):
                         try:
-                            req = urllib.request.Request(image_url, headers={'User-Agent': 'Mozilla/5.0'})
+                            req = urllib.request.Request(first_url, headers={'User-Agent': 'Mozilla/5.0'})
                             with urllib.request.urlopen(req, timeout=5) as resp:
                                 if resp.status == 200:
                                     img_data = resp.read()
                                     filename = f"{slug[:40]}.jpg"
                                     product_obj.image.save(filename, ContentFile(img_data), save=False)
                         except Exception as e:
-                            print("Failed to download image URL:", e)
+                            print("Failed primary image URL download:", e)
 
-                created_objs.append(product_obj)
+                created_objs.append((product_obj, image_urls_list, file_objs[1:] if len(file_objs) > 1 else []))
 
             if created_objs:
-                # Use standard save for models with attached file fields if any
-                for p in created_objs:
+                for p, img_urls, extra_files in created_objs:
                     p.save()
+                    # Process extra local binary files into ProductImage gallery
+                    for extra_f in extra_files:
+                        ProductImage.objects.create(product=p, image=extra_f)
+
+                    # Process secondary gallery images from URLs
+                    for idx, img_url in enumerate(img_urls):
+                        if img_url.startswith('http://') or img_url.startswith('https://'):
+                            try:
+                                req = urllib.request.Request(img_url, headers={'User-Agent': 'Mozilla/5.0'})
+                                with urllib.request.urlopen(req, timeout=5) as resp:
+                                    if resp.status == 200:
+                                        img_data = resp.read()
+                                        filename = f"{p.slug[:35]}_gal_{idx}.jpg"
+                                        pi = ProductImage(product=p)
+                                        pi.image.save(filename, ContentFile(img_data), save=True)
+                            except Exception as e:
+                                print("Failed gallery image download:", e)
 
         return Response({
             'success': True,
             'created_count': len(created_objs),
-            'message': f'Successfully created {len(created_objs)} products, categories and images in 1-Click!'
+            'message': f'Successfully created {len(created_objs)} products with multiple gallery images!'
         }, status=status.HTTP_201_CREATED)

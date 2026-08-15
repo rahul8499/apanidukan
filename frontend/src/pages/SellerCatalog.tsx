@@ -36,6 +36,9 @@ export default function SellerCatalog() {
   const [newProdCat, setNewProdCat] = useState('')
   const [newProdFile, setNewProdFile] = useState<File | null>(null)
   const [newProdImage, setNewProdImage] = useState<File | null>(null)
+  const [newProdImages, setNewProdImages] = useState<File[]>([])
+  const [newProdPrimaryIndex, setNewProdPrimaryIndex] = useState<number>(0)
+  const [editNewImages, setEditNewImages] = useState<File[]>([])
 
   const loadData = async () => {
     try {
@@ -119,6 +122,7 @@ export default function SellerCatalog() {
     setEditPrice(String(prod.price || '0'))
     setEditStock(String(prod.stock_quantity ?? 100))
     setEditCategory(prod.category ? String(prod.category) : '')
+    setEditNewImages([])
   }
 
   async function handleSaveProductEdit(e: React.FormEvent) {
@@ -126,14 +130,25 @@ export default function SellerCatalog() {
     if (!editingProduct) return
     setIsUpdatingProduct(true)
     try {
-      await api.patch(`/products/${editingProduct.id}/`, {
-        name: editName,
-        price: editPrice,
-        stock_quantity: parseInt(editStock || '0', 10),
-        category: editCategory ? parseInt(editCategory, 10) : null
+      const formData = new FormData()
+      formData.append('name', editName)
+      formData.append('price', editPrice)
+      formData.append('stock_quantity', editStock)
+      if (editCategory) formData.append('category', editCategory)
+
+      // Upload extra gallery images
+      if (editNewImages.length > 0) {
+        editNewImages.forEach((imgFile) => {
+          formData.append('images', imgFile)
+        })
+      }
+
+      await api.patch(`/products/${editingProduct.id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       })
       setMessage(`✏️ '${editName}' updated successfully!`)
       setEditingProduct(null)
+      setEditNewImages([])
       await loadData()
     } catch (err) {
       setMessage(errorMessage(err))
@@ -142,16 +157,49 @@ export default function SellerCatalog() {
     }
   }
 
-  async function handleDirectProductImageUpload(productId: number, file: File) {
-    if (!file) return
-    setMessage('⏳ Uploading image...')
+  async function handleSetPrimaryCardImage(productId: number, imageId: number) {
+    setMessage('⏳ Updating main card photo...')
     try {
-      const data = new FormData()
-      data.append('image', file)
-      await api.patch(`/products/${productId}/`, data, {
+      const res = await api.patch(`/products/${productId}/images/`, {
+        set_primary_id: imageId
+      })
+      setMessage('⭐ Primary card photo updated!')
+      if (editingProduct && editingProduct.id === productId) {
+        setEditingProduct(res.data.product)
+      }
+      await loadData()
+    } catch (error) {
+      setMessage(errorMessage(error))
+    }
+  }
+
+  async function handleDeleteGalleryImage(productId: number, imageId: number) {
+    try {
+      await api.delete(`/products/${productId}/images/`, {
+        data: { image_id: imageId }
+      })
+      setEditingProduct((prev: any) => prev ? {
+        ...prev,
+        images: (prev.images || []).filter((img: any) => img.id !== imageId)
+      } : null)
+      setMessage('🖼️ Gallery image deleted successfully.')
+      await loadData()
+    } catch (error) {
+      setMessage(errorMessage(error))
+    }
+  }
+
+  async function handleDirectProductImageUpload(productId: number, files: FileList | File[]) {
+    const fileArray = Array.from(files)
+    if (fileArray.length === 0) return
+    setMessage(`⏳ Uploading ${fileArray.length} image(s)...`)
+    try {
+      const formData = new FormData()
+      fileArray.forEach((f) => formData.append('images', f))
+      const res = await api.post(`/products/${productId}/images/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      setMessage('🖼️ Image updated successfully!')
+      setMessage(`🖼️ Uploaded ${fileArray.length} photo(s) to catalog product!`)
       await loadData()
     } catch (error) {
       setMessage(errorMessage(error))
@@ -172,7 +220,7 @@ export default function SellerCatalog() {
   async function handleAddSingleProduct(e: React.FormEvent) {
     e.preventDefault()
     if (!store || !newProdName.trim()) return
-    setMessage('⏳ Adding product...')
+    setMessage('⏳ Adding product with selected images...')
     try {
       const formData = new FormData()
       formData.append('store', String(store.id))
@@ -181,24 +229,38 @@ export default function SellerCatalog() {
       formData.append('stock_quantity', newProdStock)
       if (newProdCat) formData.append('category', newProdCat)
       if (newProdFile) formData.append('digital_file', newProdFile)
-      if (newProdImage) formData.append('image', newProdImage)
+
+      // Multiple Images & Primary Selection
+      const primaryFile = newProdImages[newProdPrimaryIndex] || newProdImage || (newProdImages.length > 0 ? newProdImages[0] : null)
+      if (primaryFile) {
+        formData.append('image', primaryFile)
+      }
+
+      if (newProdImages.length > 0) {
+        newProdImages.forEach((imgFile) => {
+          formData.append('images', imgFile)
+        })
+      }
 
       await api.post('/products/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 
-      setMessage(`✓ Product '${newProdName}' added successfully!`)
+      setMessage(`✓ Product '${newProdName}' added successfully with ${newProdImages.length || (newProdImage ? 1 : 0)} photos!`)
       setNewProdName('')
       setNewProdPrice('0')
       setNewProdStock('100')
       setNewProdFile(null)
       setNewProdImage(null)
+      setNewProdImages([])
+      setNewProdPrimaryIndex(0)
       setShowAddModal(false)
       await loadData()
     } catch (err) {
       setMessage(errorMessage(err))
     }
   }
+
 
   if (!store) return <div className="p-6">Loading catalog...</div>
 
@@ -340,33 +402,49 @@ export default function SellerCatalog() {
                     {group.items.map((prod) => {
                       const isOutOfStock = Number(prod.stock_quantity ?? 100) <= 0
                       const isLowStock = Number(prod.stock_quantity ?? 100) > 0 && Number(prod.stock_quantity ?? 100) <= 5
+                      
+                      // Gather all images attached to this product
+                      const allProdImages: { id?: number; url: string; isPrimary: boolean }[] = []
+                      if (prod.image) {
+                        allProdImages.push({ url: mediaUrl(prod.image), isPrimary: true })
+                      }
+                      if (Array.isArray(prod.images)) {
+                        prod.images.forEach((gImg: any) => {
+                          const fullUrl = mediaUrl(gImg.image)
+                          if (fullUrl && !allProdImages.some(item => item.url === fullUrl)) {
+                            allProdImages.push({ id: gImg.id, url: fullUrl, isPrimary: false })
+                          }
+                        })
+                      }
 
                       return (
                         <div
                           key={prod.id}
-                          className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-xs hover:shadow-md transition-all"
+                          className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-xs hover:shadow-md transition-all space-y-3"
                         >
                           <div className="space-y-3">
                             {/* Product Header & Image */}
                             <div className="flex items-start gap-3">
-                              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200 shadow-xs flex items-center justify-center">
+                              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200 shadow-xs flex items-center justify-center group">
                                 {prod.image ? (
                                   <img src={mediaUrl(prod.image)} alt={prod.name} className="h-full w-full object-cover" />
                                 ) : (
                                   <span className="text-2xl">🛍️</span>
                                 )}
+                                <span className="absolute top-0.5 left-0.5 bg-indigo-600/90 backdrop-blur-xs text-[8px] font-black text-white px-1 py-0.2 rounded">Card Main</span>
                                 <label
-                                  title="Change Product Photo"
-                                  className="absolute inset-0 bg-slate-950/40 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer text-xs font-bold"
+                                  title="Upload Multiple Product Photos"
+                                  className="absolute inset-0 bg-slate-950/60 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[10px] font-bold p-1 text-center"
                                 >
-                                  📷
+                                  📷 Upload
                                   <input
                                     type="file"
                                     accept="image/*"
+                                    multiple
                                     className="hidden"
                                     onChange={(e) => {
-                                      if (e.target.files?.[0]) {
-                                        handleDirectProductImageUpload(prod.id, e.target.files[0])
+                                      if (e.target.files && e.target.files.length > 0) {
+                                        handleDirectProductImageUpload(prod.id, e.target.files)
                                       }
                                     }}
                                   />
@@ -381,6 +459,40 @@ export default function SellerCatalog() {
                                 <p className="mt-1 text-sm font-black text-indigo-600">₹{prod.price}</p>
                               </div>
                             </div>
+
+                            {/* Card Gallery Thumbnails Strip & Primary Card Image Switcher */}
+                            {allProdImages.length > 1 && (
+                              <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-2 space-y-1">
+                                <p className="text-[10px] font-bold text-slate-500 flex items-center justify-between">
+                                  <span>🖼️ Product Gallery ({allProdImages.length} photos)</span>
+                                  <span className="text-indigo-600 font-extrabold">Click thumbnail to set as Card Main</span>
+                                </p>
+                                <div className="flex gap-1.5 overflow-x-auto py-1">
+                                  {allProdImages.map((imgItem, idx) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      title={imgItem.isPrimary ? "Current Card Profile Image" : "Click to set as Card Profile Image"}
+                                      onClick={() => {
+                                        if (imgItem.id) {
+                                          handleSetPrimaryCardImage(prod.id, imgItem.id)
+                                        }
+                                      }}
+                                      className={`relative h-10 w-10 shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                                        imgItem.isPrimary
+                                          ? 'border-indigo-600 ring-2 ring-indigo-300 scale-105'
+                                          : 'border-slate-200 opacity-70 hover:opacity-100'
+                                      }`}
+                                    >
+                                      <img src={imgItem.url} alt="" className="h-full w-full object-cover" />
+                                      {imgItem.isPrimary && (
+                                        <span className="absolute bottom-0 inset-x-0 bg-indigo-600 text-[7px] font-black text-white text-center">⭐ Main</span>
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
 
                             {/* Stock Badge & Digital File Badge */}
                             <div className="flex items-center justify-between text-[11px] font-bold pt-1 border-t border-slate-100">
@@ -414,15 +526,16 @@ export default function SellerCatalog() {
                               ✏️ Edit
                             </button>
 
-                            <label className="flex-1 text-center rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer">
-                              📷 Photo
+                            <label title="Add Multiple Photos to this Product" className="flex-1 text-center rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer">
+                              📷 Multi-Photos
                               <input
                                 type="file"
                                 accept="image/*"
+                                multiple
                                 className="hidden"
                                 onChange={(e) => {
-                                  if (e.target.files?.[0]) {
-                                    handleDirectProductImageUpload(prod.id, e.target.files[0])
+                                  if (e.target.files && e.target.files.length > 0) {
+                                    handleDirectProductImageUpload(prod.id, e.target.files)
                                   }
                                 }}
                               />
@@ -451,11 +564,11 @@ export default function SellerCatalog() {
       {/* Edit Product Modal */}
       {editingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-slate-200">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-bold text-base text-slate-900">Edit Product</h3>
-                <p className="text-xs text-slate-500">Update product details & category</p>
+                <p className="text-xs text-slate-500">Update product details & choose main card photo</p>
               </div>
               <button
                 type="button"
@@ -517,10 +630,87 @@ export default function SellerCatalog() {
                 </select>
               </div>
 
+              {/* Multi-Image Gallery & Primary Photo Selector */}
+              <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-slate-800">
+                    Product Image Gallery & Main Card Photo
+                  </label>
+                  <span className="text-[10px] text-indigo-600 font-bold">
+                    {(editingProduct?.images?.length || 0) + (editingProduct?.image ? 1 : 0)} Total
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500">Click ⭐ button on any photo to make it the Main Profile image shown on product card.</p>
+
+                {/* Existing Gallery Images Grid with Primary Chooser */}
+                <div className="grid grid-cols-3 gap-2">
+                  {editingProduct?.image && (
+                    <div className="relative group h-20 rounded-xl border-2 border-indigo-600 bg-white overflow-hidden shadow-xs flex flex-col justify-between p-1">
+                      <img
+                        src={mediaUrl(editingProduct.image)}
+                        alt="Primary"
+                        className="h-12 w-full object-cover rounded"
+                      />
+                      <span className="bg-indigo-600 text-[9px] font-black text-white text-center py-0.5 rounded">⭐ Main Card Photo</span>
+                    </div>
+                  )}
+
+                  {(editingProduct?.images || []).map((imgObj: any) => {
+                    const isCurrentMain = editingProduct?.image && mediaUrl(editingProduct.image) === mediaUrl(imgObj.image)
+                    return (
+                      <div key={imgObj.id} className="relative group h-20 rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs flex flex-col justify-between p-1">
+                        <img
+                          src={mediaUrl(imgObj.image)}
+                          alt="Gallery"
+                          className="h-11 w-full object-cover rounded"
+                        />
+                        <div className="flex items-center justify-between gap-1">
+                          {!isCurrentMain ? (
+                            <button
+                              type="button"
+                              onClick={() => handleSetPrimaryCardImage(editingProduct.id, imgObj.id)}
+                              className="flex-1 bg-slate-800 text-[8px] font-black text-white py-0.5 rounded hover:bg-indigo-600"
+                            >
+                              ⭐ Set Main
+                            </button>
+                          ) : (
+                            <span className="flex-1 bg-indigo-600 text-[8px] font-black text-white text-center py-0.5 rounded">⭐ Main</span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteGalleryImage(editingProduct.id, imgObj.id)}
+                            className="h-4 w-4 flex items-center justify-center rounded bg-rose-600 text-[9px] text-white font-black hover:bg-rose-700 shrink-0"
+                            title="Delete Photo"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="pt-2 border-t border-slate-200">
+                  <label className="text-[11px] font-bold text-slate-700">Add More Photos to Gallery (Select Multiple At Once)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => setEditNewImages(Array.from(e.target.files || []))}
+                    className="mt-1 w-full text-xs text-slate-600"
+                  />
+                  {editNewImages.length > 0 && (
+                    <p className="mt-1 text-[10px] font-bold text-emerald-600">
+                      ✓ {editNewImages.length} new photos selected to upload on save!
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div className="flex gap-2 pt-3">
                 <button
                   type="button"
-                  onClick={() => setEditingProduct(null)}
+                  onClick={() => { setEditingProduct(null); setEditNewImages([]) }}
                   className="flex-1 rounded-xl border border-slate-200 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
                 >
                   Cancel
@@ -541,11 +731,11 @@ export default function SellerCatalog() {
       {/* Add Single Product Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-slate-200">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-bold text-base text-slate-900">Add New Product</h3>
-                <p className="text-xs text-slate-500">Publish a single item to catalog</p>
+                <p className="text-xs text-slate-500">Publish item with multi-photo gallery & choose card profile image</p>
               </div>
               <button
                 type="button"
@@ -608,14 +798,51 @@ export default function SellerCatalog() {
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700">Product Image (Optional)</label>
+              {/* Multiple Images Selector with Primary Card Photo Chooser */}
+              <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800">
+                    Product Photos (Select Multiple at Once)
+                  </label>
+                  <span className="text-[10px] text-teal-600 font-bold">Multi-Select Active</span>
+                </div>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setNewProdImage(e.target.files?.[0] || null)}
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || [])
+                    setNewProdImages(files)
+                    setNewProdPrimaryIndex(0)
+                  }}
                   className="mt-1 w-full text-xs text-slate-600"
                 />
+
+                {newProdImages.length > 0 && (
+                  <div className="space-y-1 pt-2 border-t border-slate-200">
+                    <p className="text-[10px] font-bold text-slate-600">Click photo thumbnail to choose which image displays on Card Profile:</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {newProdImages.map((file, idx) => {
+                        const isPrimary = newProdPrimaryIndex === idx
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setNewProdPrimaryIndex(idx)}
+                            className={`relative h-16 rounded-xl border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${
+                              isPrimary ? 'border-teal-600 ring-2 ring-teal-300' : 'border-slate-200 opacity-70'
+                            }`}
+                          >
+                            <img src={URL.createObjectURL(file)} alt="preview" className="h-10 w-full object-cover rounded" />
+                            <span className={`text-[8px] font-black text-center py-0.5 rounded ${isPrimary ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                              {isPrimary ? '⭐ Main Card' : 'Gallery'}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -646,6 +873,7 @@ export default function SellerCatalog() {
           </div>
         </div>
       )}
+
 
       {/* Unified Seller Bottom Navigation Bar */}
       <SellerBottomNav storeId={store.id} activeTab="catalog" />

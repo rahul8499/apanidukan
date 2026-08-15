@@ -43,14 +43,16 @@ export default function StoreManager() {
   const [stockQuantity, setStockQuantity] = useState('100')
   const [category, setCategory] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [productImages, setProductImages] = useState<File[]>([])
+  const [productPrimaryIndex, setProductPrimaryIndex] = useState<number>(0)
   const [phoneNumber, setPhoneNumber] = useState('')
   const [productRequests, setProductRequests] = useState<any[]>([])
   const [message, setMessage] = useState('')
 
   // Dedicated Bulk Product Creator State
   const [bulkCategory, setBulkCategory] = useState('')
-  const [bulkMode, setBulkMode] = useState<'matrix' | 'text' | 'csv'>('matrix')
-  const [bulkRows, setBulkRows] = useState<{ name: string; price: string; stock: string; image_file?: File; image_preview_url?: string }[]>([
+  const [bulkMode, setBulkMode] = useState<'matrix' | 'text' | 'csv'>('csv')
+  const [bulkRows, setBulkRows] = useState<{ name: string; price: string; stock: string; image_files?: File[]; image_preview_urls?: string[] }[]>([
     { name: '', price: '', stock: '100' },
     { name: '', price: '', stock: '100' },
     { name: '', price: '', stock: '100' },
@@ -64,6 +66,7 @@ export default function StoreManager() {
   const [csvPreview, setCsvPreview] = useState<{ category_name: string; name: string; price: string; description: string; stock?: string; image_url?: string; image_file?: File; image_preview_url?: string }[]>([])
   const [isImporting, setIsImporting] = useState(false)
   const [isKillerFeatureOpen, setIsKillerFeatureOpen] = useState(false)
+  const [guideModalType, setGuideModalType] = useState<'csv' | 'text' | 'matrix' | null>(null)
 
   // Product Edit Modal & Sidebar Drawer State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -322,14 +325,29 @@ export default function StoreManager() {
       if (category) data.append('category', category)
       if (file) {
         data.append('digital_file', file)
-        if (file.type.startsWith('image/')) data.append('image', file)
       }
+
+      // Multiple Images Support & Primary Card Image Selection
+      const primaryFile = productImages[productPrimaryIndex] || (productImages.length > 0 ? productImages[0] : null)
+      if (primaryFile) {
+        data.append('image', primaryFile)
+      }
+
+      if (productImages.length > 0) {
+        productImages.forEach((imgFile) => {
+          data.append('images', imgFile)
+        })
+      } else if (file && file.type.startsWith('image/')) {
+        data.append('image', file)
+      }
+
       await api.post('/products/', data, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setProductName(''); setPrice('0'); setStockQuantity('100'); setCategory(''); setFile(null)
-      setMessage('Product add ho gaya.')
+      setProductName(''); setPrice('0'); setStockQuantity('100'); setCategory(''); setFile(null); setProductImages([]); setProductPrimaryIndex(0)
+      setMessage(`✓ Product '${productName}' successfully added with ${productImages.length || 1} photo(s)!`)
       load()
     } catch (error) { setMessage(errorMessage(error)) }
   }
+
 
   // Bulk Product Handlers
   function handleAddBulkRow() {
@@ -344,13 +362,31 @@ export default function StoreManager() {
     })
   }
 
-  function handleRowImageSelect(index: number, file: File) {
+  function handleRowImageSelect(index: number, files: File[]) {
     setBulkRows(prev => {
       const updated = [...prev]
+      const currentFiles = updated[index].image_files || []
+      const combinedFiles = [...currentFiles, ...files]
+      const previewUrls = combinedFiles.map(f => URL.createObjectURL(f))
       updated[index] = {
         ...updated[index],
-        image_file: file,
-        image_preview_url: URL.createObjectURL(file)
+        image_files: combinedFiles,
+        image_preview_urls: previewUrls
+      }
+      return updated
+    })
+  }
+
+  function handleRemoveRowImage(rowIndex: number, imgIndex: number) {
+    setBulkRows(prev => {
+      const updated = [...prev]
+      const currentFiles = updated[rowIndex].image_files || []
+      const filteredFiles = currentFiles.filter((_, i) => i !== imgIndex)
+      const previewUrls = filteredFiles.map(f => URL.createObjectURL(f))
+      updated[rowIndex] = {
+        ...updated[rowIndex],
+        image_files: filteredFiles,
+        image_preview_urls: previewUrls
       }
       return updated
     })
@@ -435,10 +471,14 @@ export default function StoreManager() {
           price: item.price || '0',
           stock: item.stock || '100'
         }
-        if (item.image_file) {
-          const key = `img_${idx}`
-          payloadItem.image_key = key
-          formData.append(key, item.image_file)
+        if (item.image_files && item.image_files.length > 0) {
+          const keys: string[] = []
+          item.image_files.forEach((imgFile, imgIdx) => {
+            const key = `img_${idx}_${imgIdx}`
+            keys.push(key)
+            formData.append(key, imgFile)
+          })
+          payloadItem.image_keys = keys
         }
         return payloadItem
       })
@@ -465,19 +505,36 @@ export default function StoreManager() {
   // CSV Import Handlers
   function downloadSampleCsv() {
     const csvContent = `Category,Product Name,Price,Stock,Description,Image URL
-Bikes & Accessories,Full Face Riding Helmet,1850,50,DOT & ISI certified safety helmet,https://images.unsplash.com/photo-1558981403-c5f9899a28bc
+Bikes & Accessories,Full Face Riding Helmet,1850,50,DOT & ISI certified safety helmet,"helmet.jpg, helmet-side.jpg, helmet-back.jpg"
+Bikes & Accessories,Premium Racing Helmet,2499,30,Aerodynamic racing helmet with dual visor,"https://images.unsplash.com/photo-1558981403-c5f9899a28bc, https://images.unsplash.com/photo-1558981806-ec527fa84c39"
 Bikes & Accessories,Chain Lube & Cleaner Spray,399,100,High performance synthetic chain spray,https://images.unsplash.com/photo-1486006920555-c77dce18193b
-Bikes & Accessories,Waterproof Bike Cover,499,35,Heavy duty UV and rain protection cover,https://images.unsplash.com/photo-1558981806-ec527fa84c39
+Bikes & Accessories,Waterproof Bike Cover,499,35,Heavy duty UV and rain protection cover,"bike-cover-front.jpg, bike-cover-folded.jpg"
 Groceries,Organic Forest Honey 500g,450,20,100% natural raw forest honey,https://images.unsplash.com/photo-1587049352846-4a222e784d38
 Groceries,Cold Pressed Coconut Oil 1L,520,40,Unrefined pure extra virgin coconut oil,https://images.unsplash.com/photo-1615485290382-441e4d049cb5
 Digital Templates,WhatsApp Store Setup Guide,299,999,E-book step-by-step store setup,https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7
-Digital Templates,Instagram Marketing Bundle,499,999,500+ editable Canva social posts,https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0
-Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass,https://images.unsplash.com/photo-1590658268037-6bf12165a8df`
+Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass,"earbuds-case.jpg, earbuds-side.jpg"`
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.setAttribute('href', url)
-    link.setAttribute('download', 'products_import_sample.csv')
+    link.setAttribute('download', 'products_import_multi_image_sample.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  function downloadSampleText() {
+    const textContent = `Full Face Riding Helmet - 1850 - 50
+Engine Oil 1L - 450 - 20
+Chain Lube & Cleaner Spray - 399 - 100
+Waterproof Bike Cover - 499 - 35
+Organic Forest Honey 500g - 450 - 25
+Bluetooth Wireless Earbuds - 1299 - 15`
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', 'sample_products_text_list.txt')
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -727,25 +784,42 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
     <SellerHeader store={store} activeTabTitle="Store Setup" onStoreUpdate={load} />
 
     <div className="space-y-5 p-4 sm:p-6">
-      {/* Enterprise Store Status Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 p-5 text-white shadow-lg border border-indigo-800/40">
+      {/* Enterprise Store Status Banner — Ultra-Premium Express Launcher */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-5 sm:p-6 text-white shadow-2xl border border-indigo-500/30 backdrop-blur-xl">
+        {/* Glow & Sparkle Accents */}
+        <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-indigo-300 border border-indigo-400/30 tracking-wider">
-                Store Progress
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-3 py-0.5 text-[10px] font-black uppercase text-emerald-300 border border-emerald-400/40 tracking-wider shadow-xs">
+                ⚡ 1-SECOND STORE LAUNCHER
               </span>
-              <span className="text-xs font-semibold text-indigo-200">1-Min Quick Setup</span>
+              <span className="text-xs font-extrabold text-amber-300">
+                1-Min Express Setup
+              </span>
             </div>
-            <p className="mt-2 text-lg sm:text-xl font-extrabold text-white leading-snug">
-              {store.description || 'Add categories, publish products & share customer link.'}
+            <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-200 tracking-tight">
+              Aapki Online Dukaan Express Setup Ready Hai! 🚀
+            </h1>
+            <p className="text-xs text-slate-300 font-medium max-w-xl leading-relaxed">
+              Bas 1-Click mein products & multi-images import karein, WhatsApp number connect karein aur instant customer link share karke order lena shuru karein!
             </p>
           </div>
-          <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2 shrink-0 border-t border-indigo-800/40 sm:border-t-0 pt-3 sm:pt-0">
-            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${store.is_published ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>
-              {store.is_published ? '● LIVE STORE' : '○ DRAFT STORE'}
+
+          <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2.5 shrink-0 border-t border-white/10 sm:border-t-0 pt-3 sm:pt-0">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-black uppercase tracking-wider shadow-md ${
+              store.is_published
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-emerald-950/40'
+                : 'bg-amber-500/20 text-amber-300 border border-amber-400/40 shadow-amber-950/40'
+            }`}>
+              <span className={`h-2 w-2 rounded-full ${store.is_published ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
+              {store.is_published ? 'LIVE STORE ACTIVE' : 'DRAFT MODE'}
             </span>
-            <span className="text-[11px] font-bold text-indigo-300">Catalog & Share Ready</span>
+            <span className="text-[11px] font-extrabold text-indigo-300">
+              ⚡ 1-Click Order Link Ready
+            </span>
           </div>
         </div>
       </div>
@@ -756,12 +830,6 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
           <span>{message}</span>
         </div>
       )}
-
-
-
-
-
-
 
       {/* Step 01: Storefront & WhatsApp Order Channel Setup */}
       <section id="share" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4 transition-all">
@@ -836,42 +904,70 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
         </div>
       </section>
 
-      {/* DEDICATED STANDALONE SECTION: Collapsible 1-Click Bulk & CSV Product Import (Right after Step 01) */}
-      <section id="bulk-import" className="rounded-2xl border border-indigo-900/40 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-4 sm:p-5 text-white shadow-md transition-all">
+      {/* DEDICATED STANDALONE SECTION: Ultra-Premium Collapsible 1-Click Bulk & CSV Product Import */}
+      <section id="bulk-import" className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-5 sm:p-6 text-white shadow-2xl transition-all backdrop-blur-xl group hover:border-amber-400/50">
+        {/* Glow Effects */}
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
+
         <div
-          onClick={() => setIsKillerFeatureOpen(!isKillerFeatureOpen)}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none"
+          onClick={() => {
+            const nextState = !isKillerFeatureOpen
+            setIsKillerFeatureOpen(nextState)
+            if (nextState) setBulkMode('csv')
+          }}
+          className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none"
         >
           <div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex rounded-full bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-teal-300 border border-teal-400/30 tracking-wider">⚡ Killer Feature</span>
-              <span className="text-xs font-bold text-indigo-200">1-Second Quick Bulk Setup</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-3 py-0.5 text-[10px] font-black uppercase text-slate-950 shadow-md shadow-amber-500/20 border border-amber-200/50 tracking-wider">
+                👑 ULTRA KILLER FEATURE
+              </span>
+              <span className="text-xs font-extrabold text-amber-200/90 tracking-wide flex items-center gap-1">
+                <span>⚡ 1-Second Express Engine</span>
+              </span>
             </div>
-            <h2 className="mt-1 text-lg sm:text-xl font-extrabold text-white">1-Click Bulk & CSV Product Import</h2>
-            <p className="mt-0.5 text-xs text-indigo-200 font-medium">Upload Excel/CSV files or paste multiple products at once!</p>
+            <h2 className="mt-1.5 text-xl sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-200">
+              1-Click Multi-Product & CSV Super Import
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-300 font-medium">
+              Bulk Excel/CSV upload, paste text list, ya direct form grid se 1 second mein saare products & gallery photos add karein!
+            </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
             {isKillerFeatureOpen && (
-              <div onClick={e => e.stopPropagation()} className="flex rounded-xl bg-white/10 p-1 border border-white/10 shadow-xs">
+              <div onClick={e => e.stopPropagation()} className="flex rounded-2xl bg-white/10 p-1 border border-amber-400/20 shadow-inner backdrop-blur-md">
                 <button
                   type="button"
                   onClick={() => setBulkMode('matrix')}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${bulkMode === 'matrix' ? 'bg-teal-500 text-white shadow-xs' : 'text-slate-300 hover:text-white'}`}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${
+                    bulkMode === 'matrix'
+                      ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
                 >
-                  📝 Form
+                  📝 Form Grid
                 </button>
                 <button
                   type="button"
                   onClick={() => setBulkMode('text')}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${bulkMode === 'text' ? 'bg-teal-500 text-white shadow-xs' : 'text-slate-300 hover:text-white'}`}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${
+                    bulkMode === 'text'
+                      ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
                 >
-                  ✨ Text
+                  ✨ Text Import
                 </button>
                 <button
                   type="button"
                   onClick={() => setBulkMode('csv')}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${bulkMode === 'csv' ? 'bg-teal-500 text-white shadow-xs' : 'text-slate-300 hover:text-white'}`}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${
+                    bulkMode === 'csv'
+                      ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
                 >
                   📁 CSV File
                 </button>
@@ -880,7 +976,7 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
 
             <button
               type="button"
-              className="rounded-xl border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-white/20 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
+              className="rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-500 to-yellow-600 px-3.5 py-1.5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 hover:brightness-110 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
             >
               <span>{isKillerFeatureOpen ? '▲ Collapse' : '⚡ 1-Second Setup (Expand ▾)'}</span>
             </button>
@@ -891,18 +987,33 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
           <div className="pt-4 border-t border-indigo-800/50 mt-3 animate-in fade-in duration-200 text-slate-900">
             {bulkMode === 'csv' ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold text-slate-900">CSV Columns Supported:</p>
-                    <p className="text-[11px] font-mono text-slate-600">Category, Product Name, Price, Description, Image URL</p>
+                    <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                      <span>📊 CSV Columns Supported:</span>
+                      <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Multi-Image Active</span>
+                    </p>
+                    <p className="text-[11px] font-mono text-slate-600 mt-0.5">Category, Product Name, Price, Stock, Description, Image URL</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={downloadSampleCsv}
-                    className="rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-bold text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-all"
-                  >
-                    📥 Download Sample CSV
-                  </button>
+                  
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setGuideModalType('csv')}
+                      className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                      title="Open Multi-Image CSV Guide & Format Examples"
+                    >
+                      <span>📖 Multi-Image Guide</span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={downloadSampleCsv}
+                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <span>📥 Download Sample CSV</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="rounded-2xl border-2 border-dashed border-indigo-300/80 bg-white p-5 text-center shadow-xs">
@@ -988,6 +1099,35 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
               </div>
             ) : bulkMode === 'text' ? (
               <div className="space-y-3">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                      <span>✨ Text Product Import:</span>
+                      <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Paste & Import</span>
+                    </p>
+                    <p className="text-[11px] font-mono text-slate-600 mt-0.5">Format: Product Name - Price - Stock Quantity</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setGuideModalType('text')}
+                      className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                      title="Open Text Import Format Guide"
+                    >
+                      <span>📖 Text Guide</span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={downloadSampleText}
+                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <span>📥 Download Sample Text</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <label className="text-xs font-bold text-slate-200">Target Category:</label>
@@ -1046,6 +1186,35 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
               </div>
             ) : (
               <form onSubmit={handleBulkSubmit} className="space-y-3">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                      <span>📝 Multi-Row Form Grid:</span>
+                      <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Direct Entry</span>
+                    </p>
+                    <p className="text-[11px] text-slate-600 mt-0.5 font-medium">Add multiple items with custom price, stock & photos directly!</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setGuideModalType('matrix')}
+                      className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                      title="Open Form Grid Guide"
+                    >
+                      <span>📖 Form Guide</span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={downloadSampleCsv}
+                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <span>📥 Download Template</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-xs font-bold text-slate-200">Target Category:</label>
                   <select
@@ -1089,19 +1258,46 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
                           className="w-full rounded-lg border border-slate-200 p-1.5 text-xs font-bold text-slate-800 focus:outline-indigo-500 text-center"
                         />
                       </div>
-                      <label className="cursor-pointer rounded-lg bg-slate-100 p-1.5 hover:bg-slate-200 border border-slate-200 shrink-0" title="Attach Product Photo">
-                        {row.image_preview_url ? (
-                          <img src={row.image_preview_url} alt="" className="h-5 w-5 rounded object-cover" />
+                      <div className="flex items-center gap-1 shrink-0">
+                        {row.image_preview_urls && row.image_preview_urls.length > 0 ? (
+                          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                            {row.image_preview_urls.map((url, imgIdx) => (
+                              <div key={imgIdx} className="relative group">
+                                <img src={url} alt="" className="h-6 w-6 rounded object-cover border border-slate-300" />
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveRowImage(idx, imgIdx)}
+                                  className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center opacity-80 hover:opacity-100"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            <label className="cursor-pointer rounded bg-slate-200 px-1.5 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-300" title="Add More Photos">
+                              +
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={e => e.target.files && handleRowImageSelect(idx, Array.from(e.target.files))}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
                         ) : (
-                          <span className="text-xs">📷</span>
+                          <label className="cursor-pointer rounded-lg bg-slate-100 p-1.5 hover:bg-slate-200 border border-slate-200 shrink-0 flex items-center gap-1 text-slate-700" title="Attach Product Photos (Multiple supported)">
+                            <span className="text-xs">📷</span>
+                            <span className="text-[10px] font-bold">Add Photos</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              onChange={e => e.target.files && handleRowImageSelect(idx, Array.from(e.target.files))}
+                              className="hidden"
+                            />
+                          </label>
                         )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={e => e.target.files?.[0] && handleRowImageSelect(idx, e.target.files[0])}
-                          className="hidden"
-                        />
-                      </label>
+                      </div>
                       {bulkRows.length > 1 && (
                         <button
                           type="button"
@@ -1194,13 +1390,83 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
           </span>
         </div>
 
-        <form onSubmit={addProduct} className="grid gap-3 sm:grid-cols-2">
-          <input value={productName} onChange={e => setProductName(e.target.value)} required placeholder="Product name" className="premium-input" />
-          <input value={price} onChange={e => setPrice(e.target.value)} required min="0" type="number" step="0.01" placeholder="Price in INR" className="premium-input" />
-          <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Stock Qty (default 100)" className="premium-input" />
-          <select value={category} onChange={e => setCategory(e.target.value)} className="premium-input"><option value="">No category</option>{categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
-          <input onChange={e => setFile(e.target.files?.[0] || null)} type="file" className="premium-input sm:col-span-2" />
-          <button className="primary-button bg-slate-900 shadow-slate-200 hover:bg-slate-800 sm:col-span-2 py-3 text-xs font-black cursor-pointer transition-all">
+        <form onSubmit={addProduct} className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-bold text-slate-700">Product Name</label>
+              <input value={productName} onChange={e => setProductName(e.target.value)} required placeholder="Product name" className="premium-input mt-1" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-700">Price (₹)</label>
+              <input value={price} onChange={e => setPrice(e.target.value)} required min="0" type="number" step="0.01" placeholder="Price in INR" className="premium-input mt-1" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-700">Stock Quantity</label>
+              <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Stock Qty (default 100)" className="premium-input mt-1" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-700">Category</label>
+              <select value={category} onChange={e => setCategory(e.target.value)} className="premium-input mt-1"><option value="">No category</option>{categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+            </div>
+          </div>
+
+          {/* Multiple Product Photos Picker with Main Card Photo Selection */}
+          <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span>🖼️ Product Photos</span>
+                <span className="text-[10px] text-teal-600 font-extrabold">(Select Multiple Photos at Once)</span>
+              </label>
+              <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">
+                {productImages.length} Photos Selected
+              </span>
+            </div>
+            
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={e => {
+                const files = Array.from(e.target.files || [])
+                setProductImages(files)
+                setProductPrimaryIndex(0)
+              }}
+              className="premium-input text-xs"
+            />
+
+            {productImages.length > 0 && (
+              <div className="space-y-1 pt-2 border-t border-slate-200">
+                <p className="text-[10px] font-bold text-slate-600">Click thumbnail to select which photo displays on Main Product Card:</p>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                  {productImages.map((imgFile, idx) => {
+                    const isPrimary = productPrimaryIndex === idx
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setProductPrimaryIndex(idx)}
+                        className={`relative h-16 rounded-xl border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${
+                          isPrimary ? 'border-teal-600 ring-2 ring-teal-300' : 'border-slate-200 opacity-70'
+                        }`}
+                      >
+                        <img src={URL.createObjectURL(imgFile)} alt="preview" className="h-10 w-full object-cover rounded" />
+                        <span className={`text-[8px] font-black text-center py-0.5 rounded ${isPrimary ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                          {isPrimary ? '⭐ Main Card' : 'Gallery'}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-700">Digital Downloadable File (Optional PDF/Zip)</label>
+            <input onChange={e => setFile(e.target.files?.[0] || null)} type="file" className="premium-input mt-1" />
+          </div>
+
+          <button className="primary-button bg-slate-900 shadow-slate-200 hover:bg-slate-800 py-3 text-xs font-black cursor-pointer transition-all w-full">
             + Add Published Product
           </button>
         </form>
@@ -1272,6 +1538,137 @@ Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Universal Guide Dialogue Modal (CSV, Text, Form Grid) */}
+      {guideModalType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">
+                  {guideModalType === 'csv' ? '📊' : guideModalType === 'text' ? '✨' : '📝'}
+                </span>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900">
+                    {guideModalType === 'csv'
+                      ? 'CSV Multi-Image Import Guide'
+                      : guideModalType === 'text'
+                      ? 'Text List Import Guide'
+                      : 'Multi-Row Form Grid Guide'}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {guideModalType === 'csv'
+                      ? 'Learn how to bulk import multiple product photos via CSV'
+                      : guideModalType === 'text'
+                      ? 'Learn how to bulk paste products using text format'
+                      : 'Learn how to quickly add multiple items via form rows'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGuideModalType(null)}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            {guideModalType === 'csv' ? (
+              <div className="space-y-3 text-xs text-slate-700">
+                <div className="rounded-2xl bg-teal-50 border border-teal-200 p-3.5 space-y-2 text-teal-900">
+                  <p className="font-extrabold text-sm flex items-center gap-1.5">
+                    <span>💡 How Multi-Image Works in CSV</span>
+                  </p>
+                  <p className="font-medium leading-relaxed">
+                    Single product mein <b>Multiple Images</b> link karne ke liye, CSV file ki <code>Image URL</code> column mein saari images ke filenames ya URLs ko comma (<code>,</code>) se separate karke double quotes ke andar rakhein.
+                  </p>
+                  <p className="font-bold text-teal-950">
+                    ⭐ Pehli Photo <u>Card Profile Main Image</u> banegi, aur baaki saari photos product ki <u>Gallery</u> mein attach hongi!
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-extrabold text-slate-900 text-xs">Example 1: Local Image Files (Phone/PC Files)</h4>
+                  <p className="text-[11px] text-slate-500">Aap apne phone ya computer ki local image files (e.g. <code>helmet.jpg</code>) ko matching names se link kar sakte hain:</p>
+                  <div className="bg-slate-900 text-teal-300 p-3 rounded-xl font-mono text-[11px] overflow-x-auto border border-slate-800">
+                    "helmet.jpg, helmet-side.jpg, helmet-back.jpg"
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-extrabold text-slate-900 text-xs">Example 2: Online Web URLs</h4>
+                  <p className="text-[11px] text-slate-500">Aap Internet image links (e.g. Unsplash, Cloudinary, AWS) bhi direct link kar sakte hain:</p>
+                  <div className="bg-slate-900 text-indigo-300 p-3 rounded-xl font-mono text-[11px] overflow-x-auto border border-slate-800">
+                    "https://img.com/helmet-1.jpg, https://img.com/helmet-2.jpg"
+                  </div>
+                </div>
+              </div>
+            ) : guideModalType === 'text' ? (
+              <div className="space-y-3 text-xs text-slate-700">
+                <div className="rounded-2xl bg-teal-50 border border-teal-200 p-3.5 space-y-2 text-teal-900">
+                  <p className="font-extrabold text-sm flex items-center gap-1.5">
+                    <span>✨ How Text Import Works</span>
+                  </p>
+                  <p className="font-medium leading-relaxed">
+                    Aap bas multiple products ki list ko 1 line per product type karke copy-paste kar sakte hain. Format: <code>Product Name - Price - Stock</code>.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-extrabold text-slate-900 text-xs">Copyable Text Example:</h4>
+                  <div className="bg-slate-900 text-emerald-300 p-3.5 rounded-xl font-mono text-[11px] leading-relaxed border border-slate-800 select-all">
+                    Full Face Riding Helmet - 1850 - 50<br/>
+                    Engine Oil 1L - 450 - 20<br/>
+                    Chain Lube & Cleaner Spray - 399 - 100<br/>
+                    Waterproof Bike Cover - 499 - 35
+                  </div>
+                  <p className="text-[11px] text-slate-500">Tip: Stock quantity optional hai, nahi denge toh default stock 100 auto-apply ho jayega.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 text-xs text-slate-700">
+                <div className="rounded-2xl bg-teal-50 border border-teal-200 p-3.5 space-y-2 text-teal-900">
+                  <p className="font-extrabold text-sm flex items-center gap-1.5">
+                    <span>📝 How Multi-Row Form Grid Works</span>
+                  </p>
+                  <p className="font-medium leading-relaxed">
+                    Form grid mein aap <code>+ Add Row</code> button se multiple products add kar sakte hain, har row ke liye custom price & stock quantity set kar sakte hain aur camera icon (📷) se individual photo attach kar sakte hain!
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+                  <h4 className="font-extrabold text-slate-900 text-xs">Features Included:</h4>
+                  <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600 font-medium">
+                    <li>Multi-Row instant addition</li>
+                    <li>Instant photo file picker per product row</li>
+                    <li>1-Click Save all products together</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={guideModalType === 'text' ? downloadSampleText : downloadSampleCsv}
+                className="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all flex items-center gap-1.5"
+              >
+                <span>
+                  {guideModalType === 'text' ? '📥 Download Sample Text' : '📥 Download Sample CSV / Template'}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGuideModalType(null)}
+                className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
+              >
+                Close Guide
+              </button>
+            </div>
           </div>
         </div>
       )}

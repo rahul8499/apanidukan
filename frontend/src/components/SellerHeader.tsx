@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
@@ -18,7 +18,12 @@ import {
   Phone,
   Sparkles,
   ShieldCheck,
-  Zap
+  Zap,
+  User,
+  Edit3,
+  Camera,
+  Check,
+  MapPin
 } from 'lucide-react'
 
 interface SellerHeaderProps {
@@ -30,9 +35,30 @@ interface SellerHeaderProps {
 export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: SellerHeaderProps) {
   const auth = useAuth()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [phoneNumber, setPhoneNumber] = useState(store?.whatsapp_phone || store?.phone_number || '')
+  const [storeName, setStoreName] = useState(store?.name || '')
+  const [storeDescription, setStoreDescription] = useState(store?.description || '')
+  const [storeAddress, setStoreAddress] = useState(store?.address || '')
+  const [phoneNumber, setPhoneNumber] = useState(store?.phone_number || store?.whatsapp_phone || '')
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(store?.logo || null)
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
+  const [isProfileEditing, setIsProfileEditing] = useState(false)
   const [message, setMessage] = useState('')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (store) {
+      setStoreName(store.name || '')
+      setStoreDescription(store.description || '')
+      setStoreAddress(store.address || '')
+      setPhoneNumber(store.phone_number || store.whatsapp_phone || '')
+      if (store.logo) {
+        setLogoPreview(store.logo)
+      }
+    }
+  }, [store])
+
+  const currentLogoUrl = logoPreview || store?.logo || null
 
   if (!store) {
     return (
@@ -72,14 +98,40 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
     }
   }
 
-  async function savePhone(e: React.FormEvent) {
+  async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault()
+    setIsSavingProfile(true)
     try {
-      await api.patch(`/stores/${store.id}/`, { whatsapp_phone: phoneNumber })
-      setMessage('✓ WhatsApp number saved!')
+      const formData = new FormData()
+      formData.append('name', storeName)
+      formData.append('description', storeDescription)
+      formData.append('address', storeAddress)
+      formData.append('phone_number', phoneNumber)
+      formData.append('whatsapp_phone', phoneNumber)
+      if (logoFile) {
+        formData.append('logo', logoFile)
+      }
+      const res = await api.patch(`/stores/${store.id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      if (res.data?.logo) {
+        setLogoPreview(res.data.logo)
+      }
+      setMessage('✓ Store profile updated successfully!')
+      setIsProfileEditing(false)
       if (onStoreUpdate) onStoreUpdate()
     } catch {
-      setMessage('Failed to save phone number.')
+      setMessage('Failed to update store profile.')
+    } finally {
+      setIsSavingProfile(false)
+    }
+  }
+
+  function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setLogoFile(file)
+      setLogoPreview(URL.createObjectURL(file))
     }
   }
 
@@ -97,11 +149,12 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           {/* Left Brand Identity Card */}
           <div className="flex items-center gap-3.5 min-w-0">
             {/* Logo Avatar with Radial Ambient Glow */}
-            <div className="relative group flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 via-teal-950/80 to-slate-900 text-teal-300 border border-teal-500/40 shadow-[0_0_20px_rgba(20,184,166,0.25)] transition-transform duration-300 group-hover:scale-105">
-              {/* Radial glow background layer */}
-              <div className="absolute inset-0 rounded-2xl bg-teal-500/20 blur-md opacity-60 group-hover:opacity-100 transition-opacity" />
-
-              <Store className="relative h-5.5 w-5.5 sm:h-6 sm:w-6 text-teal-300 drop-shadow-[0_0_12px_rgba(20,184,166,0.9)]" />
+            <div className="relative group flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 via-teal-950/80 to-slate-900 text-teal-300 border border-teal-500/40 shadow-[0_0_20px_rgba(20,184,166,0.25)] transition-transform duration-300 group-hover:scale-105 overflow-hidden">
+              {currentLogoUrl ? (
+                <img src={currentLogoUrl} alt={store.name} className="h-full w-full object-cover rounded-2xl" />
+              ) : (
+                <Store className="relative h-5.5 w-5.5 sm:h-6 sm:w-6 text-teal-300 drop-shadow-[0_0_12px_rgba(20,184,166,0.9)]" />
+              )}
 
               {/* Status Ping Dot */}
               <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
@@ -166,7 +219,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               type="button"
               onClick={() => setIsSettingsOpen(true)}
               className="group flex items-center gap-1.5 rounded-xl sm:rounded-2xl border border-slate-800 bg-slate-900/90 px-3.5 py-2 text-xs font-bold text-slate-200 hover:border-teal-500/50 hover:bg-slate-850 hover:text-teal-300 hover:shadow-[0_0_15px_rgba(20,184,166,0.2)] transition-all duration-300 cursor-pointer shadow-inner"
-              title="Open Store Settings & Controls"
+              title="Open Store Settings & Profile Controls"
             >
               <Settings className="h-4 w-4 text-slate-400 transition-transform duration-700 group-hover:rotate-180 group-hover:text-teal-400" />
               <span className="hidden sm:inline font-extrabold tracking-wide">Settings</span>
@@ -189,184 +242,321 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       {/* Settings Drawer Backdrop */}
       {isSettingsOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 animate-in fade-in"
+          className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
           onClick={() => setIsSettingsOpen(false)}
         />
       )}
 
-      {/* Slide-over Dark Glass Settings Sidebar Drawer */}
+      {/* Slide-over Clean Premium White App Settings Sidebar Drawer */}
       <aside
-        className={`fixed top-0 right-0 z-50 h-full w-92 max-w-[92vw] bg-slate-950/98 text-white border-l border-slate-800/90 shadow-[0_0_60px_rgba(0,0,0,0.9)] backdrop-blur-3xl transition-transform duration-300 ease-in-out flex flex-col ${
+        className={`fixed top-0 right-0 z-50 h-full w-96 max-w-[92vw] bg-white text-slate-900 border-l border-slate-200/80 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${
           isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between border-b border-slate-800/80 bg-slate-950 px-6 py-4 text-white">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500/20 via-cyan-500/15 to-indigo-500/20 text-teal-400 border border-teal-500/30 shadow-[0_0_15px_rgba(20,184,166,0.2)]">
-              <SlidersHorizontal className="h-5 w-5 text-teal-400" />
+        {/* Ultra-Premium Drawer Header with Store Identity */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 px-6 py-5 text-white border-b border-indigo-950 shadow-md">
+          {/* Subtle Ambient Glow */}
+          <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none" />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="relative h-12 w-12 shrink-0 rounded-2xl bg-white/10 p-0.5 border border-white/20 shadow-md overflow-hidden flex items-center justify-center">
+                {currentLogoUrl ? (
+                  <img src={currentLogoUrl} alt={store.name} className="h-full w-full rounded-xl object-cover" />
+                ) : (
+                  <Store className="h-6 w-6 text-indigo-300" />
+                )}
+                <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+              </div>
+
+              <div className="min-w-0">
+                <h2 className="font-black text-base text-white truncate tracking-tight">{store.name}</h2>
+                <p className="text-[11px] font-mono text-indigo-300/80 truncate">@{store.slug}</p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-black text-base text-white tracking-wide">Store Controls</h2>
-              <p className="text-[11px] font-medium text-teal-400/80">Enterprise Management Console</p>
-            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(false)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white transition-colors cursor-pointer border border-white/10 shrink-0"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsSettingsOpen(false)}
-            className="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer border border-slate-800"
-          >
-            <X className="h-4.5 w-4.5" />
-          </button>
         </div>
 
-        {/* Drawer Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Drawer Content Body — Ordered Logical Sequence */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-white">
           {message && (
-            <div className="rounded-2xl border border-teal-500/40 bg-gradient-to-r from-teal-500/15 to-cyan-500/10 p-4 text-xs font-extrabold text-teal-200 shadow-inner flex items-center gap-2">
-              <Zap className="h-4 w-4 text-teal-400 shrink-0" />
+            <div className="rounded-2xl border border-teal-200 bg-teal-50 p-3.5 text-xs font-bold text-teal-900 shadow-2xs flex items-center gap-2">
+              <Zap className="h-4 w-4 text-teal-600 shrink-0" />
               <span>{message}</span>
             </div>
           )}
 
-          {/* Quick Tools Shortcuts Card */}
-          <div className="rounded-2xl border border-slate-800/90 bg-slate-900/70 p-4.5 space-y-3 backdrop-blur-xl shadow-inner">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-teal-400" />
-              <span>Seller Suite Modules</span>
+          {/* SECTION 1: 🏪 Editable Store Profile & Identity */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-2.5">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-indigo-600" />
+                <span className="font-extrabold text-xs text-slate-900">Store Profile & Details</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsProfileEditing(!isProfileEditing)}
+                className="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+              >
+                <Edit3 className="h-3 w-3" />
+                <span>{isProfileEditing ? 'Cancel Edit' : 'Edit Profile'}</span>
+              </button>
+            </div>
+
+            {isProfileEditing ? (
+              <form onSubmit={handleSaveProfile} className="space-y-3 pt-1">
+                <div className="flex items-center gap-3">
+                  <div className="relative h-14 w-14 shrink-0 rounded-2xl bg-slate-200 border border-slate-300 flex items-center justify-center overflow-hidden">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <Store className="h-7 w-7 text-slate-400" />
+                    )}
+                    <label className="absolute inset-0 bg-slate-900/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-white">
+                      <Camera className="h-5 w-5" />
+                      <input type="file" accept="image/*" onChange={handleLogoSelect} className="hidden" />
+                    </label>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">Store Logo Photo</p>
+                    <p className="text-[10px] text-slate-500">Click icon to change image</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700">Store Name:</label>
+                  <input
+                    type="text"
+                    value={storeName}
+                    onChange={e => setStoreName(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700">Store Description / Tagline:</label>
+                  <textarea
+                    value={storeDescription}
+                    onChange={e => setStoreDescription(e.target.value)}
+                    rows={2}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-medium text-slate-900 focus:border-indigo-500 focus:outline-none"
+                    placeholder="Short description about your shop..."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700">Store Address (Optional):</label>
+                  <div className="relative mt-1">
+                    <MapPin className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={storeAddress}
+                      onChange={e => setStoreAddress(e.target.value)}
+                      placeholder="Shop No. 12, Main Market, Mumbai"
+                      className="w-full rounded-xl border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs font-medium text-slate-900 focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700">WhatsApp Order Phone Number:</label>
+                  <div className="relative mt-1">
+                    <Phone className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value)}
+                      placeholder="919876543210"
+                      className="w-full rounded-xl border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs font-mono text-slate-900 focus:border-indigo-500 focus:outline-none"
+                      inputMode="tel"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-2xs flex items-center justify-center gap-1.5"
+                >
+                  <Check className="h-4 w-4" />
+                  <span>{isSavingProfile ? 'Saving...' : 'Save Profile Changes'}</span>
+                </button>
+              </form>
+            ) : (
+              <div className="space-y-2 text-xs font-medium text-slate-700">
+                <div className="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-200/80">
+                  <span className="text-[11px] text-slate-500 font-bold">Store Name:</span>
+                  <span className="font-extrabold text-slate-900">{store.name}</span>
+                </div>
+                {store.description && (
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                    <span className="text-[11px] text-slate-500 font-bold block mb-0.5">Tagline:</span>
+                    <p className="text-xs text-slate-800 italic">{store.description}</p>
+                  </div>
+                )}
+                {store.address && (
+                  <div className="flex justify-between items-start bg-white p-2.5 rounded-xl border border-slate-200/80">
+                    <span className="text-[11px] text-slate-500 font-bold flex items-center gap-1 shrink-0">
+                      <MapPin className="h-3 w-3 text-indigo-600" />
+                      <span>Address:</span>
+                    </span>
+                    <span className="font-semibold text-xs text-slate-800 text-right">{store.address}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-200/80">
+                  <span className="text-[11px] text-slate-500 font-bold">Order Phone:</span>
+                  <span className="font-mono font-bold text-slate-900">{store.whatsapp_phone || store.phone_number || 'Not set'}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 2: 🚀 Seller Suite Modules (Quick Navigation) */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5 shadow-2xs">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
+              <span>Seller Navigation Modules</span>
             </p>
 
             <Link
               to={`/stores/${store.id}/catalog`}
               onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-slate-950/90 p-3.5 text-xs font-extrabold text-slate-200 border border-slate-800 hover:border-teal-500/50 hover:bg-teal-500/10 hover:text-teal-200 transition-all shadow-inner"
+              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
             >
               <span className="flex items-center gap-3">
-                <FolderKanban className="h-4.5 w-4.5 text-teal-400" />
+                <FolderKanban className="h-4.5 w-4.5 text-indigo-600" />
                 <span>Product Catalog & Inventory</span>
               </span>
-              <span className="text-slate-500 group-hover:text-teal-400 font-bold transition-transform group-hover:translate-x-1">➔</span>
+              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
 
             <Link
               to={`/stores/${store.id}/requests`}
               onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-slate-950/90 p-3.5 text-xs font-extrabold text-slate-200 border border-slate-800 hover:border-teal-500/50 hover:bg-teal-500/10 hover:text-teal-200 transition-all shadow-inner"
+              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
             >
               <span className="flex items-center gap-3">
-                <Inbox className="h-4.5 w-4.5 text-teal-400" />
+                <Inbox className="h-4.5 w-4.5 text-indigo-600" />
                 <span>Product Requests Queue</span>
               </span>
-              <span className="text-slate-500 group-hover:text-teal-400 font-bold transition-transform group-hover:translate-x-1">➔</span>
+              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
 
             <Link
               to={`/stores/${store.id}/payments`}
               onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-slate-950/90 p-3.5 text-xs font-extrabold text-slate-200 border border-slate-800 hover:border-teal-500/50 hover:bg-teal-500/10 hover:text-teal-200 transition-all shadow-inner"
+              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
             >
               <span className="flex items-center gap-3">
-                <CreditCard className="h-4.5 w-4.5 text-teal-400" />
+                <CreditCard className="h-4.5 w-4.5 text-indigo-600" />
                 <span>Payments Gateway Integration</span>
               </span>
-              <span className="text-slate-500 group-hover:text-teal-400 font-bold transition-transform group-hover:translate-x-1">➔</span>
+              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
           </div>
 
-          {/* Manage in App Toggle */}
-          <div className="rounded-2xl border border-slate-800/90 bg-slate-900/70 p-4.5 space-y-3 shadow-inner">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-extrabold text-xs text-white">Manage in App Mode</h3>
-                <p className="text-[11px] text-slate-400 mt-0.5">Real-time Order Status System</p>
+          {/* SECTION 3: ⚙️ Store Preferences & Visibility */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-3 shadow-2xs">
+            {/* Manage in App Mode Segmented Control */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
+                    <span>Manage in App Mode</span>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black ${
+                      store.manage_in_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'
+                    }`}>
+                      {store.manage_in_app ? 'ACTIVE (ON)' : 'DISABLED (OFF)'}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">Real-time Order Processing System</p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => toggleManageInApp(!store.manage_in_app)}
-                className={`relative inline-flex h-6.5 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none ${
-                  store.manage_in_app ? 'bg-teal-500 shadow-[0_0_15px_rgba(20,184,166,0.7)]' : 'bg-slate-800'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5.5 w-5.5 transform rounded-full bg-white shadow-md ring-0 transition duration-300 ease-in-out ${
-                    store.manage_in_app ? 'translate-x-5.5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-            <p className="text-[11px] text-slate-400 bg-slate-950/90 p-3 rounded-xl border border-slate-800/80 leading-relaxed font-medium">
-              {store.manage_in_app
-                ? '🟢 ACTIVE: Live status changes trigger instant WebSocket alerts on customer devices.'
-                : '⚪ OFF: Direct WhatsApp checkout mode.'}
-            </p>
-          </div>
 
-          {/* Storefront Status */}
-          <div className="rounded-2xl border border-slate-800/90 bg-slate-900/70 p-4.5 space-y-3 shadow-inner">
-            <h3 className="font-extrabold text-xs text-white">Storefront Visibility</h3>
-            <div className="flex items-center justify-between bg-slate-950/90 p-3 rounded-xl border border-slate-800/80">
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
-                store.is_published ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-[0_0_10px_rgba(20,184,166,0.2)]' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-              }`}>
-                {store.is_published ? '● LIVE STORE' : '○ DRAFT STORE'}
-              </span>
-              {!store.is_published && (
+              {/* Explicit ON / OFF Action Button Group */}
+              <div className="grid grid-cols-2 gap-1.5 bg-slate-200/80 p-1 rounded-xl border border-slate-200/90">
                 <button
                   type="button"
-                  onClick={publishStore}
-                  className="rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-4 py-1.5 text-xs font-black text-white hover:brightness-110 shadow-xs cursor-pointer transition-all"
+                  onClick={() => toggleManageInApp(true)}
+                  className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    store.manage_in_app
+                      ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 border border-emerald-500'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  }`}
                 >
-                  Publish Live
+                  <span>🟢 ON</span>
+                  <span className="text-[10px] font-extrabold opacity-90">(App System)</span>
                 </button>
-              )}
-            </div>
-          </div>
 
-          {/* WhatsApp Order Phone Number Input */}
-          <div className="rounded-2xl border border-slate-800/90 bg-slate-900/70 p-4.5 space-y-3 shadow-inner">
-            <div>
-              <h3 className="font-extrabold text-xs text-white">WhatsApp Order Target Phone</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Target number for direct customer orders.</p>
-            </div>
-            <form onSubmit={savePhone} className="flex gap-2">
-              <div className="relative flex-1">
-                <Phone className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-                <input
-                  value={phoneNumber}
-                  onChange={e => setPhoneNumber(e.target.value)}
-                  placeholder="919876543210"
-                  className="w-full rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3 text-xs font-mono text-white placeholder-slate-500 focus:border-teal-500 focus:outline-none"
-                  inputMode="tel"
-                />
+                <button
+                  type="button"
+                  onClick={() => toggleManageInApp(false)}
+                  className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    !store.manage_in_app
+                      ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  }`}
+                >
+                  <span>⚪ OFF</span>
+                  <span className="text-[10px] font-extrabold opacity-90">(WhatsApp)</span>
+                </button>
               </div>
-              <button
-                type="submit"
-                className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-extrabold text-white hover:bg-teal-500 cursor-pointer shadow-xs transition-all"
-              >
-                Save
-              </button>
-            </form>
+
+              <p className="text-[11px] text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200 leading-relaxed font-medium">
+                {store.manage_in_app
+                  ? '🟢 ON Mode: Orders store system mein process hote hain with real-time status tracking & notifications.'
+                  : '⚪ OFF Mode: Customers direct aapke WhatsApp number par order send karte hain.'}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-slate-200/60 pt-3">
+              <span className="text-xs font-bold text-slate-900">Store Visibility:</span>
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black ${
+                  store.is_published ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+                }`}>
+                  {store.is_published ? '● LIVE' : '○ DRAFT'}
+                </span>
+                {!store.is_published && (
+                  <button
+                    type="button"
+                    onClick={publishStore}
+                    className="rounded-lg bg-indigo-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-indigo-700 transition-all cursor-pointer"
+                  >
+                    Publish
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Customer Storefront Link */}
+          {/* SECTION 4: 🔗 Customer Link & Logout */}
           {store.slug && (
             <Link
               to={`/store/${store.slug}`}
               target="_blank"
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-cyan-500/40 bg-gradient-to-r from-cyan-500/15 to-teal-500/15 py-3.5 text-xs font-extrabold text-cyan-300 hover:text-white hover:border-cyan-400/80 transition-all shadow-[0_0_20px_rgba(6,182,212,0.2)]"
+              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 py-3 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all shadow-2xs"
             >
-              <ExternalLink className="h-4.5 w-4.5 text-cyan-400" />
+              <ExternalLink className="h-4 w-4 text-indigo-600" />
               <span>Open Customer Storefront ↗</span>
             </Link>
           )}
 
-          {/* Logout Action */}
           <button
             type="button"
             onClick={() => { auth.logout(); navigate('/login') }}
-            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-rose-500/40 bg-rose-500/10 py-3.5 text-xs font-extrabold text-rose-300 hover:bg-rose-500/20 hover:text-white transition-all cursor-pointer shadow-inner"
+            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 py-3 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all cursor-pointer shadow-2xs"
           >
-            <LogOut className="h-4.5 w-4.5 text-rose-400" />
+            <LogOut className="h-4 w-4 text-rose-600" />
             <span>Logout from Workspace</span>
           </button>
         </div>

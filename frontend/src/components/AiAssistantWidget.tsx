@@ -39,6 +39,9 @@ export default function AiAssistantWidget() {
     try {
       const data = new FormData()
       data.append('message', question)
+      // Send a short, safe conversation window so follow-up questions such as
+      // "un products ki price?" retain their product reference.
+      data.append('history', JSON.stringify(items.slice(-6).map(({ role, text }) => ({ role, text }))))
       if (image) data.append('image', image)
 
       const response = await api.post('/ai/assistant/', data, { headers: { 'Content-Type': 'multipart/form-data' } })

@@ -22,3 +22,21 @@ class AssistantChatViewTests(TestCase):
         mocked_chat.assert_called_once()
         user_message = mocked_chat.call_args.kwargs['messages'][1]['content']
         self.assertEqual(user_message, 'sabse kam price vala product konsa hai')
+
+    @patch('ai_assistant.views.chat', return_value='{"answer": "Baby Shampoo ₹150 ka hai."}')
+    def test_follow_up_question_includes_recent_chat_history(self, mocked_chat):
+        request = APIRequestFactory().post(
+            '/api/v1/ai/assistant/',
+            {
+                'message': 'un products ki price kya hai?',
+                'history': '[{"role":"user","text":"Kya new product add hua hai?"},{"role":"assistant","text":"Baby Shampoo aur Baby Diapers recently add hue hain."}]',
+            },
+            format='json',
+        )
+
+        response = AssistantChatView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        messages = mocked_chat.call_args.kwargs['messages']
+        self.assertEqual(messages[1]['content'], 'Kya new product add hua hai?')
+        self.assertEqual(messages[2]['content'], 'Baby Shampoo aur Baby Diapers recently add hue hain.')

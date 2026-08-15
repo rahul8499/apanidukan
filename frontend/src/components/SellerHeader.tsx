@@ -83,12 +83,28 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
     }
   }, [store])
 
-  const [subStatus, setSubStatus] = useState<any>(null)
+  // Instant memory & localStorage cached subscription state (Prevents navbar blinking on tab changes)
+  const [subStatus, setSubStatus] = useState<any>(() => {
+    if (!store?.id) return null
+    try {
+      const cached = localStorage.getItem(`sub_status_${store.id}`)
+      return cached ? JSON.parse(cached) : null
+    } catch {
+      return null
+    }
+  })
 
   useEffect(() => {
     if (!store?.id) return
     api.get(`/payments/subscriptions/status/?store_id=${store.id}`)
-      .then(res => setSubStatus(res.data))
+      .then(res => {
+        if (res.data?.success) {
+          setSubStatus(res.data)
+          try {
+            localStorage.setItem(`sub_status_${store.id}`, JSON.stringify(res.data))
+          } catch {}
+        }
+      })
       .catch(() => {})
   }, [store?.id])
 

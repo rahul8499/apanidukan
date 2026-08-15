@@ -126,6 +126,31 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
 
+# Caching Configuration (Supports Redis Cluster in Production)
+REDIS_URL = os.environ.get('REDIS_URL')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'multi-store-local-cache',
+        }
+    }
+
+# IP Whitelisting Configuration for Rate Limiting (Allows trusted IPs & Razorpay servers to bypass throttling)
+_whitelist_env = os.environ.get('RATE_LIMIT_WHITELIST_IPS', '127.0.0.1, ::1, localhost')
+RATE_LIMIT_WHITELIST_IPS = [ip.strip() for ip in _whitelist_env.split(',') if ip.strip()]
+
+# Django REST Framework Rate Limiting & Security Throttling (With IP Whitelisting)
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -133,8 +158,19 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
-    'DEFAULT_THROTTLE_CLASSES': ('rest_framework.throttling.AnonRateThrottle', 'rest_framework.throttling.UserRateThrottle', 'rest_framework.throttling.ScopedRateThrottle'),
-    'DEFAULT_THROTTLE_RATES': {'anon': '100/hour', 'user': '1000/hour', 'auth': '10/hour', 'public_order': '30/hour', 'ai_assistant': '30/hour'},
+    'DEFAULT_THROTTLE_CLASSES': (
+        'config.throttling.WhitelistedAnonRateThrottle',
+        'config.throttling.WhitelistedUserRateThrottle',
+        'config.throttling.WhitelistedScopedRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '300/hour',          # Anonymous storefront visitors (Scraping & DDoS protection)
+        'user': '3000/hour',         # Authenticated sellers & customers (High concurrency)
+        'auth': '10/minute',         # Login/Auth endpoints (Brute-force protection)
+        'public_order': '30/hour',   # Order placement throttling
+        'ai_assistant': '30/hour',   # AI assistant request quota
+        'webhook': '120/minute',     # Payment Webhooks (Razorpay callback limit)
+    },
 }
 
 from datetime import timedelta

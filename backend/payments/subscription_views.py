@@ -287,6 +287,7 @@ class CancelStoreSubscriptionView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class RazorpaySubscriptionWebhookView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'webhook'
 
     def post(self, request):
         raw_body = request.body.decode('utf-8')

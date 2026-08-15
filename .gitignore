@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build
+dist/
+build/
+
+# Expo / React Native
+.expo/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Ollama
+.ollama-runtime/
+*.ollama

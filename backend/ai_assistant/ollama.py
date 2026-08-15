@@ -70,6 +70,80 @@ def resolve_model(requested_model: str, available: list, has_image: bool = False
     return available[0]
 
 
+def _strip_reasoning(content: str) -> str:
+    """Remove leaked internal reasoning and system tags from small-model chat output."""
+    if not content:
+        return content
+
+    import re
+
+    # Strip explicit <think>...</think> blocks if present
+    content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+    # Remove XML-like system/environment tags and their contents
+    content = re.sub(r'<environment_details>.*?</environment_details>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<system_info>.*?</system_info>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<[^>]+>', '', content)
+
+    reasoning_patterns = (
+        'the user is asking',
+        'i need to check',
+        'looking at the',
+        'looking at',
+        'i should',
+        'let me',
+        'wait,',
+        'hmm,',
+        'actually,',
+        'first,',
+        'now,',
+        'so,',
+        'based on the',
+        'i can see',
+        'the user wants',
+        'the user needs',
+        'i will',
+        'i will now',
+        'the first item',
+        'the newest',
+        'the last entry',
+        'all other items',
+        'to find the',
+        'checking the',
+        'current time:',
+        'working directory:',
+        'workspace root',
+        'open tabs:',
+    )
+
+    def _is_reasoning(line: str) -> bool:
+        lower = line.lower().strip()
+        if lower.startswith('"answer":'):
+            lower = lower.split('"answer":', 1)[1].strip().lstrip('":\' ')
+        elif lower.startswith("'answer':"):
+            lower = lower.split("'answer':", 1)[1].strip().lstrip('":\' ')
+
+        return any(
+            lower.startswith(p)
+            or lower.startswith('"' + p)
+            or lower.startswith("'" + p)
+            or (':' in lower and lower.split(':', 1)[1].strip().startswith(p))
+            for p in reasoning_patterns
+        )
+
+    lines = content.splitlines()
+    cleaned = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith('```') or stripped.startswith('---'):
+            continue
+        if _is_reasoning(stripped):
+            continue
+        cleaned.append(stripped)
+    return '\n'.join(cleaned).strip()
+
+
 def chat(*, messages, model, response_format=None, max_tokens=150):
     base_url = getattr(settings, 'OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
     available = get_available_models(base_url)
@@ -160,6 +234,9 @@ def chat(*, messages, model, response_format=None, max_tokens=150):
     # content. Never expose that control marker in the customer UI.
     if '</think>' in content:
         content = content.split('</think>', 1)[1].strip()
+    # Strip leaked internal reasoning that smaller models sometimes emit
+    # without proper </think> tags.
+    content = _strip_reasoning(content)
     if not content:
         raise OllamaUnavailable('Ollama returned an empty response.')
     return content

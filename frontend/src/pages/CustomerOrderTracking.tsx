@@ -4,7 +4,6 @@ import api from '../services/api'
 import { StoreCartProvider } from '../context/StoreCartContext'
 import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
-import NotificationBellHeader from '../components/NotificationBellHeader'
 
 const ORDER_STEPS = [
   { key: 'NEW', label: 'Order Placed', desc: 'Received by store' },
@@ -211,7 +210,6 @@ function playOrderUpdateChime() {
               />
               {wsConnected ? 'Live Updates' : 'Auto Sync'}
             </span>
-            <NotificationBellHeader />
           </div>
         </div>
       </header>

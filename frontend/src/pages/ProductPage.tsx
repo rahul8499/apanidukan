@@ -5,6 +5,7 @@ import { StoreCartProvider, useStoreCart } from '../context/StoreCartContext'
 import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
 import NotificationBellHeader from '../components/NotificationBellHeader'
+import { Tag, Sparkles, Check, ShoppingCart } from 'lucide-react'
 
 export default function ProductPage() {
   const { storeSlug } = useParams()
@@ -20,6 +21,7 @@ function ProductContent() {
   const { storeSlug, productSlug } = useParams()
   const [product, setProduct] = useState<any>(null)
   const [selectedImgIndex, setSelectedImgIndex] = useState(0)
+  const [coupons, setCoupons] = useState<any[]>([])
   const cart = useStoreCart()
 
   useEffect(() => {
@@ -28,11 +30,14 @@ function ProductContent() {
       setProduct(res.data)
       setSelectedImgIndex(0)
     }).catch(() => { })
+
+    api.get(`/public/stores/${storeSlug}/coupons/`).then((res) => {
+      setCoupons(Array.isArray(res.data) ? res.data : [])
+    }).catch(() => { })
   }, [storeSlug, productSlug])
 
   if (!product) return <div className="mx-auto min-h-screen w-full max-w-md bg-slate-50 p-5 lg:max-w-none lg:w-full">Loading product...</div>
 
-  // Collect all product images into unified array
   const allImages: string[] = []
   if (product.image) {
     allImages.push(product.image.startsWith('http') ? product.image : `${window.location.protocol}//${window.location.hostname}:8000${product.image}`)
@@ -47,6 +52,8 @@ function ProductContent() {
   }
 
   const currentImage = allImages[selectedImgIndex] || null
+  const activeCoupon = coupons.find((c: any) => c.product_id === product.id) || coupons.find((c: any) => !c.product_id)
+  const isOutOfStock = product.stock_quantity !== undefined && product.stock_quantity !== null && Number(product.stock_quantity) <= 0
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-md bg-slate-50 pb-32 lg:max-w-none lg:w-full">
@@ -75,14 +82,33 @@ function ProductContent() {
               <span className="text-7xl">🛍️</span>
             )}
 
+            {activeCoupon && (
+              <div className="absolute top-3 left-3 z-10">
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-1 text-xs font-black text-white shadow-lg">
+                  <Tag className="h-3.5 w-3.5" />
+                  {activeCoupon.discount_type === 'PERCENTAGE'
+                    ? `${activeCoupon.discount_value}% OFF WITH COUPON`
+                    : `FLAT ₹${activeCoupon.discount_value} OFF WITH COUPON`}
+                </span>
+              </div>
+            )}
+
             {allImages.length > 1 && (
               <div className="absolute top-3 right-3 rounded-full bg-slate-950/70 backdrop-blur-md px-3 py-1 text-[11px] font-extrabold text-white border border-white/20">
                 {selectedImgIndex + 1} / {allImages.length}
               </div>
             )}
+
+            {isOutOfStock && (
+              <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center">
+                <span className="bg-rose-600 text-white font-black text-xs uppercase px-4 py-1.5 rounded-full shadow tracking-wider">
+                  Out of Stock
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Interactive Multi-Image Gallery Thumbnails */}
+          {/* Interactive Gallery Thumbnails */}
           {allImages.length > 1 && (
             <div className="flex gap-2.5 overflow-x-auto p-4 bg-slate-100/80 border-b border-slate-200">
               {allImages.map((imgUrl, idx) => (
@@ -106,20 +132,48 @@ function ProductContent() {
               <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black uppercase text-indigo-600 border border-indigo-200">
                 {product.category?.name || 'In Store Product'}
               </span>
-              <p className="text-2xl font-black text-indigo-700">₹{product.price}</p>
+              <div className="text-right">
+                <p className="text-2xl font-black text-indigo-700">₹{product.price}</p>
+                {activeCoupon && (
+                  <p className="text-[11px] font-bold text-emerald-600">
+                    Use code <span className="font-mono bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">{activeCoupon.code}</span> at checkout
+                  </p>
+                )}
+              </div>
             </div>
 
             <h2 className="text-2xl font-extrabold text-slate-900 leading-snug">{product.name}</h2>
+
+            {/* Active Coupon Banner Card */}
+            {activeCoupon && (
+              <div className="rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 p-4 space-y-1.5 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-emerald-600" />
+                  <p className="text-xs font-black text-emerald-900">Available Promotional Offer</p>
+                </div>
+                <p className="text-xs text-emerald-800 font-semibold leading-relaxed">
+                  Apply coupon code <strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-emerald-300">{activeCoupon.code}</strong> during checkout to get{' '}
+                  <strong>
+                    {activeCoupon.discount_type === 'PERCENTAGE'
+                      ? `${activeCoupon.discount_value}% OFF`
+                      : `FLAT ₹${activeCoupon.discount_value} OFF`}
+                  </strong>
+                  {activeCoupon.min_order_amount > 0 && ` on orders above ₹${activeCoupon.min_order_amount}`}.
+                </p>
+              </div>
+            )}
             
             <p className="text-sm leading-relaxed text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100">
               {product.description || product.short_description || 'High quality item verified by seller.'}
             </p>
 
             <button
+              disabled={isOutOfStock}
               onClick={() => cart.add({ id: product.id, slug: product.slug, name: product.name, price: product.price, image: currentImage || product.image })}
-              className="w-full rounded-2xl bg-indigo-600 py-4 text-base font-extrabold text-white shadow-lg hover:bg-indigo-700 active:scale-98 transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-base font-extrabold text-white shadow-lg hover:bg-indigo-700 active:scale-98 disabled:bg-slate-300 disabled:text-slate-500 transition-all cursor-pointer"
             >
-              Add to Cart →
+              <ShoppingCart className="h-5 w-5" />
+              <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart →'}</span>
             </button>
           </div>
         </article>

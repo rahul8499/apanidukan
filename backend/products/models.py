@@ -50,3 +50,29 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.product.name}"
+
+
+class Coupon(models.Model):
+    DISCOUNT_TYPES = (
+        ('PERCENTAGE', 'Percentage OFF (%)'),
+        ('FLAT', 'Flat Amount OFF (₹)'),
+    )
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='coupons')
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='coupons')
+    code = models.CharField(max_length=50)
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES, default='FLAT')
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    max_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    usage_count = models.PositiveIntegerField(default=0)
+    valid_until = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['store', 'code'], name='unique_coupon_code_per_store')]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.code} ({self.store.slug})"
+

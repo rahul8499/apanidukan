@@ -1,12 +1,13 @@
 {
-  "name": "MultiStore - Online Stores",
+  "name": "MultiStore - Digital Storefront & Orders",
   "short_name": "MultiStore",
-  "description": "Create and shop digital stores.",
+  "description": "Shop products directly from local verified seller stores with instant live tracking.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#111827",
+  "orientation": "any",
+  "background_color": "#020617",
+  "theme_color": "#020617",
   "icons": [
     { "src": "/icons/multistore-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "/icons/multistore-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }

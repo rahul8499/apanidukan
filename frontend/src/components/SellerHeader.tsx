@@ -26,7 +26,8 @@ import {
   Crown,
   MapPin,
   AlertTriangle,
-  Bell
+  Bell,
+  Tag
 } from 'lucide-react'
 
 interface SellerHeaderProps {
@@ -517,6 +518,18 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <span>Payments Gateway Integration</span>
               </span>
               <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
+            </Link>
+
+            <Link
+              to={`/stores/${store.id}/coupons`}
+              onClick={() => setIsSettingsOpen(false)}
+              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
+            >
+              <span className="flex items-center gap-3">
+                <Tag className="h-4.5 w-4.5 text-emerald-600" />
+                <span>Coupons & Offers Management</span>
+              </span>
+              <span className="text-slate-400 group-hover:text-emerald-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
           </div>
 

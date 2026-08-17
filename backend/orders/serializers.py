@@ -60,6 +60,8 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
     payment_type = serializers.ChoiceField(choices=('COD', 'ONLINE'), required=False, default='COD')
     delivery_address = serializers.CharField(required=False, allow_blank=True, max_length=1000)
     location_url = serializers.URLField(required=False, allow_blank=True, max_length=1000)
+    coupon_code = serializers.CharField(required=False, allow_blank=True, max_length=50)
+    discount_amount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, default=Decimal('0.00'))
 
     def validate_customer_phone(self, value):
         value = value.strip()
@@ -103,16 +105,27 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                 snapshots.append({'product_id': product.id, 'name': product.name, 'price': str(product.price), 'quantity': quantity, 'line_total': str(line_total)})
                 total += line_total
 
+            discount_amt = Decimal(str(validated_data.get('discount_amount', 0)))
+            c_code = validated_data.get('coupon_code', '').strip().upper()
+
+            if c_code:
+                from products.models import Coupon
+                Coupon.objects.filter(store=store, code__iexact=c_code).update(usage_count=models.F('usage_count') + 1)
+
+            final_total = max(Decimal('0.00'), total - discount_amt)
+
             order = WhatsAppOrder.objects.create(
                 store=store,
                 items=snapshots,
-                total=total,
+                total=final_total,
                 currency='INR',
                 customer_name=validated_data.get('customer_name', ''),
                 customer_phone=validated_data.get('customer_phone', ''),
                 payment_type=validated_data.get('payment_type', 'COD'),
                 delivery_address=validated_data.get('delivery_address', ''),
                 location_url=validated_data.get('location_url', ''),
+                coupon_code=c_code,
+                discount_amount=discount_amt,
             )
         return order
 
@@ -120,5 +133,6 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
 class WhatsAppOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = WhatsAppOrder
-        fields = ('id', 'reference', 'customer_name', 'customer_phone', 'payment_type', 'delivery_address', 'location_url', 'items', 'total', 'currency', 'status', 'created_at', 'updated_at')
+        fields = ('id', 'reference', 'customer_name', 'customer_phone', 'payment_type', 'delivery_address', 'location_url', 'coupon_code', 'discount_amount', 'items', 'total', 'currency', 'status', 'created_at', 'updated_at')
         read_only_fields = ('id', 'reference', 'items', 'total', 'currency', 'created_at', 'updated_at')
+

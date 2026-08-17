@@ -98,6 +98,8 @@ class WhatsAppOrder(models.Model):
     payment_type = models.CharField(max_length=20, blank=True)
     delivery_address = models.TextField(blank=True)
     location_url = models.URLField(blank=True)
+    coupon_code = models.CharField(max_length=50, blank=True, default='')
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     items = models.JSONField(default=list)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     currency = models.CharField(max_length=10, default='INR')

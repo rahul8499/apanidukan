@@ -71,3 +71,15 @@ class PublicProductSerializer(serializers.ModelSerializer):
             return {'id': obj.category.id, 'name': obj.category.name, 'slug': obj.category.slug}
         return None
 
+
+class CouponSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(source='product', queryset=Product.objects.all(), required=False, allow_null=True)
+
+    class Meta:
+        from .models import Coupon
+        model = Coupon
+        fields = ('id', 'store', 'product', 'product_id', 'product_name', 'code', 'discount_type', 'discount_value', 'min_order_amount', 'max_discount_amount', 'is_active', 'usage_count', 'valid_until', 'created_at')
+        read_only_fields = ('id', 'usage_count', 'created_at')
+
+

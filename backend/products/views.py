@@ -275,3 +275,33 @@ class ProductViewSet(viewsets.ModelViewSet):
             'created_count': len(created_objs),
             'message': f'Successfully created {len(created_objs)} products with multiple gallery images!'
         }, status=status.HTTP_201_CREATED)
+
+
+class CouponViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        from .serializers import CouponSerializer
+        return CouponSerializer
+
+    def get_queryset(self):
+        from .models import Coupon
+        return Coupon.objects.filter(store__owner=self.request.user)
+
+    def perform_create(self, serializer):
+        from .models import Coupon
+        store_id = self.request.data.get('store')
+        if not store_id:
+            store = Store.objects.filter(owner=self.request.user).first()
+        else:
+            store = get_object_or_404(Store, id=store_id, owner=self.request.user)
+        
+        if not store:
+            raise PermissionDenied('No valid store found for this user.')
+
+        code = self.request.data.get('code', '').strip().upper()
+        if not code:
+            raise ValidationError({'code': 'Coupon code is required.'})
+
+        serializer.save(store=store, code=code)
+

@@ -9,7 +9,7 @@ import {
 
 interface SellerBottomNavProps {
   storeId: string | number
-  activeTab: 'setup' | 'catalog' | 'orders' | 'payments' | 'chat' | 'requests' | 'analytics'
+  activeTab?: string
 }
 
 export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavProps) {

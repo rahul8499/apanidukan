@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Check, Palette, Layers, Eye, Sparkles, Sun, Moon, Flame, Zap, ShieldCheck } from 'lucide-react'
+import { X, Check, Palette, Layers, Eye, Sparkles, Crown, Sprout, ShieldCheck } from 'lucide-react'
 import api from '../services/api'
 import { STORE_THEME_PRESETS, StoreThemeConfig, getStoreTheme } from '../utils/storeTheme'
 
@@ -19,7 +19,7 @@ export default function SellerThemeCustomizerModal({
   const [selectedCategory, setSelectedCategory] = useState<string>(currentTheme.category || 'KIRANA')
   const [primaryColor, setPrimaryColor] = useState<string>(currentTheme.primary_color || '#059669')
   const [customGradient, setCustomGradient] = useState<string>(currentTheme.banner_bg_gradient || '')
-  const [themeFilter, setThemeFilter] = useState<'ALL' | 'DARK' | 'LIGHT'>('ALL')
+  const [tierFilter, setTierFilter] = useState<'ALL' | 'BASIC' | 'PREMIUM'>('ALL')
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('')
 
@@ -42,6 +42,8 @@ export default function SellerThemeCustomizerModal({
       category: selectedCategory,
       preset_id: basePreset.preset_id,
       name: basePreset.name,
+      tier: basePreset.tier || 'basic',
+      tagline: basePreset.tagline,
       icon: basePreset.icon,
       primary_color: primaryColor || basePreset.primary_color,
       secondary_color: basePreset.secondary_color,
@@ -65,7 +67,7 @@ export default function SellerThemeCustomizerModal({
         theme: updatedThemeData,
       })
 
-      setSaveSuccessMsg('🎉 Store Color Theme & Gradient updated successfully!')
+      setSaveSuccessMsg('🎉 Store Theme Template Applied & Saved Successfully!')
       setTimeout(() => {
         onSaveSuccess()
         onClose()
@@ -81,8 +83,8 @@ export default function SellerThemeCustomizerModal({
   const activeGradient = customGradient || activePreset.banner_bg_gradient
 
   const filteredPresets = Object.entries(STORE_THEME_PRESETS).filter(([_, p]) => {
-    if (themeFilter === 'DARK') return p.is_dark_mode
-    if (themeFilter === 'LIGHT') return !p.is_dark_mode
+    if (tierFilter === 'BASIC') return p.tier === 'basic'
+    if (tierFilter === 'PREMIUM') return p.tier === 'premium'
     return true
   })
 
@@ -127,7 +129,7 @@ export default function SellerThemeCustomizerModal({
             <div>
               <h2 className="text-sm sm:text-base font-black text-white">Store Color Theme & Vibe Studio</h2>
               <p className="text-[10px] sm:text-xs text-teal-300 font-medium">
-                Vibrant Gradients, Dark/Light Aesthetics & Live Storefront Customization
+                Select Basic or Premium Theme Templates for Live Customer Storefront Customization
               </p>
             </div>
           </div>
@@ -159,12 +161,15 @@ export default function SellerThemeCustomizerModal({
                 <span>Live Customer Storefront Preview</span>
               </label>
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-black text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
-                  ☀️ Crisp White Canvas
-                </span>
-                <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                  {activePreset.gradient_name || 'Vibrant Gradient'}
-                </span>
+                {activePreset.tier === 'premium' ? (
+                  <span className="text-[10px] font-black text-amber-800 bg-gradient-to-r from-amber-100 to-yellow-200 border border-amber-300 px-2 py-0.5 rounded-md flex items-center gap-1">
+                    <Crown className="h-3 w-3 text-amber-600" /> 👑 Premium Template
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md flex items-center gap-1">
+                    <Sprout className="h-3 w-3 text-emerald-600" /> 🌱 Basic Template
+                  </span>
+                )}
               </div>
             </div>
 
@@ -237,53 +242,115 @@ export default function SellerThemeCustomizerModal({
           </div>
 
           {/* ══════════════════════════════════════════════════════════ */}
-          {/* STEP 2: Select Visual Theme Palette (12 Ultra Killer Presets) */}
+          {/* STEP 2: Basic vs Premium Theme Templates Selection */}
           {/* ══════════════════════════════════════════════════════════ */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
                 <Layers className="h-3.5 w-3.5 text-indigo-600" />
-                <span>1. Select Color Theme Palette (White Canvas)</span>
+                <span>1. Select Theme Template (Click to Apply)</span>
               </label>
-              <span className="text-[10px] font-bold text-slate-500">12 Curated Themes</span>
+
+              {/* Basic vs Premium Category Tabs */}
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setTierFilter('ALL')}
+                  className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer ${
+                    tierFilter === 'ALL'
+                      ? 'bg-white text-indigo-700 shadow-xs border border-slate-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  ✨ All ({Object.keys(STORE_THEME_PRESETS).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTierFilter('BASIC')}
+                  className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                    tierFilter === 'BASIC'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Sprout className="h-2.5 w-2.5" /> 🌱 Basic
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTierFilter('PREMIUM')}
+                  className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                    tierFilter === 'PREMIUM'
+                      ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Crown className="h-2.5 w-2.5 text-amber-700" /> 👑 Premium
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {Object.entries(STORE_THEME_PRESETS).map(([key, preset]) => {
+            {/* Template Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {filteredPresets.map(([key, preset]) => {
                 const isSelected = selectedCategory === key
+                const isPremium = preset.tier === 'premium'
 
                 return (
                   <button
                     key={key}
                     type="button"
                     onClick={() => handleSelectPreset(key)}
-                    className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs relative overflow-hidden group ${
+                    className={`flex flex-col justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs relative overflow-hidden group min-h-[92px] ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/30'
+                        ? isPremium
+                          ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-400/40'
+                          : 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/30'
                         : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-xl group-hover:scale-110 transition-transform">{preset.icon}</span>
-                      <span
-                        className="h-3.5 w-3.5 rounded-full border border-white shadow-xs"
-                        style={{ backgroundColor: preset.primary_color }}
-                      />
+                    <div>
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xl group-hover:scale-110 transition-transform">{preset.icon}</span>
+                        <div className="flex items-center gap-1">
+                          {isPremium ? (
+                            <span className="text-[8px] font-black px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-2xs flex items-center gap-0.5">
+                              <Crown className="h-2.5 w-2.5" /> Premium
+                            </span>
+                          ) : (
+                            <span className="text-[8px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              Basic
+                            </span>
+                          )}
+                          <span
+                            className="h-3 w-3 rounded-full border border-white shadow-xs ml-0.5"
+                            style={{ backgroundColor: preset.primary_color }}
+                          />
+                        </div>
+                      </div>
+
+                      <p className="mt-1 text-xs font-black text-slate-900 leading-tight">
+                        {preset.name.split('&')[0].trim()}
+                      </p>
+                      {preset.tagline && (
+                        <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5">
+                          {preset.tagline}
+                        </p>
+                      )}
                     </div>
-                    <p className="mt-1.5 text-xs font-black text-slate-900 leading-tight">
-                      {preset.name.split('&')[0].trim()}
-                    </p>
-                    <div className="flex items-center justify-between w-full mt-1">
-                      <span className="text-[8px] font-bold text-slate-400">
-                        White Theme
-                      </span>
-                      <span className="text-[8px] font-black text-indigo-700 bg-indigo-100 px-1 py-0.2 rounded">
+
+                    <div className="flex items-center justify-between w-full mt-1.5 pt-1 border-t border-slate-100">
+                      <span className="text-[8px] font-bold text-slate-400">1-Click Apply</span>
+                      <span className={`text-[8px] font-black px-1.5 py-0.2 rounded ${
+                        isPremium ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'
+                      }`}>
                         {preset.gradient_name?.split(' ')[0]}
                       </span>
                     </div>
 
                     {isSelected && (
-                      <div className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-white shadow-xs">
+                      <div className={`absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-white shadow-xs ${
+                        isPremium ? 'bg-amber-500' : 'bg-emerald-600'
+                      }`}>
                         <Check className="h-2.5 w-2.5" />
                       </div>
                     )}
@@ -294,7 +361,7 @@ export default function SellerThemeCustomizerModal({
           </div>
 
           {/* ══════════════════════════════════════════════════════════ */}
-          {/* STEP 3: Hero Banner Gradient Presets (Ultra Killer Feature) */}
+          {/* STEP 3: Hero Banner Gradient Presets */}
           {/* ══════════════════════════════════════════════════════════ */}
           <div className="space-y-2 rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
             <div className="flex items-center justify-between">
@@ -302,7 +369,7 @@ export default function SellerThemeCustomizerModal({
                 <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                 <span>2. Hero Banner Gradient Style</span>
               </label>
-              <span className="text-[10px] font-bold text-slate-400">8 Gradient Presets</span>
+              <span className="text-[10px] font-bold text-slate-400">8 Presets</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
@@ -378,10 +445,10 @@ export default function SellerThemeCustomizerModal({
             <button
               type="submit"
               disabled={isSaving}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-teal-600 px-5 py-2 text-xs font-black text-white shadow-md hover:from-indigo-500 hover:to-teal-500 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-600 px-5 py-2 text-xs font-black text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               <Check className="h-4 w-4" />
-              <span>{isSaving ? 'Saving Theme...' : 'Apply & Save Theme'}</span>
+              <span>{isSaving ? 'Applying Template...' : 'Apply & Save Theme'}</span>
             </button>
           </div>
         </form>

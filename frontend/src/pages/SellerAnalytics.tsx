@@ -13,6 +13,7 @@ export default function SellerAnalytics() {
   const [analytics, setAnalytics] = useState<any>(null)
   const [orders, setOrders] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
+  const [coupons, setCoupons] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month' | 'all'>('all')
   const [message, setMessage] = useState('')
@@ -39,15 +40,18 @@ export default function SellerAnalytics() {
       setCachedStore(found)
       setStore(found)
 
-      const [analyticsRes, productRes, ordersRes] = await Promise.all([
+      const [analyticsRes, productRes, ordersRes, couponsRes] = await Promise.all([
         api.get(`/stores/${found.id}/analytics/`).catch(() => ({ data: null })),
         api.get('/products/').catch(() => ({ data: [] })),
         api.get(`/seller/stores/${found.id}/whatsapp-orders/`).catch(() => ({ data: [] })),
+        api.get('/coupons/').catch(() => ({ data: [] })),
       ])
 
       setAnalytics(analyticsRes.data)
       setProducts((productRes.data || []).filter((item: any) => String(item.store) === String(found.id)))
       setOrders(ordersRes.data || [])
+      const couponList = Array.isArray(couponsRes.data) ? couponsRes.data : (couponsRes.data?.results || [])
+      setCoupons(couponList.filter((item: any) => String(item.store) === String(found.id)))
     } catch {
       navigate('/login')
     } finally {
@@ -207,6 +211,15 @@ export default function SellerAnalytics() {
     () => products.filter((p) => Number(p.stock_quantity ?? 100) > 0 && Number(p.stock_quantity ?? 100) <= 5),
     [products]
   )
+
+  // Coupon Redemptions & Savings Metrics
+  const totalCouponRedemptions = useMemo(() => {
+    return coupons.reduce((sum, c) => sum + (c.usage_count || 0), 0)
+  }, [coupons])
+
+  const totalCouponDiscountGiven = useMemo(() => {
+    return validOrders.reduce((sum, o) => sum + (parseFloat(o.discount_amount) || 0), 0)
+  }, [validOrders])
 
   async function requestNotificationPermission() {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -436,8 +449,53 @@ export default function SellerAnalytics() {
             </div>
           </div>
 
-          <!-- Section 3: Buyer Traffic, Conversion & Customer Loyalty -->
-          <div class="section-title">2. Buyer App Visitors & Repeat Customer Loyalty</div>
+          <!-- Section 3: Promotions & Coupon Redemptions Audit -->
+          <div class="section-title">3. Promotions & Coupon Redemptions Audit</div>
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="label">Active Coupons</div>
+              <div class="value">${coupons.filter(c => c.is_active).length} / ${coupons.length}</div>
+              <div class="sub" style="color: #059669;">Published Live</div>
+            </div>
+            <div class="kpi-card indigo">
+              <div class="label">Total Redemptions</div>
+              <div class="value">${totalCouponRedemptions}</div>
+              <div class="sub" style="color: #4f46e5;">Placed Orders</div>
+            </div>
+            <div class="kpi-card">
+              <div class="label">Total Discount Given</div>
+              <div class="value">₹${totalCouponDiscountGiven.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <div class="sub" style="color: #059669;">Customer Savings</div>
+            </div>
+          </div>
+
+          ${coupons.length > 0 ? `
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Coupon Code</th>
+                    <th>Status</th>
+                    <th>Offer Discount</th>
+                    <th>Successful Order Redemptions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${coupons.map((c: any) => `
+                    <tr>
+                      <td style="font-family: monospace; font-weight: 900; color: #4f46e5;">${c.code}</td>
+                      <td>${c.is_active ? '<span class="badge-ok">PUBLISHED</span>' : '<span class="badge-alert">DRAFT</span>'}</td>
+                      <td>${c.discount_type === 'PERCENTAGE' ? `${c.discount_value}% OFF` : `FLAT ₹${c.discount_value} OFF`} ${c.min_order_amount > 0 ? `(Min Order ₹${c.min_order_amount})` : ''}</td>
+                      <td style="font-weight: 800; color: #0f172a;">${c.usage_count || 0} Orders Applied</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+
+          <!-- Section 4: Buyer Traffic, Conversion & Customer Loyalty -->
+          <div class="section-title">4. Buyer App Visitors & Repeat Customer Loyalty</div>
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="label">Storefront Visitors</div>
@@ -486,7 +544,7 @@ export default function SellerAnalytics() {
           ` : ''}
 
           <!-- Section 5: Inventory Stock Health Audit -->
-          <div class="section-title">3. Inventory Stock Health & Risk Audit</div>
+          <div class="section-title">5. Inventory Stock Health & Risk Audit</div>
           <div class="table-container">
             <table>
               <thead>
@@ -513,7 +571,7 @@ export default function SellerAnalytics() {
 
           <!-- Section 6: Customer Demand Queue Audit -->
           ${filteredProductRequests.length > 0 ? `
-            <div class="section-title">4. Customer Unmet Product Demand Queue</div>
+            <div class="section-title">6. Customer Unmet Product Demand Queue</div>
             <div class="table-container">
               <table>
                 <thead>
@@ -538,7 +596,7 @@ export default function SellerAnalytics() {
 
           <!-- Section 7: Popular Search Queries -->
           ${searches.length > 0 ? `
-            <div class="section-title">5. Popular Storefront Search Queries</div>
+            <div class="section-title">7. Popular Storefront Search Queries</div>
             <div class="table-container">
               <table>
                 <thead>
@@ -954,6 +1012,87 @@ export default function SellerAnalytics() {
               </div>
             </div>
           )}
+        </section>
+
+        {/* 🏷️ COUPON PERFORMANCE & ORDER REDEMPTIONS ANALYTICS */}
+        <section className="rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-white via-indigo-50/40 to-slate-50 p-4 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Promotions Analytics</p>
+              <h2 className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                <span>🏷️ Coupon Code Usage & Order Redemptions</span>
+              </h2>
+            </div>
+            <Link to={`/stores/${store.id}/coupons`} className="text-xs font-extrabold text-indigo-600 hover:underline">
+              Manage Coupons →
+            </Link>
+          </div>
+
+          {/* Quick Coupon Metrics Summary Grid */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="rounded-xl bg-white p-2.5 border border-slate-200/80 shadow-2xs space-y-0.5">
+              <p className="text-[9px] font-black uppercase text-slate-500">Active Coupons</p>
+              <p className="text-base sm:text-xl font-black text-slate-900">
+                {coupons.filter(c => c.is_active).length} / {coupons.length}
+              </p>
+              <p className="text-[9px] font-extrabold text-emerald-600">Published Live</p>
+            </div>
+
+            <div className="rounded-xl bg-white p-2.5 border border-slate-200/80 shadow-2xs space-y-0.5">
+              <p className="text-[9px] font-black uppercase text-slate-500">Total Redemptions</p>
+              <p className="text-base sm:text-xl font-black text-indigo-600">
+                {totalCouponRedemptions}
+              </p>
+              <p className="text-[9px] font-extrabold text-indigo-500">Placed Orders</p>
+            </div>
+
+            <div className="rounded-xl bg-white p-2.5 border border-slate-200/80 shadow-2xs space-y-0.5">
+              <p className="text-[9px] font-black uppercase text-slate-500">Total Discount Given</p>
+              <p className="text-base sm:text-xl font-black text-emerald-600">
+                ₹{totalCouponDiscountGiven.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              <p className="text-[9px] font-extrabold text-emerald-600">Customer Savings</p>
+            </div>
+          </div>
+
+          {/* Coupon Performance Table List */}
+          <div className="space-y-2 pt-1">
+            {coupons.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500 font-medium">
+                No coupons created yet. Go to Coupons page to create promotional offers.
+              </div>
+            ) : (
+              coupons.map((coupon: any) => (
+                <div key={coupon.id} className="flex items-center justify-between rounded-xl bg-white p-2.5 border border-slate-200/90 shadow-2xs">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-black text-xs text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+                        {coupon.code}
+                      </span>
+                      <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                        coupon.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {coupon.is_active ? 'PUBLISHED' : 'DRAFT'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-semibold mt-1">
+                      Discount: {coupon.discount_type === 'PERCENTAGE' ? `${coupon.discount_value}% OFF` : `FLAT ₹${coupon.discount_value} OFF`}
+                      {coupon.min_order_amount > 0 && ` • Min Order ₹${coupon.min_order_amount}`}
+                    </p>
+                  </div>
+
+                  <div className="text-right shrink-0 pl-2">
+                    <p className="text-xs font-black text-indigo-700">
+                      {coupon.usage_count || 0} Orders
+                    </p>
+                    <p className="text-[9px] font-bold text-slate-400">
+                      {coupon.usage_count > 0 ? 'Applied on Order' : '0 Applied'}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </section>
 
         {/* Product Request Queue / Customer Requests */}

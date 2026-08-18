@@ -6,6 +6,9 @@ import NotificationBellHeader from './NotificationBellHeader'
 import { useNotifications } from '../context/NotificationContext'
 import SellerAiAssistantModal from './SellerAiAssistantModal'
 import StoreQrStandeeModal from './StoreQrStandeeModal'
+import StorePosterModal from './StorePosterModal'
+import SellerScratchConfigModal from './SellerScratchConfigModal'
+import { ScratchCardConfig } from './CustomerScratchCardModal'
 import {
   Store,
   Settings,
@@ -36,7 +39,9 @@ import {
   MessageSquare,
   PhoneCall,
   Volume2,
-  VolumeX
+  VolumeX,
+  Image as ImageIcon,
+  Gift
 } from 'lucide-react'
 
 interface SellerHeaderProps {
@@ -49,6 +54,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const auth = useAuth()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
+  const [showPosterModal, setShowPosterModal] = useState(false)
+  const [showScratchModal, setShowScratchModal] = useState(false)
   const [storeName, setStoreName] = useState(store?.name || '')
   const [storeDescription, setStoreDescription] = useState(store?.description || '')
   const [storeAddress, setStoreAddress] = useState(store?.address || '')
@@ -61,6 +68,29 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [showQrModal, setShowQrModal] = useState(false)
   const [message, setMessage] = useState('')
   const navigate = useNavigate()
+
+  const [scratchConfig, setScratchConfig] = useState<ScratchCardConfig>(() => {
+    try {
+      const saved = localStorage.getItem(`qs_scratch_config_${store?.id}`)
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return {
+      enabled: true,
+      title: '🎉 Scratch & Win Welcome Gift!',
+      rewardText: 'Flat ₹50 OFF on orders above ₹299',
+      couponCode: 'LUCKY50',
+      discountType: 'fixed',
+      discountValue: 50,
+      minOrder: 299
+    }
+  })
+
+  const handleSaveScratchConfig = (newConfig: ScratchCardConfig) => {
+    setScratchConfig(newConfig)
+    try {
+      localStorage.setItem(`qs_scratch_config_${store?.id}`, JSON.stringify(newConfig))
+    } catch {}
+  }
 
   const [soundboxOn, setSoundboxOn] = useState(() => {
     return localStorage.getItem('qs_soundbox_enabled') !== 'false'
@@ -358,6 +388,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <span className="hidden xs:inline font-black tracking-wide">✨ AI Copilot</span>
             </button>
 
+
+
             {/* Real-time Notification Bell */}
             <NotificationBellHeader />
 
@@ -652,12 +684,44 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             )}
           </div>
 
-          {/* SECTION 2: 🚀 Seller Suite Modules (Quick Navigation) */}
+          {/* SECTION 2: 🚀 Seller Suite Modules & Marketing Tools */}
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5 shadow-2xs">
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1">
               <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
-              <span>Seller Navigation Modules</span>
+              <span>Seller Navigation & Marketing Tools</span>
             </p>
+
+            {/* AI WhatsApp Status Poster Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setShowPosterModal(true)
+              }}
+              className="w-full group flex items-center justify-between rounded-xl bg-purple-500/10 p-3 text-xs font-black text-purple-900 border border-purple-300/80 hover:bg-purple-500/20 hover:border-purple-400 transition-all shadow-2xs cursor-pointer text-left"
+            >
+              <span className="flex items-center gap-3">
+                <ImageIcon className="h-4.5 w-4.5 text-purple-600 shrink-0" />
+                <span>🎨 AI WhatsApp Poster Generator</span>
+              </span>
+              <span className="text-purple-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
+            </button>
+
+            {/* Scratch Card / Gift Config Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setShowScratchModal(true)
+              }}
+              className="w-full group flex items-center justify-between rounded-xl bg-amber-500/10 p-3 text-xs font-black text-amber-900 border border-amber-300/80 hover:bg-amber-500/20 hover:border-amber-400 transition-all shadow-2xs cursor-pointer text-left"
+            >
+              <span className="flex items-center gap-3">
+                <Gift className="h-4.5 w-4.5 text-amber-600 shrink-0" />
+                <span>🎁 Customer Gift & Scratch Config</span>
+              </span>
+              <span className="text-amber-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
+            </button>
 
             <Link
               to={`/stores/${store.id}/catalog`}
@@ -990,6 +1054,25 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           store={store}
           publicUrl={`${window.location.origin}/store/${store.slug}`}
           onClose={() => setShowQrModal(false)}
+        />
+      )}
+
+      {/* AI WhatsApp Poster Generator Modal */}
+      {showPosterModal && store && (
+        <StorePosterModal
+          store={store}
+          publicUrl={`${window.location.origin}/store/${store.slug}`}
+          onClose={() => setShowPosterModal(false)}
+        />
+      )}
+
+      {/* Seller Scratch Card Rewards Settings Modal */}
+      {showScratchModal && store && (
+        <SellerScratchConfigModal
+          storeId={store.id}
+          currentConfig={scratchConfig}
+          onSave={handleSaveScratchConfig}
+          onClose={() => setShowScratchModal(false)}
         />
       )}
     </>

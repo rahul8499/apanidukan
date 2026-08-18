@@ -9,18 +9,18 @@ export default function NotificationBellHeader({ className = '' }: { className?:
     window.location.pathname === '/platform'
   )
 
-  const {
-    notifications,
-    unreadCount,
-    showNotifDrawer,
-    setShowNotifDrawer,
-    permission,
-    requestPermission,
-    markAllRead,
-    clearAll,
-    removeNotification,
-    addNotification
-  } = useNotifications()
+  const notifContext = useNotifications()
+
+  const notifications = notifContext?.notifications || []
+  const unreadCount = notifContext?.unreadCount || 0
+  const showNotifDrawer = notifContext?.showNotifDrawer || false
+  const setShowNotifDrawer = notifContext?.setShowNotifDrawer || (() => {})
+  const permission = notifContext?.permission || 'default'
+  const requestPermission = notifContext?.requestPermission || (async () => {})
+  const markAllRead = notifContext?.markAllRead || (() => {})
+  const clearAll = notifContext?.clearAll || (() => {})
+  const removeNotification = notifContext?.removeNotification || (() => {})
+  const addNotification = notifContext?.addNotification || (() => {})
 
   const navigate = useNavigate()
 

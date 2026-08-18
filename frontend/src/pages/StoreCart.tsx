@@ -5,6 +5,7 @@ import api from '../services/api'
 import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
 import NotificationBellHeader from '../components/NotificationBellHeader'
+import CustomerScratchCardModal, { ScratchCardConfig } from '../components/CustomerScratchCardModal'
 import {
   Tag, Sparkles, Check, X, MapPin, Zap, ArrowLeft, Trash2, Plus, Minus,
   ShieldCheck, ShoppingBag, CreditCard, ChevronRight, CheckCircle2, AlertCircle
@@ -37,10 +38,31 @@ function CartContent() {
   // Coupons State
   const [availableCoupons, setAvailableCoupons] = useState<any[]>([])
   const [couponInput, setCouponInput] = useState('')
-  const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null)
+  const [appliedCoupons, setAppliedCoupons] = useState<any[]>([])
   const [couponError, setCouponError] = useState('')
   const [couponSuccess, setCouponSuccess] = useState('')
   const [validatingCoupon, setValidatingCoupon] = useState(false)
+
+  const [showScratchModal, setShowScratchModal] = useState(false)
+  const [scratchConfig, setScratchConfig] = useState<ScratchCardConfig | null>(null)
+
+  useEffect(() => {
+    if (!store?.id) return
+    try {
+      const configKey = `qs_scratch_config_${store.id}`
+      const configSaved = localStorage.getItem(configKey)
+      const config: ScratchCardConfig = configSaved ? JSON.parse(configSaved) : {
+        enabled: true,
+        title: '🎉 Scratch & Win Welcome Gift!',
+        rewardText: 'Flat ₹50 OFF on orders above ₹299',
+        couponCode: 'LUCKY50',
+        discountType: 'fixed',
+        discountValue: 50,
+        minOrder: 299
+      }
+      setScratchConfig(config)
+    } catch {}
+  }, [store?.id])
 
   useEffect(() => {
     if (customerName.trim()) localStorage.setItem('qs_chat_name', customerName.trim())
@@ -70,8 +92,16 @@ function CartContent() {
       .catch(() => setError('Store details could not be loaded.'))
 
     api.get(`/public/stores/${storeSlug}/coupons/`)
-      .then(res => setAvailableCoupons(Array.isArray(res.data) ? res.data : []))
-      .catch(() => { })
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setAvailableCoupons(res.data)
+        } else if (res.data && Array.isArray(res.data.results)) {
+          setAvailableCoupons(res.data.results)
+        } else {
+          setAvailableCoupons([])
+        }
+      })
+      .catch(() => setAvailableCoupons([]))
   }, [storeSlug])
 
   const [flashSale, setFlashSale] = useState<any>(() => {
@@ -114,6 +144,23 @@ function CartContent() {
     return () => window.removeEventListener('qs-flash-sale-updated', handleUpdate)
   }, [store?.id, storeSlug])
 
+  // Auto-populate input with claimed coupon only if not manually removed by customer
+  useEffect(() => {
+    if (!storeSlug) return
+    try {
+      const isRemoved = sessionStorage.getItem(`qs_user_removed_coupon_${storeSlug}`) === 'true'
+      if (isRemoved) return
+
+      const savedClaimed = localStorage.getItem(`qs_claimed_coupon_${storeSlug}`)
+      if (savedClaimed && (!appliedCoupons || appliedCoupons.length === 0) && !couponInput) {
+        const parsed = JSON.parse(savedClaimed)
+        if (parsed?.code) {
+          setCouponInput(parsed.code)
+        }
+      }
+    } catch {}
+  }, [storeSlug, appliedCoupons, couponInput])
+
   const applyCouponCode = async (codeToApply: string) => {
     const code = codeToApply.trim().toUpperCase()
     if (!code) {
@@ -121,36 +168,112 @@ function CartContent() {
       return
     }
 
+    if (appliedCoupons.some(c => c.code?.toUpperCase() === code)) {
+      setCouponError(`Coupon ${code} is already applied!`)
+      return
+    }
+
+    if (storeSlug) {
+      try {
+        sessionStorage.removeItem(`qs_user_removed_coupon_${storeSlug}`)
+      } catch {}
+    }
+
     setCouponError('')
     setCouponSuccess('')
     setValidatingCoupon(true)
+
+    // Load seller-configured scratch card settings if applicable
+    let scratchVal = 50
+    let scratchType = 'FIXED'
+    let scratchMin = 0
+
+    try {
+      const scratchSaved = store?.id ? localStorage.getItem(`qs_scratch_config_${store.id}`) : null
+      if (scratchSaved) {
+        const parsed = JSON.parse(scratchSaved)
+        scratchVal = parsed.discountValue || 50
+        scratchType = parsed.discountType === 'percentage' ? 'PERCENTAGE' : 'FIXED'
+        scratchMin = parsed.minOrder || 0
+      }
+    } catch {}
+
+    // Check min_order_amount locally if available in availableCoupons
+    const localCoupon = (availableCoupons || []).find((c: any) => c.code?.toUpperCase() === code)
+    if (localCoupon && localCoupon.min_order_amount && cart.total < Number(localCoupon.min_order_amount)) {
+      setCouponError(`Minimum order amount of ₹${Number(localCoupon.min_order_amount).toFixed(2)} required for coupon ${code}. (Current total: ₹${cart.total.toFixed(2)})`)
+      setValidatingCoupon(false)
+      return
+    }
 
     try {
       const res = await api.post(`/public/stores/${storeSlug}/validate-coupon/`, {
         code,
         subtotal: cart.total,
-        items: cart.items.map(item => ({ id: item.id, quantity: item.quantity }))
+        items: cart.items.map(item => ({ id: item.id, quantity: item.quantity })),
+        is_scratch: scratchConfig?.enabled && scratchConfig?.couponCode?.toUpperCase() === code,
+        scratch_discount_value: scratchVal,
+        scratch_discount_type: scratchType,
+        scratch_min_order: scratchMin
       })
 
       if (res.data?.valid) {
-        setAppliedCoupon(res.data)
-        setCouponSuccess(`Coupon ${res.data.code} applied! Saved ₹${res.data.discount_amount.toFixed(2)}`)
+        const discAmt = Number(res.data.discount_amount || res.data.discount || 0)
+        const newCoupon = {
+          ...res.data,
+          code: res.data.code || code,
+          discount_amount: discAmt
+        }
+        setAppliedCoupons(prev => [...prev.filter(c => c.code?.toUpperCase() !== code), newCoupon])
+        setCouponSuccess(`Coupon ${newCoupon.code} applied! Saved ₹${newCoupon.discount_amount.toFixed(2)}`)
         setCouponInput('')
       } else {
-        setCouponError(res.data?.detail || 'Invalid coupon code.')
+        setCouponError(res.data?.detail || `Invalid or expired coupon code ${code}.`)
       }
     } catch (err: any) {
-      setAppliedCoupon(null)
-      setCouponError(err.response?.data?.detail || 'Coupon code invalid or subtotal too low.')
+      const backendError = err.response?.data?.detail || err.response?.data?.message
+      if (backendError) {
+        setCouponError(backendError)
+      } else if (scratchConfig?.enabled && scratchConfig?.couponCode?.toUpperCase() === code) {
+        if (cart.total < scratchMin) {
+          setCouponError(`Minimum order amount of ₹${scratchMin} required for Scratch Card reward coupon.`)
+        } else {
+          const fallbackDisc = scratchType === 'PERCENTAGE' ? (cart.total * scratchVal) / 100 : scratchVal
+          const finalDisc = Math.min(fallbackDisc, cart.total)
+          const newCoupon = {
+            valid: true,
+            code: code,
+            discount_amount: finalDisc,
+            discount_type: scratchType,
+            discount_value: scratchVal
+          }
+          setAppliedCoupons(prev => [...prev.filter(c => c.code?.toUpperCase() !== code), newCoupon])
+          setCouponSuccess(`Coupon ${code} applied! Saved ₹${finalDisc.toFixed(2)}`)
+          setCouponInput('')
+        }
+      } else {
+        setCouponError(`Invalid or expired coupon code ${code}.`)
+      }
     } finally {
       setValidatingCoupon(false)
     }
   }
 
-  const removeAppliedCoupon = () => {
-    setAppliedCoupon(null)
+  const removeAppliedCoupon = (codeToRemove?: string) => {
+    if (!codeToRemove) {
+      setAppliedCoupons([])
+    } else {
+      setAppliedCoupons(prev => prev.filter(c => c.code?.toUpperCase() !== codeToRemove.toUpperCase()))
+    }
     setCouponSuccess('')
     setCouponError('')
+    setCouponInput('')
+    if (storeSlug) {
+      try {
+        localStorage.removeItem(`qs_claimed_coupon_${storeSlug}`)
+        sessionStorage.setItem(`qs_user_removed_coupon_${storeSlug}`, 'true')
+      } catch {}
+    }
   }
 
   function useCurrentLocation() {
@@ -212,9 +335,10 @@ function CartContent() {
       const flashSaleDiscount = (flashSale?.active && flashSale?.discount > 0)
         ? (cart.total * (flashSale.discount / 100))
         : 0
-      const couponDiscount = appliedCoupon ? appliedCoupon.discount_amount : 0
+      const couponDiscount = appliedCoupons.reduce((sum, item) => sum + (Number(item.discount_amount) || Number(item.discount) || 0), 0)
       const totalDiscountAmt = couponDiscount + flashSaleDiscount
       const finalTotal = Math.max(0, cart.total - totalDiscountAmt)
+      const appliedCodes = appliedCoupons.map(c => c.code).join(', ')
 
       const result = await api.post(`/public/stores/${storeSlug}/whatsapp-orders/`, {
         items: cart.items.map(item => ({ id: item.id, quantity: item.quantity })),
@@ -223,7 +347,7 @@ function CartContent() {
         payment_type: paymentType,
         delivery_address: deliveryAddress,
         location_url: locationUrl,
-        coupon_code: appliedCoupon ? appliedCoupon.code : '',
+        coupon_code: appliedCodes,
         discount_amount: totalDiscountAmt,
       })
       const order = result.data
@@ -241,7 +365,7 @@ function CartContent() {
         `Items: ${order.items.map((item: any) => `${item.name} × ${item.quantity}`).join(', ')}`,
         `Subtotal: ₹${cart.total.toFixed(2)}`,
         ...(flashSale?.active && flashSaleDiscount > 0 ? [`⚡ Flash Sale (${flashSale.discount}% OFF): -₹${flashSaleDiscount.toFixed(2)}`] : []),
-        ...(appliedCoupon ? [`Coupon (${appliedCoupon.code}): -₹${couponDiscount.toFixed(2)}`] : []),
+        ...(appliedCoupons.length > 0 ? [`🎟️ Coupons (${appliedCodes}): -₹${couponDiscount.toFixed(2)}`] : []),
         `Total Payable: ₹${finalTotal.toFixed(2)}`,
         ...(order.delivery_address ? [`Delivery Address: ${order.delivery_address}`] : []),
         ...(order.location_url ? [`Location: ${order.location_url}`] : []),
@@ -259,7 +383,8 @@ function CartContent() {
 
   const mediaUrl = (url: string) => url?.startsWith('http') ? url : `${window.location.protocol}//${window.location.hostname}:8000${url}`
   const flashSaleDiscountAmount = (flashSale?.active && flashSale?.discount > 0) ? (cart.total * (flashSale.discount / 100)) : 0
-  const discountAmount = (appliedCoupon ? appliedCoupon.discount_amount : 0) + flashSaleDiscountAmount
+  const couponDiscountAmount = appliedCoupons.reduce((sum, item) => sum + (Number(item.discount_amount) || Number(item.discount) || 0), 0)
+  const discountAmount = couponDiscountAmount + flashSaleDiscountAmount
   const finalTotalAmount = Math.max(0, cart.total - discountAmount)
 
   // Empty Cart View
@@ -552,99 +677,199 @@ function CartContent() {
                   <Tag className="h-4 w-4 text-indigo-600" />
                   <h3 className="text-xs sm:text-sm font-bold text-slate-900">Store Coupons & Offers</h3>
                 </div>
-                {appliedCoupon && (
+                {appliedCoupons.length > 0 && (
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                    Applied
+                    {appliedCoupons.length} Applied
                   </span>
                 )}
               </div>
 
-              {/* Applied Coupon Display */}
-              {appliedCoupon ? (
-                <div className="flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-300 p-3 shadow-xs">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold text-xs shadow-2xs">
-                      🎉
-                    </div>
-                    <div className="truncate">
-                      <p className="text-xs font-black text-emerald-950">Woohoo! Code "{appliedCoupon.code}" Applied!</p>
-                      <p className="text-[11px] text-emerald-700 font-extrabold">You are saving ₹{appliedCoupon.discount_amount.toFixed(2)} on this order</p>
-                    </div>
+              {/* Applied Coupons Display Banner if Active */}
+              {appliedCoupons.length > 0 && (
+                <div className="space-y-1.5 rounded-xl bg-emerald-50 border border-emerald-300 p-3 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5">
+                    <span className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
+                      🎉 {appliedCoupons.length} {appliedCoupons.length === 1 ? 'Coupon' : 'Coupons'} Applied!
+                    </span>
+                    <span className="text-[11px] text-emerald-700 font-black">
+                      Total Savings: ₹{couponDiscountAmount.toFixed(2)}
+                    </span>
                   </div>
-                  <button
-                    onClick={removeAppliedCoupon}
-                    className="text-[10px] font-extrabold text-rose-600 hover:text-rose-800 bg-white px-2.5 py-1 rounded-lg border border-rose-200 cursor-pointer shrink-0 shadow-2xs"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  <div className="flex gap-2">
-                    <input
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      placeholder="Enter Coupon Code"
-                      className="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-mono font-bold text-slate-900 uppercase focus:border-indigo-600 focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => applyCouponCode(couponInput)}
-                      disabled={validatingCoupon || !couponInput.trim()}
-                      className="rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-extrabold text-white hover:bg-indigo-700 disabled:bg-slate-300 transition-all cursor-pointer shrink-0"
-                    >
-                      {validatingCoupon ? 'Checking…' : 'APPLY'}
-                    </button>
-                  </div>
-
-                  {couponError && (
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-rose-700 bg-rose-50 p-2 rounded-xl border border-rose-200">
-                      <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-600" />
-                      <span>{couponError}</span>
-                    </div>
-                  )}
-
-                  {/* Available Store Coupons Pill Cards */}
-                  {(() => {
-                    const applicableCoupons = availableCoupons.filter((coupon) => {
-                      if (!coupon.product_id) return true
-                      return cart.items.some((item) => item.id === coupon.product_id)
-                    })
-
-                    if (applicableCoupons.length === 0) return null
-
-                    return (
-                      <div className="space-y-1.5 pt-1">
-                        <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Available Coupons:</p>
-                        <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5 scrollbar-none">
-                          {applicableCoupons.map((coupon) => (
-                            <div
-                              key={coupon.id}
-                              className="flex items-center justify-between rounded-xl bg-white border border-slate-200 p-2 text-xs shadow-2xs"
-                            >
-                              <div className="min-w-0 pr-1">
-                                <span className="font-mono font-black text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">
-                                  {coupon.code}
-                                </span>
-                                <p className="text-[10px] font-bold text-slate-700 truncate mt-0.5">
-                                  {coupon.discount_type === 'PERCENTAGE' ? `${coupon.discount_value}% OFF` : `FLAT ₹${coupon.discount_value} OFF`}
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => applyCouponCode(coupon.code)}
-                                className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[10px] font-extrabold text-white hover:bg-emerald-500 cursor-pointer shrink-0"
-                              >
-                                APPLY
-                              </button>
-                            </div>
-                          ))}
+                  <div className="space-y-1.5 pt-1">
+                    {appliedCoupons.map((c) => (
+                      <div key={c.code} className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-lg border border-emerald-200 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-black text-xs text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            {c.code}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-700">
+                            -₹{Number(c.discount_amount || 0).toFixed(2)}
+                          </span>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => removeAppliedCoupon(c.code)}
+                          className="text-[10px] font-extrabold text-rose-600 hover:text-rose-800 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 cursor-pointer"
+                        >
+                          ✕ Remove
+                        </button>
                       </div>
-                    )
-                  })()}
+                    ))}
+                  </div>
                 </div>
               )}
+
+              {/* Coupon Input & Available Options */}
+              <div className="space-y-2.5">
+                <div className="flex gap-2">
+                  <input
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    placeholder="Enter Coupon Code"
+                    className="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-mono font-bold text-slate-900 uppercase focus:border-indigo-600 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => applyCouponCode(couponInput)}
+                    disabled={validatingCoupon || !couponInput.trim()}
+                    className="rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-extrabold text-white hover:bg-indigo-700 disabled:bg-slate-300 transition-all cursor-pointer shrink-0"
+                  >
+                    {validatingCoupon ? 'Checking…' : 'APPLY'}
+                  </button>
+                </div>
+
+                {/* Scratch & Win Coupon Button */}
+                {scratchConfig?.enabled && (
+                  <button
+                    type="button"
+                    onClick={() => setShowScratchModal(true)}
+                    className="w-full flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-500/20 via-indigo-500/10 to-amber-500/20 p-2 border border-amber-400/40 text-xs font-black text-amber-900 hover:scale-[1.01] transition-all cursor-pointer shadow-xs"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-amber-600 animate-bounce" />
+                      <span>🎁 Scratch & Win Welcome Coupon!</span>
+                    </span>
+                    <span className="bg-amber-500 text-white font-black text-[10px] px-2 py-0.5 rounded-full uppercase">
+                      SCRATCH NOW →
+                    </span>
+                  </button>
+                )}
+
+                {/* Available Store Coupons Pill Cards */}
+                {(() => {
+                  const listToRender = [...availableCoupons]
+                  if (scratchConfig?.enabled && scratchConfig?.couponCode) {
+                    const exists = listToRender.some(c => c.code?.toUpperCase() === scratchConfig.couponCode.toUpperCase())
+                    if (!exists) {
+                      listToRender.unshift({
+                        id: 'scratch_config_card',
+                        code: scratchConfig.couponCode,
+                        discount_type: scratchConfig.discountType === 'percentage' ? 'PERCENTAGE' : 'FIXED',
+                        discount_value: scratchConfig.discountValue,
+                        is_scratch: true
+                      })
+                    }
+                  }
+
+                  const applicableCoupons = listToRender.filter((coupon) => {
+                    if (!coupon.product_id) return true
+                    return cart.items.some((item) => item.id === coupon.product_id)
+                  })
+
+                  if (applicableCoupons.length === 0) return null
+
+                  return (
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Available Coupons ({applicableCoupons.length}):</p>
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5 scrollbar-none">
+                        {applicableCoupons.map((coupon) => {
+                          const isCurrent = appliedCoupons.some(c => c.code?.toUpperCase() === coupon.code?.toUpperCase())
+
+                          return (
+                            <div
+                              key={coupon.id}
+                              className={`flex items-center justify-between rounded-xl border p-2 text-xs shadow-2xs transition-all ${
+                                isCurrent
+                                  ? 'bg-emerald-50 border-emerald-400 ring-1 ring-emerald-400'
+                                  : coupon.is_scratch 
+                                  ? 'bg-amber-50/70 border-amber-300/80' 
+                                  : 'bg-white border-slate-200'
+                              }`}
+                            >
+                              <div className="min-w-0 pr-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span className={`font-mono font-black text-[10px] px-1.5 py-0.5 rounded border ${
+                                    isCurrent
+                                      ? 'text-emerald-900 bg-emerald-200 border-emerald-400'
+                                      : coupon.is_scratch 
+                                      ? 'text-amber-900 bg-amber-200/80 border-amber-400' 
+                                      : 'text-indigo-700 bg-indigo-50 border-indigo-200'
+                                  }`}>
+                                    {coupon.code}
+                                  </span>
+                                  {coupon.is_scratch && (
+                                    <span className="text-[9px] font-black text-amber-700 bg-amber-100 px-1 rounded">🎁 Scratch Reward</span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] font-bold text-slate-700 truncate mt-0.5">
+                                  {coupon.discount_type === 'PERCENTAGE' ? `${coupon.discount_value}% OFF` : `FLAT ₹${coupon.discount_value} OFF`}
+                                  {Number(coupon.min_order_amount || 0) > 0 && (
+                                    <span className="text-amber-700 font-extrabold ml-1.5">• Min Order ₹{coupon.min_order_amount}</span>
+                                  )}
+                                </p>
+                              </div>
+
+                               {(() => {
+                                 const minAmt = Number(coupon.min_order_amount || 0)
+                                 const isBelowMin = minAmt > 0 && cart.total < minAmt
+                                 const needed = minAmt - cart.total
+
+                                 if (isCurrent) {
+                                   return (
+                                     <button
+                                       type="button"
+                                       onClick={() => removeAppliedCoupon(coupon.code)}
+                                       className="rounded-lg bg-emerald-600 hover:bg-rose-600 px-2.5 py-1 text-[10px] font-black text-white shrink-0 shadow-2xs flex items-center gap-1 cursor-pointer transition-colors"
+                                     >
+                                       ✓ APPLIED (✕)
+                                     </button>
+                                   )
+                                 }
+
+                                 if (isBelowMin) {
+                                   return (
+                                     <button
+                                       type="button"
+                                       disabled
+                                       className="rounded-lg bg-slate-100 text-slate-400 border border-slate-200 px-2 py-1 text-[9px] font-bold shrink-0 cursor-not-allowed"
+                                       title={`Add ₹${needed.toFixed(2)} more to unlock this coupon`}
+                                     >
+                                       Add ₹{needed > 1000 ? Math.round(needed) : needed.toFixed(0)} more
+                                     </button>
+                                   )
+                                 }
+
+                                 return (
+                                   <button
+                                     type="button"
+                                     onClick={() => {
+                                       setCouponInput(coupon.code)
+                                       applyCouponCode(coupon.code)
+                                     }}
+                                     className="rounded-lg bg-indigo-600 px-2.5 py-1 text-[10px] font-extrabold text-white hover:bg-indigo-500 cursor-pointer shrink-0 shadow-2xs"
+                                   >
+                                     + APPLY
+                                   </button>
+                                 )
+                               })()}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
             </div>
 
             {/* FLIPKART STYLE PRICE DETAILS CARD */}
@@ -666,12 +891,12 @@ function CartContent() {
                   </div>
                 )}
 
-                {appliedCoupon && (
-                  <div className="flex justify-between text-emerald-600 font-extrabold">
-                    <span>Discount ({appliedCoupon.code}):</span>
-                    <span>-₹{appliedCoupon.discount_amount.toFixed(2)}</span>
+                {appliedCoupons.map((c) => (
+                  <div key={c.code} className="flex justify-between text-emerald-600 font-extrabold">
+                    <span>🎟️ Coupon ({c.code}):</span>
+                    <span>-₹{Number(c.discount_amount || 0).toFixed(2)}</span>
                   </div>
-                )}
+                ))}
 
                 <div className="flex justify-between text-slate-600">
                   <span>Delivery Charges:</span>
@@ -728,6 +953,19 @@ function CartContent() {
           </button>
         </div>
       </div>
+
+      {/* Scratch Card Modal on Cart Page */}
+      {showScratchModal && scratchConfig && store && (
+        <CustomerScratchCardModal
+          config={scratchConfig}
+          storeName={store.name}
+          onClaimCoupon={(code) => {
+            setCouponInput(code)
+            applyCouponCode(code)
+          }}
+          onClose={() => setShowScratchModal(false)}
+        />
+      )}
 
       <CustomerBottomNav storeSlug={storeSlug!} active="cart" />
       <CustomerChatWidget storeSlug={storeSlug!} />

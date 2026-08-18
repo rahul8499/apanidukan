@@ -179,7 +179,26 @@ class PublicValidateCouponView(generics.GenericAPIView):
         ).first()
 
         if not coupon:
-            return Response({'valid': False, 'detail': 'Invalid or expired coupon code.'}, status=400)
+            # Auto-create/register dynamic scratch card coupon in database ONLY if explicitly scratch reward code
+            is_scratch = request.data.get('is_scratch')
+            if is_scratch and code.startswith('SCRATCH'):
+                scratch_val = float(request.data.get('scratch_discount_value', 50.0))
+                scratch_type = str(request.data.get('scratch_discount_type', 'FIXED')).upper()
+                scratch_min = float(request.data.get('scratch_min_order', 0.0))
+
+                coupon, _ = Coupon.objects.get_or_create(
+                    store=store,
+                    code=code,
+                    defaults={
+                        'discount_type': scratch_type if scratch_type in ['PERCENTAGE', 'FIXED'] else 'FIXED',
+                        'discount_value': scratch_val,
+                        'min_order_amount': scratch_min,
+                        'is_active': True
+                    }
+                )
+
+        if not coupon:
+            return Response({'valid': False, 'detail': f'Invalid or expired coupon code "{code}".'}, status=400)
 
         # Product-specific coupon validation
         cart_product_ids = []

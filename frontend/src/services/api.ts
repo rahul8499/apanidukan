@@ -59,7 +59,13 @@ api.interceptors.response.use(
       if (!refreshToken) {
         isRefreshing = false;
         localStorage.removeItem('access_token');
-        if (window.location.pathname !== '/login') window.location.href = '/login';
+        const isPublicRoute = typeof window !== 'undefined' && (
+          window.location.pathname.startsWith('/store/') ||
+          window.location.pathname.startsWith('/pwa/')
+        );
+        if (window.location.pathname !== '/login' && !isPublicRoute) {
+          window.location.href = '/login';
+        }
         return Promise.reject(error);
       }
 
@@ -81,7 +87,11 @@ api.interceptors.response.use(
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         delete api.defaults.headers.common['Authorization'];
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        const isPublicRoute = typeof window !== 'undefined' && (
+          window.location.pathname.startsWith('/store/') ||
+          window.location.pathname.startsWith('/pwa/')
+        );
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register' && !isPublicRoute) {
           window.location.replace('/login');
         }
         return Promise.reject(err);

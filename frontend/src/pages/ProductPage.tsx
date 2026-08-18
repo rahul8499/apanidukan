@@ -146,7 +146,8 @@ function ProductContent() {
   }
 
   const currentImage = allImages[selectedImgIndex] || null
-  const activeCoupon = coupons.find((c: any) => c.product_id === product.id) || coupons.find((c: any) => !c.product_id)
+  const applicableCoupons = (coupons || []).filter((c: any) => c && (c.product_id === product?.id || !c.product_id))
+  const activeCoupon = applicableCoupons[0] || null
   const isOutOfStock = product.stock_quantity !== undefined && product.stock_quantity !== null && Number(product.stock_quantity) <= 0
 
   const numPrice = Number(product.price) || 0
@@ -549,25 +550,34 @@ function ProductContent() {
                 )}
               </div>
 
-              {/* Coupons Card */}
-              {activeCoupon && (
-                <div className="space-y-1.5 pt-0.5">
-                  <div className="rounded-xl bg-emerald-50/80 border border-emerald-200 p-2.5 space-y-1 relative">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white uppercase">
-                        Coupon
-                      </span>
-                      <button
-                        onClick={() => copyCoupon(activeCoupon.code)}
-                        className="flex items-center gap-0.5 rounded bg-emerald-700 px-2 py-0.5 text-[10px] font-black text-white hover:bg-emerald-800 shrink-0 cursor-pointer"
-                      >
-                        <Copy className="h-2.5 w-2.5" /> Copy Code
-                      </button>
-                    </div>
-                    <p className="text-[11px] font-bold text-emerald-950 break-words">
-                      Get {activeCoupon.discount_type === 'PERCENTAGE' ? `${activeCoupon.discount_value}% OFF` : `FLAT ₹${activeCoupon.discount_value} OFF`} using <span className="font-mono bg-white border border-emerald-300 px-1 py-0.5 rounded text-emerald-900 text-[10px]">{activeCoupon.code}</span>
-                      {activeCoupon.min_order_amount > 0 && ` (Min order ₹${activeCoupon.min_order_amount})`}.
-                    </p>
+              {/* Coupons Section (Display All Applicable Coupons) */}
+              {applicableCoupons.length > 0 && (
+                <div className="space-y-2 pt-0.5">
+                  <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                    <Tag className="h-3 w-3 text-emerald-600" />
+                    <span>Available Offers & Coupons ({applicableCoupons.length})</span>
+                  </p>
+                  <div className="space-y-2">
+                    {applicableCoupons.map((c: any) => (
+                      <div key={c.id || c.code} className="rounded-xl bg-emerald-50/80 border border-emerald-200/90 p-2.5 space-y-1 relative shadow-2xs">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white uppercase tracking-wider">
+                            {c.product_id ? 'Item Offer' : 'Store Coupon'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copyCoupon(c.code)}
+                            className="flex items-center gap-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 px-2 py-1 text-[10px] font-black text-white shrink-0 cursor-pointer shadow-2xs transition-colors"
+                          >
+                            <Copy className="h-2.5 w-2.5" /> Copy Code
+                          </button>
+                        </div>
+                        <p className="text-[11px] font-bold text-emerald-950 break-words">
+                          Get {c.discount_type === 'PERCENTAGE' ? `${c.discount_value}% OFF` : `FLAT ₹${c.discount_value} OFF`} using <span className="font-mono bg-white border border-emerald-300 px-1 py-0.5 rounded text-emerald-900 text-[10px] font-black">{c.code}</span>
+                          {Number(c.min_order_amount) > 0 && ` (Min order ₹${c.min_order_amount})`}.
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

@@ -12,6 +12,7 @@ import CustomerChatWidget from '../components/CustomerChatWidget'
 import AiSearchModal from '../components/AiSearchModal'
 import { useNotifications } from '../context/NotificationContext'
 import NotificationBellHeader from '../components/NotificationBellHeader'
+import CustomerScratchCardModal, { ScratchCardConfig } from '../components/CustomerScratchCardModal'
 
 export default function StoreHome() {
   const { storeSlug } = useParams()
@@ -129,6 +130,50 @@ function Storefront() {
   const [storeCoupons, setStoreCoupons] = useState<any[]>([])
   const [showOfferModal, setShowOfferModal] = useState(false)
   const [copiedToast, setCopiedToast] = useState(false)
+
+  const [scratchCardModalOpen, setScratchCardModalOpen] = useState(false)
+  const [scratchCardConfig, setScratchCardConfig] = useState<ScratchCardConfig | null>(null)
+
+  useEffect(() => {
+    if (!store?.id) return
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const scratchedKey = `qs_scratched_${store.id}`
+      const lastScratched = localStorage.getItem(scratchedKey)
+
+      if (lastScratched !== today) {
+        const configKey = `qs_scratch_config_${store.id}`
+        const configSaved = localStorage.getItem(configKey)
+        const config: ScratchCardConfig = configSaved ? JSON.parse(configSaved) : {
+          enabled: true,
+          title: '🎉 Scratch & Win Welcome Gift!',
+          rewardText: 'Flat ₹50 OFF on orders above ₹299',
+          couponCode: 'LUCKY50',
+          discountType: 'fixed',
+          discountValue: 50,
+          minOrder: 299
+        }
+
+        if (config.enabled) {
+          setScratchCardConfig(config)
+          const timer = setTimeout(() => {
+            setScratchCardModalOpen(true)
+          }, 1200)
+          return () => clearTimeout(timer)
+        }
+      }
+    } catch {}
+  }, [store?.id])
+
+  const handleClaimScratchCoupon = (code: string, discountValue: number, discountType: 'fixed' | 'percentage') => {
+    try {
+      if (store?.id) {
+        const today = new Date().toISOString().split('T')[0]
+        localStorage.setItem(`qs_scratched_${store.id}`, today)
+        localStorage.setItem(`qs_claimed_coupon_${storeSlug}`, JSON.stringify({ code, discountValue, discountType }))
+      }
+    } catch {}
+  }
 
   const storeWideCoupon = useMemo(() => {
     return storeCoupons.find((c: any) => !c.product_id)
@@ -1115,6 +1160,28 @@ function Storefront() {
                 </button>
               </div>
             </div>
+          )}
+
+          {/* Customer Interactive Scratch Card Reward Modal */}
+          {scratchCardModalOpen && scratchCardConfig && store && (
+            <CustomerScratchCardModal
+              config={scratchCardConfig}
+              storeName={store.name}
+              onClaimCoupon={handleClaimScratchCoupon}
+              onClose={() => setScratchCardModalOpen(false)}
+            />
+          )}
+
+          {/* Floating Scratch Card Trigger Button */}
+          {scratchCardConfig?.enabled && (
+            <button
+              type="button"
+              onClick={() => setScratchCardModalOpen(true)}
+              className="fixed bottom-20 right-4 z-40 flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-3.5 py-2 text-xs font-black text-slate-950 shadow-xl shadow-amber-500/30 border border-amber-300/60 hover:scale-105 transition-all cursor-pointer"
+            >
+              <Sparkles className="h-4 w-4 text-white animate-spin" />
+              <span>🎁 Scratch & Win!</span>
+            </button>
           )}
 
           <CustomerBottomNav storeSlug={storeSlug!} active="home" />

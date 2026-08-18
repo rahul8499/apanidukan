@@ -203,21 +203,21 @@ export default function SellerOrders() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50/80 pb-28 lg:max-w-none lg:w-full">
+    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50/80 pb-14 sm:pb-16 lg:max-w-none lg:w-full">
       {/* Unified Seller Header */}
       <SellerHeader store={store} activeTabTitle="Orders Management" onStoreUpdate={load} />
 
-      <div className="space-y-4 p-4 sm:p-6">
+      <div className="space-y-3 sm:space-y-5 p-2.5 sm:p-6">
         {/* Enterprise Dark Hero Header — Modernized & Compact for Mobile */}
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3.5 sm:p-5 text-white shadow-xl border border-indigo-500/30 backdrop-blur-xl">
+        <div className="relative overflow-hidden rounded-xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3 sm:p-5 text-white shadow-md sm:shadow-xl border border-indigo-500/30 backdrop-blur-xl">
           {/* Neon Glow background reflections */}
           <div className="absolute -top-12 -right-12 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-12 -left-12 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 space-y-3">
+          <div className="relative z-10 space-y-2.5 sm:space-y-3">
             {/* Top Bar: Status Badge + Refresh + Connection Pill */}
             <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-teal-500/20 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30 tracking-wider shadow-xs">
+              <span className="inline-flex items-center gap-1 rounded-full bg-teal-500/20 px-2 py-0.5 text-[8px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30 tracking-wider shadow-xs">
                 ⚡ ORDERS CONTROL
               </span>
 
@@ -229,7 +229,7 @@ export default function SellerOrders() {
                     await load()
                     setTimeout(() => setIsRefreshingData(false), 500)
                   }}
-                  className="flex items-center gap-1 rounded-xl border border-teal-500/40 bg-teal-950/70 px-2.5 py-1 text-[11px] sm:text-xs font-extrabold text-teal-300 hover:bg-teal-900 transition-all cursor-pointer shadow-xs active:scale-95"
+                  className="flex items-center gap-1 rounded-lg sm:rounded-xl border border-teal-500/40 bg-teal-950/70 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs font-extrabold text-teal-300 hover:bg-teal-900 transition-all cursor-pointer shadow-xs active:scale-95"
                   title="Refresh live orders"
                 >
                   <span className={`text-xs ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
@@ -237,7 +237,7 @@ export default function SellerOrders() {
                 </button>
 
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold ${
+                  className={`inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-0.5 text-[8px] sm:text-[10px] font-extrabold ${
                     wsConnected
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
                       : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
@@ -257,20 +257,20 @@ export default function SellerOrders() {
             <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/10">
               <div className="flex items-baseline gap-3">
                 <div>
-                  <p className="text-2xl sm:text-3xl font-black text-white leading-none">{orders.length}</p>
-                  <p className="text-[10px] sm:text-xs text-indigo-200/90 font-bold mt-0.5">Total Received</p>
+                  <p className="text-xl sm:text-3xl font-black text-white leading-none">{orders.length}</p>
+                  <p className="text-[9px] sm:text-xs text-indigo-200/90 font-bold mt-0.5">Total Orders</p>
                 </div>
-                <div className="h-7 w-[1px] bg-slate-800 mx-1 hidden xs:block" />
+                <div className="h-6 w-[1px] bg-slate-800 mx-1 hidden xs:block" />
                 <div className="hidden xs:block">
-                  <p className="text-lg sm:text-2xl font-black text-emerald-300 leading-none">₹{totalSalesVolume.toFixed(0)}</p>
-                  <p className="text-[10px] sm:text-xs text-slate-300 font-bold mt-0.5">Total Revenue</p>
+                  <p className="text-base sm:text-2xl font-black text-emerald-300 leading-none">₹{totalSalesVolume.toFixed(0)}</p>
+                  <p className="text-[9px] sm:text-xs text-slate-300 font-bold mt-0.5">Revenue</p>
                 </div>
               </div>
 
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider text-indigo-200">Mode</span>
+              <div className="flex flex-col items-end gap-0.5">
+                <span className="text-[8px] sm:text-[10px] uppercase font-bold tracking-wider text-indigo-200">Mode</span>
                 <span
-                  className={`font-black px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] border shadow-sm ${
+                  className={`font-black px-2 py-0.5 rounded-lg sm:rounded-xl text-[9px] sm:text-[11px] border shadow-xs ${
                     isManageInAppOn
                       ? 'bg-teal-500/20 text-teal-300 border-teal-500/40'
                       : 'bg-slate-900 text-slate-300 border-slate-700'
@@ -283,33 +283,33 @@ export default function SellerOrders() {
           </div>
         </div>
 
-        {/* Top Executive KPI Metrics Summary Cards — Web Large / Mobile Compact */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          <div className="rounded-2xl border border-slate-200/80 bg-white py-2 px-3 sm:p-4 shadow-2xs flex flex-col justify-between">
-            <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-wider">Gross Sales</span>
-            <p className="my-0.5 text-sm sm:text-2xl font-black text-slate-900 truncate">₹{totalSalesVolume.toFixed(2)}</p>
-            <span className="text-[9px] sm:text-xs text-emerald-600 font-bold">Valid Orders</span>
+        {/* Top Executive KPI Metrics Summary Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
+          <div className="rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white py-2 px-2.5 sm:p-4 shadow-2xs flex flex-col justify-between">
+            <span className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400 tracking-wider">Gross Sales</span>
+            <p className="my-0.5 text-xs sm:text-2xl font-black text-slate-900 truncate">₹{totalSalesVolume.toFixed(2)}</p>
+            <span className="text-[8px] sm:text-xs text-emerald-600 font-bold">Valid Orders</span>
           </div>
 
-          <div className="rounded-2xl border border-amber-200/80 bg-amber-50/50 py-2 px-3 sm:p-4 shadow-2xs flex flex-col justify-between">
+          <div className="rounded-xl sm:rounded-2xl border border-amber-200/80 bg-amber-50/50 py-2 px-2.5 sm:p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex justify-between items-center">
-              <span className="text-[9px] sm:text-[10px] font-black uppercase text-amber-800 tracking-wider">New Pending</span>
-              {newOrdersCount > 0 && <span className="h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>}
+              <span className="text-[8px] sm:text-[10px] font-black uppercase text-amber-800 tracking-wider">Pending</span>
+              {newOrdersCount > 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping"></span>}
             </div>
-            <p className="my-0.5 text-sm sm:text-2xl font-black text-amber-950">{newOrdersCount}</p>
-            <span className="text-[9px] sm:text-xs text-amber-700 font-bold">Action Needed</span>
+            <p className="my-0.5 text-xs sm:text-2xl font-black text-amber-950">{newOrdersCount}</p>
+            <span className="text-[8px] sm:text-xs text-amber-700 font-bold">Action Needed</span>
           </div>
 
-          <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/50 py-2 px-3 sm:p-4 shadow-2xs flex flex-col justify-between">
-            <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-800 tracking-wider">Completed</span>
-            <p className="my-0.5 text-sm sm:text-2xl font-black text-emerald-950">{completedCount}</p>
-            <span className="text-[9px] sm:text-xs text-emerald-700 font-bold">Paid / Delivered</span>
+          <div className="rounded-xl sm:rounded-2xl border border-emerald-200/80 bg-emerald-50/50 py-2 px-2.5 sm:p-4 shadow-2xs flex flex-col justify-between">
+            <span className="text-[8px] sm:text-[10px] font-black uppercase text-emerald-800 tracking-wider">Completed</span>
+            <p className="my-0.5 text-xs sm:text-2xl font-black text-emerald-950">{completedCount}</p>
+            <span className="text-[8px] sm:text-xs text-emerald-700 font-bold">Delivered</span>
           </div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white py-2 px-3 sm:p-4 shadow-2xs flex flex-col justify-between">
-            <span className="text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-wider">Avg Order Value</span>
-            <p className="my-0.5 text-sm sm:text-2xl font-black text-slate-900 truncate">₹{avgOrderValue.toFixed(0)}</p>
-            <span className="text-[9px] sm:text-xs text-slate-500 font-bold">Per Order</span>
+          <div className="rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white py-2 px-2.5 sm:p-4 shadow-2xs flex flex-col justify-between">
+            <span className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400 tracking-wider">Avg Order</span>
+            <p className="my-0.5 text-xs sm:text-2xl font-black text-slate-900 truncate">₹{avgOrderValue.toFixed(0)}</p>
+            <span className="text-[8px] sm:text-xs text-slate-500 font-bold">Per Order</span>
           </div>
         </div>
 
@@ -438,27 +438,27 @@ export default function SellerOrders() {
             return (
               <article
                 key={order.id}
-                className={`rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-2xs hover:shadow-md transition-all space-y-2.5 ${getStatusLeftBorder(order.status)}`}
+                className={`rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all space-y-2 ${getStatusLeftBorder(order.status)}`}
               >
                 {/* 1. Header: Order Ref + Time + Amount + Status Dropdown/Badge */}
-                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-1.5 border-b border-slate-100 pb-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => copyRefToClipboard(order.reference)}
-                      className="rounded-lg bg-indigo-50 border border-indigo-100/80 px-2 py-0.5 text-[11px] font-mono font-black text-indigo-700 hover:bg-indigo-100 transition-all flex items-center gap-1 cursor-pointer"
+                      className="rounded-md bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 text-[10px] sm:text-[11px] font-mono font-black text-indigo-700 hover:bg-indigo-100 transition-all flex items-center gap-1 cursor-pointer"
                       title="Click to Copy Order #"
                     >
                       <span>#{order.reference}</span>
-                      <span className="text-[10px] text-indigo-400">{copiedRef === order.reference ? '✓' : '📋'}</span>
+                      <span className="text-[9px] text-indigo-400">{copiedRef === order.reference ? '✓' : '📋'}</span>
                     </button>
-                    <span className="text-[10px] font-medium text-slate-400">
+                    <span className="text-[9px] sm:text-[10px] font-medium text-slate-400">
                       {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-base sm:text-lg font-black text-slate-900">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm sm:text-lg font-black text-slate-900">
                       ₹{order.total}
                     </span>
 
@@ -467,7 +467,7 @@ export default function SellerOrders() {
                       <select
                         value={order.status}
                         onChange={(e) => updateStatus(order.id, e.target.value)}
-                        className="rounded-xl border border-slate-300 bg-slate-900 px-2 py-1 text-[11px] font-bold text-white shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none cursor-pointer"
+                        className="rounded-lg border border-slate-300 bg-slate-900 px-1.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-white shadow-xs focus:ring-1 focus:ring-teal-500 focus:outline-none cursor-pointer"
                       >
                         {statuses.map((status) => (
                           <option key={status} value={status} className="bg-white text-slate-900 font-bold">
@@ -476,7 +476,7 @@ export default function SellerOrders() {
                         ))}
                       </select>
                     ) : (
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-black border ${getStatusBadgeStyle(order.status)}`}>
+                      <span className={`inline-flex rounded-full px-2 py-0.2 text-[9px] sm:text-[10px] font-black border ${getStatusBadgeStyle(order.status)}`}>
                         {order.status}
                       </span>
                     )}
@@ -484,44 +484,60 @@ export default function SellerOrders() {
                 </div>
 
                 {/* 2. Compact Customer & Payment Row */}
-                <div className="flex items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-[10px] shrink-0">
+                <div className="flex items-center justify-between gap-1.5 text-xs">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-[9px] shrink-0">
                       {getInitials(order.customer_name)}
                     </div>
                     <div className="min-w-0">
-                      <span className="font-extrabold text-slate-900 truncate block text-xs">
+                      <span className="font-extrabold text-slate-900 truncate block text-[11px] sm:text-xs">
                         {order.customer_name || 'Customer'}
                       </span>
                       {order.customer_phone && (
-                        <a href={`tel:${order.customer_phone}`} className="font-mono text-[10px] text-indigo-700 font-bold hover:underline">
+                        <a href={`tel:${order.customer_phone}`} className="font-mono text-[9px] sm:text-[10px] text-indigo-700 font-bold hover:underline">
                           📞 {order.customer_phone}
                         </a>
                       )}
                     </div>
                   </div>
 
-                  <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md shrink-0">
-                    {order.payment_type === 'COD' ? '💵 COD' : '💳 Online'}
-                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${
+                      order.order_type === 'STORE_PICKUP'
+                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                        : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                    }`}>
+                      {order.order_type === 'STORE_PICKUP' ? '🏪 Pickup' : '🚚 Delivery'}
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
+                      {order.payment_type === 'COD' ? '💵 COD' : '💳 Online'}
+                    </span>
+                  </div>
                 </div>
 
-                {/* 3. Delivery Address (If Present) */}
-                {order.delivery_address && (
-                  <p className="text-[11px] text-slate-600 font-medium bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 truncate">
-                    <span className="font-bold text-slate-700">📍 </span>{order.delivery_address}
+                {/* 3. Delivery Address or Pickup Notice */}
+                {order.order_type === 'STORE_PICKUP' ? (
+                  <p className="text-[10px] sm:text-[11px] text-amber-900 font-medium bg-amber-50/70 px-2 py-0.5 rounded-md border border-amber-200/60 truncate">
+                    <span className="font-bold">🏪 Store Pickup: </span>Customer will collect from shop
                   </p>
-                )}
+                ) : order.delivery_address ? (
+                  <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100 truncate">
+                    <span className="font-bold text-slate-700">📍 </span>{order.delivery_address}
+                    {Number(order.delivery_fee) > 0 && (
+                      <span className="font-bold text-indigo-600 ml-1">(Delivery: ₹{Number(order.delivery_fee).toFixed(0)})</span>
+                    )}
+                  </p>
+                ) : null}
 
                 {/* 4. Compact Purchased Items List */}
-                <div className="rounded-xl bg-slate-50/80 p-2.5 text-xs border border-slate-100 space-y-1">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                <div className="rounded-lg bg-slate-50/80 p-2 text-xs border border-slate-100 space-y-0.5">
+                  <div className="flex justify-between items-center text-[9px] font-black uppercase text-slate-400 tracking-wider">
                     <span>Items ({order.items?.length || 0})</span>
                     <span>Qty × Price</span>
                   </div>
                   {Array.isArray(order.items) &&
                     order.items.map((item: any, idx: number) => (
-                      <div key={idx} className="flex justify-between items-center text-slate-800 text-[11px]">
+                      <div key={idx} className="flex justify-between items-center text-slate-800 text-[10px] sm:text-[11px]">
                         <span className="font-semibold truncate">• {item.name || item.product_name || 'Product'}</span>
                         <span className="font-black shrink-0 ml-2">×{item.quantity} (₹{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(0)})</span>
                       </div>
@@ -530,9 +546,9 @@ export default function SellerOrders() {
 
                 {/* 5. Progress Bar (Ultra Slim 4-Stage Tracker) */}
                 {currentStatusUpper !== 'CANCELLED' && (
-                  <div className="flex items-center gap-2 text-[9px] font-extrabold text-slate-500 pt-0.5">
+                  <div className="flex items-center gap-1.5 text-[8px] sm:text-[9px] font-extrabold text-slate-500 pt-0.5">
                     <span className={currentStatusUpper === 'NEW' ? 'text-amber-600 font-black' : 'text-slate-400'}>Placed</span>
-                    <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                    <div className="flex-1 h-1 rounded-full bg-slate-200 overflow-hidden">
                       <div
                         className={`h-full transition-all duration-300 ${
                           currentStatusUpper === 'NEW' ? 'w-1/4 bg-amber-500' :
@@ -549,11 +565,11 @@ export default function SellerOrders() {
                 )}
 
                 {/* 6. Clean Action Toolbar */}
-                <div className="grid grid-cols-2 sm:flex items-center gap-1.5 pt-1">
+                <div className="grid grid-cols-2 sm:flex items-center gap-1 pt-0.5">
                   <button
                     type="button"
                     onClick={() => startDirectChat(order)}
-                    className="rounded-xl bg-indigo-600 py-1.5 px-2.5 text-[11px] font-bold text-white shadow-2xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                    className="rounded-lg bg-indigo-600 py-1 px-2 text-[10px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-1 cursor-pointer"
                   >
                     💬 Chat
                   </button>
@@ -561,7 +577,7 @@ export default function SellerOrders() {
                   {order.customer_phone ? (
                     <>
                       <a
-                        className="rounded-xl bg-emerald-600 py-1.5 px-2.5 text-[11px] font-bold text-white shadow-2xs hover:bg-emerald-700 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        className="rounded-lg bg-emerald-600 py-1 px-2 text-[10px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-emerald-700 transition-all flex items-center justify-center gap-1 cursor-pointer"
                         href={`https://wa.me/${formatPhoneForWhatsApp(order.customer_phone)}`}
                         target="_blank"
                         rel="noreferrer"
@@ -569,7 +585,7 @@ export default function SellerOrders() {
                         WhatsApp ↗
                       </a>
                       <a
-                        className="rounded-xl bg-slate-100 border border-slate-200 py-1.5 px-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        className="rounded-lg bg-slate-100 border border-slate-200 py-1 px-2 text-[10px] sm:text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center gap-1 cursor-pointer"
                         href={`tel:${order.customer_phone}`}
                       >
                         📞 Call
@@ -580,7 +596,7 @@ export default function SellerOrders() {
                   <Link
                     to={`/store/${store.slug}/order/${order.reference}`}
                     target="_blank"
-                    className="rounded-xl bg-slate-900 py-1.5 px-2.5 text-[11px] font-bold text-white shadow-2xs hover:bg-slate-800 transition-all flex items-center justify-center gap-1 col-span-2 sm:col-span-1"
+                    className="rounded-lg bg-slate-900 py-1 px-2 text-[10px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-slate-800 transition-all flex items-center justify-center gap-1 col-span-2 sm:col-span-1"
                   >
                     Track ↗
                   </Link>

@@ -13,6 +13,8 @@ import AiSearchModal from '../components/AiSearchModal'
 import { useNotifications } from '../context/NotificationContext'
 import NotificationBellHeader from '../components/NotificationBellHeader'
 import CustomerScratchCardModal, { ScratchCardConfig } from '../components/CustomerScratchCardModal'
+import { getStoreTheme } from '../utils/storeTheme'
+import { setupCustomerStorePwa } from '../pwa/pwaManager'
 
 export default function StoreHome() {
   const { storeSlug } = useParams()
@@ -108,6 +110,9 @@ function Storefront() {
       .then(res => {
         const data = res.data.data || res.data
         setStore(data)
+        if (data) {
+          setupCustomerStorePwa(data)
+        }
         if (data?.id) {
           setActiveStoreId(data.id)
         }
@@ -297,6 +302,7 @@ function Storefront() {
   })
   const mediaUrl = (url: string) => url?.startsWith('http') ? url : `${window.location.protocol}//${window.location.hostname}:8000${url}`
   const cart = useStoreCart()
+  const storeTheme = useMemo(() => getStoreTheme(store), [store])
 
   const submitProductRequest = async () => {
     const trimmedName = requestName.trim()
@@ -348,7 +354,7 @@ function Storefront() {
   }
 
   return (
-    <div className="mx-auto min-h-screen w-full bg-slate-50 pb-24 lg:pb-12 text-xs sm:text-sm font-sans">
+    <div className={`mx-auto min-h-screen w-full ${storeTheme.page_bg_class} pb-24 lg:pb-12 text-xs sm:text-sm font-sans transition-colors duration-300`}>
       {loading ? (
         <div className="flex min-h-[70vh] flex-col items-center justify-center p-4 text-center">
           <div className="w-full max-w-sm rounded-2xl bg-slate-900 p-6 text-white shadow-xl border border-slate-800 space-y-3 animate-pulse">
@@ -537,7 +543,7 @@ function Storefront() {
                     setSearchTerm(e.target.value)
                     if (aiSearchProducts) setAiSearchProducts(null)
                   }}
-                  placeholder="Search medicines, products..."
+                  placeholder="Search products, categories..."
                   className="w-full rounded-xl bg-slate-900 py-1.5 pl-8 pr-16 text-xs text-white placeholder-slate-400 border border-slate-800 focus:border-indigo-500 focus:outline-none"
                 />
                 {searchTerm && (
@@ -584,20 +590,23 @@ function Storefront() {
           {/* ========================================================================= */}
           {/* CATEGORIES BAR (PLACED OUTSIDE & DIRECTLY BELOW THE BLACK HEADER SECTION)  */}
           {/* ========================================================================= */}
-          <div className="sticky top-[86px] sm:top-[92px] z-30 w-full bg-white border-b border-slate-200/90 py-2.5 px-3 sm:px-5 shadow-xs">
+          <div className={`sticky top-[86px] sm:top-[92px] z-30 w-full ${storeTheme.sub_bar_bg_class} border-b py-2.5 px-3 sm:px-5 shadow-xs transition-colors duration-300`}>
             <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
 
               {/* Category: All */}
               <button
                 onClick={() => setActiveCategory('')}
+                style={!activeCategory ? { backgroundColor: storeTheme.primary_color } : undefined}
                 className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer shadow-xs ${!activeCategory
-                  ? 'bg-slate-900 text-white ring-2 ring-indigo-500/30'
-                  : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+                  ? 'text-white ring-2 ring-white/20'
+                  : storeTheme.is_dark_mode
+                    ? 'bg-slate-800/80 text-slate-300 border border-slate-700 hover:bg-slate-700'
+                    : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
                   }`}
               >
-                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                <Sparkles className="h-3.5 w-3.5 text-amber-300" />
                 <span>All</span>
-                <span className={`ml-0.5 rounded-full px-2 py-0.2 text-[10px] font-black ${!activeCategory ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'
+                <span className={`ml-0.5 rounded-full px-2 py-0.2 text-[10px] font-black ${!activeCategory ? 'bg-black/30 text-white' : storeTheme.is_dark_mode ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700'
                   }`}>
                   {products.length}
                 </span>
@@ -611,13 +620,16 @@ function Storefront() {
                   <button
                     key={c.id}
                     onClick={() => setActiveCategory(c.slug)}
+                    style={isActive ? { backgroundColor: storeTheme.primary_color } : undefined}
                     className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer shadow-xs ${isActive
-                      ? 'bg-slate-900 text-white ring-2 ring-indigo-500/30'
-                      : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+                      ? 'text-white ring-2 ring-white/20'
+                      : storeTheme.is_dark_mode
+                        ? 'bg-slate-800/80 text-slate-300 border border-slate-700 hover:bg-slate-700'
+                        : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
                       }`}
                   >
                     <span>{c.name}</span>
-                    <span className={`rounded-full px-2 py-0.2 text-[10px] font-black ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
+                    <span className={`rounded-full px-2 py-0.2 text-[10px] font-black ${isActive ? 'bg-black/30 text-white' : storeTheme.is_dark_mode ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'
                       }`}>
                       {count}
                     </span>
@@ -789,10 +801,13 @@ function Storefront() {
               </div>
             )}
 
-            {/* Ultra-Premium Hero Banner with Gold Verified Badge & Integrated Trust Chips */}
-            <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3.5 sm:p-5 text-white shadow-xl border border-amber-500/30">
-              {/* Background Subtle Ambient Glow */}
-              <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-amber-500/10 blur-2xl pointer-events-none" />
+            {/* Ultra-Premium Hero Banner Styled with Store Color Theme */}
+            <section className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${storeTheme.banner_bg_gradient} p-3.5 sm:p-5 text-white shadow-xl border border-white/15`}>
+              {/* Background Subtle Ambient Glow with Dynamic Accent */}
+              <div
+                className="absolute -top-12 -right-12 h-44 w-44 rounded-full blur-2xl pointer-events-none opacity-25"
+                style={{ backgroundColor: storeTheme.primary_color }}
+              />
 
               <div className="relative z-10 space-y-2.5">
                 {/* Badges Row */}
@@ -825,7 +840,8 @@ function Storefront() {
 
                   <a
                     href="#products"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 text-xs font-black text-slate-950 shadow-md shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 transition-all shrink-0 self-start sm:self-center"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white shadow-md hover:brightness-110 transition-all shrink-0 self-start sm:self-center cursor-pointer active:scale-95"
+                    style={{ backgroundColor: storeTheme.primary_color }}
                   >
                     <span>Explore Shop</span>
                     <ChevronRight className="h-3.5 w-3.5" />
@@ -835,20 +851,31 @@ function Storefront() {
             </section>
 
             {/* Quick Unlisted Product Request Micro-Banner */}
-            <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/10 border border-amber-400/40 p-2.5 sm:p-3 text-slate-900 shadow-2xs">
-              <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-slate-950 font-black text-xs">
+            <div className={`flex items-center justify-between rounded-xl border p-2.5 sm:p-3 shadow-2xs ${
+              storeTheme.is_dark_mode 
+                ? 'bg-slate-900/80 border-slate-800 text-white' 
+                : 'bg-white border-slate-200/90 text-slate-900'
+            }`}>
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-white font-black text-xs shrink-0"
+                  style={{ backgroundColor: storeTheme.primary_color }}
+                >
                   ⚡
                 </span>
-                <div>
-                  <p className="text-xs font-black text-slate-950">Can't find a product you need?</p>
-                  <p className="text-[10px] text-slate-600 font-semibold">Request any unlisted item directly from {store.name}</p>
+                <div className="min-w-0">
+                  <p className={`text-xs font-black truncate ${storeTheme.text_primary_class}`}>
+                    Can't find a product you need?
+                  </p>
+                  <p className={`text-[10px] font-medium truncate ${storeTheme.text_secondary_class}`}>
+                    Request any unlisted item directly from {store.name}
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setRequestOpen(true)}
-                className="shrink-0 rounded-lg bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-[10px] sm:text-xs font-extrabold text-slate-950 shadow transition-all cursor-pointer"
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-[10px] sm:text-xs font-black text-white shadow-md bg-gradient-to-r ${storeTheme.btn_gradient} transition-all cursor-pointer active:scale-95`}
               >
                 Request Product
               </button>
@@ -858,13 +885,15 @@ function Storefront() {
             <section id="products" className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-1.5">
-                    <TrendingUp className="h-4 w-4 text-indigo-600" />
+                  <h2 className={`text-sm sm:text-base font-bold ${storeTheme.text_primary_class} flex items-center gap-1.5`}>
+                    <TrendingUp className="h-4 w-4" style={{ color: storeTheme.primary_color }} />
                     <span>Featured Products</span>
                   </h2>
                 </div>
 
-                <span className="text-[10px] font-extrabold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
+                <span
+                  className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${storeTheme.accent_badge_class}`}
+                >
                   {visibleProducts.length} Items
                 </span>
               </div>
@@ -879,7 +908,7 @@ function Storefront() {
                   return (
                     <div
                       key={p.id}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-2xs hover:shadow-md transition-all duration-200"
+                      className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border ${storeTheme.card_bg_class} transition-all duration-200`}
                     >
                       <Link to={`/store/${storeSlug}/product/${p.slug}`} className="block relative">
                         {/* Deal Overlay */}
@@ -893,7 +922,9 @@ function Storefront() {
                         )}
 
                         {/* Image Box */}
-                        <div className="relative flex aspect-[5/4] sm:aspect-square w-full items-center justify-center bg-slate-50/80 p-1.5 sm:p-2 overflow-hidden group-hover:bg-indigo-50/20 transition-all">
+                        <div className={`relative flex aspect-[5/4] sm:aspect-square w-full items-center justify-center p-1.5 sm:p-2 overflow-hidden transition-all ${
+                          storeTheme.is_dark_mode ? 'bg-slate-950/60 group-hover:bg-slate-950/90' : 'bg-slate-50/80 group-hover:bg-slate-100'
+                        }`}>
                           {p.image ? (
                             <img
                               src={mediaUrl(p.image)}
@@ -915,12 +946,12 @@ function Storefront() {
 
                         {/* Title & Pricing */}
                         <div className="p-2 sm:p-2.5 pb-1 space-y-0.5 sm:space-y-1">
-                          <h3 className="line-clamp-2 text-[11px] sm:text-xs font-extrabold text-slate-800 group-hover:text-indigo-600 transition-colors leading-tight">
+                          <h3 className={`line-clamp-2 text-[11px] sm:text-xs font-extrabold ${storeTheme.text_primary_class} transition-colors leading-tight`}>
                             {p.name}
                           </h3>
 
                           <div className="flex items-baseline gap-1 pt-0.5">
-                            <span className="text-xs sm:text-sm font-black text-slate-950">
+                            <span className={`text-xs sm:text-sm font-black ${storeTheme.text_primary_class}`}>
                               ₹{p.price}
                             </span>
                             {mockMrp && mockMrp > p.price && (
@@ -931,21 +962,24 @@ function Storefront() {
                           </div>
 
                           {p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) > 0 && Number(p.stock_quantity) <= 5 && (
-                            <p className="text-[9px] font-bold text-amber-600">
+                            <p className="text-[9px] font-bold text-amber-500">
                               🔥 Only {p.stock_quantity} left
                             </p>
                           )}
                         </div>
                       </Link>
 
-                      {/* Quantity Controller / Add Button */}
+                      {/* Quantity Controller / Action Add Button */}
                       <div className="p-1.5 sm:p-2 pt-0.5 sm:pt-1">
                         {cartItem ? (
-                          <div className="flex items-center justify-between rounded-lg bg-indigo-600 p-0.5 text-white shadow-xs">
+                          <div
+                            className="flex items-center justify-between rounded-lg p-0.5 text-white shadow-xs"
+                            style={{ backgroundColor: storeTheme.primary_color }}
+                          >
                             <button
                               type="button"
                               onClick={() => cart.change(p.id, cartItem.quantity - 1)}
-                              className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded bg-indigo-700 hover:bg-indigo-800 font-bold active:scale-95 cursor-pointer"
+                              className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded bg-black/20 hover:bg-black/40 font-bold active:scale-95 cursor-pointer"
                             >
                               <Minus className="h-3 w-3" />
                             </button>
@@ -953,7 +987,7 @@ function Storefront() {
                             <button
                               type="button"
                               onClick={() => cart.change(p.id, cartItem.quantity + 1)}
-                              className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded bg-indigo-700 hover:bg-indigo-800 font-bold active:scale-95 cursor-pointer"
+                              className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded bg-black/20 hover:bg-black/40 font-bold active:scale-95 cursor-pointer"
                             >
                               <Plus className="h-3 w-3" />
                             </button>
@@ -962,7 +996,7 @@ function Storefront() {
                           <button
                             disabled={isOutOfStock}
                             onClick={() => cart.add({ id: p.id, slug: p.slug, name: p.name, price: p.price, image: p.image })}
-                            className="flex w-full items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 py-1 sm:py-1.5 text-[11px] sm:text-xs font-extrabold text-white shadow-xs hover:from-indigo-500 hover:to-violet-500 disabled:bg-slate-300 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 transition-all cursor-pointer"
+                            className={`flex w-full items-center justify-center gap-1 rounded-lg bg-gradient-to-r ${storeTheme.btn_gradient} py-1 sm:py-1.5 text-[11px] sm:text-xs font-black text-white shadow-xs disabled:opacity-50 transition-all cursor-pointer`}
                           >
                             <Plus className="h-3 w-3" />
                             <span>{isOutOfStock ? 'Out of Stock' : 'Add'}</span>

@@ -189,3 +189,25 @@ class SellerWhatsAppOrdersView(APIView):
         })
 
         return Response(order_data)
+
+
+class PublicCustomerWalletView(APIView):
+    def get(self, request, slug):
+        store = get_object_or_404(Store, slug=slug, is_published=True)
+        phone = request.query_params.get('phone', '').strip()
+        if not phone:
+            return Response({'customer_phone': '', 'balance': '0.00', 'total_earned': '0.00', 'total_redeemed': '0.00'})
+        wallet, _ = CustomerWallet.objects.get_or_create(
+            store=store,
+            customer_phone=phone,
+            defaults={'balance': Decimal('0.00')}
+        )
+        return Response({
+            'customer_phone': wallet.customer_phone,
+            'customer_name': wallet.customer_name,
+            'balance': str(wallet.balance),
+            'total_earned': str(wallet.total_earned),
+            'total_redeemed': str(wallet.total_redeemed),
+        })
+
+

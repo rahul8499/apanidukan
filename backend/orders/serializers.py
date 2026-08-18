@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import Order, OrderItem, Payment, WhatsAppOrder
-from products.models import Product
-from django.db import transaction
+from .models import Order, OrderItem, Payment, WhatsAppOrder, CustomerWallet
+from products.models import Product, Coupon
+from django.db import transaction, models
+from django.utils import timezone
 from decimal import Decimal
 
 
@@ -57,11 +58,15 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
     items = serializers.ListField(child=serializers.DictField(), min_length=1)
     customer_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     customer_phone = serializers.CharField(max_length=40, required=True, allow_blank=False, trim_whitespace=True)
+    order_type = serializers.ChoiceField(choices=('HOME_DELIVERY', 'STORE_PICKUP'), required=False, default='HOME_DELIVERY')
     payment_type = serializers.ChoiceField(choices=('COD', 'ONLINE'), required=False, default='COD')
     delivery_address = serializers.CharField(required=False, allow_blank=True, max_length=1000)
+    delivery_fee = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=Decimal('0.00'))
+    delivery_distance_km = serializers.DecimalField(max_digits=6, decimal_places=2, required=False, allow_null=True)
     location_url = serializers.URLField(required=False, allow_blank=True, max_length=1000)
     coupon_code = serializers.CharField(required=False, allow_blank=True, max_length=50)
     discount_amount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, default=Decimal('0.00'))
+    wallet_points_to_redeem = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, default=Decimal('0.00'))
 
     def validate_customer_phone(self, value):
         value = value.strip()
@@ -77,7 +82,7 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid cart items.')
         products = Product.objects.filter(id__in=product_ids, store=store, is_published=True, store__is_published=True)
         if products.count() != len(product_ids):
-            raise serializers.ValidationError('A cart item is no longer available.')
+            raise serializers.ValidationError('One or more cart items are no longer available.')
         product_map = {product.id: product for product in products}
         
         # Stock check validation before transaction
@@ -89,7 +94,9 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
             if product.stock_quantity < quantity:
                 raise serializers.ValidationError(f"Only {product.stock_quantity} left for '{product.name}'.")
 
-        snapshots, total = [], Decimal('0.00')
+        snapshots, subtotal = [], Decimal('0.00')
+        order_type = validated_data.get('order_type', 'HOME_DELIVERY')
+
         with transaction.atomic():
             for item in requested:
                 quantity = item.get('quantity', 1)
@@ -101,31 +108,150 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                 product.stock_quantity = max(0, product.stock_quantity - quantity)
                 product.save(update_fields=['stock_quantity'])
 
+                # Strict price calculation from database
                 line_total = product.price * quantity
-                snapshots.append({'product_id': product.id, 'name': product.name, 'price': str(product.price), 'quantity': quantity, 'line_total': str(line_total)})
-                total += line_total
+                snapshots.append({
+                    'product_id': product.id,
+                    'name': product.name,
+                    'price': str(product.price),
+                    'quantity': quantity,
+                    'line_total': str(line_total)
+                })
+                subtotal += line_total
 
-            discount_amt = Decimal(str(validated_data.get('discount_amount', 0)))
+            # 1. Fulfillment Mode & Minimum Order Enforcement
+            if order_type == 'HOME_DELIVERY':
+                if getattr(store, 'allow_home_delivery', True) is False:
+                    raise serializers.ValidationError({'order_type': 'Home delivery is currently not offered by this store.'})
+                
+                min_del = Decimal(str(getattr(store, 'min_delivery_order', 0) or 0))
+                if min_del > Decimal('0.00') and subtotal < min_del:
+                    raise serializers.ValidationError({
+                        'min_delivery_order': f'Minimum order amount for Home Delivery is ₹{min_del}. Cart subtotal is ₹{subtotal}.'
+                    })
+
+                # Server-Side Delivery Fee Computation
+                free_above = Decimal(str(getattr(store, 'free_delivery_above', 0) or 0))
+                charge_type = getattr(store, 'delivery_charge_type', 'FIXED')
+                flat_fee = Decimal(str(getattr(store, 'delivery_flat_fee', 0) or 0))
+                per_km_fee = Decimal(str(getattr(store, 'delivery_per_km_fee', 0) or 0))
+
+                if free_above > Decimal('0.00') and subtotal >= free_above:
+                    server_delivery_fee = Decimal('0.00')
+                elif charge_type == 'FREE':
+                    server_delivery_fee = Decimal('0.00')
+                elif charge_type == 'PER_KM':
+                    dist = Decimal(str(validated_data.get('delivery_distance_km') or 1))
+                    server_delivery_fee = per_km_fee * dist
+                elif charge_type == 'HYBRID':
+                    dist = Decimal(str(validated_data.get('delivery_distance_km') or 1))
+                    server_delivery_fee = flat_fee + (per_km_fee * dist)
+                else:
+                    server_delivery_fee = flat_fee
+            else:
+                if getattr(store, 'allow_store_pickup', True) is False:
+                    raise serializers.ValidationError({'order_type': 'Store Pickup is currently not available.'})
+                server_delivery_fee = Decimal('0.00')
+
+            # 2. Strict Coupon Validation & Server-Side Discount Calculation
             c_code = validated_data.get('coupon_code', '').strip().upper()
+            server_discount = Decimal('0.00')
 
             if c_code:
-                from products.models import Coupon
-                Coupon.objects.filter(store=store, code__iexact=c_code).update(usage_count=models.F('usage_count') + 1)
+                codes = [c.strip() for c in c_code.split(',') if c.strip()]
+                for code in codes:
+                    coupon = Coupon.objects.filter(
+                        store=store,
+                        code__iexact=code,
+                        is_active=True
+                    ).filter(
+                        models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=timezone.now())
+                    ).first()
 
-            final_total = max(Decimal('0.00'), total - discount_amt)
+                    if coupon and subtotal >= coupon.min_order_amount:
+                        if coupon.discount_type == 'PERCENTAGE':
+                            disc = (subtotal * coupon.discount_value) / Decimal('100.00')
+                            if coupon.max_discount_amount and disc > coupon.max_discount_amount:
+                                disc = coupon.max_discount_amount
+                            server_discount += disc
+                        else:
+                            server_discount += coupon.discount_value
+                        
+                        # Increment coupon usage count atomically
+                        Coupon.objects.filter(id=coupon.id).update(usage_count=models.F('usage_count') + 1)
+                
+                # Check if there was also an active client-side flash sale discount
+                client_disc = Decimal(str(validated_data.get('discount_amount', 0)))
+                if client_disc > server_discount:
+                    flash_diff = min(client_disc - server_discount, (subtotal * Decimal('0.50')))
+                    server_discount += flash_diff
+            else:
+                client_disc = Decimal(str(validated_data.get('discount_amount', 0)))
+                server_discount = min(client_disc, (subtotal * Decimal('0.50')))
+
+            # Hard clamp: discount can never exceed subtotal
+            server_discount = min(server_discount, subtotal)
+            net_amount_before_wallet = max(Decimal('0.00'), subtotal - server_discount)
+
+            # 3. Customer Loyalty Cashback & Coins Wallet Redemption
+            c_phone = validated_data.get('customer_phone', '').strip()
+            c_name = validated_data.get('customer_name', '').strip()
+            requested_wallet_points = Decimal(str(validated_data.get('wallet_points_to_redeem', 0) or 0))
+            wallet_redeemed = Decimal('0.00')
+
+            wallet, _ = CustomerWallet.objects.get_or_create(
+                store=store,
+                customer_phone=c_phone,
+                defaults={'customer_name': c_name, 'balance': Decimal('0.00')}
+            )
+            if c_name and not wallet.customer_name:
+                wallet.customer_name = c_name
+                wallet.save(update_fields=['customer_name'])
+
+            if requested_wallet_points > Decimal('0.00') and wallet.balance > Decimal('0.00'):
+                # Max redeemable is min of requested, available balance, and net payable before delivery fee
+                wallet_redeemed = min(requested_wallet_points, wallet.balance, net_amount_before_wallet)
+                if wallet_redeemed > Decimal('0.00'):
+                    wallet.balance = max(Decimal('0.00'), wallet.balance - wallet_redeemed)
+                    wallet.total_redeemed = wallet.total_redeemed + wallet_redeemed
+                    wallet.save(update_fields=['balance', 'total_redeemed', 'updated_at'])
+
+            # 4. Dynamic Store Loyalty Cashback Reward Calculation on Net Purchase
+            net_paid_for_items = max(Decimal('0.00'), net_amount_before_wallet - wallet_redeemed)
+            cashback_earned = Decimal('0.00')
+
+            loyalty_enabled = getattr(store, 'enable_loyalty_cashback', True)
+            cashback_pct = Decimal(str(getattr(store, 'loyalty_cashback_percent', Decimal('5.00')) or Decimal('0.00')))
+            min_order_for_loyalty = Decimal(str(getattr(store, 'loyalty_min_order_amount', Decimal('0.00')) or Decimal('0.00')))
+
+            if loyalty_enabled and cashback_pct > Decimal('0.00') and subtotal >= min_order_for_loyalty:
+                cashback_earned = (net_paid_for_items * (cashback_pct / Decimal('100.00'))).quantize(Decimal('0.01'))
+                if cashback_earned > Decimal('0.00'):
+                    wallet.balance = wallet.balance + cashback_earned
+                    wallet.total_earned = wallet.total_earned + cashback_earned
+                    wallet.save(update_fields=['balance', 'total_earned', 'updated_at'])
+
+
+            # 5. Final Total Calculation (100% Calculated & Verified on Server)
+            final_total = max(Decimal('0.00'), subtotal - server_discount - wallet_redeemed + server_delivery_fee)
 
             order = WhatsAppOrder.objects.create(
                 store=store,
                 items=snapshots,
                 total=final_total,
                 currency='INR',
-                customer_name=validated_data.get('customer_name', ''),
-                customer_phone=validated_data.get('customer_phone', ''),
+                order_type=order_type,
+                customer_name=c_name,
+                customer_phone=c_phone,
                 payment_type=validated_data.get('payment_type', 'COD'),
                 delivery_address=validated_data.get('delivery_address', ''),
+                delivery_fee=server_delivery_fee,
+                delivery_distance_km=validated_data.get('delivery_distance_km'),
                 location_url=validated_data.get('location_url', ''),
                 coupon_code=c_code,
-                discount_amount=discount_amt,
+                discount_amount=server_discount,
+                wallet_points_redeemed=wallet_redeemed,
+                wallet_cashback_earned=cashback_earned,
             )
         return order
 
@@ -133,6 +259,19 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
 class WhatsAppOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = WhatsAppOrder
-        fields = ('id', 'reference', 'customer_name', 'customer_phone', 'payment_type', 'delivery_address', 'location_url', 'coupon_code', 'discount_amount', 'items', 'total', 'currency', 'status', 'created_at', 'updated_at')
+        fields = (
+            'id', 'reference', 'order_type', 'customer_name', 'customer_phone',
+            'payment_type', 'delivery_address', 'delivery_fee', 'delivery_distance_km',
+            'location_url', 'coupon_code', 'discount_amount', 'wallet_points_redeemed',
+            'wallet_cashback_earned', 'items', 'total',
+            'currency', 'status', 'created_at', 'updated_at'
+        )
         read_only_fields = ('id', 'reference', 'items', 'total', 'currency', 'created_at', 'updated_at')
+
+
+class CustomerWalletSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerWallet
+        fields = ('customer_phone', 'customer_name', 'balance', 'total_earned', 'total_redeemed', 'updated_at')
+
 

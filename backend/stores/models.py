@@ -4,6 +4,8 @@ from django.utils.text import slugify
 from django.utils import timezone
 
 
+from decimal import Decimal
+
 def unique_slugify(model, value, slug_field_name='slug'):
     base_slug = slugify(value)[:50]
     slug = base_slug
@@ -25,6 +27,13 @@ class Store(models.Model):
         (STATUS_ARCHIVED, 'Archived'),
     ]
 
+    DELIVERY_TYPE_CHOICES = [
+        ('FREE', 'Free Delivery'),
+        ('FIXED', 'Flat Delivery Fee'),
+        ('PER_KM', 'Per KM Delivery Fee'),
+        ('HYBRID', 'Base Fee + Per KM'),
+    ]
+
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='stores')
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=255, unique=True)
@@ -38,6 +47,22 @@ class Store(models.Model):
     manage_in_app = models.BooleanField(default=False)
     allow_home_delivery = models.BooleanField(default=True)
     allow_store_pickup = models.BooleanField(default=True)
+    
+    # Fulfillment & Delivery Configuration
+    min_delivery_order = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    delivery_radius_km = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('10.00'))
+    delivery_charge_type = models.CharField(max_length=20, choices=DELIVERY_TYPE_CHOICES, default='FIXED')
+    delivery_flat_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    delivery_per_km_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    free_delivery_above = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    delivery_estimated_time = models.CharField(max_length=100, default='30-45 mins', blank=True)
+    pickup_instructions = models.TextField(blank=True, default='')
+
+    # Dynamic Customer Loyalty & Cashback Wallet Configuration
+    enable_loyalty_cashback = models.BooleanField(default=True)
+    loyalty_cashback_percent = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('5.00'))
+    loyalty_min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+
     visits_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)

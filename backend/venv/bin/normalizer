@@ -1,4 +1,6 @@
-#!/home/rahulkolhe/Desktop/practice/backend/venv/bin/python3
+#!/bin/sh
+'''exec' "/home/rahulkolhe/Desktop/pract/New folder/storeproblem/backend/venv/bin/python" "$0" "$@"
+' '''
 # -*- coding: utf-8 -*-
 import re
 import sys

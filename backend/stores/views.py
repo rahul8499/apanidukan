@@ -52,20 +52,43 @@ class StoreViewSet(viewsets.ModelViewSet):
         ]
         
         # Orders & Revenue
-        orders = store.whatsapp_orders.all()
+        orders = store.whatsapp_orders.all().order_by('-created_at')
         total_orders = orders.count()
         total_revenue = sum(float(o.total) for o in orders)
         
-        # Unique and Repeat Customers
-        customer_counts = {}
+        # Real Customer Demographics & Loyalty Breakdown
+        customers_map = {}
         for o in orders:
-            key = (o.customer_phone or o.customer_name or '').strip()
-            if key:
-                customer_counts[key] = customer_counts.get(key, 0) + 1
-        
-        total_unique_customers = len(customer_counts)
-        repeat_customers_count = sum(1 for count in customer_counts.values() if count > 1)
+            phone = (o.customer_phone or '').strip()
+            name = (o.customer_name or '').strip()
+            key = phone or name or f"customer_{o.id}"
+            
+            if key not in customers_map:
+                customers_map[key] = {
+                    'name': name or 'Customer',
+                    'phone': phone,
+                    'orders_count': 0,
+                    'total_spent': 0.0,
+                    'first_order_date': o.created_at,
+                    'last_order_date': o.created_at,
+                }
+            
+            c = customers_map[key]
+            c['orders_count'] += 1
+            c['total_spent'] += float(o.total or 0)
+            if o.created_at < c['first_order_date']:
+                c['first_order_date'] = o.created_at
+            if o.created_at > c['last_order_date']:
+                c['last_order_date'] = o.created_at
+
+        total_unique_customers = len(customers_map)
+        repeat_customers_count = sum(1 for c in customers_map.values() if c['orders_count'] > 1)
+        new_customers_count = max(0, total_unique_customers - repeat_customers_count)
         repeat_customer_rate = round((repeat_customers_count / total_unique_customers * 100), 1) if total_unique_customers > 0 else 0
+        avg_customer_value = round((total_revenue / total_unique_customers), 2) if total_unique_customers > 0 else 0
+
+        # Sort top customers by total spent and order volume
+        top_customers = sorted(customers_map.values(), key=lambda x: (x['total_spent'], x['orders_count']), reverse=True)[:25]
         
         # Product requests
         product_reqs = store.product_requests.all().order_by('-created_at')
@@ -99,8 +122,11 @@ class StoreViewSet(viewsets.ModelViewSet):
             'total_orders': total_orders,
             'total_revenue': total_revenue,
             'total_unique_customers': total_unique_customers,
+            'new_customers_count': new_customers_count,
             'repeat_customers_count': repeat_customers_count,
             'repeat_customer_rate': repeat_customer_rate,
+            'avg_customer_value': avg_customer_value,
+            'top_customers': top_customers,
             'total_product_requests': total_product_requests,
             'product_requests': requests_list,
             'top_products': top_products,

@@ -236,7 +236,7 @@ export default function SellerChat() {
   if (!store) return <div className="p-6 text-xs text-slate-500 font-bold">Loading WhatsApp Inbox...</div>
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50/90 pb-28 flex flex-col lg:max-w-none lg:w-full">
+    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50/90 pb-14 sm:pb-16 flex flex-col lg:max-w-none lg:w-full">
       {/* Unified Seller Header */}
       <SellerHeader store={store} activeTabTitle="WhatsApp Chat Inbox" onStoreUpdate={loadStoreAndConversations} />
 

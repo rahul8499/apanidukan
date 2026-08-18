@@ -1,9 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { RefreshCw, Download } from 'lucide-react'
+import {
+  RefreshCw, Download, FileSpreadsheet, Users, UserCheck,
+  Repeat, TrendingUp, Sparkles, Phone, MessageSquare, ShoppingBag
+} from 'lucide-react'
 import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
+import WhatsAppMarketingCrmModal from '../components/WhatsAppMarketingCrmModal'
+import SellerDeliveryConfigModal from '../components/SellerDeliveryConfigModal'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
 
@@ -17,6 +22,8 @@ export default function SellerAnalytics() {
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month' | 'all'>('all')
   const [message, setMessage] = useState('')
+  const [showCrmModal, setShowCrmModal] = useState(false)
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false)
   const navigate = useNavigate()
 
   // Notification Permission State
@@ -98,9 +105,6 @@ export default function SellerAnalytics() {
 
   const visits = analytics?.total_visits || 0
   const productViews = analytics?.total_product_views || 0
-  const uniqueCustomers = analytics?.total_unique_customers || orders.length
-  const repeatCustomers = analytics?.repeat_customers_count || Math.max(0, Math.floor(orders.length * 0.25))
-  const repeatRate = analytics?.repeat_customer_rate || (orders.length > 0 ? 25 : 0)
   const topProducts = analytics?.top_products || []
   const searches = analytics?.searches || []
   const productRequests = analytics?.product_requests || []
@@ -221,6 +225,107 @@ export default function SellerAnalytics() {
     return validOrders.reduce((sum, o) => sum + (parseFloat(o.discount_amount) || 0), 0)
   }, [validOrders])
 
+  // Real Customer Retention, Demographics & Top Loyal Buyers Aggregation
+  const customerStats = useMemo(() => {
+    const customerMap: { [key: string]: {
+      name: string
+      phone: string
+      ordersCount: number
+      filteredOrdersCount: number
+      totalSpent: number
+      filteredSpent: number
+      firstOrderDate: Date
+      lastOrderDate: Date
+      isRepeat: boolean
+    }} = {}
+
+    // 1. Process ALL historical orders to get accurate customer lifetime data
+    orders.forEach((o) => {
+      const phone = (o.customer_phone || '').trim()
+      const name = (o.customer_name || '').trim()
+      const key = phone || name || `order_${o.id}`
+      const orderDate = new Date(o.created_at || Date.now())
+      const total = parseFloat(o.total) || 0
+
+      if (!customerMap[key]) {
+        customerMap[key] = {
+          name: name || 'Customer',
+          phone: phone,
+          ordersCount: 0,
+          filteredOrdersCount: 0,
+          totalSpent: 0,
+          filteredSpent: 0,
+          firstOrderDate: orderDate,
+          lastOrderDate: orderDate,
+          isRepeat: false,
+        }
+      }
+
+      const c = customerMap[key]
+      c.ordersCount += 1
+      c.totalSpent += total
+      if (orderDate < c.firstOrderDate) c.firstOrderDate = orderDate
+      if (orderDate > c.lastOrderDate) c.lastOrderDate = orderDate
+      c.isRepeat = c.ordersCount > 1
+    })
+
+    // 2. Filter for the selected timeRange
+    const filteredCustomerKeys = new Set<string>()
+    filteredOrders.forEach((o) => {
+      const phone = (o.customer_phone || '').trim()
+      const name = (o.customer_name || '').trim()
+      const key = phone || name || `order_${o.id}`
+      filteredCustomerKeys.add(key)
+      if (customerMap[key]) {
+        customerMap[key].filteredOrdersCount += 1
+        customerMap[key].filteredSpent += parseFloat(o.total) || 0
+      }
+    })
+
+    const totalUnique = filteredCustomerKeys.size || (timeRange === 'all' ? Object.keys(customerMap).length : 0)
+
+    let repeatCount = 0
+    let newCount = 0
+
+    filteredCustomerKeys.forEach((k) => {
+      const c = customerMap[k]
+      if (c) {
+        if (c.ordersCount > 1) repeatCount++
+        else newCount++
+      }
+    })
+
+    // Fallback to backend analytics endpoint if no local order cache
+    if (totalUnique === 0 && analytics?.total_unique_customers) {
+      return {
+        totalUnique: analytics.total_unique_customers,
+        newCustomers: analytics.new_customers_count ?? Math.max(0, analytics.total_unique_customers - (analytics.repeat_customers_count || 0)),
+        repeatCustomers: analytics.repeat_customers_count ?? 0,
+        repeatRate: analytics.repeat_customer_rate ?? 0,
+        avgCustomerSpend: analytics.avg_customer_value ?? (analytics.total_revenue && analytics.total_unique_customers ? Math.round(analytics.total_revenue / analytics.total_unique_customers) : 0),
+        topCustomersList: analytics.top_customers || [],
+      }
+    }
+
+    const repeatRate = totalUnique > 0 ? Math.round((repeatCount / totalUnique) * 100) : 0
+    const filteredRevenue = filteredOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0)
+    const avgCustomerSpend = totalUnique > 0 ? Math.round(filteredRevenue / totalUnique) : 0
+
+    // Top Loyal Customers Leaderboard
+    const topCustomersList = Object.values(customerMap)
+      .sort((a, b) => (b.totalSpent - a.totalSpent) || (b.ordersCount - a.ordersCount))
+      .slice(0, 25)
+
+    return {
+      totalUnique,
+      newCustomers: newCount,
+      repeatCustomers: repeatCount,
+      repeatRate,
+      avgCustomerSpend,
+      topCustomersList,
+    }
+  }, [orders, filteredOrders, timeRange, analytics])
+
   async function requestNotificationPermission() {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       const perm = await Notification.requestPermission()
@@ -281,6 +386,64 @@ export default function SellerAnalytics() {
   const mediaUrl = (url?: string) => {
     if (!url) return ''
     return url.startsWith('http') ? url : `${window.location.protocol}//${window.location.hostname}:8000${url}`
+  }
+
+  // 📥 Download Real Analytics & Customer Dataset as CSV
+  const downloadCSVReport = () => {
+    const rangeLabel =
+      timeRange === 'today'
+        ? 'Today_24h'
+        : timeRange === 'week'
+        ? 'Last_7_Days'
+        : timeRange === 'month'
+        ? 'Last_30_Days'
+        : 'All_Time'
+
+    const rows: string[] = []
+    rows.push(`"Store Sales & Customer Analytics Report"`)
+    rows.push(`"Store Name","${(store?.name || '').replace(/"/g, '""')}"`)
+    rows.push(`"Store Slug","${(store?.slug || '').replace(/"/g, '""')}"`)
+    rows.push(`"Time Range","${rangeLabel}"`)
+    rows.push(`"Generated At","${new Date().toLocaleString('en-IN')}"`)
+    rows.push(``)
+    rows.push(`"=== EXECUTIVE KPI SUMMARY ==="`)
+    rows.push(`"Metric","Value"`)
+    rows.push(`"Gross Revenue (INR)","${grossSales.toFixed(2)}"`)
+    rows.push(`"Valid Orders Count","${validOrders.length}"`)
+    rows.push(`"Total Unique Customers","${customerStats.totalUnique}"`)
+    rows.push(`"New 1st-Time Customers","${customerStats.newCustomers}"`)
+    rows.push(`"Repeat Returning Customers","${customerStats.repeatCustomers}"`)
+    rows.push(`"Repeat Retention Rate (%)","${customerStats.repeatRate}%"`)
+    rows.push(`"Average Order Value (INR)","${avgOrderValue}"`)
+    rows.push(`"Average Spend Per Customer (INR)","${customerStats.avgCustomerSpend}"`)
+    rows.push(``)
+    rows.push(`"=== CUSTOMER RETENTION & DEMOGRAPHICS ==="`)
+    rows.push(`"Rank","Customer Name","WhatsApp Phone","Total Orders","Lifetime Spent (INR)","Customer Segment","First Order Date","Last Order Date"`)
+
+    customerStats.topCustomersList.forEach((c: any, index: number) => {
+      const seg = c.ordersCount > 1 ? 'Repeat Customer' : 'New Customer'
+      const firstDate = c.firstOrderDate ? new Date(c.firstOrderDate).toLocaleDateString('en-IN') : '-'
+      const lastDate = c.lastOrderDate ? new Date(c.lastOrderDate).toLocaleDateString('en-IN') : '-'
+      rows.push(`"${index + 1}","${(c.name || 'Customer').replace(/"/g, '""')}","${c.phone || ''}","${c.ordersCount}","${Number(c.totalSpent || 0).toFixed(2)}","${seg}","${firstDate}","${lastDate}"`)
+    })
+
+    rows.push(``)
+    rows.push(`"=== DETAILED ORDERS BREAKDOWN ==="`)
+    rows.push(`"Order #","Date","Customer Name","Phone","Order Type","Payment Type","Items Count","Total (INR)","Status"`)
+    filteredOrders.forEach((o: any) => {
+      const date = o.created_at ? new Date(o.created_at).toLocaleString('en-IN') : '-'
+      const itemsCount = Array.isArray(o.items) ? o.items.length : 0
+      rows.push(`"#${o.reference}","${date}","${(o.customer_name || '').replace(/"/g, '""')}","${o.customer_phone || ''}","${o.order_type || 'HOME_DELIVERY'}","${o.payment_type || 'COD'}","${itemsCount}","${Number(o.total || 0).toFixed(2)}","${o.status || 'NEW'}"`)
+    })
+
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(rows.join('\n'))
+    const link = document.createElement('a')
+    link.setAttribute('href', csvContent)
+    link.setAttribute('download', `${store?.slug || 'store'}_analytics_customers_${rangeLabel}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    setMessage('📥 Analytics & Customer CSV report downloaded successfully!')
   }
 
   const downloadPDFReport = () => {
@@ -494,30 +657,61 @@ export default function SellerAnalytics() {
             </div>
           ` : ''}
 
-          <!-- Section 4: Buyer Traffic, Conversion & Customer Loyalty -->
-          <div class="section-title">4. Buyer App Visitors & Repeat Customer Loyalty</div>
+          <!-- Section 4: Customer Retention & Repeat Loyalty Analysis -->
+          <div class="section-title">4. Customer Retention & Repeat Loyalty Analysis</div>
           <div class="kpi-grid">
             <div class="kpi-card">
-              <div class="label">Storefront Visitors</div>
-              <div class="value">${visits.toLocaleString()}</div>
-              <div class="sub" style="color: #0d9488;">App Visitor Traffic</div>
-            </div>
-            <div class="kpi-card">
               <div class="label">Total Unique Buyers</div>
-              <div class="value">${uniqueCustomers.toLocaleString()}</div>
+              <div class="value">${customerStats.totalUnique.toLocaleString()}</div>
               <div class="sub" style="color: #2563eb;">Distinct Customers</div>
             </div>
             <div class="kpi-card">
-              <div class="label">Repeat Buyers (&gt;1 Order)</div>
-              <div class="value">${repeatCustomers.toLocaleString()}</div>
-              <div class="sub" style="color: #059669;">Loyal Returning Buyers</div>
+              <div class="label">New 1st-Time Buyers</div>
+              <div class="value">${customerStats.newCustomers.toLocaleString()}</div>
+              <div class="sub" style="color: #059669;">First-Time Purchases</div>
             </div>
-            <div class="kpi-card">
-              <div class="label">Repeat Customer Rate</div>
-              <div class="value">${repeatRate}%</div>
+            <div class="kpi-card indigo">
+              <div class="label">Repeat Buyers (&gt;1 Order)</div>
+              <div class="value">${customerStats.repeatCustomers.toLocaleString()}</div>
+              <div class="sub" style="color: #4f46e5;">Loyal Returning Buyers</div>
+            </div>
+            <div class="kpi-card amber">
+              <div class="label">Repeat Retention Rate</div>
+              <div class="value">${customerStats.repeatRate}%</div>
               <div class="sub" style="color: #d97706;">Buyer Retention Index</div>
             </div>
           </div>
+
+          <!-- Section 4B: Top Loyal Customers Leaderboard -->
+          ${customerStats.topCustomersList.length > 0 ? `
+            <div class="section-title" style="margin-top: 10px;">Top Loyal Customers Leaderboard</div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Customer Name</th>
+                    <th>WhatsApp Phone</th>
+                    <th>Segment</th>
+                    <th>Total Orders</th>
+                    <th>Lifetime Spent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${customerStats.topCustomersList.slice(0, 10).map((c: any, i: number) => `
+                    <tr>
+                      <td style="font-weight: 900; color: #4f46e5;">#${i + 1}</td>
+                      <td style="font-weight: 800; color: #0f172a;">${c.name || 'Customer'}</td>
+                      <td style="font-family: monospace;">${c.phone || '-'}</td>
+                      <td>${c.ordersCount > 1 ? '<span class="badge-ok">VIP REPEAT</span>' : '<span class="badge-alert">NEW BUYER</span>'}</td>
+                      <td style="font-weight: 800;">${c.ordersCount} Orders</td>
+                      <td style="font-weight: 900; color: #0d9488;">₹${Number(c.totalSpent || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
 
           <!-- Section 4: Top Product Performance Visual Bar Chart -->
           ${topProducts.length > 0 ? `
@@ -643,46 +837,46 @@ export default function SellerAnalytics() {
   if (!store) return <div className="p-6 text-xs text-slate-500 font-bold">Loading Executive Analytics...</div>
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50 pb-28 lg:max-w-none lg:w-full">
+    <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50 pb-14 sm:pb-16 lg:max-w-none lg:w-full">
       {/* Unified Seller Header */}
       <SellerHeader store={store} activeTabTitle="Store Analytics" onStoreUpdate={loadData} />
 
-      <div className="space-y-4 p-3 sm:p-5">
+      <div className="space-y-3 sm:space-y-5 p-2.5 sm:p-6">
         {message && (
-          <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-xs font-bold text-teal-900 flex items-center justify-between">
+          <div className="rounded-xl border border-teal-200 bg-teal-50 p-2.5 sm:p-3 text-xs font-bold text-teal-900 flex items-center justify-between">
             <span>{message}</span>
-            <button onClick={() => setMessage('')} className="text-teal-700 font-bold hover:text-teal-900">✕</button>
+            <button onClick={() => setMessage('')} className="text-teal-700 font-bold hover:text-teal-900 cursor-pointer">✕</button>
           </div>
         )}
 
-        {/* Top Header & Range Filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-4 rounded-2xl text-white shadow-md">
+        {/* 1. Header & Time Range Filter Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-white shadow-md">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-teal-400 animate-pulse"></span>
-              <h1 className="text-base font-extrabold text-white">Executive Sales Analytics</h1>
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse"></span>
+              <h1 className="text-xs sm:text-base font-black text-white">Executive Sales Analytics</h1>
             </div>
-            <p className="text-xs text-teal-300 font-medium mt-0.5">
-              Live operational metrics & customer behavior insights for {store.name}
+            <p className="text-[10px] sm:text-xs text-teal-300 font-medium mt-0.5">
+              Live metrics & customer insights for {store.name}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-1.5 self-start sm:self-auto flex-wrap">
             {/* Time Range Filter Tabs */}
-            <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700">
+            <div className="flex items-center gap-0.5 bg-slate-800/80 p-0.5 sm:p-1 rounded-lg sm:rounded-xl border border-slate-700">
               {(['today', 'week', 'month', 'all'] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => setTimeRange(r)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-extrabold transition-all cursor-pointer ${timeRange === r ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                  className={`rounded-md sm:rounded-lg px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-extrabold transition-all cursor-pointer ${timeRange === r ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                     }`}
                 >
-                  {r === 'today' ? 'Today' : r === 'week' ? '7 Days' : r === 'month' ? '30 Days' : 'All Time'}
+                  {r === 'today' ? 'Today' : r === 'week' ? '7D' : r === 'month' ? '30D' : 'All'}
                 </button>
               ))}
             </div>
 
-            {/* Lucide-React Refresh Icon Button */}
+            {/* Refresh Icon Button */}
             <button
               type="button"
               onClick={async () => {
@@ -690,506 +884,574 @@ export default function SellerAnalytics() {
                 await loadData()
                 setTimeout(() => setIsRefreshingData(false), 500)
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-teal-500/40 bg-teal-900/60 text-teal-200 hover:bg-teal-800 hover:text-white transition-all cursor-pointer shadow-xs shrink-0 active:scale-95"
-              title="Click to refresh live analytics data"
+              className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl border border-teal-500/40 bg-teal-900/60 text-teal-200 hover:bg-teal-800 hover:text-white transition-all cursor-pointer shadow-xs shrink-0 active:scale-95"
+              title="Refresh live analytics data"
             >
-              <RefreshCw className={`h-4 w-4 ${isRefreshingData ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshingData ? 'animate-spin' : ''}`} />
             </button>
 
-            {/* Lucide-React PDF Download Icon Button */}
+            {/* CSV Export Button */}
+            <button
+              type="button"
+              onClick={downloadCSVReport}
+              className="flex h-7 sm:h-8 items-center gap-1 px-2 sm:px-2.5 rounded-lg sm:rounded-xl border border-emerald-400/40 bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-500 hover:to-teal-600 text-[10px] sm:text-xs font-bold transition-all cursor-pointer shadow-xs shrink-0 active:scale-95"
+              title="Download CSV"
+            >
+              <FileSpreadsheet className="h-3 w-3" />
+              <span className="hidden xs:inline">CSV</span>
+            </button>
+
+            {/* PDF Report Button */}
             <button
               type="button"
               onClick={downloadPDFReport}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-teal-400/40 bg-gradient-to-r from-teal-500 to-emerald-600 text-white hover:from-teal-400 hover:to-emerald-500 transition-all cursor-pointer shadow-sm shrink-0 active:scale-95"
-              title="Download Filtered Enterprise Sales PDF Report"
+              className="flex h-7 sm:h-8 items-center gap-1 px-2 sm:px-2.5 rounded-lg sm:rounded-xl border border-teal-400/40 bg-gradient-to-r from-teal-500 to-indigo-600 text-white hover:from-teal-400 hover:to-indigo-500 text-[10px] sm:text-xs font-bold transition-all cursor-pointer shadow-xs shrink-0 active:scale-95"
+              title="Download PDF"
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-3 w-3" />
+              <span className="hidden xs:inline">PDF</span>
             </button>
           </div>
         </div>
 
-        {/* 🌟 ULTRA-PREMIUM HIGH-DENSITY EXECUTIVE KPI GRID */}
-        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
-          {/* Gross Sales Volume */}
-          <div
-            onClick={() => navigate(`/stores/${store.id}/orders`)}
-            className="rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white p-3 sm:p-4 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
-            title="Click to view all orders"
-          >
-            <div className="flex items-center justify-between gap-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 truncate">Gross Sales</span>
-              <span className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-teal-50 text-teal-600 text-xs font-bold">
-                💰
-              </span>
-            </div>
-            <p className="mt-1.5 text-base sm:text-xl font-black text-slate-900 tracking-tight truncate">
-              ₹{grossSales.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
-            </p>
-            <div className="mt-1 flex items-center justify-between text-[10px] sm:text-[11px] pt-1 border-t border-slate-100">
-              <span className="font-bold text-emerald-600">Valid ({validOrders.length})</span>
-              <span className="text-teal-600 font-extrabold group-hover:underline">View ➔</span>
-            </div>
+        {/* SECTION 1: 📊 EXECUTIVE SALES PERFORMANCE (5 KPI CARDS) */}
+        <section className="space-y-1.5">
+          <div className="flex items-center justify-between px-0.5">
+            <h2 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span>📊 Sales & Orders Overview</span>
+            </h2>
+            <span className="text-[9px] font-bold text-slate-400">Time Range: {timeRange.toUpperCase()}</span>
           </div>
 
-          {/* New Pending (Action Needed) */}
-          <div
-            onClick={() => navigate(`/stores/${store.id}/orders?status=NEW`)}
-            className="rounded-xl sm:rounded-2xl border border-amber-200/90 bg-gradient-to-br from-white via-amber-50/40 to-amber-100/30 p-3 sm:p-4 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
-            title="Click to review new pending orders"
-          >
-            <div className="flex items-center justify-between gap-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 truncate">New Pending</span>
-              <span className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-amber-100 text-amber-700 text-xs font-bold animate-pulse">
-                ⏳
-              </span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-3">
+            {/* Gross Sales Volume */}
+            <div
+              onClick={() => navigate(`/stores/${store.id}/orders`)}
+              className="rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              title="Click to view all orders"
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-500 truncate">Gross Sales</span>
+                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-teal-50 text-teal-600 text-[10px] sm:text-xs font-bold">
+                  💰
+                </span>
+              </div>
+              <p className="mt-1 text-sm sm:text-xl font-black text-slate-900 tracking-tight truncate">
+                ₹{grossSales.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+              </p>
+              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-slate-100">
+                <span className="font-bold text-emerald-600">Valid ({validOrders.length})</span>
+                <span className="text-teal-600 font-extrabold group-hover:underline">Orders ➔</span>
+              </div>
             </div>
-            <p className="mt-1.5 text-lg sm:text-2xl font-black text-amber-600 tracking-tight">
-              {pendingCount}
-            </p>
-            <div className="mt-1 flex items-center justify-between text-[10px] sm:text-[11px] pt-1 border-t border-amber-200/50">
-              <span className="font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px]">Action Needed</span>
-              <span className="text-amber-700 font-extrabold group-hover:underline">Review ➔</span>
-            </div>
-          </div>
 
-          {/* Customer Demand (Product Requests) */}
-          <div
-            onClick={() => navigate(`/stores/${store.id}/requests`)}
-            className="rounded-xl sm:rounded-2xl border border-rose-200/90 bg-gradient-to-br from-white via-rose-50/40 to-rose-100/30 p-3 sm:p-4 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
-            title="Click to open Product Request Queue"
-          >
-            <div className="flex items-center justify-between gap-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 truncate">Demand</span>
-              <span className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-rose-100 text-rose-600 text-xs font-bold animate-pulse">
-                💡
-              </span>
+            {/* New Pending (Action Needed) */}
+            <div
+              onClick={() => navigate(`/stores/${store.id}/orders?status=NEW`)}
+              className="rounded-xl sm:rounded-2xl border border-amber-200/90 bg-gradient-to-br from-white via-amber-50/40 to-amber-100/30 p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              title="Click to review new pending orders"
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-amber-800 truncate">Pending</span>
+                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-amber-100 text-amber-700 text-[10px] sm:text-xs font-bold animate-pulse">
+                  ⏳
+                </span>
+              </div>
+              <p className="mt-1 text-sm sm:text-2xl font-black text-amber-600 tracking-tight">
+                {pendingCount}
+              </p>
+              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-amber-200/50">
+                <span className="font-extrabold text-amber-800 bg-amber-100 px-1 py-0.2 rounded text-[8px] sm:text-[10px]">Action Needed</span>
+                <span className="text-amber-700 font-extrabold group-hover:underline">Review ➔</span>
+              </div>
             </div>
-            <p className="mt-1.5 text-lg sm:text-2xl font-black text-rose-700 tracking-tight">
-              {filteredProductRequests.length}
-            </p>
-            <div className="mt-1 flex items-center justify-between text-[10px] sm:text-[11px] pt-1 border-t border-rose-200/50">
-              <span className="font-extrabold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px]">Unmet</span>
-              <span className="text-rose-600 font-extrabold group-hover:underline">Queue ➔</span>
-            </div>
-          </div>
 
-          {/* Completed Orders */}
-          <div
-            onClick={() => navigate(`/stores/${store.id}/orders?status=DELIVERED`)}
-            className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-white via-indigo-50/40 to-indigo-100/30 p-3 sm:p-4 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
-            title="Click to view delivered completed orders"
-          >
-            <div className="flex items-center justify-between gap-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 truncate">Completed</span>
-              <span className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-indigo-100 text-indigo-700 text-xs font-bold">
-                ✅
-              </span>
+            {/* Customer Demand (Product Requests) */}
+            <div
+              onClick={() => navigate(`/stores/${store.id}/requests`)}
+              className="rounded-xl sm:rounded-2xl border border-rose-200/90 bg-gradient-to-br from-white via-rose-50/40 to-rose-100/30 p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              title="Click to open Product Request Queue"
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-800 truncate">Demand</span>
+                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-rose-100 text-rose-600 text-[10px] sm:text-xs font-bold animate-pulse">
+                  💡
+                </span>
+              </div>
+              <p className="mt-1 text-sm sm:text-2xl font-black text-rose-700 tracking-tight">
+                {filteredProductRequests.length}
+              </p>
+              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-rose-200/50">
+                <span className="font-extrabold text-rose-700 bg-rose-100 px-1 py-0.2 rounded text-[8px] sm:text-[10px]">Unmet</span>
+                <span className="text-rose-600 font-extrabold group-hover:underline">Queue ➔</span>
+              </div>
             </div>
-            <p className="mt-1.5 text-lg sm:text-2xl font-black text-indigo-900 tracking-tight">
-              {completedCount}
-            </p>
-            <div className="mt-1 flex items-center justify-between text-[10px] sm:text-[11px] pt-1 border-t border-indigo-200/50">
-              <span className="font-bold text-indigo-700">Delivered</span>
-              <span className="text-indigo-600 font-extrabold group-hover:underline">Orders ➔</span>
-            </div>
-          </div>
 
-          {/* Average Order Value (AOV) */}
-          <div className="col-span-2 sm:col-span-1 rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white p-3 sm:p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
-            <div className="flex items-center justify-between gap-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 truncate">Avg Order Value</span>
-              <span className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-purple-50 text-purple-600 text-xs font-bold">
-                📊
-              </span>
+            {/* Completed Orders */}
+            <div
+              onClick={() => navigate(`/stores/${store.id}/orders?status=DELIVERED`)}
+              className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-white via-indigo-50/40 to-indigo-100/30 p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              title="Click to view delivered completed orders"
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-indigo-800 truncate">Completed</span>
+                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-indigo-100 text-indigo-700 text-[10px] sm:text-xs font-bold">
+                  ✅
+                </span>
+              </div>
+              <p className="mt-1 text-sm sm:text-2xl font-black text-indigo-900 tracking-tight">
+                {completedCount}
+              </p>
+              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-indigo-200/50">
+                <span className="font-bold text-indigo-700">Delivered</span>
+                <span className="text-indigo-600 font-extrabold group-hover:underline">Orders ➔</span>
+              </div>
             </div>
-            <p className="mt-1.5 text-base sm:text-xl font-black text-slate-900 tracking-tight truncate">
-              ₹{avgOrderValue.toLocaleString('en-IN')}
-            </p>
-            <div className="mt-1 flex items-center justify-between text-[10px] sm:text-[11px] pt-1 border-t border-slate-100">
-              <span className="font-bold text-purple-700">Average</span>
-              <span className="text-slate-400 font-medium">Basket Size</span>
+
+            {/* Average Order Value (AOV) */}
+            <div className="col-span-2 sm:col-span-1 rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-500 truncate">Avg Order</span>
+                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-purple-50 text-purple-600 text-[10px] sm:text-xs font-bold">
+                  📊
+                </span>
+              </div>
+              <p className="mt-1 text-sm sm:text-xl font-black text-slate-900 tracking-tight truncate">
+                ₹{avgOrderValue.toLocaleString('en-IN')}
+              </p>
+              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-slate-100">
+                <span className="font-bold text-purple-700">Average</span>
+                <span className="text-slate-400 font-medium">Basket</span>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 📱 APP USAGE, STORE VISITORS & PRODUCT VIEWS */}
-        <section className="rounded-2xl border border-indigo-900/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-3.5 sm:p-4 text-white shadow-lg space-y-2.5">
-          <div className="flex items-center justify-between border-b border-indigo-800/50 pb-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg bg-teal-500/20 text-teal-300 font-black text-xs sm:text-sm border border-teal-500/30">
+        {/* SECTION 2: 📱 APP TRAFFIC, VISITORS & CONVERSION */}
+        <section className="rounded-xl sm:rounded-2xl border border-indigo-900/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-3 sm:p-4 text-white shadow-md space-y-2">
+          <div className="flex items-center justify-between border-b border-indigo-800/50 pb-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-lg bg-teal-500/20 text-teal-300 font-black text-[10px] sm:text-sm border border-teal-500/30">
                 📲
               </span>
               <div className="min-w-0">
-                <h2 className="text-xs sm:text-sm font-black text-white truncate">App Visitors & Product Engagement</h2>
-                <p className="text-[10px] text-teal-300/90 font-medium truncate">Real-time buyer app traffic & storefront views</p>
+                <h2 className="text-[11px] sm:text-sm font-black text-white truncate">App Visitors & Store Conversion</h2>
+                <p className="text-[9px] sm:text-[10px] text-teal-300/90 font-medium truncate">Live traffic & storefront views</p>
               </div>
             </div>
-            <span className="rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider shrink-0">
+            <span className="rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0">
               Live ⚡
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
             {/* Total Storefront Visitors */}
-            <div className="rounded-xl bg-slate-900/90 p-2.5 sm:p-3 border border-slate-800/90 space-y-0.5">
-              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">👀 Visitors</p>
-              <p className="text-lg sm:text-2xl font-black text-white">{visits.toLocaleString()}</p>
-              <p className="text-[9px] sm:text-[10px] text-teal-400 font-extrabold">Total app visits</p>
+            <div className="rounded-lg sm:rounded-xl bg-slate-900/90 p-2 sm:p-3 border border-slate-800/90 space-y-0.5">
+              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">👀 Visitors</p>
+              <p className="text-sm sm:text-2xl font-black text-white">{visits.toLocaleString()}</p>
+              <p className="text-[8px] sm:text-[10px] text-teal-400 font-extrabold">Storefront visits</p>
             </div>
 
             {/* Total Product Views */}
-            <div className="rounded-xl bg-slate-900/90 p-2.5 sm:p-3 border border-slate-800/90 space-y-0.5">
-              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">🛍️ Product Views</p>
-              <p className="text-lg sm:text-2xl font-black text-indigo-300">{productViews.toLocaleString()}</p>
-              <p className="text-[9px] sm:text-[10px] text-indigo-400 font-extrabold">Product opens</p>
+            <div className="rounded-lg sm:rounded-xl bg-slate-900/90 p-2 sm:p-3 border border-slate-800/90 space-y-0.5">
+              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">🛍️ Views</p>
+              <p className="text-sm sm:text-2xl font-black text-indigo-300">{productViews.toLocaleString()}</p>
+              <p className="text-[8px] sm:text-[10px] text-indigo-400 font-extrabold">Product clicks</p>
             </div>
 
             {/* Total Unique Buyers */}
-            <div className="rounded-xl bg-slate-900/90 p-2.5 sm:p-3 border border-slate-800/90 space-y-0.5">
-              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">👥 Active Buyers</p>
-              <p className="text-lg sm:text-2xl font-black text-emerald-400">{uniqueCustomers.toLocaleString()}</p>
-              <p className="text-[9px] sm:text-[10px] text-emerald-400 font-extrabold">Unique buyers</p>
+            <div className="rounded-lg sm:rounded-xl bg-slate-900/90 p-2 sm:p-3 border border-slate-800/90 space-y-0.5">
+              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">👥 Buyers</p>
+              <p className="text-sm sm:text-2xl font-black text-emerald-400">{customerStats.totalUnique.toLocaleString()}</p>
+              <p className="text-[8px] sm:text-[10px] text-emerald-400 font-extrabold">Unique buyers</p>
             </div>
 
             {/* Store Conversion Rate */}
-            <div className="rounded-xl bg-slate-900/90 p-2.5 sm:p-3 border border-slate-800/90 space-y-0.5">
-              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">📈 Conversion</p>
-              <p className="text-lg sm:text-2xl font-black text-amber-400">
+            <div className="rounded-lg sm:rounded-xl bg-slate-900/90 p-2 sm:p-3 border border-slate-800/90 space-y-0.5">
+              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">📈 Conversion</p>
+              <p className="text-sm sm:text-2xl font-black text-amber-400">
                 {visits > 0 ? ((validOrders.length / visits) * 100).toFixed(1) : '0.0'}%
               </p>
-              <p className="text-[9px] sm:text-[10px] text-amber-400 font-extrabold">Visitors to orders</p>
+              <p className="text-[8px] sm:text-[10px] text-amber-400 font-extrabold">Visitors to orders</p>
             </div>
           </div>
         </section>
 
-        {/* Payment & Order Velocity Breakdown */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* SECTION 3: 💵 PAYMENT BREAKDOWN & INVENTORY ALERTS */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
           {/* Payment Method Distribution */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700">💵 Payment Method Breakdown</h3>
-              <span className="text-[10px] font-bold text-slate-400">COD vs Prepaid</span>
+          <div className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+              <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700">💵 Payment Methods</h3>
+              <span className="text-[9px] font-bold text-slate-400">COD vs Prepaid</span>
             </div>
 
             <div className="space-y-2">
               <div>
-                <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
+                <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-800 mb-0.5">
                   <span>Cash on Delivery (COD)</span>
-                  <span>{paymentBreakdown.codCount} orders ({paymentBreakdown.codPercent}%)</span>
+                  <span>{paymentBreakdown.codCount} ({paymentBreakdown.codPercent}%)</span>
                 </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full bg-amber-500 rounded-full transition-all duration-500" style={{ width: `${paymentBreakdown.codPercent}%` }}></div>
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
+                <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-800 mb-0.5">
                   <span>Online / Prepaid</span>
-                  <span>{paymentBreakdown.onlineCount} orders ({paymentBreakdown.onlinePercent}%)</span>
+                  <span>{paymentBreakdown.onlineCount} ({paymentBreakdown.onlinePercent}%)</span>
                 </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full bg-teal-600 rounded-full transition-all duration-500" style={{ width: `${paymentBreakdown.onlinePercent}%` }}></div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Store Traffic & Engagement */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700">👁️ Store Traffic & Clicks</h3>
-              <span className="text-[10px] font-bold text-slate-400">Buyer visits</span>
+          {/* Smart Stock Inventory Alert Card */}
+          <div className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+              <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                <span>📦 Inventory Status</span>
+              </h3>
+              <span className="text-[9px] font-bold text-slate-400">Stock monitor</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-slate-50 p-3 border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Store Page Visits</p>
-                <p className="text-lg font-extrabold text-slate-900 mt-1">{visits.toLocaleString()}</p>
-                <p className="text-[10px] text-teal-600 font-semibold mt-0.5">Direct storefront views</p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-3 border border-slate-100">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Product Opens</p>
-                <p className="text-lg font-extrabold text-indigo-900 mt-1">{productViews.toLocaleString()}</p>
-                <p className="text-[10px] text-indigo-600 font-semibold mt-0.5">Product detail clicks</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-
-        {/* Smart Stock Inventory Alert */}
-        {(outOfStockItems.length > 0 || lowStockItems.length > 0) && (
-          <div className="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-amber-50 p-4 shadow-xs">
-            <div className="flex items-center justify-between border-b border-rose-200/60 pb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-xs text-white font-black animate-pulse">🚨</span>
-                <div>
-                  <h3 className="font-extrabold text-xs text-rose-950 uppercase tracking-wider">Smart Stock Inventory Alert</h3>
-                  <p className="text-[11px] text-rose-800 font-medium">
-                    {outOfStockItems.length > 0 && <span className="font-bold text-rose-700">{outOfStockItems.length} product(s) Out of Stock! </span>}
-                    {lowStockItems.length > 0 && <span className="font-bold text-amber-700">{lowStockItems.length} product(s) Low in Stock (&le; 5 units).</span>}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3 space-y-2 max-h-48 overflow-y-auto pr-1">
-              {outOfStockItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-xl bg-white p-2.5 border border-rose-200 shadow-2xs">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="rounded-md bg-rose-100 px-1.5 py-0.5 text-[10px] font-black text-rose-700 shrink-0">OUT OF STOCK</span>
-                    <p className="text-xs font-bold text-slate-900 truncate">{item.name}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+            {(outOfStockItems.length > 0 || lowStockItems.length > 0) ? (
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {outOfStockItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between rounded-lg bg-rose-50 p-1.5 border border-rose-200 text-xs">
+                    <div className="min-w-0 pr-2">
+                      <p className="font-bold text-rose-900 truncate text-[10px] sm:text-xs">{item.name}</p>
+                      <span className="text-[8px] bg-rose-200 text-rose-800 font-black px-1 rounded">OUT OF STOCK</span>
+                    </div>
                     <button
                       type="button"
                       onClick={() => handleQuickRestock(item.id, Number(item.stock_quantity ?? 0), 50)}
-                      className="rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white shadow-xs hover:bg-emerald-700 cursor-pointer"
+                      className="rounded bg-emerald-600 px-2 py-0.5 text-[9px] font-bold text-white shadow-2xs hover:bg-emerald-700 shrink-0 cursor-pointer"
                     >
-                      ⚡ Restock +50
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(item)}
-                      className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 cursor-pointer"
-                    >
-                      ✏️ Edit
+                      +50 Stock
                     </button>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {lowStockItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-xl bg-white p-2.5 border border-amber-200 shadow-2xs">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-800 shrink-0">ONLY {item.stock_quantity} LEFT</span>
-                    <p className="text-xs font-bold text-slate-900 truncate">{item.name}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                {lowStockItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between rounded-lg bg-amber-50 p-1.5 border border-amber-200 text-xs">
+                    <div className="min-w-0 pr-2">
+                      <p className="font-bold text-amber-900 truncate text-[10px] sm:text-xs">{item.name}</p>
+                      <span className="text-[8px] bg-amber-200 text-amber-800 font-black px-1 rounded">{item.stock_quantity} left</span>
+                    </div>
                     <button
                       type="button"
                       onClick={() => handleQuickRestock(item.id, Number(item.stock_quantity ?? 0), 50)}
-                      className="rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white shadow-xs hover:bg-emerald-700 cursor-pointer"
+                      className="rounded bg-emerald-600 px-2 py-0.5 text-[9px] font-bold text-white shadow-2xs hover:bg-emerald-700 shrink-0 cursor-pointer"
                     >
-                      ⚡ Restock +50
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(item)}
-                      className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 cursor-pointer"
-                    >
-                      ✏️ Edit
+                      +50 Stock
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Customer Retention Breakdown Card */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700">👥 Customer Base & Repeat Loyalty</h2>
-          <div className="mt-3 grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
-            <div>
-              <p className="text-[11px] font-semibold text-slate-400">Total Unique Buyers</p>
-              <p className="text-lg font-extrabold text-slate-900">{uniqueCustomers}</p>
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold text-slate-400">Repeat Customers (&gt;1 Order)</p>
-              <p className="text-lg font-extrabold text-teal-700">{repeatCustomers}</p>
-            </div>
-          </div>
-          {uniqueCustomers > 0 && (
-            <div className="mt-3">
-              <div className="flex justify-between text-xs font-bold text-slate-700">
-                <span>Repeat Purchase Rate</span>
-                <span>{repeatRate}%</span>
-              </div>
-              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-teal-600 transition-all duration-500" style={{ width: `${Math.min(repeatRate, 100)}%` }} />
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* 🏷️ COUPON PERFORMANCE & ORDER REDEMPTIONS ANALYTICS */}
-        <section className="rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-white via-indigo-50/40 to-slate-50 p-4 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Promotions Analytics</p>
-              <h2 className="text-xs font-black text-slate-900 flex items-center gap-1.5">
-                <span>🏷️ Coupon Code Usage & Order Redemptions</span>
-              </h2>
-            </div>
-            <Link to={`/stores/${store.id}/coupons`} className="text-xs font-extrabold text-indigo-600 hover:underline">
-              Manage Coupons →
-            </Link>
-          </div>
-
-          {/* Quick Coupon Metrics Summary Grid */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            <div className="rounded-xl bg-white p-2.5 border border-slate-200/80 shadow-2xs space-y-0.5">
-              <p className="text-[9px] font-black uppercase text-slate-500">Active Coupons</p>
-              <p className="text-base sm:text-xl font-black text-slate-900">
-                {coupons.filter(c => c.is_active).length} / {coupons.length}
-              </p>
-              <p className="text-[9px] font-extrabold text-emerald-600">Published Live</p>
-            </div>
-
-            <div className="rounded-xl bg-white p-2.5 border border-slate-200/80 shadow-2xs space-y-0.5">
-              <p className="text-[9px] font-black uppercase text-slate-500">Total Redemptions</p>
-              <p className="text-base sm:text-xl font-black text-indigo-600">
-                {totalCouponRedemptions}
-              </p>
-              <p className="text-[9px] font-extrabold text-indigo-500">Placed Orders</p>
-            </div>
-
-            <div className="rounded-xl bg-white p-2.5 border border-slate-200/80 shadow-2xs space-y-0.5">
-              <p className="text-[9px] font-black uppercase text-slate-500">Total Discount Given</p>
-              <p className="text-base sm:text-xl font-black text-emerald-600">
-                ₹{totalCouponDiscountGiven.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-              <p className="text-[9px] font-extrabold text-emerald-600">Customer Savings</p>
-            </div>
-          </div>
-
-          {/* Coupon Performance Table List */}
-          <div className="space-y-2 pt-1">
-            {coupons.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500 font-medium">
-                No coupons created yet. Go to Coupons page to create promotional offers.
+                ))}
               </div>
             ) : (
-              coupons.map((coupon: any) => (
-                <div key={coupon.id} className="flex items-center justify-between rounded-xl bg-white p-2.5 border border-slate-200/90 shadow-2xs">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-black text-xs text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
-                        {coupon.code}
-                      </span>
-                      <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
-                        coupon.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {coupon.is_active ? 'PUBLISHED' : 'DRAFT'}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                      Discount: {coupon.discount_type === 'PERCENTAGE' ? `${coupon.discount_value}% OFF` : `FLAT ₹${coupon.discount_value} OFF`}
-                      {coupon.min_order_amount > 0 && ` • Min Order ₹${coupon.min_order_amount}`}
-                    </p>
-                  </div>
-
-                  <div className="text-right shrink-0 pl-2">
-                    <p className="text-xs font-black text-indigo-700">
-                      {coupon.usage_count || 0} Orders
-                    </p>
-                    <p className="text-[9px] font-bold text-slate-400">
-                      {coupon.usage_count > 0 ? 'Applied on Order' : '0 Applied'}
-                    </p>
-                  </div>
-                </div>
-              ))
+              <div className="py-3 text-center text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg border border-emerald-200">
+                ✅ All products are well-stocked!
+              </div>
             )}
           </div>
         </section>
 
-        {/* Product Request Queue / Customer Requests */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-extrabold uppercase text-teal-600 tracking-wider">Customer Demands</p>
-              <h2 className="text-xs font-extrabold text-slate-900">Unmet Product Request Queue</h2>
+        {/* SECTION 4: 👥 BUYER RETENTION & TOP CUSTOMERS LEADERBOARD */}
+        <section className="rounded-xl sm:rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white via-indigo-50/30 to-slate-50 p-3 sm:p-4 shadow-2xs space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-indigo-100/80 pb-2">
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 text-xs font-black">
+                👥
+              </span>
+              <div>
+                <h2 className="text-xs sm:text-sm font-black text-slate-900">
+                  Customer Loyalty & Leaderboard
+                </h2>
+                <p className="text-[9px] sm:text-[10px] text-slate-500 font-medium">
+                  Repeat purchase rates & top buyer spend
+                </p>
+              </div>
             </div>
-            <Link to={`/stores/${store.id}/requests`} className="text-xs font-extrabold text-teal-600 hover:underline">
-              Manage All →
-            </Link>
-          </div>
-          <p className="text-[11px] text-slate-500">Customers who searched and could not find a product will appear here.</p>
 
-          <div className="space-y-2">
-            {productRequests.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
-                No active product requests right now.
+            <div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setShowCrmModal(true)}
+                className="inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-black text-white shadow-xs hover:brightness-110 active:scale-95 cursor-pointer"
+              >
+                <MessageSquare className="h-3 w-3" />
+                <span>WhatsApp CRM</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4 Rich KPI Cards: Total, New, Repeat, Repeat Rate */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
+            {/* Total Unique Customers */}
+            <div className="rounded-lg sm:rounded-xl bg-white p-2.5 border border-slate-200/90 shadow-2xs space-y-0.5">
+              <span className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400">Total Buyers</span>
+              <p className="text-sm sm:text-xl font-black text-slate-900">
+                {customerStats.totalUnique.toLocaleString()}
+              </p>
+              <p className="text-[8px] sm:text-[10px] font-bold text-blue-600">Distinct contacts</p>
+            </div>
+
+            {/* New First-Time Customers */}
+            <div className="rounded-lg sm:rounded-xl bg-white p-2.5 border border-slate-200/90 shadow-2xs space-y-0.5">
+              <span className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400">New Buyers</span>
+              <p className="text-sm sm:text-xl font-black text-emerald-600">
+                {customerStats.newCustomers.toLocaleString()}
+              </p>
+              <p className="text-[8px] sm:text-[10px] font-bold text-emerald-700">1st-time orders</p>
+            </div>
+
+            {/* Repeat Customers (>1 Order) */}
+            <div className="rounded-lg sm:rounded-xl bg-white p-2.5 border border-indigo-200 shadow-2xs space-y-0.5">
+              <span className="text-[8px] sm:text-[10px] font-black uppercase text-indigo-700">Repeat Buyers</span>
+              <p className="text-sm sm:text-xl font-black text-indigo-600">
+                {customerStats.repeatCustomers.toLocaleString()}
+              </p>
+              <p className="text-[8px] sm:text-[10px] font-bold text-indigo-700">&gt; 1 order placed</p>
+            </div>
+
+            {/* Repeat Customer Retention Rate */}
+            <div className="rounded-lg sm:rounded-xl bg-white p-2.5 border border-amber-200 shadow-2xs space-y-0.5">
+              <span className="text-[8px] sm:text-[10px] font-black uppercase text-amber-800">Repeat Rate</span>
+              <p className="text-sm sm:text-xl font-black text-amber-600">
+                {customerStats.repeatRate}%
+              </p>
+              <p className="text-[8px] sm:text-[10px] font-bold text-amber-700">Retention index</p>
+            </div>
+          </div>
+
+          {/* TOP LOYAL CUSTOMERS LEADERBOARD TABLE */}
+          <div className="space-y-1.5 pt-1">
+            <h3 className="text-[10px] sm:text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1">
+              <span>🏆 Top Buyers ({customerStats.topCustomersList.length})</span>
+            </h3>
+
+            {customerStats.topCustomersList.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-center text-slate-400 text-xs font-medium">
+                No customer orders recorded for this range yet.
               </div>
             ) : (
-              productRequests.map((request: any) => (
-                <div key={request.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-extrabold text-xs text-slate-900">{request.productName}</p>
-                      <p className="mt-0.5 text-[11px] text-slate-600">Customer: {request.customerName || 'Customer'}</p>
-                      <p className="text-[11px] text-slate-600">Phone: {request.customerPhone || 'N/A'}</p>
+              <div className="divide-y divide-slate-100 rounded-lg sm:rounded-xl border border-slate-200/90 bg-white shadow-2xs overflow-hidden max-h-56 overflow-y-auto">
+                {customerStats.topCustomersList.slice(0, 8).map((c: any, index: number) => {
+                  const initial = (c.name || 'C').charAt(0).toUpperCase()
+                  const isRepeat = (c.ordersCount || 0) > 1
+
+                  return (
+                    <div
+                      key={c.phone || c.name || index}
+                      className="flex items-center justify-between p-2 hover:bg-slate-50/80 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md font-black text-[10px] ${
+                          index === 0
+                            ? 'bg-amber-100 text-amber-800'
+                            : index === 1
+                            ? 'bg-slate-200 text-slate-700'
+                            : index === 2
+                            ? 'bg-orange-100 text-orange-800'
+                            : 'bg-indigo-50 text-indigo-700'
+                        }`}>
+                          {index < 3 ? ['🥇', '🥈', '🥉'][index] : initial}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1">
+                            <p className="text-[11px] font-black text-slate-900 truncate">
+                              {c.name || 'Customer'}
+                            </p>
+                            {isRepeat && (
+                              <span className="rounded bg-indigo-50 text-indigo-700 px-1 text-[8px] font-black">
+                                VIP
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[9px] font-mono text-slate-400 truncate">
+                            {c.phone || 'Phone N/A'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 text-right">
+                        <div>
+                          <p className="text-[11px] font-black text-slate-900">
+                            ₹{Number(c.totalSpent || 0).toFixed(0)}
+                          </p>
+                          <p className="text-[8px] font-semibold text-slate-400">
+                            {c.ordersCount} orders
+                          </p>
+                        </div>
+
+                        {c.phone && (
+                          <a
+                            href={`https://wa.me/${formatPhoneForWhatsApp(c.phone)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all text-xs"
+                            title="Chat on WhatsApp"
+                          >
+                            💬
+                          </a>
+                        )}
+                      </div>
                     </div>
-                    {request.customerPhone && (
-                      <a
-                        href={`https://wa.me/${formatPhoneForWhatsApp(request.customerPhone)}?text=${encodeURIComponent(`Hi ${request.customerName || 'Customer'}, thanks for requesting ${request.productName}. We will contact you soon.`)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-lg bg-[#25D366] px-2.5 py-1 text-[10px] font-extrabold text-white shadow-2xs hover:bg-emerald-600 transition-all"
-                      >
-                        Reply WA
-                      </a>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* SECTION 5: 🏷️ PROMOTIONS & SEARCH TRENDS */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
+          {/* Coupon Performance */}
+          <div className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between border-b border-indigo-100 pb-1.5">
+              <h3 className="text-[11px] sm:text-xs font-black text-slate-900 flex items-center gap-1">
+                <span>🏷️ Coupon Performance</span>
+              </h3>
+              <Link to={`/stores/${store.id}/coupons`} className="text-[10px] font-bold text-indigo-600 hover:underline">
+                Manage ➔
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5">
+              <div className="rounded-lg bg-slate-50 p-2 border border-slate-100 text-center">
+                <p className="text-[8px] font-black uppercase text-slate-400">Active</p>
+                <p className="text-xs sm:text-sm font-black text-slate-900">{coupons.filter(c => c.is_active).length}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2 border border-slate-100 text-center">
+                <p className="text-[8px] font-black uppercase text-slate-400">Applied</p>
+                <p className="text-xs sm:text-sm font-black text-indigo-600">{totalCouponRedemptions}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2 border border-slate-100 text-center">
+                <p className="text-[8px] font-black uppercase text-slate-400">Savings</p>
+                <p className="text-xs sm:text-sm font-black text-emerald-600">₹{totalCouponDiscountGiven.toFixed(0)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Searches */}
+          <div className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+              <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700">🔍 Top Buyer Searches</h3>
+              <span className="text-[9px] font-bold text-slate-400">{searches.length} terms</span>
+            </div>
+
+            <div className="space-y-1 max-h-28 overflow-y-auto">
+              {searches.length === 0 ? (
+                <p className="text-center text-xs text-slate-400 py-2">No searches yet.</p>
+              ) : (
+                searches.map((s: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-50 p-1.5 text-xs">
+                    <span className="font-bold text-slate-800 text-[11px]">"{s.query_term}"</span>
+                    <span className="rounded bg-teal-50 px-1.5 py-0.2 text-[9px] font-extrabold text-teal-700">
+                      {s.search_count} searches
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 6: 💡 CUSTOMER PRODUCT REQUESTS (UNMET DEMAND QUEUE) */}
+        <section className="rounded-xl sm:rounded-2xl border border-rose-200/90 bg-gradient-to-br from-white via-rose-50/30 to-slate-50 p-3 sm:p-4 shadow-2xs space-y-2.5">
+          <div className="flex items-center justify-between border-b border-rose-100 pb-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-100 text-rose-700 text-xs font-black shrink-0">
+                💡
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-xs sm:text-sm font-black text-slate-900 truncate">Customer Product Requests (Unmet Demand)</h2>
+                <p className="text-[9px] sm:text-[10px] text-rose-700/90 font-medium truncate">Customers who requested products not found in store</p>
+              </div>
+            </div>
+            <Link
+              to={`/stores/${store.id}/requests`}
+              className="text-[10px] sm:text-xs font-black text-rose-700 hover:underline shrink-0"
+            >
+              Manage Queue ➔
+            </Link>
+          </div>
+
+          <div className="space-y-1.5">
+            {productRequests.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-rose-200 bg-rose-50/50 p-3 text-center text-xs text-rose-700/80 font-medium">
+                No active product requests right now. When customers request products on your store, they will appear here.
+              </div>
+            ) : (
+              productRequests.slice(0, 5).map((request: any) => (
+                <div
+                  key={request.id}
+                  className="rounded-lg sm:rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-black text-xs text-slate-900">
+                        {request.productName}
+                      </span>
+                      <span className="rounded bg-rose-50 border border-rose-200 text-rose-700 px-1 text-[8px] font-black uppercase">
+                        Demand
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                      By <strong>{request.customerName || 'Customer'}</strong> {request.customerPhone && `(📞 ${request.customerPhone})`}
+                    </p>
+                    {request.message && (
+                      <p className="text-[10px] text-slate-600 italic bg-slate-50 px-1.5 py-0.5 rounded mt-1">
+                        "{request.message}"
+                      </p>
                     )}
                   </div>
-                  {request.message && <p className="mt-1.5 text-[11px] text-slate-600 italic">"{request.message}"</p>}
+
+                  {request.customerPhone && (
+                    <a
+                      href={`https://wa.me/${formatPhoneForWhatsApp(request.customerPhone)}?text=${encodeURIComponent(
+                        `Hi ${request.customerName || 'Customer'}! Thanks for requesting "${request.productName}" at ${store.name}. We are arranging it for you soon!`
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-1 rounded-lg bg-[#25D366] px-2.5 py-1 text-[10px] font-bold text-white shadow-2xs hover:bg-emerald-600 transition-all shrink-0 cursor-pointer self-start sm:self-auto"
+                    >
+                      <span>💬 Reply WhatsApp</span>
+                    </a>
+                  )}
                 </div>
               ))
             )}
           </div>
         </section>
 
-        {/* Top Viewed Products */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700">🔥 Top Viewed Products</h2>
-            <span className="text-[10px] font-bold text-slate-400">{topProducts.length} items</span>
+        {/* SECTION 7: 🔥 TOP VIEWED PRODUCTS */}
+        <section className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+            <h2 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700">🔥 Top Viewed Products</h2>
+            <span className="text-[9px] font-bold text-slate-400">{topProducts.length} items</span>
           </div>
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             {topProducts.length === 0 ? (
-              <p className="text-center text-xs text-slate-400 py-3">No product view analytics recorded yet.</p>
+              <p className="col-span-2 text-center text-xs text-slate-400 py-2">No product views recorded yet.</p>
             ) : (
               topProducts.map((p: any) => (
-                <div key={p.id} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
-                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white shadow-2xs shrink-0">
-                    {p.image ? <img src={mediaUrl(p.image)} alt="" className="h-full w-full object-cover" /> : <span className="text-base">🛍️</span>}
+                <div key={p.id} className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/80 p-1.5">
+                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-md bg-white shadow-2xs shrink-0">
+                    {p.image ? <img src={mediaUrl(p.image)} alt="" className="h-full w-full object-cover" /> : <span className="text-xs">🛍️</span>}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-extrabold text-slate-800">{p.name}</p>
-                    <p className="text-[11px] font-bold text-teal-600">₹{p.price}</p>
+                    <p className="truncate text-[11px] font-black text-slate-800">{p.name}</p>
+                    <p className="text-[10px] font-bold text-teal-600">₹{p.price}</p>
                   </div>
-                  <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-extrabold text-indigo-700 shrink-0">
-                    👁️ {p.views_count} views
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-
-        {/* Top Search Queries */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700">🔍 Top Buyer Searches</h2>
-            <span className="text-[10px] font-bold text-slate-400">{searches.length} queries</span>
-          </div>
-
-          <div className="space-y-2">
-            {searches.length === 0 ? (
-              <p className="text-center text-xs text-slate-400 py-3">No search query analytics recorded yet.</p>
-            ) : (
-              searches.map((s: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5">
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-800">"{s.query_term}"</h3>
-                    <p className="text-[10px] text-slate-400">
-                      Last: {new Date(s.last_searched_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-extrabold text-teal-700">
-                    {s.search_count} searches
+                  <span className="rounded bg-indigo-50 px-1.5 py-0.2 text-[9px] font-extrabold text-indigo-700 shrink-0">
+                    👁️ {p.views_count}
                   </span>
                 </div>
               ))
@@ -1233,6 +1495,27 @@ export default function SellerAnalytics() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* 📲 WhatsApp Marketing Broadcast & Customer Re-engagement CRM Modal */}
+      {showCrmModal && store && (
+        <WhatsAppMarketingCrmModal
+          store={store}
+          customers={customerStats.topCustomersList}
+          coupons={coupons}
+          onClose={() => setShowCrmModal(false)}
+        />
+      )}
+
+      {/* 🪙 Store Delivery & Cashback Loyalty Configuration Modal */}
+      {showDeliveryModal && store && (
+        <SellerDeliveryConfigModal
+          store={store}
+          onSaveSuccess={() => {
+            loadData()
+          }}
+          onClose={() => setShowDeliveryModal(false)}
+        />
       )}
 
       {/* Unified Seller Bottom Navigation Bar */}

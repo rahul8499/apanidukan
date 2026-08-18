@@ -9,6 +9,7 @@ import {
   PackageCheck, ArrowLeft, Search, Clock, CheckCircle2, AlertTriangle,
   ChevronRight, RefreshCw, MessageSquare, ShoppingBag, Truck, Check, XCircle
 } from 'lucide-react'
+import { getStoreTheme } from '../utils/storeTheme'
 
 export default function CustomerOrders() {
   const { storeSlug } = useParams()
@@ -84,8 +85,10 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     }
   }
 
+  const storeTheme = getStoreTheme(store)
+
   return (
-    <div className="mx-auto min-h-screen w-full bg-slate-50 pb-36 text-xs sm:text-sm font-sans">
+    <div className={`mx-auto min-h-screen w-full ${storeTheme.page_bg_class} pb-36 text-xs sm:text-sm font-sans transition-colors duration-300`}>
       
       {/* HEADER NAVBAR */}
       <header className="sticky top-0 z-40 bg-slate-950 text-white border-b border-slate-800 shadow-md">
@@ -109,7 +112,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
           <NotificationBellHeader />
         </div>
 
-        {/* SEARCH & FILTER TABS (FLIPKART STYLE) */}
+        {/* SEARCH & FILTER TABS */}
         <div className="bg-slate-900 border-t border-slate-800/80 px-3 py-2">
           <div className="mx-auto max-w-7xl space-y-2">
             
@@ -136,9 +139,10 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                 <button
                   key={f.key}
                   onClick={() => setActiveFilter(f.key as any)}
+                  style={activeFilter === f.key ? { backgroundColor: storeTheme.primary_color } : undefined}
                   className={`rounded-lg px-3 py-1 text-[10px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                     activeFilter === f.key
-                      ? 'bg-indigo-600 text-white shadow-xs'
+                      ? 'text-white shadow-xs'
                       : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
                   }`}
                 >
@@ -156,43 +160,45 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
         
         {/* EMPTY STATE */}
         {filteredOrders.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200/90 bg-white p-8 text-center shadow-xs space-y-4 my-6">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-50 text-4xl shadow-inner">
+          <div className={`rounded-3xl border ${storeTheme.card_bg_class} p-8 text-center shadow-xs space-y-4 my-6`}>
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-black/10 text-4xl shadow-inner">
               📦
             </div>
             <div className="space-y-1 max-w-sm mx-auto">
-              <h2 className="text-base sm:text-lg font-black text-slate-900">
+              <h2 className={`text-base sm:text-lg font-black ${storeTheme.text_primary_class}`}>
                 {orders.length === 0 ? 'No Orders Placed Yet' : 'No Matching Orders'}
               </h2>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              <p className={`text-xs ${storeTheme.text_secondary_class} font-medium leading-relaxed`}>
                 {orders.length === 0
-                  ? 'Your orders placed on this device will appear here with live tracking & GST invoices.'
+                  ? 'Your orders placed on this device will appear here with live tracking & invoices.'
                   : 'Try searching with a different order ID or filter tab.'}
               </p>
             </div>
             <Link
               to={`/store/${storeSlug}`}
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-2.5 text-xs font-black text-white shadow-md hover:scale-105 transition-all"
+              className={`inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r ${storeTheme.btn_gradient} px-6 py-2.5 text-xs font-black text-white shadow-md hover:scale-105 transition-all`}
             >
               <ShoppingBag className="h-4 w-4" />
               <span>Browse Store</span>
             </Link>
           </div>
         ) : (
-          /* FLIPKART STYLE RESPONSIVE ORDER CARDS GRID */
+          /* RESPONSIVE ORDER CARDS GRID */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
             {filteredOrders.map((order) => (
               <div
                 key={order.reference}
-                className="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xs hover:shadow-md transition-all duration-200"
+                className={`group relative overflow-hidden rounded-2xl border ${storeTheme.card_bg_class} transition-all duration-200`}
               >
                 {/* Card Top Strip */}
-                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-3.5 py-2.5">
+                <div className={`flex items-center justify-between border-b px-3.5 py-2.5 ${
+                  storeTheme.is_dark_mode ? 'border-slate-800 bg-slate-950/60' : 'border-slate-100 bg-slate-50/70'
+                }`}>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-black text-indigo-900 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md">
+                    <span className="font-mono text-xs font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2 py-0.5 rounded-md">
                       #{order.reference}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
+                    <span className={`text-[10px] ${storeTheme.text_secondary_class} font-medium hidden sm:inline`}>
                       • {order.created_at ? new Date(order.created_at).toLocaleString() : 'Recent Order'}
                     </span>
                   </div>
@@ -204,35 +210,67 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                   
                   <div className="flex items-center justify-between gap-3">
                     <div className="space-y-0.5">
-                      <p className="text-xs text-slate-500 font-medium">Total Amount</p>
-                      <p className="text-base sm:text-lg font-black text-slate-950">
+                      <p className={`text-xs ${storeTheme.text_secondary_class} font-medium`}>Total Amount</p>
+                      <p className={`text-base sm:text-lg font-black ${storeTheme.text_primary_class}`}>
                         ₹{Number(order.total).toFixed(2)}
                       </p>
                     </div>
 
-                    <div className="text-right">
-                      <p className="text-[10px] text-slate-400 font-semibold uppercase">Order Date</p>
-                      <p className="text-xs font-bold text-slate-700">
+                    <div className="text-right space-y-0.5">
+                      <p className={`text-[10px] ${storeTheme.text_secondary_class} font-semibold uppercase`}>Order Date</p>
+                      <p className={`text-xs font-bold ${storeTheme.text_primary_class}`}>
                         {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'Today'}
                       </p>
                     </div>
                   </div>
 
+                  {/* Fulfillment Mode Pill & Notice */}
+                  <div className={`p-2.5 rounded-xl border text-[11px] font-bold ${
+                    order.order_type === 'STORE_PICKUP'
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                      : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 font-black">
+                        <span>{order.order_type === 'STORE_PICKUP' ? '🏪 Store Pickup' : '🚚 Home Delivery'}</span>
+                      </span>
+                      <span className="text-[10px] uppercase font-black px-1.5 py-0.2 rounded bg-black/30 border border-current">
+                        {order.order_type === 'STORE_PICKUP' 
+                          ? 'Self Collect' 
+                          : Number(order.delivery_fee) > 0 
+                            ? `+₹${Number(order.delivery_fee).toFixed(0)} Fee` 
+                            : 'Free Delivery'
+                        }
+                      </span>
+                    </div>
+                    {order.order_type === 'STORE_PICKUP' ? (
+                      <p className="text-[10px] opacity-80 font-medium mt-1">
+                        📍 Collect at shop: {store?.address || store?.name || 'Store Location'}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] opacity-80 font-medium mt-1">
+                        ⏱️ Est. Delivery in {store?.delivery_estimated_time || '30-45 mins'}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Actions Footer Bar */}
-                  <div className="border-t border-slate-100 pt-2.5 flex items-center justify-between gap-2">
+                  <div className={`border-t pt-2.5 flex items-center justify-between gap-2 ${
+                    storeTheme.is_dark_mode ? 'border-slate-800' : 'border-slate-100'
+                  }`}>
                     
                     <button
                       type="button"
                       onClick={() => window.dispatchEvent(new CustomEvent('qs-open-chat'))}
-                      className="text-[11px] font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-1 cursor-pointer"
+                      className={`text-[11px] font-bold ${storeTheme.text_secondary_class} hover:${storeTheme.text_primary_class} flex items-center gap-1 cursor-pointer`}
                     >
-                      <MessageSquare className="h-3.5 w-3.5 text-indigo-500" />
+                      <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />
                       <span className="hidden sm:inline">Need Help?</span>
                     </button>
 
                     <Link
                       to={`/store/${storeSlug}/order/${order.reference}`}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-xs font-black text-white shadow-xs hover:opacity-95 active:scale-98 transition-all"
+                      className={`inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r ${storeTheme.btn_gradient} px-4 py-2 text-xs font-black text-white shadow-xs hover:opacity-95 active:scale-98 transition-all`}
                     >
                       <span>Track Order Live</span>
                       <ChevronRight className="h-3.5 w-3.5" />

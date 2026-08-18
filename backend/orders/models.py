@@ -91,15 +91,25 @@ class WhatsAppOrder(models.Model):
     STATUS_CANCELLED = 'CANCELLED'
     STATUS_CHOICES = [(STATUS_NEW, 'New'), (STATUS_CONFIRMED, 'Confirmed'), (STATUS_PAID, 'Paid'), (STATUS_DELIVERED, 'Delivered'), (STATUS_CANCELLED, 'Cancelled')]
 
+    ORDER_TYPE_CHOICES = [
+        ('HOME_DELIVERY', 'Home Delivery'),
+        ('STORE_PICKUP', 'Store Pickup'),
+    ]
+
     store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='whatsapp_orders')
     reference = models.CharField(max_length=16, unique=True, default=generate_order_number, editable=False)
+    order_type = models.CharField(max_length=30, choices=ORDER_TYPE_CHOICES, default='HOME_DELIVERY')
     customer_name = models.CharField(max_length=150, blank=True)
     customer_phone = models.CharField(max_length=40, blank=True)
     payment_type = models.CharField(max_length=20, blank=True)
     delivery_address = models.TextField(blank=True)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    delivery_distance_km = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     location_url = models.URLField(blank=True)
     coupon_code = models.CharField(max_length=50, blank=True, default='')
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    wallet_points_redeemed = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    wallet_cashback_earned = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     items = models.JSONField(default=list)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     currency = models.CharField(max_length=10, default='INR')
@@ -112,3 +122,23 @@ class WhatsAppOrder(models.Model):
 
     def __str__(self):
         return f'WA-{self.reference} ({self.store.name})'
+
+
+class CustomerWallet(models.Model):
+    """Store loyalty coins and cashback wallet per customer phone number per store."""
+    store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='customer_wallets')
+    customer_phone = models.CharField(max_length=40, db_index=True)
+    customer_name = models.CharField(max_length=150, blank=True)
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    total_earned = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    total_redeemed = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('store', 'customer_phone')
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'Wallet {self.customer_phone} ({self.store.name}): ₹{self.balance}'
+

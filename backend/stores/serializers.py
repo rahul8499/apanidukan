@@ -14,7 +14,16 @@ class StoreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Store
-        fields = ('id', 'owner', 'name', 'slug', 'description', 'address', 'phone_number', 'logo', 'theme', 'status', 'is_published', 'manage_in_app', 'allow_home_delivery', 'allow_store_pickup', 'created_at', 'updated_at', 'settings')
+        fields = (
+            'id', 'owner', 'name', 'slug', 'description', 'address', 'phone_number', 'logo',
+            'theme', 'status', 'is_published', 'manage_in_app',
+            'allow_home_delivery', 'allow_store_pickup',
+            'min_delivery_order', 'delivery_radius_km', 'delivery_charge_type',
+            'delivery_flat_fee', 'delivery_per_km_fee', 'free_delivery_above',
+            'delivery_estimated_time', 'pickup_instructions',
+            'enable_loyalty_cashback', 'loyalty_cashback_percent', 'loyalty_min_order_amount',
+            'created_at', 'updated_at', 'settings'
+        )
         read_only_fields = ('owner', 'slug', 'created_at', 'updated_at')
 
     def create(self, validated_data):
@@ -47,4 +56,12 @@ class PublicStoreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Store
-        fields = ('id', 'name', 'slug', 'description', 'address', 'logo', 'theme', 'settings', 'phone_number', 'manage_in_app', 'allow_home_delivery', 'allow_store_pickup')
+        fields = (
+            'id', 'name', 'slug', 'description', 'address', 'logo', 'theme', 'settings',
+            'phone_number', 'manage_in_app', 'allow_home_delivery', 'allow_store_pickup',
+            'min_delivery_order', 'delivery_radius_km', 'delivery_charge_type',
+            'delivery_flat_fee', 'delivery_per_km_fee', 'free_delivery_above',
+            'delivery_estimated_time', 'pickup_instructions',
+            'enable_loyalty_cashback', 'loyalty_cashback_percent', 'loyalty_min_order_amount'
+        )
+

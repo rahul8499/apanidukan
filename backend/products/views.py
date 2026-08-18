@@ -13,7 +13,38 @@ from stores.models import Store
 from .models import Product, ProductImage
 from .serializers import ProductSerializer, ProductImageSerializer
 
+import uuid
+import os
+from rest_framework.views import APIView
+from storage import get_storage
 from config.websocket import broadcast_order_event_sync
+
+
+class PresignedUploadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        filename = request.data.get('filename') or request.data.get('name') or f"image_{uuid.uuid4().hex[:8]}.jpg"
+        content_type = request.data.get('content_type') or request.data.get('file_type') or 'image/jpeg'
+        folder = request.data.get('folder', 'products/images').strip('/')
+
+        ext = os.path.splitext(filename)[1] or '.jpg'
+        unique_name = f"{folder}/{uuid.uuid4().hex}{ext}"
+
+        storage = get_storage()
+        if hasattr(storage, 'get_presigned_upload_url'):
+            res = storage.get_presigned_upload_url(unique_name, content_type=content_type, expires=3600)
+            return Response({'success': True, **res})
+        else:
+            return Response({
+                'success': True,
+                'upload_url': None,
+                'file_url': storage.url(unique_name),
+                'key': unique_name,
+                'storage': 'local',
+                'expires_in': 3600
+            })
+
 
 
 class IsStoreOwner(permissions.BasePermission):

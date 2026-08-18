@@ -10,6 +10,7 @@ import {
   Zap, ArrowLeft, Plus, Minus, X, CheckCircle2,
   Maximize2, Store as StoreIcon, CheckCircle
 } from 'lucide-react'
+import { getStoreTheme } from '../utils/storeTheme'
 
 export default function ProductPage() {
   const { storeSlug } = useParams()
@@ -226,8 +227,10 @@ function ProductContent() {
     }
   }
 
+  const storeTheme = getStoreTheme(store)
+
   return (
-    <div className="min-h-screen bg-slate-100 font-sans text-slate-800 pb-20 lg:pb-12 overflow-x-hidden text-xs sm:text-sm">
+    <div className={`min-h-screen ${storeTheme.page_bg_class} font-sans pb-20 lg:pb-12 overflow-x-hidden text-xs sm:text-sm transition-colors duration-300`}>
       
       {/* Toast Notifications */}
       {copiedToast && (
@@ -655,6 +658,27 @@ function ProductContent() {
                 </div>
               </div>
 
+              {/* Desktop Direct Action Buttons Styled with Store Theme */}
+              <div className="hidden lg:flex items-center gap-3 pt-2">
+                <button
+                  disabled={isOutOfStock}
+                  onClick={handleAddToCart}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-700 bg-slate-900 py-3 text-xs font-black text-white hover:bg-slate-800 disabled:opacity-50 transition-all cursor-pointer shadow-md"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  <span>ADD TO CART</span>
+                </button>
+
+                <button
+                  disabled={isOutOfStock}
+                  onClick={handleBuyNow}
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r ${storeTheme.btn_gradient} py-3 text-xs font-black text-white hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer shadow-lg`}
+                >
+                  <Zap className="h-4 w-4 fill-white" />
+                  <span>BUY NOW ➔</span>
+                </button>
+              </div>
+
             </div>
 
             {/* Product Details Tabs */}
@@ -850,17 +874,19 @@ function ProductContent() {
       </main>
 
       {/* MOBILE PWA STICKY BOTTOM BAR */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-2 sm:p-2.5 shadow-[0_-6px_20px_rgba(0,0,0,0.12)]">
+      <div className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t p-2 sm:p-2.5 shadow-[0_-6px_20px_rgba(0,0,0,0.2)] backdrop-blur-md ${
+        storeTheme.is_dark_mode ? 'bg-slate-950/95 border-slate-800 text-white' : 'bg-white/95 border-slate-200/90 text-slate-900'
+      }`}>
         <div className="mx-auto max-w-md flex items-center gap-2">
           
-          <div className="flex flex-col justify-center pr-2 border-r border-slate-200/80 min-w-[75px]">
+          <div className="flex flex-col justify-center pr-2 border-r border-slate-700/40 min-w-[75px]">
             <div className="flex items-baseline gap-1">
-              <span className="text-sm font-black text-slate-950">₹{product.price}</span>
+              <span className={`text-sm font-black ${storeTheme.text_primary_class}`}>₹{product.price}</span>
               {savings > 0 && (
                 <span className="text-[9px] font-bold text-slate-400 line-through">₹{originalMRP}</span>
               )}
             </div>
-            <span className="text-[9px] font-extrabold text-emerald-600">
+            <span className="text-[9px] font-extrabold text-emerald-400">
               {savings > 0 ? `${discountPercent}% OFF` : 'Best Price'}
             </span>
           </div>
@@ -869,16 +895,16 @@ function ProductContent() {
             <button
               disabled={isOutOfStock}
               onClick={handleAddToCart}
-              className="flex-1 flex items-center justify-center gap-1 rounded-xl bg-amber-400 py-2.5 text-xs font-black text-slate-950 shadow-xs hover:bg-amber-500 disabled:bg-slate-300 disabled:text-slate-500 transition-all cursor-pointer border border-amber-500/40"
+              className="flex-1 flex items-center justify-center gap-1 rounded-xl bg-slate-800 text-white py-2.5 text-xs font-black shadow-xs hover:bg-slate-700 disabled:opacity-50 transition-all cursor-pointer border border-slate-700"
             >
-              <ShoppingCart className="h-3.5 w-3.5 fill-slate-950 shrink-0" />
+              <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">CART</span>
             </button>
 
             <button
               disabled={isOutOfStock}
               onClick={handleBuyNow}
-              className="flex-1 flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-orange-600 to-rose-600 py-2.5 text-xs font-black text-white shadow-xs hover:from-orange-500 hover:to-rose-500 disabled:bg-slate-300 disabled:text-slate-500 transition-all cursor-pointer"
+              className={`flex-1 flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r ${storeTheme.btn_gradient} py-2.5 text-xs font-black text-white shadow-xs disabled:opacity-50 transition-all cursor-pointer`}
             >
               <Zap className="h-3.5 w-3.5 fill-white shrink-0" />
               <span className="truncate">BUY NOW</span>

@@ -116,11 +116,22 @@ MEDIA_URL = os.environ.get('MEDIA_URL', '/media/')
 MEDIA_ROOT = os.path.join(BASE_DIR, os.environ.get('MEDIA_ROOT', 'media'))
 
 # Storage config
-MEDIA_STORAGE = os.environ.get('MEDIA_STORAGE', 'local')
-S3_BUCKET = os.environ.get('S3_BUCKET')
-S3_ACCESS_KEY = os.environ.get('S3_ACCESS_KEY')
-S3_SECRET_KEY = os.environ.get('S3_SECRET_KEY')
-S3_ENDPOINT = os.environ.get('S3_ENDPOINT')
+S3_BUCKET = (os.environ.get('AWS_STORAGE_BUCKET_NAME') or os.environ.get('S3_BUCKET') or '').strip(" '\"")
+S3_ACCESS_KEY = (os.environ.get('AWS_ACCESS_KEY_ID') or os.environ.get('S3_ACCESS_KEY') or '').strip(" '\"")
+S3_SECRET_KEY = (os.environ.get('AWS_SECRET_ACCESS_KEY') or os.environ.get('S3_SECRET_KEY') or '').strip(" '\"")
+S3_REGION = (os.environ.get('AWS_S3_REGION_NAME') or os.environ.get('S3_REGION', 'eu-north-1') or '').strip(" '\"")
+S3_ENDPOINT = (os.environ.get('S3_ENDPOINT') or '').strip(" '\"") or None
+S3_PRESIGNED_EXPIRY = int(os.environ.get('AWS_S3_PRESIGNED_URL_EXPIRY', os.environ.get('S3_PRESIGNED_EXPIRY', '3600')))
+
+if S3_BUCKET and S3_ACCESS_KEY and S3_SECRET_KEY:
+    MEDIA_STORAGE = 's3'
+else:
+    MEDIA_STORAGE = os.environ.get('MEDIA_STORAGE', 'local')
+
+if MEDIA_STORAGE == 's3':
+    DEFAULT_FILE_STORAGE = 'storage.S3Storage'
+
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

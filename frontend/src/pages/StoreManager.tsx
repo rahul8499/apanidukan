@@ -77,6 +77,8 @@ export default function StoreManager() {
   const [editStock, setEditStock] = useState('')
   const [editCategory, setEditCategory] = useState('')
   const [isUpdatingProduct, setIsUpdatingProduct] = useState(false)
+  const [isAddingProduct, setIsAddingProduct] = useState(false)
+  const [isPublishingStore, setIsPublishingStore] = useState(false)
 
   function openEditModal(prod: any) {
     setEditingProduct(prod)
@@ -323,6 +325,8 @@ export default function StoreManager() {
   async function addProduct(e: React.FormEvent) {
     e.preventDefault()
     if (!store || !productName.trim()) return
+    setIsAddingProduct(true)
+    setMessage('⏳ Uploading images & publishing product to S3 Cloud...')
     try {
       const data = new FormData()
       data.append('store', String(store.id))
@@ -351,10 +355,15 @@ export default function StoreManager() {
       }
 
       await api.post('/products/', data, { headers: { 'Content-Type': 'multipart/form-data' } })
+      const addedName = productName
       setProductName(''); setPrice('0'); setStockQuantity('100'); setCategory(''); setFile(null); setProductImages([]); setProductPrimaryIndex(0)
-      setMessage(`✓ Product '${productName}' successfully added with ${productImages.length || 1} photo(s)!`)
+      setMessage(`🎉 SUCCESS: Product '${addedName}' published to store with ${productImages.length || 1} photo(s)!`)
       load()
-    } catch (error) { setMessage(errorMessage(error)) }
+    } catch (error) { 
+      setMessage(errorMessage(error)) 
+    } finally {
+      setIsAddingProduct(false)
+    }
   }
 
 
@@ -727,11 +736,16 @@ Bluetooth Wireless Earbuds - 1299 - 15`
 
   async function publish() {
     if (!store) return
+    setIsPublishingStore(true)
     try {
       await api.post(`/stores/${store.id}/publish/`)
-      setMessage('Store live ho gaya. Ab customer link share kar sakte hain.')
+      setMessage('🚀 SUCCESS: Store LIVE ho gaya! Customer link active hai.')
       load()
-    } catch (error) { setMessage(errorMessage(error)) }
+    } catch (error) { 
+      setMessage(errorMessage(error)) 
+    } finally {
+      setIsPublishingStore(false)
+    }
   }
 
   async function handleDirectProductImageUpload(productId: number, file: File) {
@@ -788,37 +802,51 @@ Bluetooth Wireless Earbuds - 1299 - 15`
   if (!store && !message) return <div className="p-6">Loading your store...</div>
   if (!store) return <div className="p-6">{message}</div>
 
-  return <div className="mx-auto min-h-screen w-full max-w-md bg-slate-50/80 pb-28 lg:max-w-none lg:w-full">
+  return <div className="mx-auto min-h-screen w-full max-w-md bg-slate-50/80 pb-14 sm:pb-16 lg:max-w-none lg:w-full">
     {/* Unified Seller Header */}
     <SellerHeader store={store} activeTabTitle="Store Setup" onStoreUpdate={load} />
 
-    <div className="space-y-5 p-4 sm:p-6">
+    <div className="space-y-3 sm:space-y-5 p-2.5 sm:p-6">
+      {message && (
+        <div className="rounded-2xl border border-emerald-400/60 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-4 text-xs font-black text-white flex items-center justify-between shadow-xl animate-fade-in border-l-4 border-l-emerald-400">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🔔</span>
+            <span className="leading-snug">{message}</span>
+          </div>
+          <button
+            onClick={() => setMessage('')}
+            className="text-slate-300 hover:text-white font-black px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-xs shrink-0 cursor-pointer"
+          >
+            ✕ Close
+          </button>
+        </div>
+      )}
       {/* Enterprise Store Status Banner — Compact & Powerful Mobile Express Launcher */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3.5 sm:p-6 text-white shadow-xl sm:shadow-2xl border border-indigo-500/30 backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3 sm:p-6 text-white shadow-md sm:shadow-2xl border border-indigo-500/30 backdrop-blur-xl">
         {/* Glow & Sparkle Accents */}
         <div className="absolute -top-20 -right-20 h-36 sm:h-56 w-36 sm:w-56 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 -left-20 h-36 sm:h-56 w-36 sm:w-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
-          <div className="space-y-1 sm:space-y-1.5">
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase text-emerald-300 border border-emerald-400/40 tracking-wider shadow-xs">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[8px] sm:text-[10px] font-black uppercase text-emerald-300 border border-emerald-400/40 tracking-wider shadow-xs">
                 ⚡ 1-SEC LAUNCHER
               </span>
-              <span className="text-[10px] sm:text-xs font-extrabold text-amber-300">
+              <span className="text-[9px] sm:text-xs font-extrabold text-amber-300">
                 1-Min Setup
               </span>
             </div>
 
             {/* Mobile vs Desktop Title */}
-            <h1 className="text-base sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-200 tracking-tight leading-tight">
+            <h1 className="text-sm sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-200 tracking-tight leading-tight">
               <span className="sm:hidden">1-Click Online Dukaan Ready! 🚀</span>
               <span className="hidden sm:inline">Aapki Online Dukaan Express Setup Ready Hai! 🚀</span>
             </h1>
 
             {/* Mobile vs Desktop Sub-text */}
-            <p className="text-[11px] sm:text-xs text-slate-300 font-medium max-w-xl leading-snug sm:leading-relaxed">
-              <span className="sm:hidden">Bas 1-Click mein products & multi-images import karein aur instant orders lena shuru karein!</span>
+            <p className="text-[10px] sm:text-xs text-slate-300 font-medium max-w-xl leading-snug sm:leading-relaxed">
+              <span className="sm:hidden">1-Click mein products import karein aur instant orders lena shuru karein!</span>
               <span className="hidden sm:inline">Bas 1-Click mein products & multi-images import karein, WhatsApp number connect karein aur instant customer link share karke order lena shuru karein!</span>
             </p>
           </div>
@@ -828,105 +856,98 @@ Bluetooth Wireless Earbuds - 1299 - 15`
               type="button"
               onClick={publish}
               title={store.is_published ? "Store is LIVE (Click to set Draft)" : "Click to Make Store LIVE"}
-              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 py-1 text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${store.is_published
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30 shadow-emerald-950/40'
-                : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border border-emerald-300 shadow-emerald-900/50 hover:from-emerald-600 hover:to-teal-700 animate-pulse'
+              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 py-1 text-[9px] sm:text-xs font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${store.is_published
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border border-emerald-300 hover:from-emerald-600 hover:to-teal-700 animate-pulse'
                 }`}
             >
               <span className={`h-1.5 sm:h-2 w-1.5 sm:w-2 rounded-full ${store.is_published ? 'bg-emerald-400 animate-ping' : 'bg-white'}`} />
               <span>{store.is_published ? '🟢 LIVE STORE' : '🚀 MAKE STORE LIVE'}</span>
             </button>
-            <span className="text-[10px] sm:text-[11px] font-extrabold text-indigo-300">
+            <span className="text-[9px] sm:text-[11px] font-extrabold text-indigo-300">
               ⚡ 1-Click Order Link Ready
             </span>
           </div>
         </div>
       </div>
 
-      {message && (
-        <div className="rounded-2xl border border-indigo-200/80 bg-indigo-50/90 p-4 text-xs font-semibold text-indigo-950 shadow-xs flex items-center gap-2">
-          <span>⚡</span>
-          <span>{message}</span>
-        </div>
-      )}
-
       {/* Step 01: Storefront & WhatsApp Order Channel Setup */}
-      <section id="share" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4 transition-all">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-white text-xs font-black shadow-xs">
+      <section id="share" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs space-y-3 sm:space-y-4 transition-all">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-slate-900 text-white text-[10px] sm:text-xs font-black shadow-xs">
               01
             </span>
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">WhatsApp Channel & Customer Storefront Link</h2>
-              <p className="text-xs text-slate-500 font-medium">Pehle order phone save karein aur live store link share karein.</p>
+              <h2 className="text-xs sm:text-base font-black text-slate-900">WhatsApp & Storefront Link</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Order phone save karein aur store link share karein.</p>
             </div>
           </div>
           {store.is_published ? (
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200 flex items-center gap-1">
+            <span className="rounded-full bg-emerald-50 px-2 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-xs font-bold text-emerald-700 border border-emerald-200 flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Store Live
+              Live
             </span>
           ) : (
-            <button onClick={publish} className="rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-black text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer">
-              🚀 Make Store Live
+            <button onClick={publish} className="rounded-lg sm:rounded-xl bg-emerald-600 px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[10px] sm:text-xs font-black text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer">
+              🚀 Make Live
             </button>
           )}
         </div>
 
-        <form onSubmit={savePhone} className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 space-y-2">
+        <form onSubmit={savePhone} className="rounded-lg sm:rounded-xl border border-slate-200/80 bg-slate-50/50 p-2.5 sm:p-4 space-y-1.5">
           <div className="flex justify-between items-center">
-            <label className="text-xs font-bold text-slate-900">WhatsApp Order Phone Number</label>
-            <span className="text-[10px] font-mono text-slate-400">Direct Checkout Target</span>
+            <label className="text-[11px] sm:text-xs font-bold text-slate-900">WhatsApp Order Phone Number</label>
+            <span className="text-[9px] font-mono text-slate-400">Direct Checkout</span>
           </div>
-          <p className="text-[11px] text-slate-500">
-            Customer checkout par isi number par direct WhatsApp order bhejega (e.g. 919876543210).
+          <p className="text-[10px] sm:text-[11px] text-slate-500">
+            Customer checkout par isi number par direct WhatsApp order bhejega.
           </p>
-          <div className="pt-1 flex gap-2">
+          <div className="pt-0.5 flex gap-1.5">
             <input
               value={phoneNumber}
               onChange={e => setPhoneNumber(e.target.value)}
               placeholder="919876543210"
-              className="flex-1 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium text-slate-900 focus:border-slate-900 focus:outline-none transition-all shadow-2xs"
+              className="flex-1 rounded-lg sm:rounded-xl border border-slate-200 bg-white p-2 text-xs font-medium text-slate-900 focus:border-slate-900 focus:outline-none transition-all shadow-2xs"
               inputMode="tel"
             />
-            <button className="rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer shadow-xs">
-              Save Number
+            <button className="rounded-lg sm:rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer shadow-xs">
+              Save
             </button>
           </div>
         </form>
 
         {/* Ultra-Premium Official Store Web Link & Printable QR Standee Card */}
-        <div className="rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 p-4 sm:p-5 space-y-4 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-100/80 pb-3">
+        <div className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 p-3 sm:p-5 space-y-3 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100/80 pb-2.5">
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-black text-slate-900 tracking-tight">🌐 Official Storefront Web Link & Scanner</span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[9px] font-black text-emerald-800 border border-emerald-300 shadow-2xs">
-                  🛡️ VERIFIED PWA APP
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] sm:text-xs font-black text-slate-900 tracking-tight">🌐 Official Storefront Link</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.2 text-[8px] sm:text-[9px] font-black text-emerald-800 border border-emerald-300">
+                  🛡️ PWA APP
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 font-medium mt-0.5">
-                Share this link or print your shop counter QR Standee poster for customers to scan & shop.
+              <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium mt-0.5">
+                Share this link or print your shop counter QR Standee poster for customers.
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <div className="flex items-center gap-1.5 flex-wrap shrink-0">
               <button
                 type="button"
                 onClick={() => setShowQrModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-2 text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 transition-all shadow-xs cursor-pointer active:scale-95"
               >
-                <span>🖨️ Print Shop QR Standee</span>
+                <span>🖨️ QR Standee</span>
               </button>
 
               <a
                 href={whatsappShareUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3 py-2 text-xs font-black text-white hover:bg-[#20ba5a] transition-all shadow-xs cursor-pointer"
-                title="Share store invite link on WhatsApp"
+                className="inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-[#25D366] px-2.5 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black text-white hover:bg-[#20ba5a] transition-all shadow-xs cursor-pointer"
+                title="Share on WhatsApp"
               >
                 <span>📲 WhatsApp</span>
               </a>
@@ -934,48 +955,43 @@ Bluetooth Wireless Earbuds - 1299 - 15`
               <button
                 type="button"
                 onClick={copyLink}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white hover:bg-slate-800 transition-all shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-slate-900 px-2.5 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black text-white hover:bg-slate-800 transition-all shadow-xs cursor-pointer"
               >
-                <span>📋 Copy Link</span>
+                <span>📋 Copy</span>
               </button>
             </div>
           </div>
 
           {/* Display Box for Link */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2 bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 text-xs font-bold shadow-2xs">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2 bg-white p-2 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 shadow-2xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 text-[10px] sm:text-xs font-bold">
                   🔒
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400">Official Store Link</p>
-                  <p className="text-xs sm:text-sm font-black text-indigo-700 truncate font-mono">{publicUrl}</p>
+                  <p className="text-[8px] uppercase tracking-wider font-extrabold text-slate-400">Store Link</p>
+                  <p className="text-[11px] sm:text-sm font-black text-indigo-700 truncate font-mono">{publicUrl}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-1 shrink-0">
                 <a
                   href={publicUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-extrabold text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200 shadow-2xs"
+                  className="rounded-lg bg-indigo-50 px-2.5 py-1 text-[10px] sm:text-xs font-extrabold text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200"
                 >
-                  Open App ↗
+                  Open ↗
                 </a>
               </div>
             </div>
-
-            <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-              <span>💡</span>
-              <span>Customers scanning your store QR poster will instantly open your storefront app on Web & Mobile.</span>
-            </p>
           </div>
         </div>
       </section>
 
       {/* DEDICATED STANDALONE SECTION: Ultra-Premium Collapsible 1-Click Bulk & CSV Product Import */}
-      <section id="bulk-import" className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-5 sm:p-6 text-white shadow-2xl transition-all backdrop-blur-xl group hover:border-amber-400/50">
+      <section id="bulk-import" className="relative overflow-hidden rounded-xl sm:rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-3.5 sm:p-6 text-white shadow-md sm:shadow-2xl transition-all backdrop-blur-xl group hover:border-amber-400/50">
         {/* Glow Effects */}
         <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
@@ -986,66 +1002,66 @@ Bluetooth Wireless Earbuds - 1299 - 15`
             setIsKillerFeatureOpen(nextState)
             if (nextState) setBulkMode('csv')
           }}
-          className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none"
+          className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 cursor-pointer select-none"
         >
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-3 py-0.5 text-[10px] font-black uppercase text-slate-950 shadow-md shadow-amber-500/20 border border-amber-200/50 tracking-wider">
-                👑 ULTRA KILLER FEATURE
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-slate-950 shadow-xs tracking-wider">
+                👑 KILLER FEATURE
               </span>
-              <span className="text-xs font-extrabold text-amber-200/90 tracking-wide flex items-center gap-1">
-                <span>⚡ 1-Second Express Engine</span>
+              <span className="text-[10px] sm:text-xs font-extrabold text-amber-200/90 tracking-wide">
+                ⚡ 1-Sec Express Engine
               </span>
             </div>
-            <h2 className="mt-1.5 text-xl sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-200">
+            <h2 className="mt-1 text-sm sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-200">
               1-Click Multi-Product & CSV Super Import
             </h2>
-            <p className="mt-0.5 text-xs text-slate-300 font-medium">
-              Bulk Excel/CSV upload, paste text list, ya direct form grid se 1 second mein saare products & gallery photos add karein!
+            <p className="mt-0.5 text-[10px] sm:text-xs text-slate-300 font-medium leading-tight">
+              Bulk CSV upload, text list, ya direct grid se saare products & photos add karein!
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+          <div className="flex items-center gap-1.5 self-start sm:self-auto flex-wrap">
             {isKillerFeatureOpen && (
-              <div onClick={e => e.stopPropagation()} className="flex rounded-2xl bg-white/10 p-1 border border-amber-400/20 shadow-inner backdrop-blur-md">
+              <div onClick={e => e.stopPropagation()} className="flex rounded-lg sm:rounded-2xl bg-white/10 p-0.5 sm:p-1 border border-amber-400/20 backdrop-blur-md">
                 <button
                   type="button"
                   onClick={() => setBulkMode('matrix')}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${bulkMode === 'matrix'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  className={`rounded-md sm:rounded-xl px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-extrabold transition-all ${bulkMode === 'matrix'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
+                    : 'text-slate-300 hover:text-white'
                     }`}
                 >
-                  📝 Form Grid
+                  📝 Grid
                 </button>
                 <button
                   type="button"
                   onClick={() => setBulkMode('text')}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${bulkMode === 'text'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  className={`rounded-md sm:rounded-xl px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-extrabold transition-all ${bulkMode === 'text'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
+                    : 'text-slate-300 hover:text-white'
                     }`}
                 >
-                  ✨ Text Import
+                  ✨ Text
                 </button>
                 <button
                   type="button"
                   onClick={() => setBulkMode('csv')}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-extrabold transition-all ${bulkMode === 'csv'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30 border border-amber-200/50'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  className={`rounded-md sm:rounded-xl px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-extrabold transition-all ${bulkMode === 'csv'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
+                    : 'text-slate-300 hover:text-white'
                     }`}
                 >
-                  📁 CSV File
+                  📁 CSV
                 </button>
               </div>
             )}
 
             <button
               type="button"
-              className="rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-500 to-yellow-600 px-3.5 py-1.5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/20 hover:brightness-110 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
+              className="rounded-lg sm:rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-500 to-yellow-600 px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[10px] sm:text-xs font-black text-slate-950 shadow-xs hover:brightness-110 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
             >
-              <span>{isKillerFeatureOpen ? '▲ Collapse' : '⚡ 1-Second Setup (Expand ▾)'}</span>
+              <span>{isKillerFeatureOpen ? '▲ Collapse' : '⚡ Setup (Expand ▾)'}</span>
             </button>
           </div>
         </div>
@@ -1400,39 +1416,39 @@ Bluetooth Wireless Earbuds - 1299 - 15`
       </section>
 
       {/* Step 02: Category Add */}
-      <section id="categories" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-white text-xs font-black shadow-xs">
+      <section id="categories" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs transition-all">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-slate-900 text-white text-[10px] sm:text-xs font-black shadow-xs">
               02
             </span>
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">Category Add Karein</h2>
-              <p className="text-xs text-slate-500 font-medium">Customers ko products discover karne mein help karega.</p>
+              <h2 className="text-xs sm:text-base font-black text-slate-900">Category Add Karein</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Customers ko products discover karne mein help karega.</p>
             </div>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 border border-slate-200">
+          <span className="rounded-full bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-xs font-bold text-slate-700 border border-slate-200">
             {categories.length} Categories
           </span>
         </div>
 
-        <form onSubmit={addCategory} className="mt-4 flex gap-2">
+        <form onSubmit={addCategory} className="mt-3 flex gap-1.5">
           <input
             value={categoryName}
             onChange={e => setCategoryName(e.target.value)}
             required
             placeholder="e.g. E-books, Groceries, Electronics"
-            className="flex-1 rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium text-slate-900 focus:border-slate-900 focus:outline-none transition-all shadow-2xs"
+            className="flex-1 rounded-lg sm:rounded-xl border border-slate-200 bg-white p-2 text-xs font-medium text-slate-900 focus:border-slate-900 focus:outline-none transition-all shadow-2xs"
           />
-          <button className="rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-extrabold text-white shadow-xs hover:bg-slate-800 whitespace-nowrap cursor-pointer transition-all">
-            + Add Category
+          <button className="rounded-lg sm:rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 whitespace-nowrap cursor-pointer transition-all">
+            + Add
           </button>
         </form>
 
         {categories.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+          <div className="mt-2.5 flex flex-wrap gap-1 pt-2 border-t border-slate-100">
             {categories.map(item => (
-              <span key={item.id} className="rounded-lg bg-slate-100 border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-700">
+              <span key={item.id} className="rounded-md sm:rounded-lg bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-slate-700">
                 📁 {item.name}
               </span>
             ))}
@@ -1441,51 +1457,51 @@ Bluetooth Wireless Earbuds - 1299 - 15`
       </section>
 
       {/* Step 03: Single Product Addition */}
-      <section id="products" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4 transition-all">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-white text-xs font-black shadow-xs">
+      <section id="products" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs space-y-3 sm:space-y-4 transition-all">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-slate-900 text-white text-[10px] sm:text-xs font-black shadow-xs">
               03
             </span>
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">Single Product Add Karein</h2>
-              <p className="text-xs text-slate-500 font-medium">Price aur downloadable file set karke instantly publish karein.</p>
+              <h2 className="text-xs sm:text-base font-black text-slate-900">Single Product Add Karein</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Price aur downloadable file set karke instantly publish karein.</p>
             </div>
           </div>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
+          <span className="rounded-full bg-emerald-50 px-2 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-xs font-bold text-emerald-700 border border-emerald-200">
             {products.length} Products
           </span>
         </div>
 
-        <form onSubmit={addProduct} className="space-y-3">
-          <div className="grid gap-3 sm:grid-cols-2">
+        <form onSubmit={addProduct} className="space-y-2.5">
+          <div className="grid gap-2 sm:gap-3 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-bold text-slate-700">Product Name</label>
-              <input value={productName} onChange={e => setProductName(e.target.value)} required placeholder="Product name" className="premium-input mt-1" />
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Product Name</label>
+              <input value={productName} onChange={e => setProductName(e.target.value)} required placeholder="Product name" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-700">Price (₹)</label>
-              <input value={price} onChange={e => setPrice(e.target.value)} required min="0" type="number" step="0.01" placeholder="Price in INR" className="premium-input mt-1" />
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Price (₹)</label>
+              <input value={price} onChange={e => setPrice(e.target.value)} required min="0" type="number" step="0.01" placeholder="Price in INR" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-700">Stock Quantity</label>
-              <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Stock Qty (default 100)" className="premium-input mt-1" />
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Stock Quantity</label>
+              <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Stock Qty (default 100)" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-700">Category</label>
-              <select value={category} onChange={e => setCategory(e.target.value)} className="premium-input mt-1"><option value="">No category</option>{categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Category</label>
+              <select value={category} onChange={e => setCategory(e.target.value)} className="premium-input mt-0.5 p-2 text-xs"><option value="">No category</option>{categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
             </div>
           </div>
 
           {/* Multiple Product Photos Picker with Main Card Photo Selection */}
-          <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <span>🖼️ Product Photos</span>
-                <span className="text-[10px] text-teal-600 font-extrabold">(Select Multiple Photos at Once)</span>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-800 flex items-center gap-1">
+                <span>🖼️ Photos</span>
+                <span className="text-[9px] text-teal-600 font-extrabold">(Multi-select)</span>
               </label>
-              <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">
-                {productImages.length} Photos Selected
+              <span className="text-[9px] bg-teal-100 text-teal-800 font-bold px-1.5 py-0.2 rounded-full">
+                {productImages.length} Selected
               </span>
             </div>
 
@@ -1498,13 +1514,13 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                 setProductImages(files)
                 setProductPrimaryIndex(0)
               }}
-              className="premium-input text-xs"
+              className="premium-input text-xs p-1.5"
             />
 
             {productImages.length > 0 && (
-              <div className="space-y-1 pt-2 border-t border-slate-200">
-                <p className="text-[10px] font-bold text-slate-600">Click thumbnail to select which photo displays on Main Product Card:</p>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              <div className="space-y-1 pt-1.5 border-t border-slate-200">
+                <p className="text-[9px] font-bold text-slate-600">Tap photo to choose Main Card Display:</p>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
                   {productImages.map((imgFile, idx) => {
                     const isPrimary = productPrimaryIndex === idx
                     return (
@@ -1512,12 +1528,12 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                         key={idx}
                         type="button"
                         onClick={() => setProductPrimaryIndex(idx)}
-                        className={`relative h-16 rounded-xl border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${isPrimary ? 'border-teal-600 ring-2 ring-teal-300' : 'border-slate-200 opacity-70'
+                        className={`relative h-14 rounded-lg border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${isPrimary ? 'border-teal-600 ring-1 ring-teal-300' : 'border-slate-200 opacity-70'
                           }`}
                       >
-                        <img src={URL.createObjectURL(imgFile)} alt="preview" className="h-10 w-full object-cover rounded" />
-                        <span className={`text-[8px] font-black text-center py-0.5 rounded ${isPrimary ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                          {isPrimary ? '⭐ Main Card' : 'Gallery'}
+                        <img src={URL.createObjectURL(imgFile)} alt="preview" className="h-8 w-full object-cover rounded" />
+                        <span className={`text-[7px] font-black text-center py-0.2 rounded ${isPrimary ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                          {isPrimary ? '⭐ Main' : 'Gallery'}
                         </span>
                       </button>
                     )
@@ -1528,34 +1544,48 @@ Bluetooth Wireless Earbuds - 1299 - 15`
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700">Digital Downloadable File (Optional PDF/Zip)</label>
-            <input onChange={e => setFile(e.target.files?.[0] || null)} type="file" className="premium-input mt-1" />
+            <label className="text-[11px] sm:text-xs font-bold text-slate-700">Digital Downloadable File (Optional PDF/Zip)</label>
+            <input onChange={e => setFile(e.target.files?.[0] || null)} type="file" className="premium-input mt-0.5 p-1.5 text-xs" />
           </div>
 
-          <button className="primary-button bg-slate-900 shadow-slate-200 hover:bg-slate-800 py-3 text-xs font-black cursor-pointer transition-all w-full">
-            + Add Published Product
+          <button
+            type="submit"
+            disabled={isAddingProduct}
+            className="primary-button bg-slate-900 shadow-md hover:bg-slate-800 py-3 text-xs font-black cursor-pointer transition-all w-full flex items-center justify-center gap-2 rounded-xl text-white disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isAddingProduct ? (
+              <>
+                <svg className="animate-spin h-4 w-4 text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Publishing Product to S3 Cloud...</span>
+              </>
+            ) : (
+              <span>⚡ + Add Published Product</span>
+            )}
           </button>
         </form>
 
         {/* Prominent Category Catalog Button & Access Banner */}
-        <div className="rounded-2xl border border-indigo-900/40 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-4 text-white shadow-md">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="rounded-xl sm:rounded-2xl border border-indigo-900/40 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-3 sm:p-4 text-white shadow-md">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-teal-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-teal-300 border border-teal-400/30">
-                  Category-Wise Catalog
+              <div className="flex items-center gap-1.5">
+                <span className="rounded-full bg-teal-500/20 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30">
+                  Category Catalog
                 </span>
-                <span className="text-xs font-bold text-indigo-200">{products.length} Products Published</span>
+                <span className="text-[10px] sm:text-xs font-bold text-indigo-200">{products.length} Products</span>
               </div>
-              <h3 className="mt-1 text-base font-extrabold text-white">Full Product Catalog</h3>
-              <p className="mt-0.5 text-xs text-indigo-200">
-                View all products organized neatly by category ({categories.length} categories). Search, edit prices & upload photos.
+              <h3 className="mt-0.5 text-xs sm:text-base font-black text-white">Full Product Catalog</h3>
+              <p className="text-[10px] sm:text-xs text-indigo-200">
+                View all products organized by category. Edit prices & photos.
               </p>
             </div>
 
             <Link
               to={`/stores/${store.id}/catalog`}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-teal-700 transition-all shrink-0 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg sm:rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition-all shrink-0 cursor-pointer"
             >
               <span>📁 Open Category Catalog ({products.length})</span>
               <span>➔</span>

@@ -27,6 +27,7 @@ export default function SellerCatalog() {
   const [editStock, setEditStock] = useState('')
   const [editCategory, setEditCategory] = useState('')
   const [isUpdatingProduct, setIsUpdatingProduct] = useState(false)
+  const [isAddingProduct, setIsAddingProduct] = useState(false)
 
   // Single Add Product Modal State
   const [showAddModal, setShowAddModal] = useState(false)
@@ -220,7 +221,8 @@ export default function SellerCatalog() {
   async function handleAddSingleProduct(e: React.FormEvent) {
     e.preventDefault()
     if (!store || !newProdName.trim()) return
-    setMessage('⏳ Adding product with selected images...')
+    setIsAddingProduct(true)
+    setMessage('⏳ Uploading images & publishing product to store...')
     try {
       const formData = new FormData()
       formData.append('store', String(store.id))
@@ -258,6 +260,8 @@ export default function SellerCatalog() {
       await loadData()
     } catch (err) {
       setMessage(errorMessage(err))
+    } finally {
+      setIsAddingProduct(false)
     }
   }
 
@@ -711,16 +715,27 @@ export default function SellerCatalog() {
                 <button
                   type="button"
                   onClick={() => { setEditingProduct(null); setEditNewImages([]) }}
-                  className="flex-1 rounded-xl border border-slate-200 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
+                  disabled={isUpdatingProduct}
+                  className="flex-1 rounded-xl border border-slate-200 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdatingProduct}
-                  className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700"
+                  className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  {isUpdatingProduct ? 'Saving...' : 'Save Changes'}
+                  {isUpdatingProduct ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Saving Changes...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -858,15 +873,27 @@ export default function SellerCatalog() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 rounded-xl border border-slate-200 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
+                  disabled={isAddingProduct}
+                  className="flex-1 rounded-xl border border-slate-200 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700"
+                  disabled={isAddingProduct}
+                  className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  Publish Product
+                  {isAddingProduct ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Publishing Product...</span>
+                    </>
+                  ) : (
+                    <span>⚡ Publish Product</span>
+                  )}
                 </button>
               </div>
             </form>

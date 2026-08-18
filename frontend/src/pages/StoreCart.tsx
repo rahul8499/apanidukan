@@ -31,6 +31,7 @@ function CartContent() {
   const [customerName, setCustomerName] = useState(() => localStorage.getItem('qs_chat_name') || '')
   const [customerPhone, setCustomerPhone] = useState(() => localStorage.getItem('qs_chat_phone') || '')
   const [paymentType, setPaymentType] = useState('COD')
+  const [orderType, setOrderType] = useState<'HOME_DELIVERY' | 'STORE_PICKUP'>('HOME_DELIVERY')
   const [deliveryAddress, setDeliveryAddress] = useState(() => localStorage.getItem('multistore_user_delivery_address') || '')
   const [locationUrl, setLocationUrl] = useState('')
   const [locationLoading, setLocationLoading] = useState(false)
@@ -85,6 +86,11 @@ function CartContent() {
       .then(res => {
         const data = res.data.data || res.data
         setStore(data)
+        if (data?.allow_home_delivery === false && data?.allow_store_pickup !== false) {
+          setOrderType('STORE_PICKUP')
+        } else {
+          setOrderType('HOME_DELIVERY')
+        }
         if (data?.name) {
           document.title = `Cart - ${data.name}`
         }
@@ -340,12 +346,16 @@ function CartContent() {
       const finalTotal = Math.max(0, cart.total - totalDiscountAmt)
       const appliedCodes = appliedCoupons.map(c => c.code).join(', ')
 
+      const finalDeliveryAddress = orderType === 'STORE_PICKUP'
+        ? `🏪 Walk-in Store Pickup (Customer will collect from shop: ${store?.address || store?.name})`
+        : deliveryAddress
+
       const result = await api.post(`/public/stores/${storeSlug}/whatsapp-orders/`, {
         items: cart.items.map(item => ({ id: item.id, quantity: item.quantity })),
         customer_name: trimmedName,
         customer_phone: trimmedPhone,
         payment_type: paymentType,
-        delivery_address: deliveryAddress,
+        delivery_address: finalDeliveryAddress,
         location_url: locationUrl,
         coupon_code: appliedCodes,
         discount_amount: totalDiscountAmt,
@@ -356,10 +366,12 @@ function CartContent() {
       const entry = { reference: order.reference, total: finalTotal, status: order.status, created_at: order.created_at }
       localStorage.setItem(orderHistoryKey, JSON.stringify([entry, ...savedOrders.filter((item: any) => item.reference !== order.reference)].slice(0, 30)))
       const paymentLabel = order.payment_type === 'ONLINE' ? 'Online Payment' : 'COD'
+      const fulfillmentLabel = orderType === 'STORE_PICKUP' ? '🏪 Walk-in Store Pickup' : '🚚 Home Delivery'
       const trackingUrl = `${window.location.origin}/store/${storeSlug}/order/${order.reference}`
 
       const lines = [
         `🛒 New ${paymentLabel} Order #${order.reference}`,
+        `📦 Order Type: ${fulfillmentLabel}`,
         `Customer: ${order.customer_name || 'Not provided'}`,
         ...(order.customer_phone ? [`Phone: ${order.customer_phone}`] : []),
         `Items: ${order.items.map((item: any) => `${item.name} × ${item.quantity}`).join(', ')}`,
@@ -367,8 +379,8 @@ function CartContent() {
         ...(flashSale?.active && flashSaleDiscount > 0 ? [`⚡ Flash Sale (${flashSale.discount}% OFF): -₹${flashSaleDiscount.toFixed(2)}`] : []),
         ...(appliedCoupons.length > 0 ? [`🎟️ Coupons (${appliedCodes}): -₹${couponDiscount.toFixed(2)}`] : []),
         `Total Payable: ₹${finalTotal.toFixed(2)}`,
-        ...(order.delivery_address ? [`Delivery Address: ${order.delivery_address}`] : []),
-        ...(order.location_url ? [`Location: ${order.location_url}`] : []),
+        ...(orderType === 'STORE_PICKUP' ? [`Pickup Shop Address: ${store?.address || store?.name}`] : (order.delivery_address ? [`Delivery Address: ${order.delivery_address}`] : [])),
+        ...(order.location_url ? [`GPS Location: ${order.location_url}`] : []),
         `\n📌 Track Order Live & Invoice:`,
         `${trackingUrl}`
       ]
@@ -608,6 +620,42 @@ function CartContent() {
               </div>
 
               <div className="space-y-2.5">
+                {/* Fulfillment Selection (Home Delivery vs Walk-in Store Pickup) */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Select Fulfillment Option *</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {store?.allow_home_delivery !== false && (
+                      <button
+                        type="button"
+                        onClick={() => setOrderType('HOME_DELIVERY')}
+                        className={`flex items-center justify-center gap-1.5 p-2 py-1.5 rounded-xl border text-[11px] font-black transition-all cursor-pointer ${
+                          orderType === 'HOME_DELIVERY'
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-1 ring-indigo-300'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="text-xs">🚚</span>
+                        <span>Home Delivery</span>
+                      </button>
+                    )}
+
+                    {store?.allow_store_pickup !== false && (
+                      <button
+                        type="button"
+                        onClick={() => setOrderType('STORE_PICKUP')}
+                        className={`flex items-center justify-center gap-1.5 p-2 py-1.5 rounded-xl border text-[11px] font-black transition-all cursor-pointer ${
+                          orderType === 'STORE_PICKUP'
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-1 ring-indigo-300'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="text-xs">🏪</span>
+                        <span>Walk-in / Pickup</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <div className="grid sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="text-[11px] font-bold text-slate-700">Full Name</label>
@@ -637,31 +685,46 @@ function CartContent() {
                     value={paymentType}
                     onChange={(e) => setPaymentType(e.target.value)}
                   >
-                    <option value="COD">💵 Cash on Delivery (COD)</option>
+                    <option value="COD">💵 Cash on Delivery / Pay at Shop</option>
                     <option value="ONLINE">💳 Online Payment (UPI / Card / NetBanking)</option>
                   </select>
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-slate-700">Delivery Address</label>
-                    <button
-                      type="button"
-                      onClick={useCurrentLocation}
-                      disabled={locationLoading}
-                      className="text-[10px] font-extrabold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <MapPin className="h-3 w-3 text-amber-500" />
-                      <span>{locationLoading ? 'Locating…' : 'Use Current GPS'}</span>
-                    </button>
+                {orderType === 'STORE_PICKUP' ? (
+                  <div className="rounded-xl bg-amber-50/90 border border-amber-200 p-3 space-y-1 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🏪</span>
+                      <span className="text-xs font-black text-amber-900">Walk-in Store Pickup Selected</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800 font-medium">
+                      Customer will collect order directly from shop. No home delivery address required!
+                    </p>
+                    <p className="text-xs font-extrabold text-slate-900 bg-white p-2 rounded-lg border border-amber-200/80 mt-1">
+                      📍 Store Pickup Location: {store?.address || store?.name || 'Shop Location'}
+                    </p>
                   </div>
-                  <textarea
-                    className="w-full mt-1 rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none min-h-16"
-                    placeholder="House/Flat No., Landmark, Pincode"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                  />
-                </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-slate-700">Delivery Address</label>
+                      <button
+                        type="button"
+                        onClick={useCurrentLocation}
+                        disabled={locationLoading}
+                        className="text-[10px] font-extrabold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <MapPin className="h-3 w-3 text-amber-500" />
+                        <span>{locationLoading ? 'Locating…' : 'Use Current GPS'}</span>
+                      </button>
+                    </div>
+                    <textarea
+                      className="w-full mt-1 rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none min-h-16"
+                      placeholder="House/Flat No., Landmark, Pincode"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

@@ -36,6 +36,8 @@ class Store(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_DRAFT)
     is_published = models.BooleanField(default=False)
     manage_in_app = models.BooleanField(default=False)
+    allow_home_delivery = models.BooleanField(default=True)
+    allow_store_pickup = models.BooleanField(default=True)
     visits_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)

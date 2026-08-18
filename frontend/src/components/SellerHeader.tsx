@@ -41,7 +41,8 @@ import {
   Volume2,
   VolumeX,
   Image as ImageIcon,
-  Gift
+  Gift,
+  Truck
 } from 'lucide-react'
 
 interface SellerHeaderProps {
@@ -68,6 +69,50 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [showQrModal, setShowQrModal] = useState(false)
   const [message, setMessage] = useState('')
   const navigate = useNavigate()
+
+  // Fulfillment & Delivery Options State
+  const [allowHomeDelivery, setAllowHomeDelivery] = useState<boolean>(store?.allow_home_delivery ?? true)
+  const [allowStorePickup, setAllowStorePickup] = useState<boolean>(store?.allow_store_pickup ?? true)
+  const [isUpdatingDeliverySettings, setIsUpdatingDeliverySettings] = useState(false)
+
+  useEffect(() => {
+    if (store) {
+      setAllowHomeDelivery(store.allow_home_delivery ?? true)
+      setAllowStorePickup(store.allow_store_pickup ?? true)
+    }
+  }, [store?.allow_home_delivery, store?.allow_store_pickup])
+
+  const handleToggleDeliverySetting = async (field: 'allow_home_delivery' | 'allow_store_pickup', value: boolean) => {
+    if (!value) {
+      if (field === 'allow_home_delivery' && !allowStorePickup) {
+        alert('At least one fulfillment option (Home Delivery or Walk-in Store Pickup) must remain enabled!')
+        return
+      }
+      if (field === 'allow_store_pickup' && !allowHomeDelivery) {
+        alert('At least one fulfillment option (Home Delivery or Walk-in Store Pickup) must remain enabled!')
+        return
+      }
+    }
+
+    const nextHomeDelivery = field === 'allow_home_delivery' ? value : allowHomeDelivery
+    const nextStorePickup = field === 'allow_store_pickup' ? value : allowStorePickup
+
+    setAllowHomeDelivery(nextHomeDelivery)
+    setAllowStorePickup(nextStorePickup)
+
+    try {
+      setIsUpdatingDeliverySettings(true)
+      await api.patch(`/stores/${store.id}/`, {
+        allow_home_delivery: nextHomeDelivery,
+        allow_store_pickup: nextStorePickup
+      })
+      if (onStoreUpdate) onStoreUpdate()
+    } catch {
+      alert('Failed to update fulfillment settings.')
+    } finally {
+      setIsUpdatingDeliverySettings(false)
+    }
+  }
 
   const [scratchConfig, setScratchConfig] = useState<ScratchCardConfig>(() => {
     try {
@@ -129,7 +174,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
     setFlashSaleTitle(title)
     const payload = { active, discount, title }
     if (store?.id) localStorage.setItem(`qs_flash_sale_${store.id}`, JSON.stringify(payload))
-    if (activeStore?.slug) localStorage.setItem(`qs_flash_sale_${activeStore.slug}`, JSON.stringify(payload))
+    if (store?.slug) localStorage.setItem(`qs_flash_sale_${store.slug}`, JSON.stringify(payload))
     localStorage.setItem('qs_flash_sale_global', JSON.stringify(payload))
     window.dispatchEvent(new CustomEvent('qs-flash-sale-updated', { detail: payload }))
   }
@@ -684,6 +729,108 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             )}
           </div>
 
+          {/* SECTION 1.5: 🚚 Fulfillment & Delivery Modes Controls */}
+          <div className="rounded-xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3 space-y-2 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-indigo-100/80 pb-1.5">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-wider text-indigo-600">Checkout Fulfillment</p>
+                <h4 className="text-[11px] font-black text-slate-900 flex items-center gap-1 mt-0.5">
+                  <Truck className="h-3 w-3 text-indigo-600" />
+                  <span>Order Fulfillment Modes</span>
+                </h4>
+              </div>
+              {isUpdatingDeliverySettings && (
+                <span className="text-[9px] font-extrabold text-indigo-600 animate-pulse">Saving...</span>
+              )}
+            </div>
+
+            <p className="text-[9px] text-slate-600 font-medium leading-tight">
+              Toggle order options shown to customers at checkout:
+            </p>
+
+            <div className="space-y-1.5">
+              {/* Home Delivery Toggle */}
+              <div className={`flex items-center justify-between rounded-xl p-2 border transition-all shadow-2xs ${
+                allowHomeDelivery 
+                  ? 'bg-white border-emerald-300 ring-1 ring-emerald-400/20' 
+                  : 'bg-slate-100/70 border-slate-200 opacity-75'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm shadow-inner ${
+                    allowHomeDelivery ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-200 border border-slate-300'
+                  }`}>
+                    🚚
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-black text-slate-900">Home Delivery</span>
+                      <span className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full ${
+                        allowHomeDelivery ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {allowHomeDelivery ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-slate-500 font-medium block">Deliver order to customer home</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleToggleDeliverySetting('allow_home_delivery', !allowHomeDelivery)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    allowHomeDelivery ? 'bg-emerald-600' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition-transform duration-200 ease-in-out ${
+                      allowHomeDelivery ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Walk-in Store Pickup Toggle */}
+              <div className={`flex items-center justify-between rounded-xl p-2 border transition-all shadow-2xs ${
+                allowStorePickup 
+                  ? 'bg-white border-emerald-300 ring-1 ring-emerald-400/20' 
+                  : 'bg-slate-100/70 border-slate-200 opacity-75'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm shadow-inner ${
+                    allowStorePickup ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-200 border border-slate-300'
+                  }`}>
+                    🏪
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-black text-slate-900">Walk-in / Store Pickup</span>
+                      <span className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full ${
+                        allowStorePickup ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {allowStorePickup ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-slate-500 font-medium block">Customer collects at shop</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleToggleDeliverySetting('allow_store_pickup', !allowStorePickup)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    allowStorePickup ? 'bg-emerald-600' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition-transform duration-200 ease-in-out ${
+                      allowStorePickup ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* SECTION 2: 🚀 Seller Suite Modules & Marketing Tools */}
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5 shadow-2xs">
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1">
@@ -978,7 +1125,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <button
                 type="button"
                 onClick={() => {
-                  setSettingsOpen(false)
+                  setIsSettingsOpen(false)
                   setShowQrModal(true)
                 }}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3 text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 transition-all shadow-md cursor-pointer"

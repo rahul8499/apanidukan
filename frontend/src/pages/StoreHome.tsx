@@ -923,7 +923,7 @@ function Storefront() {
                             <span className="text-xs sm:text-sm font-black text-slate-950">
                               ₹{p.price}
                             </span>
-                            {mockMrp > p.price && (
+                            {mockMrp && mockMrp > p.price && (
                               <span className="text-[9px] sm:text-[10px] font-medium text-slate-400 line-through">
                                 ₹{mockMrp}
                               </span>

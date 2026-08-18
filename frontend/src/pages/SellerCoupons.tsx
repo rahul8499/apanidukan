@@ -35,11 +35,12 @@ export default function SellerCoupons() {
 
   // Form State for Coupons
   const [code, setCode] = useState('')
-  const [discountType, setDiscountType] = useState<'FLAT' | 'PERCENTAGE'>('FLAT')
+  const [discountType, setDiscountType] = useState<'FLAT' | 'PERCENTAGE' | 'BOGO' | 'FREE_DELIVERY'>('FLAT')
   const [discountValue, setDiscountValue] = useState('')
   const [minOrderAmount, setMinOrderAmount] = useState('0')
   const [maxDiscountAmount, setMaxDiscountAmount] = useState('')
   const [selectedProductId, setSelectedProductId] = useState<string>('')
+  const [productSearchQuery, setProductSearchQuery] = useState<string>('')
 
   // 🪙 Customer Loyalty Cashback State
   const [enableLoyaltyCashback, setEnableLoyaltyCashback] = useState<boolean>(true)
@@ -279,12 +280,13 @@ export default function SellerCoupons() {
     setMinOrderAmount('0')
     setMaxDiscountAmount('')
     setSelectedProductId('')
+    setProductSearchQuery('')
     setError('')
     setCreateModalOpen(true)
   }
 
   // Quick Preset Helper for Coupons
-  const applyCouponPreset = (presetCode: string, type: 'FLAT' | 'PERCENTAGE', val: string, minOrd: string) => {
+  const applyCouponPreset = (presetCode: string, type: 'FLAT' | 'PERCENTAGE' | 'BOGO' | 'FREE_DELIVERY', val: string, minOrd: string) => {
     setCode(presetCode)
     setDiscountType(type)
     setDiscountValue(val)
@@ -297,8 +299,9 @@ export default function SellerCoupons() {
     setDiscountType(coupon.discount_type || 'FLAT')
     setDiscountValue(String(coupon.discount_value || ''))
     setMinOrderAmount(String(coupon.min_order_amount || '0'))
-    setMaxDiscountAmount(String(coupon.max_discount_amount || ''))
-    setSelectedProductId(coupon.product_id ? String(coupon.product_id) : '')
+    setMaxDiscountAmount(coupon.max_discount_amount ? String(coupon.max_discount_amount) : '')
+    setSelectedProductId(coupon.product_id ? String(coupon.product_id) : (coupon.product ? String(coupon.product) : ''))
+    setProductSearchQuery('')
     setError('')
     setCreateModalOpen(true)
   }
@@ -309,9 +312,11 @@ export default function SellerCoupons() {
       setError('Coupon code is required.')
       return
     }
-    if (!discountValue || Number(discountValue) <= 0) {
-      setError('Valid discount value is required.')
-      return
+    if (discountType !== 'BOGO' && discountType !== 'FREE_DELIVERY') {
+      if (!discountValue || Number(discountValue) <= 0) {
+        setError('Valid discount value is required.')
+        return
+      }
     }
 
     setError('')
@@ -322,7 +327,7 @@ export default function SellerCoupons() {
       product_id: selectedProductId ? Number(selectedProductId) : null,
       code: code.trim().toUpperCase(),
       discount_type: discountType,
-      discount_value: Number(discountValue),
+      discount_value: discountValue ? Number(discountValue) : 0,
       min_order_amount: Number(minOrderAmount || 0),
       max_discount_amount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
       is_active: isPublished
@@ -843,17 +848,25 @@ export default function SellerCoupons() {
                           <span className="inline-block px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono font-black text-xs tracking-wider">
                             {coupon.code}
                           </span>
-                          <p className="mt-1 text-xs font-extrabold text-emerald-600 flex items-center gap-1">
-                            {coupon.discount_type === 'PERCENTAGE' ? (
-                              <>
+                          <p className="mt-1 text-xs font-extrabold flex items-center gap-1">
+                            {coupon.discount_type === 'BOGO' ? (
+                              <span className="text-purple-600 font-black flex items-center gap-1">
+                                🎁 BOGO (Buy 1 Get 1 Free)
+                              </span>
+                            ) : coupon.discount_type === 'FREE_DELIVERY' ? (
+                              <span className="text-sky-600 font-black flex items-center gap-1">
+                                🚚 Free Doorstep Delivery
+                              </span>
+                            ) : coupon.discount_type === 'PERCENTAGE' ? (
+                              <span className="text-emerald-600 flex items-center gap-1">
                                 <Percent className="h-3 w-3" />
                                 <span>{coupon.discount_value}% OFF</span>
-                              </>
+                              </span>
                             ) : (
-                              <>
+                              <span className="text-emerald-600 flex items-center gap-1">
                                 <IndianRupee className="h-3 w-3" />
                                 <span>FLAT ₹{coupon.discount_value} OFF</span>
-                              </>
+                              </span>
                             )}
                           </p>
                         </div>
@@ -1760,38 +1773,49 @@ export default function SellerCoupons() {
                   <span className="text-[8px] sm:text-[9px] text-indigo-600 font-bold">Tap to auto-fill</span>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => applyCouponPreset('BUY1GET1', 'BOGO', '0', '0')}
+                    className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
+                      code === 'BUY1GET1' ? 'bg-purple-600 text-white border-purple-600 shadow-2xs' : 'bg-white border-purple-200 text-purple-900 hover:bg-purple-50'
+                    }`}
+                  >
+                    <p className="text-[10px] font-black">🎁 Buy 1 Get 1</p>
+                    <p className={`text-[8px] ${code === 'BUY1GET1' ? 'text-purple-100' : 'text-slate-500'}`}>BOGO Offer</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyCouponPreset('FREEDEL', 'FREE_DELIVERY', '0', '0')}
+                    className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
+                      code === 'FREEDEL' ? 'bg-sky-600 text-white border-sky-600 shadow-2xs' : 'bg-white border-sky-200 text-sky-900 hover:bg-sky-50'
+                    }`}
+                  >
+                    <p className="text-[10px] font-black">🚚 Free Delivery</p>
+                    <p className={`text-[8px] ${code === 'FREEDEL' ? 'text-sky-100' : 'text-slate-500'}`}>0 Shipping</p>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => applyCouponPreset('WELCOME50', 'FLAT', '50', '299')}
                     className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                      code === 'WELCOME50' ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white border-indigo-200 text-indigo-900 hover:bg-indigo-100'
+                      code === 'WELCOME50' ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white border-indigo-200 text-indigo-900 hover:bg-indigo-50'
                     }`}
                   >
-                    <p className="text-[10px] font-black">🎁 Flat ₹50</p>
+                    <p className="text-[10px] font-black">💰 Flat ₹50</p>
                     <p className={`text-[8px] ${code === 'WELCOME50' ? 'text-indigo-100' : 'text-slate-500'}`}>On ₹299+</p>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => applyCouponPreset('SAVE10', 'PERCENTAGE', '10', '0')}
+                    onClick={() => applyCouponPreset('SAVE15', 'PERCENTAGE', '15', '0')}
                     className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                      code === 'SAVE10' ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white border-indigo-200 text-indigo-900 hover:bg-indigo-100'
+                      code === 'SAVE15' ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white border-indigo-200 text-indigo-900 hover:bg-indigo-50'
                     }`}
                   >
-                    <p className="text-[10px] font-black">🔥 10% OFF</p>
-                    <p className={`text-[8px] ${code === 'SAVE10' ? 'text-indigo-100' : 'text-slate-500'}`}>Storewide</p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => applyCouponPreset('FLAT100', 'FLAT', '100', '999')}
-                    className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                      code === 'FLAT100' ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white border-indigo-200 text-indigo-900 hover:bg-indigo-100'
-                    }`}
-                  >
-                    <p className="text-[10px] font-black">⭐ ₹100</p>
-                    <p className={`text-[8px] ${code === 'FLAT100' ? 'text-indigo-100' : 'text-slate-500'}`}>On ₹999+</p>
+                    <p className="text-[10px] font-black">🔥 15% OFF</p>
+                    <p className={`text-[8px] ${code === 'SAVE15' ? 'text-indigo-100' : 'text-slate-500'}`}>Storewide</p>
                   </button>
                 </div>
               </div>
@@ -1804,7 +1828,7 @@ export default function SellerCoupons() {
                   type="text"
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. SAVE20, WELCOME50"
+                  placeholder="e.g. BUY1GET1, FREEDEL, SAVE20"
                   className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-black font-mono text-indigo-700 tracking-wider focus:border-indigo-600 focus:outline-none"
                   required
                 />
@@ -1820,6 +1844,8 @@ export default function SellerCoupons() {
                   >
                     <option value="FLAT">Flat ₹ Discount</option>
                     <option value="PERCENTAGE">Percentage (%) Off</option>
+                    <option value="BOGO">Buy 1 Get 1 Free (BOGO) 🎁</option>
+                    <option value="FREE_DELIVERY">Free Doorstep Delivery 🚚</option>
                   </select>
                 </div>
 
@@ -1827,12 +1853,19 @@ export default function SellerCoupons() {
                   <label className="text-[11px] font-bold text-slate-700">Discount Value *</label>
                   <input
                     type="number"
-                    min="1"
+                    min="0"
                     value={discountValue}
                     onChange={(e) => setDiscountValue(e.target.value)}
-                    placeholder={discountType === 'FLAT' ? '₹ 50' : '15%'}
+                    placeholder={
+                      discountType === 'BOGO'
+                        ? '0 (Auto BOGO Item)'
+                        : discountType === 'FREE_DELIVERY'
+                        ? '0 (Free Shipping)'
+                        : discountType === 'FLAT'
+                        ? '₹ 50'
+                        : '15%'
+                    }
                     className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
-                    required
                   />
                 </div>
               </div>
@@ -1864,20 +1897,54 @@ export default function SellerCoupons() {
                 </div>
               </div>
 
-              {/* Scope Selector */}
-              <div>
-                <label className="text-[11px] font-bold text-slate-700">Which items does this apply to?</label>
+              {/* Scope Selector with Live Product Search */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700">Which items does this apply to?</label>
+                  {products.length > 0 && (
+                    <span className="text-[9px] font-bold text-indigo-600">
+                      {products.length} products
+                    </span>
+                  )}
+                </div>
+
+                {/* Instant Product Search Bar */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={productSearchQuery}
+                    onChange={(e) => setProductSearchQuery(e.target.value)}
+                    placeholder="🔍 Type product name to search..."
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-xs font-medium text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none"
+                  />
+                  {productSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setProductSearchQuery('')}
+                      className="absolute right-2 top-1.5 text-xs font-black text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
                 <select
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
                 >
                   <option value="">🌐 All Products in Store (Full Cart)</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      🛍️ Specific: {p.name} (₹{p.price})
-                    </option>
-                  ))}
+                  {products
+                    .filter((p) =>
+                      productSearchQuery
+                        ? p.name.toLowerCase().includes(productSearchQuery.toLowerCase())
+                        : true
+                    )
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        🛍️ Specific: {p.name} (₹{p.price})
+                      </option>
+                    ))}
                 </select>
               </div>
 

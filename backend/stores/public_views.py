@@ -222,15 +222,42 @@ class PublicValidateCouponView(generics.GenericAPIView):
             }, status=400)
 
         discount = 0.0
+        bogo_message = ''
         if coupon.discount_type == 'PERCENTAGE':
             discount = (subtotal * float(coupon.discount_value)) / 100.0
             if coupon.max_discount_amount:
                 discount = min(discount, float(coupon.max_discount_amount))
+        elif coupon.discount_type == 'BOGO':
+            # Buy 1 Get 1 Free calculation logic:
+            # Requires at least 2 quantity total (or 2 of specific product) to get 1 free item.
+            if coupon.product:
+                matching_item = next((it for it in items if isinstance(it, dict) and it.get('id') == coupon.product.id), None)
+                qty = matching_item.get('quantity', 1) if matching_item else 1
+                price = float(coupon.product.price)
+            else:
+                qty = sum(it.get('quantity', 1) if isinstance(it, dict) else 1 for it in items) if items else 1
+                price = (subtotal / qty) if qty > 0 else 0.0
+
+            free_units = qty // 2
+            if free_units < 1:
+                return Response({
+                    'valid': False,
+                    'detail': f'🎁 Buy 1 Get 1 Free coupon requires at least 2 items in cart! Increase item quantity to 2 to get 1 FREE item.'
+                }, status=400)
+            
+            discount = free_units * price
+            bogo_message = f'🎁 Buy 1 Get 1 Free applied! ({free_units} Free Item{"s" if free_units > 1 else ""} included, Saved ₹{discount:.2f})'
+        elif coupon.discount_type == 'FREE_DELIVERY':
+            discount = float(coupon.discount_value) if float(coupon.discount_value) > 0 else 0.0
         else:
             discount = float(coupon.discount_value)
 
         discount = min(discount, subtotal)
         final_total = max(0.0, subtotal - discount)
+
+        message_detail = bogo_message if bogo_message else (
+            f'🚚 Free Delivery Coupon {coupon.code} applied!' if coupon.discount_type == 'FREE_DELIVERY' else f'Coupon {coupon.code} applied successfully! Saved ₹{discount:.2f}'
+        )
 
         return Response({
             'valid': True,
@@ -242,6 +269,6 @@ class PublicValidateCouponView(generics.GenericAPIView):
             'final_total': final_total,
             'product_id': coupon.product_id,
             'product_name': coupon.product.name if coupon.product else None,
-            'detail': f'Coupon {coupon.code} applied successfully! Saved ₹{discount:.2f}'
+            'detail': message_detail
         })
 

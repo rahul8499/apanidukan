@@ -568,6 +568,13 @@ function CartContent() {
                         </span>
                       </div>
 
+                      {/* BOGO Offer Active Indicator */}
+                      {appliedCoupons.some(c => c.discount_type === 'BOGO' && (!c.product_id || Number(c.product_id) === Number(item.id))) && (
+                        <div className="inline-flex items-center gap-1 rounded-md bg-purple-100 border border-purple-300 px-2 py-0.5 text-[9px] font-black text-purple-900 shadow-2xs">
+                          <span>🎁 Buy 1 Get 1 FREE Applied! (1 Free Item Included)</span>
+                        </div>
+                      )}
+
                       {/* Quantity Controller & Remove */}
                       <div className="flex items-center justify-between pt-1">
                         <div className="flex items-center gap-2 rounded-lg bg-slate-100 p-0.5 border border-slate-200">
@@ -766,7 +773,13 @@ function CartContent() {
                             {c.code}
                           </span>
                           <span className="text-[10px] font-bold text-slate-700">
-                            -₹{Number(c.discount_amount || 0).toFixed(2)}
+                            {c.discount_type === 'BOGO' ? (
+                              <span className="text-purple-700 font-extrabold">🎁 BOGO (Buy 1 Get 1 Free) - Saved ₹{Number(c.discount_amount || 0).toFixed(2)}</span>
+                            ) : c.discount_type === 'FREE_DELIVERY' ? (
+                              <span className="text-sky-700 font-extrabold">🚚 Free Shipping Coupon Applied</span>
+                            ) : (
+                              `-₹${Number(c.discount_amount || 0).toFixed(2)}`
+                            )}
                           </span>
                         </div>
                         <button
@@ -875,7 +888,15 @@ function CartContent() {
                                   )}
                                 </div>
                                 <p className="text-[10px] font-bold text-slate-700 truncate mt-0.5">
-                                  {coupon.discount_type === 'PERCENTAGE' ? `${coupon.discount_value}% OFF` : `FLAT ₹${coupon.discount_value} OFF`}
+                                  {coupon.discount_type === 'BOGO' ? (
+                                    <span className="text-purple-700 font-extrabold">🎁 Buy 1 Get 1 FREE (BOGO)</span>
+                                  ) : coupon.discount_type === 'FREE_DELIVERY' ? (
+                                    <span className="text-sky-700 font-extrabold">🚚 Free Doorstep Delivery</span>
+                                  ) : coupon.discount_type === 'PERCENTAGE' ? (
+                                    `${coupon.discount_value}% OFF`
+                                  ) : (
+                                    `FLAT ₹${coupon.discount_value} OFF`
+                                  )}
                                   {Number(coupon.min_order_amount || 0) > 0 && (
                                     <span className="text-amber-700 font-extrabold ml-1.5">• Min Order ₹{coupon.min_order_amount}</span>
                                   )}

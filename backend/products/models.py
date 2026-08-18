@@ -56,6 +56,8 @@ class Coupon(models.Model):
     DISCOUNT_TYPES = (
         ('PERCENTAGE', 'Percentage OFF (%)'),
         ('FLAT', 'Flat Amount OFF (₹)'),
+        ('BOGO', 'Buy 1 Get 1 Free (BOGO) 🎁'),
+        ('FREE_DELIVERY', 'Free Delivery 🚚'),
     )
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='coupons')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='coupons')

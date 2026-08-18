@@ -174,6 +174,22 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                             if coupon.max_discount_amount and disc > coupon.max_discount_amount:
                                 disc = coupon.max_discount_amount
                             server_discount += disc
+                        elif coupon.discount_type == 'BOGO':
+                            if coupon.product:
+                                matching_item = next((it for it in requested if it.get('id') == coupon.product.id), None)
+                                qty = matching_item.get('quantity', 1) if matching_item else 1
+                                price = coupon.product.price
+                            else:
+                                qty = sum(it.get('quantity', 1) for it in requested) if requested else 1
+                                price = (subtotal / Decimal(str(qty))) if qty > 0 else Decimal('0.00')
+
+                            free_units = qty // 2
+                            disc = price * Decimal(str(free_units)) if free_units >= 1 else Decimal('0.00')
+                            server_discount += disc
+                        elif coupon.discount_type == 'FREE_DELIVERY':
+                            if coupon.discount_value > Decimal('0.00'):
+                                server_discount += coupon.discount_value
+                            server_delivery_fee = Decimal('0.00')
                         else:
                             server_discount += coupon.discount_value
                         

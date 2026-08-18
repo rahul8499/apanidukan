@@ -69,7 +69,7 @@ export default function AiAssistantWidget() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-lg">🤖</span>
-                <p className="font-extrabold text-sm tracking-wide">MultiStore AI Assistant</p>
+                <p className="font-extrabold text-sm tracking-wide">QuickStore AI Assistant</p>
               </div>
               <p className="text-[11px] text-indigo-200 mt-0.5">Ask questions · Prescription OCR & Text Extraction</p>
             </div>

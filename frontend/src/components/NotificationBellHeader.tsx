@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../context/NotificationContext'
 
 export default function NotificationBellHeader({ className = '' }: { className?: string }) {
+  const isSellerRoute = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/stores/') ||
+    window.location.pathname === '/dashboard' ||
+    window.location.pathname === '/platform'
+  )
+
   const {
     notifications,
     unreadCount,
@@ -88,13 +94,15 @@ export default function NotificationBellHeader({ className = '' }: { className?:
             )}
 
             <div className="my-3 flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={testAlert}
-                className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-xs hover:bg-indigo-700 cursor-pointer"
-              >
-                ⚡ Test Alert
-              </button>
+              {isSellerRoute && (
+                <button
+                  type="button"
+                  onClick={testAlert}
+                  className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-xs hover:bg-indigo-700 cursor-pointer"
+                >
+                  ⚡ Test Alert
+                </button>
+              )}
               <div className="flex gap-2">
                 <button onClick={markAllRead} className="text-[11px] font-bold text-slate-600 hover:text-indigo-600 cursor-pointer">Mark read</button>
                 <button onClick={clearAll} className="text-[11px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer">Clear</button>

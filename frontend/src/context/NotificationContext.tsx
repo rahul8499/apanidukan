@@ -30,49 +30,201 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 
+let globalAudioCtx: AudioContext | null = null
+
+function getAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioContextClass) return null
+    if (!globalAudioCtx || globalAudioCtx.state === 'closed') {
+      globalAudioCtx = new AudioContextClass()
+    }
+    if (globalAudioCtx.state === 'suspended') {
+      globalAudioCtx.resume().catch(() => {})
+    }
+    return globalAudioCtx
+  } catch (e) {
+    console.error('AudioContext initialization error:', e)
+    return null
+  }
+}
+
 export function playNotificationAudio(type: 'seller' | 'customer' = 'seller') {
   try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
-    if (!AudioContext) return
-    const ctx = new AudioContext()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.type = 'sine'
-    if (type === 'seller') {
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime) // D5
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15) // A5
-      gain.gain.setValueAtTime(0.4, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.start()
-      osc.stop(ctx.currentTime + 0.5)
-    } else {
-      osc.frequency.setValueAtTime(659.25, ctx.currentTime)
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12)
-      gain.gain.setValueAtTime(0.3, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4)
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.start()
-      osc.stop(ctx.currentTime + 0.4)
+    const ctx = getAudioContext()
+    if (!ctx) return
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {})
     }
-  } catch {}
+
+    // Android & Mobile Chrome optimized AudioBuffer chime sound
+    const duration = type === 'seller' ? 0.6 : 0.5
+    const sampleRate = ctx.sampleRate || 44100
+    const buffer = ctx.createBuffer(1, Math.floor(sampleRate * duration), sampleRate)
+    const channel = buffer.getChannelData(0)
+    const freq1 = type === 'seller' ? 587.33 : 659.25
+    const freq2 = 880
+
+    for (let i = 0; i < buffer.length; i++) {
+      const t = i / sampleRate
+      const f = t < 0.15 ? freq1 : freq2
+      const decay = Math.exp(-t / 0.18)
+      channel[i] = Math.sin(2 * Math.PI * f * t) * decay * 0.7
+    }
+
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    source.connect(ctx.destination)
+    source.start(0)
+  } catch (e) {
+    console.error('Error playing notification audio:', e)
+  }
+}
+
+export function speakSoundboxAlert(text: string) {
+  try {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+
+    // Android Chrome SpeechSynthesizer unstick
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel()
+    }
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume()
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text + '.')
+    utterance.lang = 'hi-IN'
+    utterance.rate = 0.9
+    utterance.pitch = 1.0
+    utterance.volume = 1.0
+
+    const voices = window.speechSynthesis.getVoices()
+    if (voices && voices.length > 0) {
+      const hindiVoice = voices.find(v =>
+        v.lang.toLowerCase().includes('hi') ||
+        v.lang.toLowerCase().includes('hi_in') ||
+        v.lang.toLowerCase().includes('in') ||
+        v.name.toLowerCase().includes('hindi') ||
+        v.name.toLowerCase().includes('india')
+      )
+      if (hindiVoice) {
+        utterance.voice = hindiVoice
+      }
+    }
+
+    window.speechSynthesis.speak(utterance)
+  } catch (e) {
+    console.error('Soundbox alert error:', e)
+  }
 }
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const auth = useAuth()
   const [activeStoreId, setActiveStoreId] = useState<number | null>(null)
-  const [notifications, setNotifications] = useState<AppNotification[]>([
-    {
-      id: 'welcome',
-      type: 'system',
-      title: '🔔 Live App Notifications Active',
-      body: 'Real-time order alerts, messages, and stock updates are active across your app.',
-      time: 'Just now',
-      read: false
+
+  // 1. Dedicated Seller Notification State (Orders, Messages, Stock, Requests)
+  const [sellerNotifications, setSellerNotifications] = useState<AppNotification[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('qs_seller_notifications')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed
+        }
+      } catch {}
     }
-  ])
+    return [
+      {
+        id: 'seller_welcome',
+        type: 'system',
+        title: '🔔 Seller Command Center Live',
+        body: 'Real-time soundbox order alerts, customer messages, and requests active.',
+        time: 'Just now',
+        read: false
+      }
+    ]
+  })
+
+  // 2. Dedicated Customer Notification State (Product Releases, Coupons, Order Tracking)
+  const [customerNotifications, setCustomerNotifications] = useState<AppNotification[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('qs_customer_notifications')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed
+        }
+      } catch {}
+    }
+    return [
+      {
+        id: 'customer_welcome',
+        type: 'system',
+        title: '🛍️ Storefront Updates Active',
+        body: 'Explore live store offers and stay updated on new product releases.',
+        time: 'Just now',
+        read: false
+      }
+    ]
+  })
+
+  // Android / iOS Mobile gesture unlock on any touch, tap, scroll, or pointerdown
+  useEffect(() => {
+    const unlockAudio = () => {
+      try {
+        const ctx = getAudioContext()
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume().catch(() => {})
+        }
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.resume()
+          window.speechSynthesis.getVoices()
+          const silentUtterance = new SpeechSynthesisUtterance('')
+          silentUtterance.volume = 0
+          window.speechSynthesis.speak(silentUtterance)
+        }
+      } catch {}
+    }
+
+    const events = ['click', 'touchstart', 'touchend', 'pointerdown', 'scroll']
+    events.forEach(evt => {
+      window.addEventListener(evt, unlockAudio, { passive: true })
+    })
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        try { window.speechSynthesis.getVoices() } catch {}
+      }
+    }
+
+    return () => {
+      events.forEach(evt => {
+        window.removeEventListener(evt, unlockAudio)
+      })
+    }
+  }, [])
+
+  // Sync seller notifications to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('qs_seller_notifications', JSON.stringify(sellerNotifications.slice(0, 50)))
+      } catch {}
+    }
+  }, [sellerNotifications])
+
+  // Sync customer notifications to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('qs_customer_notifications', JSON.stringify(customerNotifications.slice(0, 50)))
+      } catch {}
+    }
+  }, [customerNotifications])
+
   const [showNotifDrawer, setShowNotifDrawer] = useState(false)
   const [permission, setPermission] = useState<string>(
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
@@ -90,12 +242,97 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [auth.user, activeStoreId])
 
-  // Persistent Global WebSocket connection for active store (Seller Only)
+  const getCurrentStoreId = (): number | null => {
+    if (typeof window !== 'undefined') {
+      const sellerMatch = window.location.pathname.match(/\/stores\/(\d+)/)
+      if (sellerMatch && sellerMatch[1]) {
+        return parseInt(sellerMatch[1], 10)
+      }
+      const customerMatch = window.location.pathname.match(/\/store\/(\d+)/)
+      if (customerMatch && customerMatch[1]) {
+        return parseInt(customerMatch[1], 10)
+      }
+    }
+    return activeStoreId
+  }
+
+  const effectiveStoreId = getCurrentStoreId()
+
+  const isSellerRoute = () => {
+    if (typeof window === 'undefined') return false
+    const path = window.location.pathname
+    return path.startsWith('/stores/') || path === '/dashboard' || path === '/platform'
+  }
+
+  // Fast polling backup sync for instant bell icon notifications (Every 4 seconds - Seller Only)
+  const knownOrderIdsRef = React.useRef<Set<number>>(new Set())
+  const isInitialFetchRef = React.useRef<boolean>(true)
+
   useEffect(() => {
-    if (!auth.user || !activeStoreId) return
+    if (!auth.user || !effectiveStoreId || !isSellerRoute()) return
+
+    const checkNewOrders = async () => {
+      if (!isSellerRoute()) return
+
+      try {
+        const res = await api.get(`/seller/stores/${effectiveStoreId}/whatsapp-orders/`)
+        const orders = res.data
+        if (!Array.isArray(orders)) return
+
+        if (isInitialFetchRef.current) {
+          orders.forEach((o: any) => knownOrderIdsRef.current.add(o.id))
+          isInitialFetchRef.current = false
+          return
+        }
+
+        const newOrders = orders.filter((o: any) => !knownOrderIdsRef.current.has(o.id))
+        if (newOrders.length > 0) {
+          newOrders.forEach((order: any) => {
+            knownOrderIdsRef.current.add(order.id)
+            const orderRef = order.reference || order.id
+            const title = `🛍️ New Order #${orderRef}`
+            const body = `Total ₹${order.total} by ${order.customer_name || 'Customer'} (${order.customer_phone || 'No phone'})`
+
+            playNotificationAudio('seller')
+            speakSoundboxAlert(`QuickStore naya order aaya hai! Total ${order.total} rupaye by ${order.customer_name || 'Grahak'}`)
+
+            const notifItem: AppNotification = {
+              id: `order_${order.id}_${Date.now()}`,
+              type: 'order',
+              title,
+              body,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              read: false,
+              link: `/stores/${effectiveStoreId}/orders`
+            }
+            // Push ONLY to seller notifications
+            setSellerNotifications(prev => [notifItem, ...prev])
+
+            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+              new Notification(title, { body, icon: '/icons/multistore-icon.svg' })
+            }
+          })
+        }
+      } catch {}
+    }
+
+    checkNewOrders()
+    const interval = setInterval(checkNewOrders, 4000)
+    return () => clearInterval(interval)
+  }, [auth.user, effectiveStoreId])
+
+  // Persistent Global WebSocket connection for active store (Seller & Customer)
+  useEffect(() => {
+    if (!effectiveStoreId) return
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = `${window.location.hostname}:8000`
-    const wsUrl = `${protocol}//${host}/ws/store/${activeStoreId}/`
+    const isLocal = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.port === '5173' ||
+      window.location.port === '3000'
+    )
+    const host = isLocal ? `${window.location.hostname}:8000` : window.location.host
+    const wsUrl = `${protocol}//${host}/ws/store/${effectiveStoreId}/`
 
     let socket: WebSocket | null = null
     try {
@@ -107,30 +344,61 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           let body = ''
           let notifType: AppNotification['type'] = 'system'
           let link = ''
+          const currentIsSeller = isSellerRoute()
 
           if (data.type === 'new_order' && data.order) {
+            // Seller order alerts MUST NOT go to customer
+            if (!currentIsSeller) return
+
+            knownOrderIdsRef.current.add(data.order.id)
             const orderRef = data.order.reference || data.order.order_number || data.order.id || 'NEW'
             const orderTotal = data.order.total || data.order.subtotal || 0
             title = `🛍️ New Order #${orderRef}`
             body = `Total ₹${orderTotal} by ${data.order.customer_name || 'Customer'} (${data.order.customer_phone || 'No phone'})`
             notifType = 'order'
-            link = `/stores/${activeStoreId}/orders`
+            link = `/stores/${effectiveStoreId}/orders`
+
           } else if (data.type === 'new_customer_message') {
+            if (!currentIsSeller) return
             title = `💬 Message from ${data.customer_name || 'Customer'}`
             body = `"${data.text}" (${data.customer_phone || 'No phone'})`
             notifType = 'message'
-            link = `/stores/${activeStoreId}/chat`
+            link = `/stores/${effectiveStoreId}/chat`
+
           } else if (data.type === 'new_product_request') {
+            if (!currentIsSeller) return
             title = `💡 Product Request: ${data.item_name || 'Item'}`
             body = `Requested by ${data.customer_name || 'Customer'} (${data.customer_phone || 'No phone'})`
             notifType = 'request'
-            link = `/stores/${activeStoreId}/requests`
+            link = `/stores/${effectiveStoreId}/requests`
+
+          } else if (data.type === 'new_product' || data.type === 'product_published' || data.type === 'new_product_added') {
+            // Product announcements MUST NOT go to seller dashboard! Only for customer!
+            if (currentIsSeller) return
+
+            const pName = data.product?.name || data.product_name || data.item_name || 'New Item'
+            title = `🎉 New Product Live: ${pName}`
+            body = `${pName} is now published & available to order!`
+            notifType = 'product'
+            link = `/store/${effectiveStoreId}`
           }
 
           if (title) {
             playNotificationAudio(notifType === 'product' ? 'customer' : 'seller')
+
+            if (notifType === 'order' && data.order && currentIsSeller) {
+              const cust = data.order.customer_name || 'Grahak'
+              const tot = data.order.total || data.order.subtotal || ''
+              speakSoundboxAlert(`QuickStore naya order aaya hai! Total ${tot} rupaye by ${cust}`)
+            } else if (notifType === 'request' && currentIsSeller) {
+              speakSoundboxAlert(`QuickStore naya product request aaya hai! ${data.item_name || 'Item'} by ${data.customer_name || 'Grahak'}`)
+            } else if (notifType === 'product' && !currentIsSeller) {
+              const pName = data.product?.name || data.product_name || data.item_name || 'Naya item'
+              speakSoundboxAlert(`Store par naya product live ho gaya hai: ${pName}`)
+            }
+
             const notifItem: AppNotification = {
-              id: String(Date.now()),
+              id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
               type: notifType,
               title,
               body,
@@ -138,7 +406,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               read: false,
               link
             }
-            setNotifications(prev => [notifItem, ...prev])
+
+            // Route notification to appropriate store: seller vs customer
+            if (currentIsSeller) {
+              setSellerNotifications(prev => [notifItem, ...prev])
+            } else {
+              setCustomerNotifications(prev => [notifItem, ...prev])
+            }
 
             // Trigger OS Native Web Push
             if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
@@ -158,12 +432,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               }
             }
           }
-        } catch {}
+        } catch (err) {
+          console.error("WS notification error:", err)
+        }
       }
     } catch {}
 
     return () => { socket?.close() }
-  }, [activeStoreId])
+  }, [effectiveStoreId])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -171,7 +447,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [])
 
-  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications])
+  // Dynamic context view based on route
+  const currentIsSeller = isSellerRoute()
+  const activeNotifications = currentIsSeller ? sellerNotifications : customerNotifications
+  const setActiveNotifications = currentIsSeller ? setSellerNotifications : setCustomerNotifications
+
+  const unreadCount = useMemo(() => activeNotifications.filter(n => !n.read).length, [activeNotifications])
 
   async function requestPermission() {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -189,7 +470,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     try {
       let finalPermission: NotificationPermission = 'default'
 
-      // Safari/Callback & Modern Promise compatibility
       if (typeof Notification.requestPermission === 'function') {
         const result = Notification.requestPermission((p) => {
           if (p) {
@@ -226,32 +506,71 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }
 
   function markAllRead() {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setActiveNotifications(prev => prev.map(n => ({ ...n, read: true })))
   }
 
   function clearAll() {
-    setNotifications([])
+    setActiveNotifications([])
   }
 
   function removeNotification(id: string) {
-    setNotifications(prev => prev.filter(n => n.id !== id))
+    setActiveNotifications(prev => prev.filter(n => n.id !== id))
   }
 
   function addNotification(notif: Omit<AppNotification, 'id' | 'time' | 'read'>) {
-    playNotificationAudio()
+    playNotificationAudio(notif.type === 'product' ? 'customer' : 'seller')
+
+    if (notif.type === 'order') {
+      speakSoundboxAlert(`QuickStore naya order aaya hai! ${notif.title}. ${notif.body}`)
+    } else if (notif.type === 'product') {
+      speakSoundboxAlert(`Store par naya product live ho gaya hai! ${notif.title}`)
+    } else if (notif.type === 'request') {
+      speakSoundboxAlert(`Naya product request aaya hai! ${notif.title}`)
+    } else if (notif.type === 'message') {
+      speakSoundboxAlert(`Naya grahak message aaya hai! ${notif.title}`)
+    }
+
     const newN: AppNotification = {
       ...notif,
       id: String(Date.now()),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       read: false
     }
-    setNotifications(prev => [newN, ...prev])
+
+    if (notif.type === 'product') {
+      setCustomerNotifications(prev => [newN, ...prev])
+    } else {
+      setSellerNotifications(prev => [newN, ...prev])
+    }
+
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        try {
+          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.showNotification(notif.title, {
+                body: notif.body,
+                icon: '/icons/multistore-icon.svg',
+                badge: '/icons/multistore-icon.svg',
+                vibrate: [200, 100, 200]
+              } as any)
+            }).catch(() => {
+              new Notification(notif.title, { body: notif.body, icon: '/icons/multistore-icon.svg' })
+            })
+          } else {
+            new Notification(notif.title, { body: notif.body, icon: '/icons/multistore-icon.svg' })
+          }
+        } catch (e) {
+          console.error('Error firing Web Push in addNotification:', e)
+        }
+      }
+    }
   }
 
   return (
     <NotificationContext.Provider
       value={{
-        notifications,
+        notifications: activeNotifications,
         unreadCount,
         showNotifDrawer,
         setShowNotifDrawer,

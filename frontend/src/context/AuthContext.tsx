@@ -12,21 +12,25 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const AuthProvider: React.FC<{children:any}> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
 
-  useEffect(()=>{
+  useEffect(() => {
     const token = localStorage.getItem('access_token')
-    if(token){
+    if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      api.get('/auth/me/').then(res=> setUser(res.data.data || res.data)).catch(()=>{
+      api.get('/auth/me/').then(res => setUser(res.data.data || res.data)).catch(() => {
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
+        delete api.defaults.headers.common['Authorization']
+        setUser(null)
       })
+    } else {
+      setUser(null)
     }
-  },[])
+  }, [])
 
-  async function login(email: string, password: string): Promise<User>{
+  async function login(email: string, password: string): Promise<User> {
     const res = await api.post('/auth/login/', { email, password })
     const { access, refresh } = res.data
     localStorage.setItem('access_token', access)
@@ -38,15 +42,14 @@ export const AuthProvider: React.FC<{children:any}> = ({ children }) => {
     return user
   }
 
-  async function register(data: any){
+  async function register(data: any) {
     await api.post('/auth/register/', data)
-    // auto-login after register
     await login(data.email, data.password)
   }
 
-  function logout(){
+  function logout() {
     const refresh = localStorage.getItem('refresh_token')
-    if (refresh) api.post('/auth/logout/', { refresh }).catch(() => {})
+    if (refresh) api.post('/auth/logout/', { refresh }).catch(() => { })
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     delete api.defaults.headers.common['Authorization']
@@ -56,8 +59,8 @@ export const AuthProvider: React.FC<{children:any}> = ({ children }) => {
   return <AuthContext.Provider value={{ user, login, register, logout }}>{children}</AuthContext.Provider>
 }
 
-export function useAuth(){
+export function useAuth() {
   const ctx = useContext(AuthContext)
-  if(!ctx) throw new Error('useAuth must be used within AuthProvider')
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
 }

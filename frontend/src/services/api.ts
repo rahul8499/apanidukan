@@ -80,10 +80,9 @@ api.interceptors.response.use(
         isRefreshing = false;
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        if (window.location.pathname !== '/login') {
-          // Show alert for session timeout before redirecting
-          alert("Session Timed Out. Please login again.");
-          window.location.href = '/login';
+        delete api.defaults.headers.common['Authorization'];
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+          window.location.replace('/login');
         }
         return Promise.reject(err);
       }

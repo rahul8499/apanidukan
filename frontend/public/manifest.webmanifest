@@ -1,6 +1,6 @@
 {
-  "name": "MultiStore - Digital Storefront & Orders",
-  "short_name": "MultiStore",
+  "name": "QuickStore - Digital Storefront & Orders",
+  "short_name": "QuickStore",
   "description": "Shop products directly from local verified seller stores with instant live tracking.",
   "start_url": "/",
   "scope": "/",

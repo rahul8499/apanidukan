@@ -117,6 +117,37 @@ HELP_REQUESTS = {
 FAST_REPLY = 'Namaste! 👋 Main products aur offers check karne, order tracking, aur prescription image se text/medicine names nikalne mein help kar sakta hu.'
 
 
+def clean_json_or_text_answer(raw_text: str) -> str:
+    """Clean raw Ollama JSON strings or text output, stripping {"answer": "..."} wrappers if present."""
+    if not raw_text:
+        return ""
+    text = raw_text.strip()
+
+    # Try standard json loads first
+    try:
+        parsed = json.loads(text)
+        if isinstance(parsed, dict) and 'answer' in parsed:
+            return str(parsed['answer']).strip()
+    except Exception:
+        pass
+
+    # Regex extraction fallback for malformed JSON strings like {"answer": "..."}
+    json_match = re.search(r'\{\s*"answer"\s*:\s*"(.*?)"\s*\}', text, re.DOTALL)
+    if json_match:
+        extracted = json_match.group(1).replace(r'\n', '\n').replace(r'\"', '"').strip()
+        if extracted:
+            return extracted
+
+    # Regex fallback if answer starts with "answer": "..."
+    answer_prop_match = re.search(r'"answer"\s*:\s*"(.*)', text, re.DOTALL)
+    if answer_prop_match:
+        extracted = answer_prop_match.group(1).rstrip('"} \n').replace(r'\n', '\n').replace(r'\"', '"').strip()
+        if extracted:
+            return extracted
+
+    return text
+
+
 def format_db_products_response(products, query_label: str = '') -> str:
     """Format matching Product querysets into clean, direct user answers."""
     if not products.exists():
@@ -220,7 +251,7 @@ def check_fast_path_query(message: str) -> str | None:
     # 0. Platform FAQ / General Features Fast-Path
     delivery_keywords = ['home delivery', 'delivery available', 'delivery hoti hai', 'delivery kab', 'shipping available', 'home delivery available']
     if any(kw in msg_lower for kw in delivery_keywords):
-        return "Haan! MultiStore platform par home delivery available hai. Aap easily platform par order place kar sakte ho."
+        return "Haan! QuickStore platform par home delivery available hai. Aap easily platform par order place kar sakte ho."
 
     payment_keywords = ['cash on delivery', 'cod available', 'payment options', 'payment method', 'gpay', 'upi payment']
     if any(kw in msg_lower for kw in payment_keywords):
@@ -237,6 +268,30 @@ def check_fast_path_query(message: str) -> str | None:
     address_keywords = ['store address', 'dukan address', 'store ka address', 'dukan ka address', 'address kya hai', 'location kya hai', 'store location', 'dukan location', 'store kaha hai']
     if any(kw in msg_lower for kw in address_keywords):
         return "Yeh ek online multi-vendor marketplace platform hai. Har seller/store ka business address unke specific Product Page aur Seller Store Profile par visible hota hai."
+
+    # Seller Business Advisory / Sales Improvement Queries
+    sales_low_keywords = ['sales kyu kam', 'sales kam hai', 'sales kam kyo', 'sales kyo kam', 'meri sales', 'bikri kam', 'customer kam', 'order nahi aa rahe', 'orders nahi']
+    if any(kw in msg_lower for kw in sales_low_keywords):
+        return (
+            "📈 Store Sales Improve Karne Ke 3 Tested Steps:\n\n"
+            "1. 🏷️ Discount Coupons: High-demand items par 10-20% discount offer activate karein (e.g. WELCOME10).\n"
+            "2. 📦 Catalog Stock: Popular products ko out-of-stock hone se bachayein aur high quality photos upload karein.\n"
+            "3. 📱 Direct Sharing: Store direct link WhatsApp Groups aur Social Media par daily share karein."
+        )
+
+    sales_growth_keywords = [
+        'sales kaise badhaye', 'sales badhane', 'sales growth', 'orders kaise badhaye',
+        'increase sales', 'grow store', 'sales improvement strategies', 'sales strategy',
+        'increase sales strategy', 'improvement strategies', 'sales improvement', 'growth strategy'
+    ]
+    if any(kw in msg_lower for kw in sales_growth_keywords):
+        return (
+            "🚀 Store Sales & Demand Growth Strategy:\n\n"
+            "1. 🏷️ Smart Discounting: Popular products par 10-20% discount coupons activate karein.\n"
+            "2. ⚡ Fast Restock: Low-stock items aur demand items ko always in-stock rakhein.\n"
+            "3. 📢 Social Marketing: WhatsApp groups aur Instagram stories par store link share karein.\n"
+            "4. 🖼️ Clear Catalog: High-quality product photos aur accurate descriptions add karein."
+        )
 
     # 1. Most Expensive Product Query
     expensive_triggers = [
@@ -337,11 +392,13 @@ def check_fast_path_query(message: str) -> str | None:
                 )
             return f"{prefix}Sabse naya product {item.name} (Category: {cat}) hai — ₹{item.price:,.2f} (Currently Out of stock)."
 
-    # 4. Popular / Trending / Most Viewed Products Query
+    # 4. Popular / Trending / Most Viewed & Best Selling Products Query
     popular_triggers = [
         'popular', 'trending', 'best selling', 'top products', 'famous product',
         'sabse popular', 'famous products', 'popular items', 'trending items',
-        'top items', 'best products'
+        'top items', 'best products', 'sabse jyada bikne', 'sbase jyada bikne',
+        'zyada bikne', 'jyada bikne', 'sabse zyada bikne', 'sbase zyada',
+        'top selling', 'most sold', 'sabse bika', 'bikne vala', 'bikne wala'
     ]
     if any(trigger in msg_lower for trigger in popular_triggers):
         scope_term = extract_scope_filter_term(message, popular_triggers)
@@ -355,7 +412,7 @@ def check_fast_path_query(message: str) -> str | None:
         if not top_items.exists():
             return "Filhal catalog me koi published product nahi hai."
 
-        prefix = f"Aapke query '{scope_term}' ke popular products:" if scope_term else "Store ke top popular products:"
+        prefix = f"Aapke query '{scope_term}' ke top popular & best-selling products:" if scope_term else "Store ke top demand & best-selling products:"
         lines = []
         for p in top_items:
             avail = 'In stock' if p.stock_quantity > 0 else 'Out of stock'
@@ -646,21 +703,28 @@ class AssistantChatView(APIView):
                 # If intent classification fails or returns non-JSON, fallback gracefully
                 pass
 
-            # 4. Fallback General Chat with compact context and platform knowledge
+            # 4. Fallback General Chat with Ollama (Handles general seller business advice & customer queries)
             catalog_info = get_live_products_context()
-            text_system_prompt = f"""You are the MultiStore E-Commerce AI Assistant. Reply directly in the user's language in at most 2 short sentences.
+            text_system_prompt = f"""You are the QuickStore E-Commerce & Retail Business AI Assistant.
+You assist both store customers and online store sellers.
+
+FOR STORE SELLERS:
+- Provide clear, actionable, expert business advice for questions about sales strategy, pricing, marketing, packaging, customer retention, WhatsApp promotion, inventory management, and store growth.
+- Give response in clean Hinglish/Hindi or English (matching the user's language). Use bullet points when giving steps or advice.
+
+FOR STORE CUSTOMERS:
+- Provide helpful product, price, delivery, and store support answers.
 
 PLATFORM KNOWLEDGE:
-- Home Delivery: Yes, home delivery is fully available across all stores on this platform.
-- Payment Options: Online payments (UPI, Cards, Netbanking) and Cash on Delivery (COD) are supported.
-- Store Creation: Sellers can register and create their multi-vendor online stores easily.
-- Store Address / Location: MultiStore is an online multi-vendor platform. Individual store addresses are located on Product detail pages and Seller Profile pages.
-- Order Tracking: Customers can track their live order status under My Orders.
+- Home Delivery: Available across stores on QuickStore.
+- Payment Options: UPI, Credit/Debit Cards, Netbanking, Cash on Delivery (COD).
+- Store Management: QuickStore PWA allows 1-click product catalog management, discount coupons, and direct WhatsApp customer ordering.
+- Live Order Tracking: Available under My Orders.
 
 PRODUCT CATALOG FACTS:
 {catalog_info}
 
-Use the catalog facts above when answering product, price, or stock questions. Output ONLY the final customer-facing answer without thinking or preamble."""
+Output ONLY the direct answer for the user without any preamble, reasoning, or inner thoughts."""
             answer = chat(
                 model=getattr(settings, 'OLLAMA_TEXT_MODEL', 'tinyllama'),
                 messages=[
@@ -669,14 +733,9 @@ Use the catalog facts above when answering product, price, or stock questions. O
                     {'role': 'user', 'content': message},
                 ],
                 response_format=TEXT_SCHEMA,
-                max_tokens=getattr(settings, 'OLLAMA_TEXT_RESPONSE_TOKENS', 120),
+                max_tokens=getattr(settings, 'OLLAMA_TEXT_RESPONSE_TOKENS', 250),
             )
-            try:
-                parsed = json.loads(answer)
-                answer = parsed['answer'].strip()
-            except (json.JSONDecodeError, KeyError, AttributeError):
-                answer = answer.strip()
-
+            answer = clean_json_or_text_answer(answer)
             answer = _strip_reasoning(answer)
 
             if not answer:

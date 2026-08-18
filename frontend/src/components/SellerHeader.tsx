@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import NotificationBellHeader from './NotificationBellHeader'
+import { useNotifications } from '../context/NotificationContext'
+import SellerAiAssistantModal from './SellerAiAssistantModal'
+import StoreQrStandeeModal from './StoreQrStandeeModal'
 import {
   Store,
   Settings,
@@ -27,7 +30,13 @@ import {
   MapPin,
   AlertTriangle,
   Bell,
-  Tag
+  Tag,
+  HelpCircle,
+  Mail,
+  MessageSquare,
+  PhoneCall,
+  Volume2,
+  VolumeX
 } from 'lucide-react'
 
 interface SellerHeaderProps {
@@ -39,6 +48,7 @@ interface SellerHeaderProps {
 export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: SellerHeaderProps) {
   const auth = useAuth()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false)
   const [storeName, setStoreName] = useState(store?.name || '')
   const [storeDescription, setStoreDescription] = useState(store?.description || '')
   const [storeAddress, setStoreAddress] = useState(store?.address || '')
@@ -48,8 +58,71 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [isProfileEditing, setIsProfileEditing] = useState(false)
   const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false)
+  const [showQrModal, setShowQrModal] = useState(false)
   const [message, setMessage] = useState('')
   const navigate = useNavigate()
+
+  const [soundboxOn, setSoundboxOn] = useState(() => {
+    return localStorage.getItem('qs_soundbox_enabled') !== 'false'
+  })
+
+  const [flashSaleActive, setFlashSaleActive] = useState(() => {
+    try {
+      const cached = localStorage.getItem(`qs_flash_sale_${store?.id}`)
+      return cached ? JSON.parse(cached).active : false
+    } catch {
+      return false
+    }
+  })
+
+  const [flashSaleDiscount, setFlashSaleDiscount] = useState<number>(() => {
+    try {
+      const cached = localStorage.getItem(`qs_flash_sale_${store?.id}`)
+      return cached ? JSON.parse(cached).discount || 25 : 25
+    } catch {
+      return 25
+    }
+  })
+
+  const [flashSaleTitle, setFlashSaleTitle] = useState<string>(() => {
+    try {
+      const cached = localStorage.getItem(`qs_flash_sale_${store?.id}`)
+      return cached ? JSON.parse(cached).title || 'Evening Clearance Sale' : 'Evening Clearance Sale'
+    } catch {
+      return 'Evening Clearance Sale'
+    }
+  })
+
+  function updateFlashSaleConfig(active: boolean, discount: number, title: string) {
+    setFlashSaleActive(active)
+    setFlashSaleDiscount(discount)
+    setFlashSaleTitle(title)
+    const payload = { active, discount, title }
+    if (store?.id) localStorage.setItem(`qs_flash_sale_${store.id}`, JSON.stringify(payload))
+    if (activeStore?.slug) localStorage.setItem(`qs_flash_sale_${activeStore.slug}`, JSON.stringify(payload))
+    localStorage.setItem('qs_flash_sale_global', JSON.stringify(payload))
+    window.dispatchEvent(new CustomEvent('qs-flash-sale-updated', { detail: payload }))
+  }
+
+  function toggleSoundbox() {
+    const next = !soundboxOn
+    setSoundboxOn(next)
+    localStorage.setItem('qs_soundbox_enabled', next ? 'true' : 'false')
+    if (next && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+      const u = new SpeechSynthesisUtterance("QuickStore Hindi Soundbox Alert Active hai!")
+      u.lang = 'hi-IN'
+      window.speechSynthesis.speak(u)
+    }
+  }
+
+  function toggleFlashSale() {
+    const next = !flashSaleActive
+    setFlashSaleActive(next)
+    const payload = { active: next, discount: 25, title: '⚡ Evening Stock Clearance (25% OFF)' }
+    localStorage.setItem(`qs_flash_sale_${store?.id}`, JSON.stringify(payload))
+    window.dispatchEvent(new CustomEvent('qs-flash-sale-updated', { detail: payload }))
+  }
 
   // Real-Time Web Push & PWA Notification Settings
   const [notificationPermission, setNotificationPermission] = useState<string>(
@@ -72,8 +145,11 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
     }
   }
 
+  const { setActiveStoreId } = useNotifications()
+
   useEffect(() => {
-    if (store) {
+    if (store?.id) {
+      setActiveStoreId(store.id)
       setStoreName(store.name || '')
       setStoreDescription(store.description || '')
       setStoreAddress(store.address || '')
@@ -82,7 +158,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
         setLogoPreview(store.logo)
       }
     }
-  }, [store])
+  }, [store, setActiveStoreId])
 
   // Instant memory & localStorage cached subscription state (Prevents navbar blinking on tab changes)
   const [subStatus, setSubStatus] = useState<any>(() => {
@@ -103,10 +179,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           setSubStatus(res.data)
           try {
             localStorage.setItem(`sub_status_${store.id}`, JSON.stringify(res.data))
-          } catch {}
+          } catch { }
         }
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [store?.id])
 
   const currentLogoUrl = logoPreview || store?.logo || null
@@ -235,11 +311,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   <Link
                     to={`/stores/${store.id}/subscription`}
                     title={`Current Plan: ${subStatus.plan_name} (${subStatus.status})`}
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black shrink-0 border transition-all cursor-pointer hover:scale-105 shadow-xs ${
-                      subStatus.plan_name === 'PREMIUM'
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black shrink-0 border transition-all cursor-pointer hover:scale-105 shadow-xs ${subStatus.plan_name === 'PREMIUM'
                         ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 hover:border-amber-300'
                         : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500'
-                    }`}
+                      }`}
                   >
                     {subStatus.plan_name === 'PREMIUM' ? (
                       <>
@@ -256,16 +331,33 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 )}
               </div>
 
-              {/* Row 2: Module Title / Breadcrumb */}
-              <p className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold tracking-wider text-teal-300/90 truncate mt-0.5">
-                <Sparkles className="h-3 w-3 text-teal-400 shrink-0" />
-                <span>{activeTabTitle || 'Store Manager'}</span>
+              {/* Row 2: Tagline & Active Module Title */}
+              <p className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-extrabold tracking-wide text-amber-300 truncate mt-0.5">
+                <Sparkles className="h-3 w-3 text-amber-400 shrink-0 animate-pulse" />
+                <span className="font-black text-amber-300">Demand Dekho, Product lao, Sell Karo</span>
+                {activeTabTitle && (
+                  <>
+                    <span className="text-slate-500 font-bold">•</span>
+                    <span className="text-teal-300 font-bold">{activeTabTitle}</span>
+                  </>
+                )}
               </p>
             </div>
           </div>
 
           {/* Right Action Tools Toolbar */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Seller AI Copilot Assistant Button */}
+            <button
+              type="button"
+              onClick={() => setIsAiModalOpen(true)}
+              className="flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-xl sm:rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-500/20 to-teal-500/20 px-2.5 sm:px-3.5 text-xs font-black text-amber-300 hover:border-amber-300 hover:scale-105 transition-all cursor-pointer shadow-xs"
+              title="Open Seller AI Copilot & Business Assistant"
+            >
+              <Sparkles className="h-4 w-4 text-amber-300 animate-pulse" />
+              <span className="hidden xs:inline font-black tracking-wide">✨ AI Copilot</span>
+            </button>
+
             {/* Real-time Notification Bell */}
             <NotificationBellHeader />
 
@@ -306,9 +398,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
       {/* Slide-over Clean Premium White App Settings Sidebar Drawer */}
       <aside
-        className={`fixed top-0 right-0 z-50 h-full w-96 max-w-[92vw] bg-white text-slate-900 border-l border-slate-200/80 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${
-          isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 right-0 z-50 h-full w-96 max-w-[92vw] bg-white text-slate-900 border-l border-slate-200/80 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         {/* Ultra-Premium Drawer Header with Store Identity */}
         <div className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 px-6 py-5 text-white border-b border-indigo-950 shadow-md">
@@ -328,7 +419,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
               <div className="min-w-0">
                 <h2 className="font-black text-base text-white truncate tracking-tight">{store.name}</h2>
-                <p className="text-[11px] font-mono text-indigo-300/80 truncate">@{store.slug}</p>
+                <p className="text-[10px] font-extrabold text-amber-300 truncate">Demand Dekho, Product lao, Sell Karo</p>
               </div>
             </div>
 
@@ -350,6 +441,90 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <span>{message}</span>
             </div>
           )}
+
+          {/* SECTION 0: ⚡ Store Smart Automation Controls (Soundbox & Flash Sale) */}
+          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-slate-50 p-4 space-y-3 shadow-xs">
+            <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+              <Zap className="h-4 w-4 text-indigo-600 animate-pulse" />
+              <span className="font-black text-xs text-slate-900 tracking-wide uppercase">Smart Dukan Controls</span>
+            </div>
+
+            {/* Control 1: Hindi Voice Soundbox */}
+            <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${soundboxOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
+                  {soundboxOn ? <Volume2 className="h-4.5 w-4.5 text-emerald-600" /> : <VolumeX className="h-4.5 w-4.5 text-slate-400" />}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-slate-900 truncate">Dukan Hindi Soundbox 🔊</p>
+                  <p className="text-[10px] text-slate-500 font-semibold truncate">Bolta Order & Request Reader</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={toggleSoundbox}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-600' : 'bg-slate-300'}`}
+              >
+                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
+            {/* Control 2: Evening Clearance Flash Sale */}
+            <div className="space-y-2.5 p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${flashSaleActive ? 'bg-rose-100 text-rose-600 animate-pulse' : 'bg-amber-50 text-amber-600'}`}>
+                    <Zap className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-slate-900 truncate">⚡ Evening Flash Sale</p>
+                    <p className="text-[10px] text-slate-500 font-semibold truncate">{flashSaleActive ? `${flashSaleDiscount}% OFF Banner LIVE` : 'Stock Clearance Sale'}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => updateFlashSaleConfig(!flashSaleActive, flashSaleDiscount, flashSaleTitle)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${flashSaleActive ? 'bg-rose-600' : 'bg-slate-300'}`}
+                >
+                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${flashSaleActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              {/* Dynamic Flash Sale Config Panel */}
+              <div className="pt-2 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-[10px] font-extrabold text-slate-600">Discount %:</label>
+                  <div className="flex items-center gap-1">
+                    {[10, 20, 25, 30, 50].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => updateFlashSaleConfig(flashSaleActive, d, flashSaleTitle)}
+                        className={`px-2 py-0.5 text-[10px] font-black rounded-lg transition-all cursor-pointer ${
+                          flashSaleDiscount === d
+                            ? 'bg-rose-600 text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        {d}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-extrabold text-slate-600">Sale Title:</label>
+                  <input
+                    type="text"
+                    value={flashSaleTitle}
+                    onChange={(e) => updateFlashSaleConfig(flashSaleActive, flashSaleDiscount, e.target.value)}
+                    placeholder="e.g. Evening Clearance Sale"
+                    className="w-full mt-1 px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 text-slate-900 font-bold focus:border-rose-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* SECTION 1: 🏪 Editable Store Profile & Identity */}
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-3 shadow-2xs">
@@ -541,9 +716,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <div>
                   <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
                     <span>Manage in App Mode</span>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black ${
-                      store.manage_in_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'
-                    }`}>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black ${store.manage_in_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'
+                      }`}>
                       {store.manage_in_app ? 'ACTIVE (ON)' : 'DISABLED (OFF)'}
                     </span>
                   </h3>
@@ -556,11 +730,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <button
                   type="button"
                   onClick={() => toggleManageInApp(true)}
-                  className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    store.manage_in_app
+                  className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${store.manage_in_app
                       ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 border border-emerald-500'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                  }`}
+                    }`}
                 >
                   <span>🟢 ON</span>
                   <span className="text-[10px] font-extrabold opacity-90">(App System)</span>
@@ -569,11 +742,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <button
                   type="button"
                   onClick={() => toggleManageInApp(false)}
-                  className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    !store.manage_in_app
+                  className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${!store.manage_in_app
                       ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                  }`}
+                    }`}
                 >
                   <span>⚪ OFF</span>
                   <span className="text-[10px] font-extrabold opacity-90">(WhatsApp)</span>
@@ -592,11 +764,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <button
                 type="button"
                 onClick={handleLiveToggleClick}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black cursor-pointer transition-all shadow-xs ${
-                  store.is_published
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black cursor-pointer transition-all shadow-xs ${store.is_published
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200'
                     : 'bg-gradient-to-r from-amber-500 to-emerald-600 text-white border border-emerald-400 hover:from-amber-600 hover:to-emerald-700 shadow-md animate-pulse'
-                }`}
+                  }`}
               >
                 {store.is_published ? (
                   <>
@@ -620,9 +791,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
                   <Bell className="h-4 w-4 text-indigo-600" />
                   <span>Real-Time Push Alerts</span>
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${
-                    notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
-                  }`}>
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}>
                     {notificationPermission === 'granted' ? 'ACTIVE (ON)' : 'DISABLED (OFF)'}
                   </span>
                 </h3>
@@ -682,16 +852,85 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             </Link>
           </div>
 
-          {/* SECTION 6: 🔗 Customer Link & Logout */}
+          {/* SECTION 6: 🎧 Platform & Technical Support */}
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50/80 p-4 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <HelpCircle className="h-4.5 w-4.5 text-indigo-600" />
+                <span className="font-extrabold text-xs text-slate-900">Platform & Technical Support</span>
+              </div>
+              <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-black text-white">24/7 LIVE</span>
+            </div>
+
+            <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+              Store management, PWA app, domain, catalog sync, or payment integration help ke liye platform support se contact karein:
+            </p>
+
+            {/* Direct Contact Options */}
+            <div className="space-y-2 bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs">
+              {/* Email Launcher */}
+              <a
+                href="mailto:rahulkolhe90.rk.kr@gmail.com"
+                className="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-indigo-50/60 transition-all text-xs font-bold text-slate-800"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <Mail className="h-4 w-4 text-indigo-600 shrink-0" />
+                  <span className="truncate">rahulkolhe90.rk.kr@gmail.com</span>
+                </div>
+                <span className="text-[10px] text-indigo-600 font-black shrink-0">EMAIL ↗</span>
+              </a>
+
+              {/* Phone Launcher */}
+              <a
+                href="tel:7796216506"
+                className="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-emerald-50/60 transition-all text-xs font-bold text-slate-800"
+              >
+                <div className="flex items-center gap-2">
+                  <PhoneCall className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>+91 7796216506</span>
+                </div>
+                <span className="text-[10px] text-emerald-600 font-black">CALL 📞</span>
+              </a>
+
+              {/* WhatsApp Direct Chat Launcher */}
+              <a
+                href="https://wa.me/917796216506?text=Hi%20QuickStore%20Support,%20I%20need%20technical%20help%20with%20my%20store."
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 transition-all text-xs font-black text-[#075E54]"
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-[#25D366] shrink-0" />
+                  <span>WhatsApp Support Chat</span>
+                </div>
+                <span className="text-[10px] bg-[#25D366] text-white px-2 py-0.5 rounded font-black">CHAT ➔</span>
+              </a>
+            </div>
+          </div>
+
+          {/* SECTION 7: 🔗 Customer Link & Logout */}
           {store.slug && (
-            <Link
-              to={`/store/${store.slug}`}
-              target="_blank"
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 py-3 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all shadow-2xs"
-            >
-              <ExternalLink className="h-4 w-4 text-indigo-600" />
-              <span>Open Customer Storefront ↗</span>
-            </Link>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSettingsOpen(false)
+                  setShowQrModal(true)
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3 text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 transition-all shadow-md cursor-pointer"
+              >
+                <span>🖨️ Print Counter QR Standee</span>
+              </button>
+
+              <Link
+                to={`/store/${store.slug}`}
+                target="_blank"
+                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 py-2.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all shadow-2xs"
+              >
+                <ExternalLink className="h-4 w-4 text-indigo-600" />
+                <span>Open Customer Storefront ↗</span>
+              </Link>
+            </div>
           )}
 
           <button
@@ -738,6 +977,20 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             </div>
           </div>
         </div>
+      )}
+
+      {/* Seller AI Copilot Dialogue Modal */}
+      {isAiModalOpen && (
+        <SellerAiAssistantModal store={store} onClose={() => setIsAiModalOpen(false)} />
+      )}
+
+      {/* Printable Shop QR Standee & Poster Modal */}
+      {showQrModal && store && (
+        <StoreQrStandeeModal
+          store={store}
+          publicUrl={`${window.location.origin}/store/${store.slug}`}
+          onClose={() => setShowQrModal(false)}
+        />
       )}
     </>
   )

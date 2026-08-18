@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import api from '../services/api'
+import { MessageSquare, X, Send, Phone, User, Check, CheckCheck, Sparkles, ExternalLink } from 'lucide-react'
 
 interface CustomerChatWidgetProps {
   storeSlug: string
@@ -161,7 +162,7 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
       console.warn('WS Connect error:', e)
     }
 
-    // Polling fallback every 4 seconds (only when chat is open)
+    // Polling fallback every 4 seconds
     const interval = setInterval(async () => {
       if (!isOpen) return
       try {
@@ -174,7 +175,6 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
           const fetchedMsgs = res.data.messages
           setMessages(fetchedMsgs)
 
-          // Check for unread seller messages
           if (!isOpen && fetchedMsgs.length > 0) {
             const lastMsg = fetchedMsgs[fetchedMsgs.length - 1]
             if (lastMsg.sender_type === 'SELLER' && !lastMsg.is_read) {
@@ -225,35 +225,6 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
 
   return (
     <>
-      {/* ChatBot-style Chat Bubble - compact and aligned inside the app layout */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[180px] z-30 mx-auto max-w-md lg:static lg:inset-auto lg:bottom-auto lg:z-auto lg:mx-0 lg:w-full lg:max-w-none">
-        <button
-          onClick={() => {
-            setIsOpen(!isOpen)
-            if (!isOpen) {
-              setUnreadCount(0)
-              setToastMessage(null)
-            }
-          }}
-          className="pointer-events-auto absolute right-3 flex w-16 flex-col items-center justify-center rounded-2xl border border-emerald-300/50 bg-gradient-to-br from-[#075E54] to-[#128C7E] px-2 py-2.5 text-[10px] font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:from-[#128C7E] hover:to-[#16a085] lg:relative lg:right-0 lg:ml-auto lg:mr-4 lg:mb-4"
-        >
-          <span className="text-base leading-none">💬</span>
-          <span className="mt-1 leading-tight">Chat</span>
-          <span className="leading-tight">Seller</span>
-          {unreadCount > 0 && (
-            <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white animate-pulse">
-              {unreadCount}
-            </span>
-          )}
-          {unreadCount === 0 && (
-            <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
-            </span>
-          )}
-        </button>
-      </div>
-
       {/* Toast Notification when seller replies while drawer is closed */}
       {!isOpen && toastMessage && (
         <div className="fixed top-4 left-1/2 z-50 flex w-full max-w-sm -translate-x-1/2 items-center justify-between rounded-2xl bg-[#075E54] p-3 text-white shadow-2xl border border-[#128C7E] animate-bounce">
@@ -279,21 +250,22 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
         </div>
       )}
 
-      {/* WhatsApp Style Chat Window Drawer */}
+      {/* WhatsApp Style Chat Window (Responsive Window on Desktop, Full Drawer on Mobile) */}
       {isOpen && (
-        <div className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[540px] max-w-md flex-col rounded-t-3xl bg-[#E5DDD5] shadow-[0_-12px_40px_rgba(0,0,0,0.3)] border-t border-slate-300 overflow-hidden">
+        <div className="fixed inset-x-0 bottom-0 z-50 sm:left-auto sm:right-6 sm:bottom-6 flex h-[85vh] sm:h-[580px] w-full sm:w-[420px] max-w-full flex-col rounded-t-3xl sm:rounded-3xl bg-[#E5DDD5] shadow-[0_-12px_40px_rgba(0,0,0,0.35)] border border-slate-300/80 overflow-hidden font-sans">
+          
           {/* Authentic WhatsApp Dark Teal Header */}
-          <div className="flex items-center justify-between bg-[#075E54] px-4 py-3 text-white shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#128C7E] font-bold text-white text-base shadow border border-white/20">
+          <div className="flex items-center justify-between bg-[#075E54] px-4 py-3 text-white shadow-md shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#128C7E] font-bold text-white text-base shadow border border-white/20 shrink-0">
                 🏪
-                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-[#075E54]" />
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-[#075E54]" />
               </div>
-              <div>
-                <h3 className="font-extrabold text-sm leading-tight text-white">
+              <div className="min-w-0">
+                <h3 className="font-extrabold text-xs sm:text-sm leading-tight text-white truncate">
                   {conversation?.store_name || 'Official Store Chat'}
                 </h3>
-                <p className="text-[11px] text-emerald-200 font-medium mt-0.5 flex items-center gap-1">
+                <p className="text-[10px] sm:text-[11px] text-emerald-200 font-medium mt-0.5 flex items-center gap-1">
                   <span
                     className={`h-1.5 w-1.5 rounded-full ${
                       wsConnected ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-300'
@@ -304,37 +276,39 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
               {conversation?.store_phone && (
                 <a
                   href={`https://wa.me/${conversation.store_phone.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-xl bg-[#25D366] px-2.5 py-1 text-[11px] font-extrabold text-white shadow hover:bg-[#1fba58]"
+                  className="rounded-lg bg-[#25D366] px-2 py-1 text-[10px] font-black text-white shadow hover:bg-[#1fba58] flex items-center gap-1"
                 >
-                  WhatsApp ↗
+                  <span>WhatsApp</span>
+                  <ExternalLink className="h-3 w-3" />
                 </a>
               )}
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="rounded-lg bg-white/10 px-2 py-1 text-[11px] font-semibold hover:bg-white/20"
+                className="rounded-lg bg-white/10 p-1.5 text-xs font-semibold hover:bg-white/20 text-white"
+                title="Customer Profile"
               >
-                👤 Details
+                <User className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm font-bold hover:bg-white/20 text-white"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-xs font-bold hover:bg-white/20 text-white"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
 
           {/* Contact Details Prompt Banner */}
           {(!customerName || showDetails) && (
-            <div className="bg-emerald-50 p-3 border-b border-emerald-200 text-xs space-y-2">
+            <div className="bg-emerald-50 p-3 border-b border-emerald-200 text-xs space-y-2 shrink-0">
               <div className="flex items-center justify-between">
-                <p className="font-extrabold text-[#075E54]">👤 Enter Name for WhatsApp-style Chat</p>
+                <p className="font-extrabold text-[#075E54]">👤 Enter Details for Live Chat</p>
                 {customerName && (
                   <button onClick={() => setShowDetails(false)} className="text-slate-400 font-bold">
                     ✕
@@ -346,40 +320,40 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Your Name (e.g. Rahul)"
-                  className="premium-input text-xs py-1.5 bg-white border-emerald-300 focus:border-[#075E54]"
+                  className="rounded-xl border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 focus:border-[#075E54] focus:outline-none"
                 />
                 <input
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="WhatsApp Number"
-                  className="premium-input text-xs py-1.5 bg-white border-emerald-300 focus:border-[#075E54]"
+                  className="rounded-xl border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 focus:border-[#075E54] focus:outline-none"
                   inputMode="tel"
                 />
               </div>
               <button
                 onClick={saveDetails}
-                className="w-full rounded-xl bg-[#075E54] py-2 text-xs font-extrabold text-white shadow hover:bg-[#128C7E]"
+                className="w-full rounded-xl bg-[#075E54] py-1.5 text-xs font-black text-white shadow hover:bg-[#128C7E] cursor-pointer"
               >
                 Save Name & Connect Chat
               </button>
             </div>
           )}
 
-          {/* Order Reference Context Banner if chatting for order */}
+          {/* Order Reference Context Banner */}
           {orderReference && (
-            <div className="bg-[#FEF3C7] px-4 py-1.5 border-b border-[#FDE68A] flex items-center justify-between text-xs text-amber-950 font-bold">
+            <div className="bg-[#FEF3C7] px-3.5 py-1.5 border-b border-[#FDE68A] flex items-center justify-between text-xs text-amber-950 font-bold shrink-0">
               <span>📦 Live Chat regarding Order #{orderReference}</span>
-              <span className="text-[10px] bg-amber-200 px-2 py-0.5 rounded-full text-amber-900">Order Context</span>
+              <span className="text-[9px] bg-amber-200 px-1.5 py-0.5 rounded-full text-amber-900 font-extrabold">Context</span>
             </div>
           )}
 
           {/* WhatsApp Chat Messages Container */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#E5DDD5]">
+          <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5 bg-[#E5DDD5]">
             {messages.length === 0 ? (
-              <div className="my-auto text-center p-6 bg-white/80 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="text-4xl mb-2">💬</div>
-                <p className="font-extrabold text-xs text-slate-800">Welcome to Store Live Chat!</p>
-                <p className="text-[11px] mt-1 text-slate-600 leading-relaxed">
+              <div className="my-auto text-center p-6 bg-white/90 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+                <div className="text-3xl">💬</div>
+                <p className="font-extrabold text-xs text-slate-900">Welcome to Live Store Support!</p>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
                   Send a message below. Store seller will receive your chat live on their seller dashboard.
                 </p>
               </div>
@@ -391,9 +365,9 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
                     key={m.id}
                     className={`flex flex-col ${isCustomer ? 'items-end' : 'items-start'}`}
                   >
-                    {/* WhatsApp Style Chat Bubbles: Customer Light Green (#DCF8C6), Seller White (#FFFFFF) */}
+                    {/* WhatsApp Style Chat Bubbles */}
                     <div
-                      className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs shadow ${
+                      className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs shadow-xs ${
                         isCustomer
                           ? 'bg-[#DCF8C6] text-slate-900 rounded-tr-none border border-[#c3ebaa]'
                           : 'bg-white text-slate-900 rounded-tl-none border border-slate-200'
@@ -412,7 +386,7 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
                             minute: '2-digit',
                           })}
                         </span>
-                        {isCustomer && <span className="text-[#34B7F1] font-bold">✓✓</span>}
+                        {isCustomer && <CheckCheck className="h-3 w-3 text-[#34B7F1]" />}
                       </div>
                     </div>
                   </div>
@@ -423,21 +397,22 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
           </div>
 
           {/* Form Message Input Bar */}
-          <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-slate-300 bg-[#F0F0F0] p-3">
+          <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-slate-300 bg-[#F0F0F0] p-2.5 shrink-0">
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 rounded-full border border-slate-300 bg-white px-4 py-2.5 text-xs font-medium text-slate-900 shadow-inner focus:border-[#075E54] focus:outline-none"
+              className="flex-1 rounded-full border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-900 shadow-inner focus:border-[#075E54] focus:outline-none"
             />
             <button
               type="submit"
               disabled={!text.trim()}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#075E54] text-white shadow-md disabled:opacity-50 hover:bg-[#128C7E]"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#075E54] text-white shadow-md disabled:opacity-50 hover:bg-[#128C7E] cursor-pointer"
             >
-              ➔
+              <Send className="h-4 w-4" />
             </button>
           </form>
+
         </div>
       )}
     </>

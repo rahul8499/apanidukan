@@ -7,6 +7,7 @@ import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import api from '../services/api'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
+import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
 
 const errorMessage = (error: any) =>
   error?.response?.data?.detail || Object.values(error?.response?.data || {}).flat().join(' ') || 'Please check the form and try again.'
@@ -271,7 +272,15 @@ export default function StoreManager() {
     setNotifications([])
   }
 
+  const [showQrModal, setShowQrModal] = useState(false)
+
   const publicUrl = useMemo(() => store ? `${window.location.origin}/store/${store.slug}` : '', [store])
+
+  const whatsappShareUrl = useMemo(() => {
+    if (!store?.name || !publicUrl) return ''
+    const inviteMsg = `🛍️ *Welcome to ${store.name}!*\n\nExplore our official product catalog online and order directly with instant delivery!\n\n🌐 *Shop Now:* ${publicUrl}`
+    return `https://wa.me/?text=${encodeURIComponent(inviteMsg)}`
+  }, [store?.name, publicUrl])
 
   async function load() {
     try {
@@ -887,30 +896,81 @@ Bluetooth Wireless Earbuds - 1299 - 15`
           </div>
         </form>
 
-        <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <span className="text-xs font-bold text-slate-900">🌐 Your Storefront Web Link</span>
-            <div className="flex gap-2">
+        {/* Ultra-Premium Official Store Web Link & Printable QR Standee Card */}
+        <div className="rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 p-4 sm:p-5 space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-100/80 pb-3">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-black text-slate-900 tracking-tight">🌐 Official Storefront Web Link & Scanner</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[9px] font-black text-emerald-800 border border-emerald-300 shadow-2xs">
+                  🛡️ VERIFIED PWA APP
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 font-medium mt-0.5">
+                Share this link or print your shop counter QR Standee poster for customers to scan & shop.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 flex-wrap shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowQrModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-2 text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <span>🖨️ Print Shop QR Standee</span>
+              </button>
+
+              <a
+                href={whatsappShareUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3 py-2 text-xs font-black text-white hover:bg-[#20ba5a] transition-all shadow-xs cursor-pointer"
+                title="Share store invite link on WhatsApp"
+              >
+                <span>📲 WhatsApp</span>
+              </a>
+
               <button
                 type="button"
                 onClick={copyLink}
-                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white hover:bg-slate-800 transition-all shadow-xs cursor-pointer"
               >
-                📋 Copy Link
+                <span>📋 Copy Link</span>
               </button>
-              <a
-                href={publicUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all"
-              >
-                Open Store ↗
-              </a>
             </div>
           </div>
-          <code className="block break-all rounded-lg border border-slate-200 bg-white p-2.5 text-xs text-slate-800 font-mono shadow-2xs">
-            {publicUrl}
-          </code>
+
+          {/* Display Box for Link */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2 bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 text-xs font-bold shadow-2xs">
+                  🔒
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[9px] uppercase tracking-wider font-extrabold text-slate-400">Official Store Link</p>
+                  <p className="text-xs sm:text-sm font-black text-indigo-700 truncate font-mono">{publicUrl}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <a
+                  href={publicUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-extrabold text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200 shadow-2xs"
+                >
+                  Open App ↗
+                </a>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+              <span>💡</span>
+              <span>Customers scanning your store QR poster will instantly open your storefront app on Web & Mobile.</span>
+            </p>
+          </div>
         </div>
       </section>
 
@@ -1678,6 +1738,16 @@ Bluetooth Wireless Earbuds - 1299 - 15`
           </div>
         </div>
       )}
+
+      {/* Printable Shop QR Code Standee & Poster Modal */}
+      {showQrModal && store && (
+        <StoreQrStandeeModal
+          store={store}
+          publicUrl={publicUrl}
+          onClose={() => setShowQrModal(false)}
+        />
+      )}
+
     </div>
     {/* Unified Seller Bottom Navigation Bar */}
     <SellerBottomNav storeId={store.id} activeTab="setup" />

@@ -123,8 +123,6 @@ class PublicCustomerOrdersListView(APIView):
             queryset = queryset.filter(customer_phone__icontains=phone)
         elif ref_list:
             queryset = queryset.filter(reference__in=ref_list)
-        else:
-            return Response([])
 
         queryset = queryset.order_by('-created_at')[:50]
         serializer = WhatsAppOrderSerializer(queryset, many=True)

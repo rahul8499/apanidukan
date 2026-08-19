@@ -43,31 +43,37 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     document.referrer.includes('android-app://')
   )
 
-  const loadLocalOrders = () => {
+  const fetchDynamicOrders = async (phoneToQuery?: string) => {
+    setIsSyncing(true)
     try {
-      const storeRes = api.get(`/public/stores/${storeSlug}/`)
-        .then(res => setStore(res.data.data || res.data))
-        .catch(() => {})
+      const storeRes = await api.get(`/public/stores/${storeSlug}/`)
+      setStore(storeRes.data.data || storeRes.data)
+    } catch {}
 
-      const saved = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
-      setOrders(Array.isArray(saved) ? saved : [])
+    try {
+      const params: any = {}
+      if (phoneToQuery) params.phone = phoneToQuery
+
+      const res = await api.get(`/public/stores/${storeSlug}/customer-orders/`, { params })
+      const liveOrders = Array.isArray(res.data) ? res.data : []
+      setOrders(liveOrders)
     } catch {
       setOrders([])
+    } finally {
+      setIsSyncing(false)
     }
   }
 
   useEffect(() => {
-    loadLocalOrders()
+    fetchDynamicOrders()
   }, [storeSlug])
 
-  const handleClearOrders = () => {
-    try {
-      localStorage.removeItem(`qs_customer_orders_${storeSlug}`)
-      localStorage.removeItem(`qs_customer_phone_${storeSlug}`)
-    } catch {}
-    setOrders([])
-    setCustomerPhone('')
-    setPhoneInput('')
+  const handlePhoneSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!phoneInput.trim()) return
+    setCustomerPhone(phoneInput.trim())
+    setShowPhoneSync(false)
+    fetchDynamicOrders(phoneInput.trim())
   }
 
   // Filtered orders list
@@ -145,18 +151,43 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {orders.length > 0 && (
-              <button
-                onClick={handleClearOrders}
-                title="Clear All Customer Orders"
-                className="inline-flex items-center gap-1 rounded-xl border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[10.5px] font-extrabold text-rose-300 hover:bg-rose-500/20 transition-all cursor-pointer"
-              >
-                <span>🗑️ Clear History</span>
-              </button>
-            )}
+            <button
+              onClick={() => fetchDynamicOrders(customerPhone)}
+              title="Refresh Live Orders from Database"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-current hover:bg-white/20 transition-colors cursor-pointer"
+            >
+              <span className={`text-xs ${isSyncing ? 'animate-spin' : ''}`}>↻</span>
+            </button>
+            <button
+              onClick={() => setShowPhoneSync(!showPhoneSync)}
+              className="inline-flex items-center gap-1 rounded-xl border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-bold text-current hover:bg-white/20 transition-colors cursor-pointer"
+            >
+              <span>📱 Filter Phone</span>
+            </button>
             <NotificationBellHeader />
           </div>
         </div>
+
+        {/* DYNAMIC PHONE SEARCH DRAWER */}
+        {showPhoneSync && (
+          <div className="border-t border-white/10 bg-black/20 p-3">
+            <form onSubmit={handlePhoneSearchSubmit} className="mx-auto max-w-4xl flex items-center gap-2">
+              <input
+                type="tel"
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value)}
+                placeholder="Enter phone number to query database..."
+                className="flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-1.5 text-xs text-white placeholder-white/60 focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="rounded-xl bg-white text-slate-950 font-black px-4 py-1.5 text-xs hover:bg-slate-100 transition-all shrink-0 cursor-pointer"
+              >
+                {isSyncing ? 'Fetching...' : 'Query Orders'}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* SEARCH & FILTER STRIP */}
         <div className={`border-t px-3.5 py-2 ${storeTheme.sub_bar_bg_class}`}>

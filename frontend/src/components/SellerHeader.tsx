@@ -49,7 +49,8 @@ import {
   Gift,
   Truck,
   Palette,
-  Globe
+  Globe,
+  Lock
 } from 'lucide-react'
 
 interface SellerHeaderProps {
@@ -1170,14 +1171,18 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <div className="space-y-2">
               <button
                 type="button"
-                onClick={() => {
-                  setIsSettingsOpen(false)
-                  setShowCustomDomainModal(true)
-                }}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50/80 py-2.5 text-xs font-black text-indigo-700 hover:bg-indigo-100 transition-all cursor-pointer shadow-2xs"
+                disabled
+                title="Custom Domain feature is locked for now."
+                className="w-full flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-100/90 py-2.5 px-3 text-xs font-bold text-slate-400 opacity-75 cursor-not-allowed shadow-2xs"
               >
-                <Globe className="h-4 w-4 text-indigo-600" />
-                <span>Custom Domain ({store.custom_domain ? '🟢 Active' : 'Connect'})</span>
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-slate-400" />
+                  <span>Custom Domain</span>
+                </div>
+                <div className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-600 border border-amber-500/20">
+                  <Lock className="h-3 w-3 text-amber-600" />
+                  <span>Locked</span>
+                </div>
               </button>
 
               <button

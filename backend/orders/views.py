@@ -88,7 +88,7 @@ class PublicWhatsAppOrderView(APIView):
     throttle_scope = 'public_order'
 
     def post(self, request, slug):
-        store = get_object_or_404(Store, slug=slug, is_published=True)
+        store = get_object_or_404(Store, slug=slug)
         serializer = WhatsAppOrderCreateSerializer(data=request.data, context={'store': store})
         serializer.is_valid(raise_exception=True)
         order = serializer.save()

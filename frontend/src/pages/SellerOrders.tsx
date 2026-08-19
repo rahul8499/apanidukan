@@ -42,6 +42,16 @@ export default function SellerOrders() {
 
   useEffect(() => {
     load()
+    if (!storeId) return
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
+        setOrders(response.data)
+      } catch {}
+    }, 3000)
+
+    return () => clearInterval(interval)
   }, [storeId])
 
   // WebSocket Live Updates Connection

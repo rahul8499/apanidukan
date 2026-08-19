@@ -44,14 +44,30 @@ export default function SellerOrders() {
     load()
     if (!storeId) return
 
+    // Smart Adaptive Polling: Only poll if WebSockets are NOT connected AND tab is visible
     const interval = setInterval(async () => {
+      if (document.hidden || wsConnected) return // Zero HTTP calls when WebSocket is live
+
       try {
         const response = await api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
         setOrders(response.data)
       } catch {}
-    }, 3000)
+    }, 8000)
 
     return () => clearInterval(interval)
+  }, [storeId, wsConnected])
+
+  // Instant refresh when seller returns to the app tab
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!document.hidden && storeId) {
+        api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
+          .then(res => setOrders(res.data))
+          .catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [storeId])
 
   // WebSocket Live Updates Connection

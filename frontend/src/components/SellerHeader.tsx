@@ -503,89 +503,166 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
         />
       )}
 
-      {/* Slide-over Clean Premium White App Settings Sidebar Drawer */}
+      {/* Slide-over Clean Premium App Settings Sidebar Drawer */}
       <aside
-        className={`fixed top-0 right-0 z-50 h-full w-96 max-w-[92vw] bg-white text-slate-900 border-l border-slate-200/80 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 z-50 h-full w-96 max-w-[92vw] bg-slate-50 text-slate-900 border-l border-slate-200/90 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
         {/* Ultra-Premium Drawer Header with Store Identity */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 px-6 py-5 text-white border-b border-indigo-950 shadow-md">
+        <div className="relative overflow-hidden bg-slate-950 px-5 py-4.5 text-white border-b border-slate-800 shadow-md">
           {/* Subtle Ambient Glow */}
-          <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none" />
+          <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none" />
 
           <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="relative h-12 w-12 shrink-0 rounded-2xl bg-white/10 p-0.5 border border-white/20 shadow-md overflow-hidden flex items-center justify-center">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative h-11 w-11 shrink-0 rounded-2xl bg-white/10 p-0.5 border border-white/20 shadow-md overflow-hidden flex items-center justify-center">
                 {currentLogoUrl ? (
                   <img src={currentLogoUrl} alt={store.name} className="h-full w-full rounded-xl object-cover" />
                 ) : (
-                  <Store className="h-6 w-6 text-indigo-300" />
+                  <Store className="h-5 w-5 text-indigo-300" />
                 )}
                 <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-emerald-400' : 'bg-amber-400'}`} />
               </div>
 
               <div className="min-w-0">
-                <h2 className="font-black text-base text-white truncate tracking-tight">{store.name}</h2>
-                <p className="text-[10px] font-extrabold text-amber-300 truncate">Demand Dekho, Product lao, Sell Karo</p>
+                <h2 className="font-black text-sm text-white truncate tracking-tight">{store.name}</h2>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.2 rounded-full border ${
+                    store.is_published ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  }`}>
+                    {store.is_published ? '● Live Online' : '○ Draft Mode'}
+                  </span>
+                </div>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => setIsSettingsOpen(false)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white transition-colors cursor-pointer border border-white/10 shrink-0"
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white transition-colors cursor-pointer border border-white/10 shrink-0"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        {/* Drawer Content Body — Ordered Logical Sequence */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-white">
-          {/* 📱 PWA Install Card inside Settings Drawer */}
+        {/* Drawer Content Body — Organized High-Density Layout */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50">
+          
+          {/* PWA Install Button */}
           <InstallAppButton storeSlug={store?.slug} variant="drawer_item" />
 
           {message && (
-            <div className="rounded-2xl border border-teal-200 bg-teal-50 p-3.5 text-xs font-bold text-teal-900 shadow-2xs flex items-center gap-2">
+            <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-xs font-bold text-teal-900 flex items-center gap-2">
               <Zap className="h-4 w-4 text-teal-600 shrink-0" />
               <span>{message}</span>
             </div>
           )}
 
-          {/* SECTION 0: ⚡ Store Smart Automation Controls (Soundbox & Flash Sale) */}
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-slate-50 p-4 space-y-3 shadow-xs">
-            <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
-              <Zap className="h-4 w-4 text-indigo-600 animate-pulse" />
-              <span className="font-black text-xs text-slate-900 tracking-wide uppercase">Smart Dukan Controls</span>
+          {/* ⚡ SECTION 1: FAST NAVIGATION SUITE */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5 shadow-xs">
+            <p className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 px-1 flex items-center gap-1.5">
+              <FolderKanban className="h-3.5 w-3.5 text-indigo-600" />
+              <span>Workspace Modules</span>
+            </p>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              <Link
+                to={`/stores/${store.id}/orders`}
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100/70 text-indigo-700 font-bold text-xs shrink-0">
+                  🛍️
+                </div>
+                <span className="truncate">Orders</span>
+              </Link>
+
+              <Link
+                to={`/stores/${store.id}/catalog`}
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100/70 text-emerald-700 font-bold text-xs shrink-0">
+                  📦
+                </div>
+                <span className="truncate">Catalog</span>
+              </Link>
+
+              <Link
+                to={`/stores/${store.id}/requests`}
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100/70 text-amber-700 font-bold text-xs shrink-0">
+                  💡
+                </div>
+                <span className="truncate">Requests</span>
+              </Link>
+
+              <Link
+                to={`/stores/${store.id}/coupons`}
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100/70 text-rose-700 font-bold text-xs shrink-0">
+                  🏷️
+                </div>
+                <span className="truncate">Coupons</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* 🔊 SECTION 2: SMART DUKAN CONTROLS */}
+          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-purple-50/40 to-slate-50 p-3.5 space-y-2.5 shadow-xs">
+            <div className="flex items-center gap-2 border-b border-indigo-100/80 pb-2">
+              <Zap className="h-4 w-4 text-indigo-600" />
+              <span className="font-black text-xs text-slate-900 tracking-wide uppercase">Smart Operations</span>
             </div>
 
-            {/* Control 1: Hindi Voice Soundbox */}
+            {/* Hindi Voice Soundbox Toggle */}
             <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${soundboxOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
-                  {soundboxOn ? <Volume2 className="h-4.5 w-4.5 text-emerald-600" /> : <VolumeX className="h-4.5 w-4.5 text-slate-400" />}
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${soundboxOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
+                  {soundboxOn ? <Volume2 className="h-4 w-4 text-emerald-600" /> : <VolumeX className="h-4 w-4 text-slate-400" />}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-black text-slate-900 truncate">Dukan Hindi Soundbox 🔊</p>
-                  <p className="text-[10px] text-slate-500 font-semibold truncate">Bolta Order & Request Reader</p>
+                  <p className="text-xs font-black text-slate-900 truncate">Hindi Voice Soundbox 🔊</p>
+                  <p className="text-[10px] text-slate-500 font-medium truncate">Speaks live orders & requests</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={toggleSoundbox}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-600' : 'bg-slate-300'}`}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-600' : 'bg-slate-300'}`}
               >
-                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-5' : 'translate-x-0'}`} />
+                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-4' : 'translate-x-0'}`} />
               </button>
             </div>
+
+            {/* Theme & Niche Customizer */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setShowThemeModal(true)
+              }}
+              className="w-full flex items-center justify-between rounded-xl bg-white p-2.5 text-xs font-bold text-indigo-950 border border-indigo-200 hover:bg-indigo-50/60 transition-all cursor-pointer"
+            >
+              <span className="flex items-center gap-2.5">
+                <Palette className="h-4 w-4 text-indigo-600 shrink-0" />
+                <span className="font-extrabold">🎨 Store Niche Theme Customizer</span>
+              </span>
+              <span className="text-indigo-600 font-bold">➔</span>
+            </button>
           </div>
 
-          {/* SECTION 1: 🏪 Editable Store Profile & Identity */}
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-3 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-slate-200/60 pb-2.5">
+          {/* 🏪 SECTION 3: STORE PROFILE & IDENTITY */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Store Profile & Details</span>
+                <span className="font-extrabold text-xs text-slate-900">Store Profile</span>
               </div>
               <button
                 type="button"
@@ -593,113 +670,69 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 className="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
               >
                 <Edit3 className="h-3 w-3" />
-                <span>{isProfileEditing ? 'Cancel Edit' : 'Edit Profile'}</span>
+                <span>{isProfileEditing ? 'Cancel' : 'Edit'}</span>
               </button>
             </div>
 
             {isProfileEditing ? (
-              <form onSubmit={handleSaveProfile} className="space-y-3 pt-1">
+              <form onSubmit={handleSaveProfile} className="space-y-2.5">
                 <div className="flex items-center gap-3">
-                  <div className="relative h-14 w-14 shrink-0 rounded-2xl bg-slate-200 border border-slate-300 flex items-center justify-center overflow-hidden">
+                  <div className="relative h-12 w-12 shrink-0 rounded-xl bg-slate-200 border border-slate-300 flex items-center justify-center overflow-hidden">
                     {logoPreview ? (
                       <img src={logoPreview} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <Store className="h-7 w-7 text-slate-400" />
+                      <Store className="h-6 w-6 text-slate-400" />
                     )}
                     <label className="absolute inset-0 bg-slate-900/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-white">
-                      <Camera className="h-5 w-5" />
+                      <Camera className="h-4 w-4" />
                       <input type="file" accept="image/*" onChange={handleLogoSelect} className="hidden" />
                     </label>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-800">Store Logo Photo</p>
-                    <p className="text-[10px] text-slate-500">Click icon to change image</p>
+                    <p className="text-xs font-bold text-slate-800">Store Logo</p>
+                    <p className="text-[10px] text-slate-500">Tap icon to change</p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold text-slate-700">Store Name:</label>
+                  <label className="text-[10px] font-bold text-slate-700">Store Name:</label>
                   <input
                     type="text"
                     value={storeName}
                     onChange={e => setStoreName(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold text-slate-700">Store Description / Tagline:</label>
-                  <textarea
-                    value={storeDescription}
-                    onChange={e => setStoreDescription(e.target.value)}
-                    rows={2}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2 text-xs font-medium text-slate-900 focus:border-indigo-500 focus:outline-none"
-                    placeholder="Short description about your shop..."
+                  <label className="text-[10px] font-bold text-slate-700">WhatsApp Phone Number:</label>
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    placeholder="919876543210"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:border-indigo-500 focus:outline-none"
                   />
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-slate-700">Store Address (Optional):</label>
-                  <div className="relative mt-1">
-                    <MapPin className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
-                    <input
-                      type="text"
-                      value={storeAddress}
-                      onChange={e => setStoreAddress(e.target.value)}
-                      placeholder="Shop No. 12, Main Market, Mumbai"
-                      className="w-full rounded-xl border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs font-medium text-slate-900 focus:border-indigo-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-slate-700">WhatsApp Order Phone Number:</label>
-                  <div className="relative mt-1">
-                    <Phone className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
-                    <input
-                      type="text"
-                      value={phoneNumber}
-                      onChange={e => setPhoneNumber(e.target.value)}
-                      placeholder="919876543210"
-                      className="w-full rounded-xl border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs font-mono text-slate-900 focus:border-indigo-500 focus:outline-none"
-                      inputMode="tel"
-                    />
-                  </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSavingProfile}
-                  className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-2xs flex items-center justify-center gap-1.5"
+                  className="w-full rounded-xl bg-indigo-600 py-2 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1"
                 >
-                  <Check className="h-4 w-4" />
-                  <span>{isSavingProfile ? 'Saving...' : 'Save Profile Changes'}</span>
+                  <Check className="h-3.5 w-3.5" />
+                  <span>{isSavingProfile ? 'Saving...' : 'Save Profile'}</span>
                 </button>
               </form>
             ) : (
-              <div className="space-y-2 text-xs font-medium text-slate-700">
-                <div className="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-200/80">
-                  <span className="text-[11px] text-slate-500 font-bold">Store Name:</span>
+              <div className="space-y-1.5 text-xs font-medium text-slate-700">
+                <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-500 font-bold">Store Name:</span>
                   <span className="font-extrabold text-slate-900">{store.name}</span>
                 </div>
-                {store.description && (
-                  <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
-                    <span className="text-[11px] text-slate-500 font-bold block mb-0.5">Tagline:</span>
-                    <p className="text-xs text-slate-800 italic">{store.description}</p>
-                  </div>
-                )}
-                {store.address && (
-                  <div className="flex justify-between items-start bg-white p-2.5 rounded-xl border border-slate-200/80">
-                    <span className="text-[11px] text-slate-500 font-bold flex items-center gap-1 shrink-0">
-                      <MapPin className="h-3 w-3 text-indigo-600" />
-                      <span>Address:</span>
-                    </span>
-                    <span className="font-semibold text-xs text-slate-800 text-right">{store.address}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-200/80">
-                  <span className="text-[11px] text-slate-500 font-bold">Order Phone:</span>
+                <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-500 font-bold">Order Phone:</span>
                   <span className="font-mono font-bold text-slate-900">{store.whatsapp_phone || store.phone_number || 'Not set'}</span>
                 </div>
               </div>

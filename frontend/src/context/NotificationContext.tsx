@@ -42,7 +42,7 @@ function getAudioContext(): AudioContext | null {
       globalAudioCtx = new AudioContextClass()
     }
     if (globalAudioCtx.state === 'suspended') {
-      globalAudioCtx.resume().catch(() => {})
+      globalAudioCtx.resume().catch(() => { })
     }
     return globalAudioCtx
   } catch (e) {
@@ -57,7 +57,7 @@ export function playNotificationAudio(type: 'seller' | 'customer' = 'seller') {
     if (!ctx) return
 
     if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {})
+      ctx.resume().catch(() => { })
     }
 
     // Android & Mobile Chrome optimized AudioBuffer chime sound
@@ -117,7 +117,7 @@ export function speakSoundboxAlert(text: string) {
             utterance.voice = hindiVoice
           }
         }
-      } catch {}
+      } catch { }
       synth.speak(utterance)
     }
 
@@ -148,7 +148,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           const parsed = JSON.parse(saved)
           if (Array.isArray(parsed) && parsed.length > 0) return parsed
         }
-      } catch {}
+      } catch { }
     }
     return [
       {
@@ -171,7 +171,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           const parsed = JSON.parse(saved)
           if (Array.isArray(parsed) && parsed.length > 0) return parsed
         }
-      } catch {}
+      } catch { }
     }
     return [
       {
@@ -191,7 +191,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       try {
         const ctx = getAudioContext()
         if (ctx && ctx.state === 'suspended') {
-          ctx.resume().catch(() => {})
+          ctx.resume().catch(() => { })
         }
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
           window.speechSynthesis.resume()
@@ -200,7 +200,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           silentUtterance.volume = 0
           window.speechSynthesis.speak(silentUtterance)
         }
-      } catch {}
+      } catch { }
     }
 
     const events = ['click', 'touchstart', 'touchend', 'pointerdown', 'scroll']
@@ -210,7 +210,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = () => {
-        try { window.speechSynthesis.getVoices() } catch {}
+        try { window.speechSynthesis.getVoices() } catch { }
       }
     }
 
@@ -226,7 +226,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('qs_seller_notifications', JSON.stringify(sellerNotifications.slice(0, 50)))
-      } catch {}
+      } catch { }
     }
   }, [sellerNotifications])
 
@@ -235,7 +235,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('qs_customer_notifications', JSON.stringify(customerNotifications.slice(0, 50)))
-      } catch {}
+      } catch { }
     }
   }, [customerNotifications])
 
@@ -252,7 +252,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         if (Array.isArray(stores) && stores.length > 0) {
           setActiveStoreId(stores[0].id)
         }
-      }).catch(() => {})
+      }).catch(() => { })
     }
   }, [auth.user, activeStoreId])
 
@@ -310,7 +310,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             playNotificationAudio('seller')
             const custText = order.customer_name ? `${order.customer_name} se ` : ''
             const amtText = order.total ? `kul ${Number(order.total).toFixed(0)} rupaye ka ` : ''
-            speakSoundboxAlert(`QuickStore par ${custText}${amtText}naya order praapt hua.`)
+            speakSoundboxAlert(`Aapke Store par ${custText}${amtText}naya order praapt hua.`)
 
             const notifItem: AppNotification = {
               id: `order_${order.id}_${Date.now()}`,
@@ -329,7 +329,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             }
           })
         }
-      } catch {}
+      } catch { }
     }
 
     checkNewOrders()
@@ -453,7 +453,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           console.error("WS notification error:", err)
         }
       }
-    } catch {}
+    } catch { }
 
     return () => { socket?.close() }
   }, [effectiveStoreId])

@@ -22,6 +22,7 @@ class StoreSerializer(serializers.ModelSerializer):
             'delivery_flat_fee', 'delivery_per_km_fee', 'free_delivery_above',
             'delivery_estimated_time', 'pickup_instructions',
             'enable_loyalty_cashback', 'loyalty_cashback_percent', 'loyalty_min_order_amount',
+            'custom_domain', 'custom_domain_verified',
             'created_at', 'updated_at', 'settings'
         )
         read_only_fields = ('owner', 'slug', 'created_at', 'updated_at')
@@ -62,6 +63,7 @@ class PublicStoreSerializer(serializers.ModelSerializer):
             'min_delivery_order', 'delivery_radius_km', 'delivery_charge_type',
             'delivery_flat_fee', 'delivery_per_km_fee', 'free_delivery_above',
             'delivery_estimated_time', 'pickup_instructions',
-            'enable_loyalty_cashback', 'loyalty_cashback_percent', 'loyalty_min_order_amount'
+            'enable_loyalty_cashback', 'loyalty_cashback_percent', 'loyalty_min_order_amount',
+            'custom_domain', 'custom_domain_verified'
         )
 

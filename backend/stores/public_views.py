@@ -16,7 +16,7 @@ from config.websocket import broadcast_order_event_sync
 from django.http import Http404
 
 def get_public_store_or_404(request, slug):
-    store = Store.objects.filter(slug=slug).first()
+    store = Store.objects.filter(models.Q(slug=slug) | models.Q(custom_domain=slug)).first()
     if not store:
         raise Http404("Store not found")
     if not store.is_published:

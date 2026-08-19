@@ -10,6 +10,7 @@ import StorePosterModal from './StorePosterModal'
 import SellerScratchConfigModal from './SellerScratchConfigModal'
 import SellerDeliveryConfigModal from './SellerDeliveryConfigModal'
 import SellerThemeCustomizerModal from './SellerThemeCustomizerModal'
+import SellerCustomDomainModal from './SellerCustomDomainModal'
 import { ScratchCardConfig } from './CustomerScratchCardModal'
 import InstallAppButton from '../pwa/InstallAppButton'
 import { setupSellerStorePwa } from '../pwa/pwaManager'
@@ -47,7 +48,8 @@ import {
   Image as ImageIcon,
   Gift,
   Truck,
-  Palette
+  Palette,
+  Globe
 } from 'lucide-react'
 
 interface SellerHeaderProps {
@@ -64,6 +66,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [showScratchModal, setShowScratchModal] = useState(false)
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
   const [showThemeModal, setShowThemeModal] = useState(false)
+  const [showCustomDomainModal, setShowCustomDomainModal] = useState(false)
   const [storeName, setStoreName] = useState(store?.name || '')
   const [storeDescription, setStoreDescription] = useState(store?.description || '')
   const [storeAddress, setStoreAddress] = useState(store?.address || '')
@@ -1162,9 +1165,21 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             </div>
           </div>
 
-          {/* SECTION 7: 🔗 Customer Link & Logout */}
+          {/* SECTION 7: 🔗 Customer Link & Custom Domain & Logout */}
           {store.slug && (
             <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSettingsOpen(false)
+                  setShowCustomDomainModal(true)
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50/80 py-2.5 text-xs font-black text-indigo-700 hover:bg-indigo-100 transition-all cursor-pointer shadow-2xs"
+              >
+                <Globe className="h-4 w-4 text-indigo-600" />
+                <span>Custom Domain ({store.custom_domain ? '🟢 Active' : 'Connect'})</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -1285,6 +1300,17 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             if (onStoreUpdate) onStoreUpdate()
           }}
           onClose={() => setShowThemeModal(false)}
+        />
+      )}
+
+      {/* Seller Custom Domain Manager Modal */}
+      {showCustomDomainModal && store && (
+        <SellerCustomDomainModal
+          store={store}
+          onSaveSuccess={() => {
+            if (onStoreUpdate) onStoreUpdate()
+          }}
+          onClose={() => setShowCustomDomainModal(false)}
         />
       )}
     </>

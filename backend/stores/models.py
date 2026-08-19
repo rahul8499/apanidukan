@@ -63,6 +63,10 @@ class Store(models.Model):
     loyalty_cashback_percent = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('5.00'))
     loyalty_min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
 
+    # Custom Domain Mapping Configuration
+    custom_domain = models.CharField(max_length=255, unique=True, null=True, blank=True, db_index=True)
+    custom_domain_verified = models.BooleanField(default=False)
+
     visits_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)

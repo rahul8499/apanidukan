@@ -370,7 +370,19 @@ function CartContent() {
       const order = result.data
       const orderHistoryKey = `qs_customer_orders_${storeSlug}`
       const savedOrders = JSON.parse(localStorage.getItem(orderHistoryKey) || '[]')
-      const entry = { reference: order.reference, total: finalTotal, status: order.status, created_at: order.created_at }
+      const entry = {
+        reference: order.reference,
+        total: finalTotal,
+        status: order.status,
+        created_at: order.created_at,
+        order_type: orderType,
+        delivery_fee: order.delivery_fee || 0,
+        customer_name: trimmedName,
+        customer_phone: trimmedPhone,
+        items: (order.items && order.items.length > 0)
+          ? order.items
+          : cart.items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, image: i.image }))
+      }
       localStorage.setItem(orderHistoryKey, JSON.stringify([entry, ...savedOrders.filter((item: any) => item.reference !== order.reference)].slice(0, 30)))
       const paymentLabel = order.payment_type === 'ONLINE' ? 'Online Payment' : 'COD'
       const fulfillmentLabel = orderType === 'STORE_PICKUP' ? '🏪 Walk-in Store Pickup' : '🚚 Home Delivery'

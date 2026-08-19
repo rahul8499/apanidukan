@@ -47,7 +47,34 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     // Load order history saved on this device
     try {
       const saved = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
-      setOrders(Array.isArray(saved) ? saved : [])
+      const initialOrders = Array.isArray(saved) ? saved : []
+      setOrders(initialOrders)
+
+      // Auto fetch item details for any order missing item list
+      if (initialOrders.length > 0) {
+        let hasMissing = false
+        const promises = initialOrders.map(async (o: any) => {
+          if (!o.items || !Array.isArray(o.items) || o.items.length === 0 || !o.items[0]?.image) {
+            try {
+              const res = await api.get(`/public/stores/${storeSlug}/orders/${o.reference}/`)
+              if (res.data && res.data.items) {
+                hasMissing = true
+                return { ...o, ...res.data }
+              }
+            } catch {}
+          }
+          return o
+        })
+
+        Promise.all(promises).then(enriched => {
+          if (hasMissing) {
+            setOrders(enriched)
+            try {
+              localStorage.setItem(`qs_customer_orders_${storeSlug}`, JSON.stringify(enriched))
+            } catch {}
+          }
+        })
+      }
     } catch {
       setOrders([])
     }
@@ -230,23 +257,48 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                   <div className="p-3.5 sm:p-4 space-y-3">
                     
                     <div className="flex items-start gap-3">
-                      {/* Product Thumbnail / Icon */}
-                      <div className="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-xl bg-black/5 dark:bg-white/5 border border-current/10 overflow-hidden p-1">
-                        {firstItem?.image ? (
-                          <img
-                            src={mediaUrl(firstItem.image)}
-                            alt={firstItem.name || 'Product'}
-                            className="h-full w-full object-contain"
-                          />
+                      {/* Product Thumbnail Gallery / Multi-Item Strip */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 shrink-0 max-w-[160px] sm:max-w-[220px]">
+                        {itemsList.length > 0 ? (
+                          itemsList.slice(0, 3).map((item: any, idx: number) => {
+                            const imgPath = item.image || item.product_image || item.product?.image
+                            return (
+                              <div
+                                key={idx}
+                                className="relative flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden p-1 shadow-2xs"
+                              >
+                                {imgPath ? (
+                                  <img
+                                    src={mediaUrl(imgPath)}
+                                    alt={item.name || 'Product'}
+                                    className="h-full w-full object-contain"
+                                    onError={(e) => {
+                                      // Fallback on broken image
+                                      (e.target as HTMLElement).style.display = 'none'
+                                    }}
+                                  />
+                                ) : (
+                                  <Package className="h-6 w-6 text-slate-400" />
+                                )}
+                                {item.quantity > 1 && (
+                                  <span className="absolute bottom-0.5 right-0.5 bg-black/80 text-white font-black text-[9px] px-1 py-0.2 rounded">
+                                    x{item.quantity}
+                                  </span>
+                                )}
+                              </div>
+                            )
+                          })
                         ) : (
-                          <Package className="h-7 w-7 opacity-60" />
+                          <div className="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                            <Package className="h-6 w-6 text-slate-400" />
+                          </div>
                         )}
                       </div>
 
                       {/* Items Details */}
                       <div className="flex-1 min-w-0 space-y-1">
                         <h3 className={`text-xs sm:text-sm font-extrabold ${storeTheme.text_primary_class} truncate`}>
-                          {firstItem?.name || `Order #${order.reference}`}
+                          {itemsList.map((i: any) => i.name).filter(Boolean).join(', ') || `Order #${order.reference}`}
                         </h3>
 
                         {itemsList.length > 1 && (

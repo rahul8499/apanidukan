@@ -949,122 +949,140 @@ function Storefront() {
                   return (
                     <div
                       key={p.id}
-                      className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border ${storeTheme.card_bg_class} transition-all duration-200`}
+                      className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 ${
+                        storeTheme.is_dark_mode 
+                          ? 'bg-slate-900/90 border-slate-800/90 hover:border-slate-700 hover:shadow-indigo-500/10' 
+                          : 'bg-white border-slate-200/90 hover:border-indigo-200 hover:shadow-slate-300/40 shadow-2xs'
+                      }`}
                     >
                       <Link to={`/store/${storeSlug}/product/${p.slug}`} className="block relative">
-                        {/* Single Deal Overlay Badge (BOGO > Product Special > General Discount) */}
+                        {/* Real-App Ultra Deal Overlay Badges */}
                         {primaryCoupon && (
-                          <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-1 max-w-[90%] pointer-events-none">
+                          <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 max-w-[92%] pointer-events-none">
                             <span
-                              className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white shadow-md border ${
+                              className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[9px] sm:text-[10px] font-black text-white shadow-lg backdrop-blur-xs border ${
                                 primaryCoupon.discount_type === 'BOGO'
-                                  ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 border-purple-300 animate-pulse'
+                                  ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 border-purple-300/80 shadow-purple-600/30 animate-pulse'
                                   : primaryCoupon.discount_type === 'FREE_DELIVERY'
-                                  ? 'bg-sky-600 border-sky-300'
+                                  ? 'bg-gradient-to-r from-sky-600 to-blue-600 border-sky-300/80 shadow-sky-500/20'
                                   : (primaryCoupon.product_id || primaryCoupon.product_name)
-                                  ? 'bg-amber-600 border-amber-300'
-                                  : 'bg-emerald-600 border-emerald-300'
+                                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 border-amber-300/80 shadow-amber-500/30'
+                                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400/80 shadow-emerald-600/30'
                               }`}
                             >
-                              <Tag className="h-2.5 w-2.5" />
-                              {primaryCoupon.discount_type === 'BOGO' ? (
-                                <span>🎁 BUY 1 GET 1 FREE</span>
-                              ) : primaryCoupon.discount_type === 'FREE_DELIVERY' ? (
-                                <span>🚚 FREE SHIPPING</span>
-                              ) : primaryCoupon.discount_type === 'PERCENTAGE' ? (
-                                <span>🎟️ {primaryCoupon.discount_value}% OFF {(primaryCoupon.product_id || primaryCoupon.product_name) ? '(Special)' : ''}</span>
-                              ) : (
-                                <span>🎟️ FLAT ₹{primaryCoupon.discount_value} OFF {(primaryCoupon.product_id || primaryCoupon.product_name) ? '(Special)' : ''}</span>
-                              )}
+                              <Tag className="h-2.5 w-2.5 shrink-0" />
+                              <span className="truncate">
+                                {primaryCoupon.discount_type === 'BOGO' ? (
+                                  '🎁 BUY 1 GET 1 FREE'
+                                ) : primaryCoupon.discount_type === 'FREE_DELIVERY' ? (
+                                  '🚚 FREE SHIPPING'
+                                ) : primaryCoupon.discount_type === 'PERCENTAGE' ? (
+                                  `⚡ ${primaryCoupon.discount_value}% OFF`
+                                ) : (
+                                  `⚡ FLAT ₹${primaryCoupon.discount_value} OFF`
+                                )}
+                              </span>
                             </span>
 
                             {extraOffersCount > 0 && (
-                              <span className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black text-amber-950 bg-amber-300 border border-amber-400 shadow-xs w-max">
+                              <span className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8.5px] font-black text-slate-950 bg-gradient-to-r from-amber-300 to-amber-400 border border-amber-300 shadow-sm w-max">
                                 +{extraOffersCount} More {extraOffersCount === 1 ? 'Offer' : 'Offers'}
                               </span>
                             )}
                           </div>
                         )}
 
-                        {/* Image Box */}
-                        <div className={`relative flex aspect-[5/4] sm:aspect-square w-full items-center justify-center p-1.5 sm:p-2 overflow-hidden transition-all ${
-                          storeTheme.is_dark_mode ? 'bg-slate-950/60 group-hover:bg-slate-950/90' : 'bg-slate-50/80 group-hover:bg-slate-100'
+                        {/* Image Showcase Container */}
+                        <div className={`relative flex aspect-[5/4] sm:aspect-square w-full items-center justify-center p-2 overflow-hidden transition-all ${
+                          storeTheme.is_dark_mode ? 'bg-slate-950/50 group-hover:bg-slate-950/80' : 'bg-slate-50/90 group-hover:bg-slate-100/80'
                         }`}>
                           {p.image ? (
                             <img
                               src={mediaUrl(p.image)}
                               alt={p.name}
-                              className="h-full w-full object-contain p-0.5 group-hover:scale-105 transition-transform"
+                              className="h-full w-full object-contain p-1 group-hover:scale-108 transition-transform duration-300"
                             />
                           ) : (
-                            <span className="text-3xl sm:text-4xl">🛍️</span>
+                            <span className="text-4xl">🛍️</span>
                           )}
 
                           {isOutOfStock && (
-                            <div className="absolute inset-0 bg-slate-950/70 flex items-center justify-center">
-                              <span className="bg-rose-600 text-white font-black text-[9px] uppercase px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full shadow tracking-wider">
-                                Out of Stock
+                            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center">
+                              <span className="bg-rose-600 text-white font-black text-[9px] uppercase px-3 py-1 rounded-full shadow-lg tracking-widest border border-rose-400/40">
+                                Sold Out
                               </span>
                             </div>
                           )}
                         </div>
 
-                        {/* Title & Pricing */}
-                        <div className="p-2 sm:p-2.5 pb-1 space-y-0.5 sm:space-y-1">
-                          <h3 className={`line-clamp-2 text-[11px] sm:text-xs font-extrabold ${storeTheme.text_primary_class} transition-colors leading-tight`}>
+                        {/* Title & Pricing Box */}
+                        <div className="p-2.5 pb-1 space-y-1">
+                          <h3 className={`line-clamp-2 text-xs font-extrabold ${storeTheme.text_primary_class} transition-colors leading-tight min-h-[32px]`}>
                             {p.name}
                           </h3>
 
-                          <div className="flex items-baseline gap-1 pt-0.5">
-                            <span className={`text-xs sm:text-sm font-black ${storeTheme.text_primary_class}`}>
-                              ₹{p.price}
-                            </span>
+                          <div className="flex items-center justify-between gap-1 pt-1">
+                            <div className="flex items-baseline gap-1.5 min-w-0">
+                              <span className={`text-sm sm:text-base font-black ${storeTheme.text_primary_class}`}>
+                                ₹{p.price}
+                              </span>
+                              {mockMrp && mockMrp > p.price && (
+                                <span className="text-[10px] font-semibold text-slate-400 line-through">
+                                  ₹{mockMrp}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Savings percentage tag */}
                             {mockMrp && mockMrp > p.price && (
-                              <span className="text-[9px] sm:text-[10px] font-medium text-slate-400 line-through">
-                                ₹{mockMrp}
+                              <span className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md shrink-0">
+                                {Math.round(((mockMrp - p.price) / mockMrp) * 100)}% OFF
                               </span>
                             )}
                           </div>
 
                           {p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) > 0 && Number(p.stock_quantity) <= 5 && (
-                            <p className="text-[9px] font-bold text-amber-500">
-                              🔥 Only {p.stock_quantity} left
-                            </p>
+                            <div className="flex items-center gap-1 pt-0.5">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
+                              <p className="text-[9.5px] font-bold text-amber-500">
+                                Only {p.stock_quantity} left in stock
+                              </p>
+                            </div>
                           )}
                         </div>
                       </Link>
 
-                      {/* Quantity Controller / Action Add Button */}
-                      <div className="p-1.5 sm:p-2 pt-0.5 sm:pt-1">
+                      {/* Real-App Action Stepper / Add Button (Blinkit / Swiggy Style) */}
+                      <div className="p-2 pt-1">
                         {cartItem ? (
                           <div
-                            className="flex items-center justify-between rounded-lg p-0.5 text-white shadow-xs"
+                            className="flex items-center justify-between rounded-xl p-1 text-white shadow-md transition-all"
                             style={{ backgroundColor: storeTheme.primary_color }}
                           >
                             <button
                               type="button"
                               onClick={() => cart.change(p.id, cartItem.quantity - 1)}
-                              className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded bg-black/20 hover:bg-black/40 font-bold active:scale-95 cursor-pointer"
+                              className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/25 hover:bg-black/40 font-black text-sm active:scale-90 transition-transform cursor-pointer"
                             >
-                              <Minus className="h-3 w-3" />
+                              <Minus className="h-3.5 w-3.5" />
                             </button>
-                            <span className="font-black text-xs px-1">{cartItem.quantity}</span>
+                            <span className="font-black text-xs px-2">{cartItem.quantity}</span>
                             <button
                               type="button"
                               onClick={() => cart.change(p.id, cartItem.quantity + 1)}
-                              className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded bg-black/20 hover:bg-black/40 font-bold active:scale-95 cursor-pointer"
+                              className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/25 hover:bg-black/40 font-black text-sm active:scale-90 transition-transform cursor-pointer"
                             >
-                              <Plus className="h-3 w-3" />
+                              <Plus className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         ) : (
                           <button
                             disabled={isOutOfStock}
                             onClick={() => cart.add({ id: p.id, slug: p.slug, name: p.name, price: p.price, image: p.image })}
-                            className={`flex w-full items-center justify-center gap-1 rounded-lg bg-gradient-to-r ${storeTheme.btn_gradient} py-1 sm:py-1.5 text-[11px] sm:text-xs font-black text-white shadow-xs disabled:opacity-50 transition-all cursor-pointer`}
+                            className={`flex w-full items-center justify-center gap-1 rounded-xl py-1.5 text-xs font-black text-white shadow-sm disabled:opacity-40 transition-all cursor-pointer active:scale-95 bg-gradient-to-r ${storeTheme.btn_gradient}`}
                           >
-                            <Plus className="h-3 w-3" />
-                            <span>{isOutOfStock ? 'Out of Stock' : 'Add'}</span>
+                            <Plus className="h-3.5 w-3.5" />
+                            <span>{isOutOfStock ? 'Out of Stock' : 'ADD'}</span>
                           </button>
                         )}
                       </div>

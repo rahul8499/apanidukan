@@ -932,8 +932,11 @@ function Storefront() {
                   })
 
                   const storewideCoupons = storeCoupons.filter((c: any) => !c.product_id && !c.product_name)
-                  const displayCoupons = productCoupons.length > 0 ? productCoupons : storewideCoupons.slice(0, 2)
-                  const mockMrp = displayCoupons.length > 0 ? null : Math.round(Number(p.price) * 1.25)
+                  // Combine product-specific coupons AND storewide coupons (all apply to this item!)
+                  const allApplicableCoupons = [...productCoupons, ...storewideCoupons]
+                  const displayCoupons = allApplicableCoupons.slice(0, 2)
+                  const remainingCount = allApplicableCoupons.length - displayCoupons.length
+                  const mockMrp = allApplicableCoupons.length > 0 ? null : Math.round(Number(p.price) * 1.25)
 
                   return (
                     <div
@@ -942,11 +945,12 @@ function Storefront() {
                     >
                       <Link to={`/store/${storeSlug}/product/${p.slug}`} className="block relative">
                         {/* Deal Overlay Badges (All active product & storewide offers) */}
-                        {displayCoupons.length > 0 && (
-                          <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-1 max-w-[88%]">
+                        {allApplicableCoupons.length > 0 && (
+                          <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-1 max-w-[90%] pointer-events-none">
                             {displayCoupons.map((c: any) => {
                               const isBogo = c.discount_type === 'BOGO'
                               const isFreeDel = c.discount_type === 'FREE_DELIVERY'
+                              const isProductSpecific = Boolean(c.product_id || c.product_name)
                               return (
                                 <span
                                   key={c.id || c.code}
@@ -955,6 +959,8 @@ function Storefront() {
                                       ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 border-purple-300 animate-pulse'
                                       : isFreeDel
                                       ? 'bg-sky-600 border-sky-300'
+                                      : isProductSpecific
+                                      ? 'bg-amber-600 border-amber-300'
                                       : 'bg-emerald-600 border-emerald-300'
                                   }`}
                                 >
@@ -964,13 +970,18 @@ function Storefront() {
                                   ) : isFreeDel ? (
                                     <span>🚚 FREE SHIPPING</span>
                                   ) : c.discount_type === 'PERCENTAGE' ? (
-                                    <span>🎟️ {c.discount_value}% OFF</span>
+                                    <span>🎟️ {c.discount_value}% OFF {isProductSpecific ? '(Special)' : ''}</span>
                                   ) : (
-                                    <span>🎟️ FLAT ₹{c.discount_value} OFF</span>
+                                    <span>🎟️ FLAT ₹{c.discount_value} OFF {isProductSpecific ? '(Special)' : ''}</span>
                                   )}
                                 </span>
                               )
                             })}
+                            {remainingCount > 0 && (
+                              <span className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black text-amber-950 bg-amber-300 border border-amber-400 shadow-sm w-max">
+                                +{remainingCount} More {remainingCount === 1 ? 'Offer' : 'Offers'} Available
+                              </span>
+                            )}
                           </div>
                         )}
 

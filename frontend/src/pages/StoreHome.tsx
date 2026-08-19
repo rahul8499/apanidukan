@@ -1009,7 +1009,7 @@ function Storefront() {
                           {isOutOfStock && (
                             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center">
                               <span className="bg-rose-600 text-white font-black text-[9px] uppercase px-3 py-1 rounded-full shadow-lg tracking-widest border border-rose-400/40">
-                                Sold Out
+                                Out of Stock
                               </span>
                             </div>
                           )}

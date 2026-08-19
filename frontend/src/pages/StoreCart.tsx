@@ -1079,7 +1079,7 @@ function CartContent() {
                 : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500'
                 }`}
             >
-              <span>{isStandalone ? '📲 Order on WhatsApp' : 'Order Now ↗'}</span>
+              <span>{isStandalone ? '📲 Order Now' : 'Order Now ↗'}</span>
               <ChevronRight className="h-2.5 w-2.5" />
             </button>
           </div>

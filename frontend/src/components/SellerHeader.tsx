@@ -915,25 +915,6 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <span>Seller Navigation & Marketing Tools</span>
             </p>
 
-            {/* Store Niche & Theme Customizer Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSettingsOpen(false)
-                setShowThemeModal(true)
-              }}
-              className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-indigo-500/15 via-purple-500/15 to-pink-500/10 p-3 text-xs font-black text-indigo-950 border border-indigo-300/80 hover:bg-indigo-500/25 hover:border-indigo-400 transition-all shadow-2xs cursor-pointer text-left"
-            >
-              <span className="flex items-center gap-3">
-                <Palette className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
-                <div>
-                  <span className="block">🎨 Store Niche & Theme Customizer</span>
-                  <span className="text-[10px] text-slate-500 font-semibold block">Kirana, Car Dealership, Bikes, Sports & 8+ Themes</span>
-                </div>
-              </span>
-              <span className="text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </button>
-
             {/* AI WhatsApp Status Poster Button */}
             <button
               type="button"
@@ -999,66 +980,68 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             </Link>
           </div>
 
-          {/* SECTION 3: ⚙️ Store Preferences & Visibility */}
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-3 shadow-2xs">
-            {/* Manage in App Mode Segmented Control */}
-            <div className="space-y-2.5">
+          {/* SECTION 4: ⚙️ STORE PREFERENCES & VISIBILITY */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
+                    <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-600" />
                     <span>Manage in App Mode</span>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black ${store.manage_in_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'
-                      }`}>
-                      {store.manage_in_app ? 'ACTIVE (ON)' : 'DISABLED (OFF)'}
-                    </span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-medium">Real-time Order Processing System</p>
+                  <p className="text-[10px] text-slate-500 font-medium">Order processing system mode</p>
                 </div>
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black ${
+                  store.manage_in_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'
+                }`}>
+                  {store.manage_in_app ? 'APP SYSTEM (ON)' : 'WHATSAPP (OFF)'}
+                </span>
               </div>
 
-              {/* Explicit ON / OFF Action Button Group */}
-              <div className="grid grid-cols-2 gap-1.5 bg-slate-200/80 p-1 rounded-xl border border-slate-200/90">
+              {/* Segmented Control Pill */}
+              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => toggleManageInApp(true)}
-                  className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${store.manage_in_app
-                      ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 border border-emerald-500'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                    }`}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    store.manage_in_app
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
                 >
-                  <span>🟢 ON</span>
-                  <span className="text-[10px] font-extrabold opacity-90">(App System)</span>
+                  <span>🟢 App System</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => toggleManageInApp(false)}
-                  className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${!store.manage_in_app
-                      ? 'bg-slate-800 text-white shadow-sm border border-slate-700'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                    }`}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    !store.manage_in_app
+                      ? 'bg-slate-800 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
                 >
-                  <span>⚪ OFF</span>
-                  <span className="text-[10px] font-extrabold opacity-90">(WhatsApp)</span>
+                  <span>⚪ WhatsApp Direct</span>
                 </button>
               </div>
 
-              <p className="text-[11px] text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200 leading-relaxed font-medium">
+              <p className="text-[10.5px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-snug font-medium">
                 {store.manage_in_app
-                  ? '🟢 ON Mode: Orders store system mein process hote hain with real-time status tracking & notifications.'
-                  : '⚪ OFF Mode: Customers direct aapke WhatsApp number par order send karte hain.'}
+                  ? '🟢 Orders process inside store system with live status tracking & voice alerts.'
+                  : '⚪ Customers order directly via WhatsApp messages.'}
               </p>
             </div>
 
-            <div className="flex items-center justify-between border-t border-slate-200/60 pt-3">
+            <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
               <span className="text-xs font-bold text-slate-900">Store Visibility:</span>
               <button
                 type="button"
                 onClick={handleLiveToggleClick}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black cursor-pointer transition-all shadow-xs ${store.is_published
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black cursor-pointer transition-all shadow-2xs ${
+                  store.is_published
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200'
-                    : 'bg-gradient-to-r from-amber-500 to-emerald-600 text-white border border-emerald-400 hover:from-amber-600 hover:to-emerald-700 shadow-md animate-pulse'
-                  }`}
+                    : 'bg-emerald-600 text-white border border-emerald-500 hover:bg-emerald-700 shadow-xs'
+                }`}
               >
                 {store.is_published ? (
                   <>
@@ -1075,47 +1058,45 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             </div>
           </div>
 
-          {/* SECTION 4: 🔔 Real-Time Web Push & PWA Notifications Toggle */}
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-3 shadow-2xs">
+          {/* SECTION 5: 🔔 REAL-TIME PUSH ALERTS */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
-                  <Bell className="h-4 w-4 text-indigo-600" />
-                  <span>Real-Time Push Alerts</span>
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
-                    }`}>
-                    {notificationPermission === 'granted' ? 'ACTIVE (ON)' : 'DISABLED (OFF)'}
-                  </span>
-                </h3>
-                <p className="text-[11px] text-slate-500 font-medium">Instant alerts on Mobile App (PWA) & Browser</p>
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-indigo-600" />
+                <span className="font-extrabold text-xs text-slate-900">Real-Time Push Alerts</span>
               </div>
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${
+                notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+              }`}>
+                {notificationPermission === 'granted' ? 'ACTIVE' : 'DISABLED'}
+              </span>
             </div>
 
-            <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 gap-2">
-              <div className="text-[11px] text-slate-700 font-medium leading-relaxed">
+            <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-100 gap-2">
+              <p className="text-[10.5px] text-slate-600 font-medium leading-snug">
                 {notificationPermission === 'granted'
-                  ? '✅ Push notifications active hain. Instant order & stock alerts milenge.'
-                  : '⚠️ Notifications disabled hain. Browser push permission enable karein.'}
-              </div>
+                  ? 'Instant alerts enabled for PWA App & Browser.'
+                  : 'Enable push alerts for order notifications.'}
+              </p>
 
               {notificationPermission !== 'granted' ? (
                 <button
                   type="button"
                   onClick={requestNotificationPermission}
-                  className="shrink-0 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-xs"
+                  className="shrink-0 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-2xs"
                 >
-                  Enable Alerts 🔔
+                  Enable 🔔
                 </button>
               ) : (
-                <span className="shrink-0 text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                <span className="shrink-0 text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
                   Active ✓
                 </span>
               )}
             </div>
           </div>
 
-          {/* SECTION 5: 💳 Active Subscription & Razorpay Billing Card */}
-          <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-4 space-y-3 shadow-md text-white">
+          {/* SECTION 6: 💳 ACTIVE SUBSCRIPTION */}
+          <div className="rounded-2xl border border-indigo-500/30 bg-slate-950 p-3.5 space-y-2.5 shadow-md text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Crown className="h-4 w-4 text-amber-400" />
@@ -1125,76 +1106,63 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 {subStatus?.plan_name || 'BASIC'} PLAN
               </span>
             </div>
-            <p className="text-[11px] text-slate-300 font-medium leading-relaxed">
-              {subStatus?.plan_name === 'PREMIUM'
-                ? '⭐ Premium Store Active: Executive Audit Reports & Multi-Admin Access'
-                : 'Standard Store Active. Upgrade to Premium for Executive Audit PDF & Priority Support.'}
-            </p>
             <Link
               to={`/stores/${store.id}/subscription`}
               onClick={() => setIsSettingsOpen(false)}
-              className="w-full flex items-center justify-between rounded-xl bg-indigo-600/60 hover:bg-indigo-600 border border-indigo-500/40 p-2.5 text-xs font-black text-white transition-all shadow-xs"
+              className="w-full flex items-center justify-between rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 p-2.5 text-xs font-bold text-white transition-all shadow-2xs"
             >
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-teal-300" />
-                <span>Manage Subscription & Receipts</span>
+                <span>Manage Plan & Receipts</span>
               </div>
               <span className="text-[10px] font-extrabold text-teal-300">Open ➔</span>
             </Link>
           </div>
 
-          {/* SECTION 6: 🎧 Platform & Technical Support */}
-          <div className="rounded-2xl border border-indigo-200 bg-indigo-50/80 p-4 space-y-3 shadow-2xs">
+          {/* SECTION 7: 🎧 PLATFORM TECHNICAL SUPPORT */}
+          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3.5 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <HelpCircle className="h-4.5 w-4.5 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Platform & Technical Support</span>
+                <HelpCircle className="h-4 w-4 text-indigo-600" />
+                <span className="font-extrabold text-xs text-slate-900">Technical Support</span>
               </div>
               <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-black text-white">24/7 LIVE</span>
             </div>
 
-            <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-              Store management, PWA app, domain, catalog sync, or payment integration help ke liye platform support se contact karein:
-            </p>
-
-            {/* Direct Contact Options */}
-            <div className="space-y-2 bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs">
-              {/* Email Launcher */}
+            <div className="space-y-1.5 pt-0.5">
               <a
                 href="mailto:rahulkolhe90.rk.kr@gmail.com"
-                className="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-indigo-50/60 transition-all text-xs font-bold text-slate-800"
+                className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-indigo-50/80 border border-slate-100 transition-all text-xs font-bold text-slate-800"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <Mail className="h-4 w-4 text-indigo-600 shrink-0" />
-                  <span className="truncate">rahulkolhe90.rk.kr@gmail.com</span>
+                  <Mail className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                  <span className="truncate">Email Support</span>
                 </div>
-                <span className="text-[10px] text-indigo-600 font-black shrink-0">EMAIL ↗</span>
+                <span className="text-[9.5px] text-indigo-600 font-extrabold shrink-0">Send Email ↗</span>
               </a>
 
-              {/* Phone Launcher */}
               <a
                 href="tel:7796216506"
-                className="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-emerald-50/60 transition-all text-xs font-bold text-slate-800"
+                className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-emerald-50/80 border border-slate-100 transition-all text-xs font-bold text-slate-800"
               >
                 <div className="flex items-center gap-2">
-                  <PhoneCall className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span>+91 7796216506</span>
+                  <PhoneCall className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span>Call Support (+91 7796216506)</span>
                 </div>
-                <span className="text-[10px] text-emerald-600 font-black">CALL 📞</span>
+                <span className="text-[9.5px] text-emerald-600 font-extrabold">Call 📞</span>
               </a>
 
-              {/* WhatsApp Direct Chat Launcher */}
               <a
                 href="https://wa.me/917796216506?text=Hi%20QuickStore%20Support,%20I%20need%20technical%20help%20with%20my%20store."
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-between p-2 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 transition-all text-xs font-black text-[#075E54]"
+                className="flex items-center justify-between p-2 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 transition-all text-xs font-extrabold text-[#075E54]"
               >
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-[#25D366] shrink-0" />
-                  <span>WhatsApp Support Chat</span>
+                  <MessageSquare className="h-3.5 w-3.5 text-[#25D366] shrink-0" />
+                  <span>WhatsApp Live Chat</span>
                 </div>
-                <span className="text-[10px] bg-[#25D366] text-white px-2 py-0.5 rounded font-black">CHAT ➔</span>
+                <span className="text-[9.5px] bg-[#25D366] text-white px-2 py-0.5 rounded-md font-black">Chat ➔</span>
               </a>
             </div>
           </div>

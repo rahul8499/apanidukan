@@ -74,17 +74,20 @@ export function updateDynamicManifest({
 /**
  * Configure Customer-Specific Store PWA Manifest
  */
-export function setupCustomerStorePwa(store: { name: string; slug: string; logo?: string }) {
+export function setupCustomerStorePwa(store: { id?: string | number; name: string; slug: string; logo?: string }) {
   if (!store?.slug) return
 
   localStorage.setItem('multistore-installed-store', store.slug)
+  if (store.id) {
+    localStorage.setItem('multistore-installed-store-id', String(store.id))
+  }
   localStorage.setItem('multistore-installed-type', 'customer')
 
   updateDynamicManifest({
     name: `${store.name || 'Store'} - Shopping`,
     shortName: store.name || 'Store',
     description: `Shop online directly from ${store.name} with express delivery and COD.`,
-    startUrl: `/store/${store.slug}`,
+    startUrl: `/s/${store.slug}`,
     themeColor: '#020617',
     backgroundColor: '#ffffff',
     iconUrl: store.logo || '/icons/multistore-icon.svg',
@@ -105,6 +108,21 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
     shortName: 'Seller Hub',
     description: 'Manage store orders, catalog, coupons & customer chats in real-time.',
     startUrl: `/stores/${store.id}/orders`,
+    themeColor: '#0f172a',
+    backgroundColor: '#0f172a',
+    iconUrl: '/icons/multistore-icon.svg',
+  })
+}
+
+/**
+ * Reset PWA Manifest to Generic Platform Start
+ */
+export function resetGenericPlatformPwa() {
+  updateDynamicManifest({
+    name: 'QuickStore Platform',
+    shortName: 'QuickStore',
+    description: 'Create and launch your online store in seconds.',
+    startUrl: '/start',
     themeColor: '#0f172a',
     backgroundColor: '#0f172a',
     iconUrl: '/icons/multistore-icon.svg',

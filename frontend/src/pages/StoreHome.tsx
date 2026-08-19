@@ -103,7 +103,7 @@ function Storefront() {
 
   const { setActiveStoreId } = useNotifications()
 
-  useEffect(() => {
+  const fetchStoreData = () => {
     if (!storeSlug) return
     setLoading(true)
     api.get(`/public/stores/${storeSlug}/`)
@@ -112,6 +112,7 @@ function Storefront() {
         setStore(data)
         if (data) {
           setupCustomerStorePwa(data)
+          localStorage.setItem('multistore-installed-store-validated', 'true')
         }
         if (data?.id) {
           setActiveStoreId(data.id)
@@ -130,6 +131,19 @@ function Storefront() {
     api.get(`/public/stores/${storeSlug}/products/`).then(res => setProducts(res.data)).catch(() => { })
     api.get(`/public/stores/${storeSlug}/categories/`).then(res => setCategories(res.data)).catch(() => { })
     api.get(`/public/stores/${storeSlug}/coupons/`).then(res => setStoreCoupons(Array.isArray(res.data) ? res.data : [])).catch(() => { })
+  }
+
+  useEffect(() => {
+    fetchStoreData()
+
+    const handleOnline = () => {
+      fetchStoreData()
+    }
+
+    window.addEventListener('online', handleOnline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+    }
   }, [storeSlug])
 
   const [storeCoupons, setStoreCoupons] = useState<any[]>([])

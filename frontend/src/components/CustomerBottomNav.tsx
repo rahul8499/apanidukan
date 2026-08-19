@@ -22,9 +22,9 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
   }, [storeSlug])
 
   const tabs = [
-    { key: 'home', label: 'Home', icon: Home, path: `/store/${storeSlug}` },
-    { key: 'cart', label: 'Cart', icon: ShoppingCart, path: `/store/${storeSlug}/cart`, badge: cart.count },
-    { key: 'orders', label: 'Orders', icon: PackageCheck, path: `/store/${storeSlug}/orders` },
+    { key: 'home', label: 'Home', icon: Home, path: `/s/${storeSlug}` },
+    { key: 'cart', label: 'Cart', icon: ShoppingCart, path: `/s/${storeSlug}/cart`, badge: cart.count },
+    { key: 'orders', label: 'Orders', icon: PackageCheck, path: `/s/${storeSlug}/orders` },
   ]
 
   const primaryCol = storeTheme?.primary_color || '#6366f1'

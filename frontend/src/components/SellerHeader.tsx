@@ -453,7 +453,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               {/* Customer Storefront Preview Button */}
               {store.slug && (
                 <Link
-                  to={`/store/${store.slug}`}
+                  to={`/s/${store.slug}`}
                   target="_blank"
                   className="flex h-7 w-7 sm:h-8 sm:w-auto items-center justify-center gap-1 rounded-lg border border-teal-500/40 bg-teal-500/10 sm:px-2 text-xs font-black text-teal-300 hover:bg-teal-500/20 transition-all cursor-pointer"
                   title="Preview Storefront"
@@ -1177,7 +1177,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               </button>
 
               <Link
-                to={`/store/${store.slug}`}
+                to={`/s/${store.slug}`}
                 target="_blank"
                 className="w-full flex items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 py-2.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all shadow-2xs"
               >
@@ -1242,7 +1242,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       {showQrModal && store && (
         <StoreQrStandeeModal
           store={store}
-          publicUrl={`${window.location.origin}/store/${store.slug}`}
+          publicUrl={`${window.location.origin}/s/${store.slug}`}
           onClose={() => setShowQrModal(false)}
         />
       )}
@@ -1251,7 +1251,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       {showPosterModal && store && (
         <StorePosterModal
           store={store}
-          publicUrl={`${window.location.origin}/store/${store.slug}`}
+          publicUrl={`${window.location.origin}/s/${store.slug}`}
           onClose={() => setShowPosterModal(false)}
         />
       )}

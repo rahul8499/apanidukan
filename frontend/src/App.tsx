@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
-import { useAuth } from './context/AuthContext'
+import { useAuth, AuthProvider } from './context/AuthContext'
+import { NotificationProvider } from './context/NotificationContext'
+import { resetGenericPlatformPwa } from './pwa/pwaManager'
 import StoreHome from './pages/StoreHome'
 import ProductPage from './pages/ProductPage'
 import Login from './pages/Login'
@@ -29,8 +31,6 @@ import SellerAnalytics from './pages/SellerAnalytics'
 import SellerCatalog from './pages/SellerCatalog'
 import SellerSubscription from './pages/SellerSubscription'
 import SellerCoupons from './pages/SellerCoupons'
-import { AuthProvider } from './context/AuthContext'
-import { NotificationProvider } from './context/NotificationContext'
 
 class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
   constructor(props: any) {
@@ -84,45 +84,44 @@ class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode },
   }
 }
 
-export default function App() {
-  return (
-    <GlobalErrorBoundary>
-      <AuthProvider>
-        <NotificationProvider>
-          <AppContent />
-        </NotificationProvider>
-      </AuthProvider>
-    </GlobalErrorBoundary>
-  )
-}
-
 function AppContent() {
   const auth = useAuth()
   const location = useLocation()
-  const isSellerArea = location.pathname.startsWith('/store/') || location.pathname.startsWith('/stores/') || location.pathname === '/dashboard' || location.pathname === '/platform'
+  const isSellerArea = location.pathname.startsWith('/store/') || location.pathname.startsWith('/s/') || location.pathname.startsWith('/stores/') || location.pathname === '/dashboard' || location.pathname === '/platform'
+
+  useEffect(() => {
+    const isCustomerOrSellerStore = location.pathname.startsWith('/s/') || location.pathname.startsWith('/store/') || location.pathname.startsWith('/stores/')
+    if (!isCustomerOrSellerStore) {
+      resetGenericPlatformPwa()
+    }
+  }, [location.pathname])
+
   return (
     <div className="app-shell">
-      {!isSellerArea && <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <Link to="/" className="flex items-center gap-2 font-bold text-slate-950"><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-sm text-white">Q</span>QuickStore</Link>
-          <nav className="flex items-center gap-4">
-            <Link to="/start" className="text-sm font-semibold text-indigo-700">Create your store</Link>
-            {auth.user ? (
-              <>
-                <Link to="/dashboard" className="text-sm">Dashboard</Link>
-                <button onClick={auth.logout} className="secondary-button text-sm">Logout</button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="text-sm">Login</Link>
-                <Link to="/register" className="rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white">Register</Link>
-              </>
-            )
-            }
-          </nav>
-        </div>
-      </header>
-      }
+      {!isSellerArea && (
+        <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+            <Link to="/" className="flex items-center gap-2 font-bold text-slate-950">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-sm text-white">Q</span>
+              QuickStore
+            </Link>
+            <nav className="flex items-center gap-4">
+              <Link to="/start" className="text-sm font-semibold text-indigo-700">Create your store</Link>
+              {auth.user ? (
+                <>
+                  <Link to="/dashboard" className="text-sm">Dashboard</Link>
+                  <button onClick={auth.logout} className="secondary-button text-sm">Logout</button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="text-sm">Login</Link>
+                  <Link to="/register" className="rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white">Register</Link>
+                </>
+              )}
+            </nav>
+          </div>
+        </header>
+      )}
       <main>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -147,14 +146,34 @@ function AppContent() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/downloads" element={<Downloads />} />
+
+          {/* Customer Store Front Routes (/store/:slug and /s/:slug) */}
           <Route path="/store/:storeSlug" element={<StoreHome />} />
+          <Route path="/s/:storeSlug" element={<StoreHome />} />
           <Route path="/store/:storeSlug/cart" element={<StoreCart />} />
+          <Route path="/s/:storeSlug/cart" element={<StoreCart />} />
           <Route path="/store/:storeSlug/order/:reference" element={<CustomerOrderTracking />} />
+          <Route path="/s/:storeSlug/order/:reference" element={<CustomerOrderTracking />} />
           <Route path="/store/:storeSlug/orders" element={<CustomerOrders />} />
+          <Route path="/s/:storeSlug/orders" element={<CustomerOrders />} />
           <Route path="/store/:storeSlug/product/:productSlug" element={<ProductPage />} />
+          <Route path="/s/:storeSlug/product/:productSlug" element={<ProductPage />} />
+
           <Route path="/" element={<PwaLaunch />} />
         </Routes>
       </main>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <GlobalErrorBoundary>
+      <AuthProvider>
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
+      </AuthProvider>
+    </GlobalErrorBoundary>
   )
 }

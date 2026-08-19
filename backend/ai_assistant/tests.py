@@ -109,7 +109,7 @@ class AssistantChatViewTests(TestCase):
         )
         response = AssistantChatView.as_view()(request)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('popular products:', response.data['answer'])
+        self.assertIn('best-selling products:', response.data['answer'])
 
     def test_fast_path_available_products(self):
         request = APIRequestFactory().post(

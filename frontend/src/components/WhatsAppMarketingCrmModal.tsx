@@ -71,7 +71,7 @@ export default function WhatsAppMarketingCrmModal({
 
   const buildMessage = (customerName?: string) => {
     const nameStr = customerName ? `Hi ${customerName}!` : 'Hello!'
-    const storeLink = `${window.location.origin}/store/${store.slug}`
+    const storeLink = `${window.location.origin}/s/${store.slug}`
     const couponStr = selectedCoupon ? `\n🎟️ Use Coupon Code: *${selectedCoupon}*` : ''
 
     return [
@@ -252,7 +252,7 @@ export default function WhatsAppMarketingCrmModal({
                 )}
                 <div className="pt-0.5 text-[10px] sm:text-[11px] text-teal-700 font-bold">
                   <p>🛒 Shop Online Directly Here:</p>
-                  <p className="underline truncate">{window.location.origin}/store/{store.slug}</p>
+                  <p className="underline truncate">{window.location.origin}/s/{store.slug}</p>
                 </div>
                 <p className="text-[8px] text-slate-400 text-right">12:30 PM ✓✓</p>
               </div>

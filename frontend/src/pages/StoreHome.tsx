@@ -932,10 +932,18 @@ function Storefront() {
                   })
 
                   const storewideCoupons = storeCoupons.filter((c: any) => !c.product_id && !c.product_name)
-                  // Combine product-specific coupons AND storewide coupons (all apply to this item!)
                   const allApplicableCoupons = [...productCoupons, ...storewideCoupons]
-                  const displayCoupons = allApplicableCoupons.slice(0, 2)
-                  const remainingCount = allApplicableCoupons.length - displayCoupons.length
+
+                  // Select ONLY 1 Primary Badge: BOGO > Product Special > First Storewide
+                  const primaryCoupon = (() => {
+                    if (allApplicableCoupons.length === 0) return null
+                    const bogo = allApplicableCoupons.find((c: any) => c.discount_type === 'BOGO')
+                    if (bogo) return bogo
+                    if (productCoupons.length > 0) return productCoupons[0]
+                    return storewideCoupons[0] || allApplicableCoupons[0]
+                  })()
+
+                  const extraOffersCount = allApplicableCoupons.length > 1 ? allApplicableCoupons.length - 1 : 0
                   const mockMrp = allApplicableCoupons.length > 0 ? null : Math.round(Number(p.price) * 1.25)
 
                   return (
@@ -944,42 +952,35 @@ function Storefront() {
                       className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border ${storeTheme.card_bg_class} transition-all duration-200`}
                     >
                       <Link to={`/store/${storeSlug}/product/${p.slug}`} className="block relative">
-                        {/* Deal Overlay Badges (All active product & storewide offers) */}
-                        {allApplicableCoupons.length > 0 && (
+                        {/* Single Deal Overlay Badge (BOGO > Product Special > General Discount) */}
+                        {primaryCoupon && (
                           <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-1 max-w-[90%] pointer-events-none">
-                            {displayCoupons.map((c: any) => {
-                              const isBogo = c.discount_type === 'BOGO'
-                              const isFreeDel = c.discount_type === 'FREE_DELIVERY'
-                              const isProductSpecific = Boolean(c.product_id || c.product_name)
-                              return (
-                                <span
-                                  key={c.id || c.code}
-                                  className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white shadow-md border ${
-                                    isBogo
-                                      ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 border-purple-300 animate-pulse'
-                                      : isFreeDel
-                                      ? 'bg-sky-600 border-sky-300'
-                                      : isProductSpecific
-                                      ? 'bg-amber-600 border-amber-300'
-                                      : 'bg-emerald-600 border-emerald-300'
-                                  }`}
-                                >
-                                  <Tag className="h-2.5 w-2.5" />
-                                  {isBogo ? (
-                                    <span>🎁 BUY 1 GET 1 FREE</span>
-                                  ) : isFreeDel ? (
-                                    <span>🚚 FREE SHIPPING</span>
-                                  ) : c.discount_type === 'PERCENTAGE' ? (
-                                    <span>🎟️ {c.discount_value}% OFF {isProductSpecific ? '(Special)' : ''}</span>
-                                  ) : (
-                                    <span>🎟️ FLAT ₹{c.discount_value} OFF {isProductSpecific ? '(Special)' : ''}</span>
-                                  )}
-                                </span>
-                              )
-                            })}
-                            {remainingCount > 0 && (
-                              <span className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black text-amber-950 bg-amber-300 border border-amber-400 shadow-sm w-max">
-                                +{remainingCount} More {remainingCount === 1 ? 'Offer' : 'Offers'} Available
+                            <span
+                              className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white shadow-md border ${
+                                primaryCoupon.discount_type === 'BOGO'
+                                  ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 border-purple-300 animate-pulse'
+                                  : primaryCoupon.discount_type === 'FREE_DELIVERY'
+                                  ? 'bg-sky-600 border-sky-300'
+                                  : (primaryCoupon.product_id || primaryCoupon.product_name)
+                                  ? 'bg-amber-600 border-amber-300'
+                                  : 'bg-emerald-600 border-emerald-300'
+                              }`}
+                            >
+                              <Tag className="h-2.5 w-2.5" />
+                              {primaryCoupon.discount_type === 'BOGO' ? (
+                                <span>🎁 BUY 1 GET 1 FREE</span>
+                              ) : primaryCoupon.discount_type === 'FREE_DELIVERY' ? (
+                                <span>🚚 FREE SHIPPING</span>
+                              ) : primaryCoupon.discount_type === 'PERCENTAGE' ? (
+                                <span>🎟️ {primaryCoupon.discount_value}% OFF {(primaryCoupon.product_id || primaryCoupon.product_name) ? '(Special)' : ''}</span>
+                              ) : (
+                                <span>🎟️ FLAT ₹{primaryCoupon.discount_value} OFF {(primaryCoupon.product_id || primaryCoupon.product_name) ? '(Special)' : ''}</span>
+                              )}
+                            </span>
+
+                            {extraOffersCount > 0 && (
+                              <span className="inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black text-amber-950 bg-amber-300 border border-amber-400 shadow-xs w-max">
+                                +{extraOffersCount} More {extraOffersCount === 1 ? 'Offer' : 'Offers'}
                               </span>
                             )}
                           </div>

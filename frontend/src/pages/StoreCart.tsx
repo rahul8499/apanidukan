@@ -519,29 +519,25 @@ function CartContent() {
           {/* LEFT COLUMN: ITEMS LIST & CUSTOMER DELIVERY FORM */}
           <div className="lg:col-span-7 space-y-3.5">
 
-            {/* Ultra Premium Celebratory Savings Hero Banner */}
+            {/* Sleek Compact Celebratory Savings Strip */}
             {discountAmount > 0 && (
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-3.5 sm:p-4 text-white shadow-xl shadow-emerald-600/25 border-2 border-emerald-400 animate-pulse">
-                {/* Background Shimmer Effect */}
-                <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-yellow-400/20 blur-2xl pointer-events-none" />
-                <div className="relative z-10 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-2xl shadow-inner border border-white/30">
-                      🎉
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs sm:text-sm font-black text-white tracking-wider uppercase drop-shadow-xs">
-                          TOTAL SAVINGS UNLOCKED!
-                        </span>
-                        <Sparkles className="h-4 w-4 text-amber-300 animate-bounce" />
-                      </div>
-                      <p className="text-xs sm:text-sm font-extrabold text-emerald-100 mt-0.5 leading-tight">
-                        Woohoo! You are saving <span className="bg-yellow-400 text-slate-950 px-2 py-0.5 rounded-lg font-black text-sm sm:text-base shadow-md inline-block mx-1">₹{discountAmount.toFixed(2)}</span> on this order!
-                      </p>
-                    </div>
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 px-3 py-2 text-white shadow-md border border-emerald-400/80 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-white/20 text-sm shadow-inner border border-white/30">
+                    🎉
+                  </span>
+                  <div className="min-w-0 truncate">
+                    <p className="text-[11px] sm:text-xs font-black text-white truncate leading-none">
+                      <span className="text-amber-300 uppercase tracking-wide mr-1">SAVINGS UNLOCKED!</span>
+                      <span>You save</span>
+                      <span className="bg-amber-300 text-slate-950 font-black px-1.5 py-0.5 rounded-md text-xs shadow-xs mx-1 inline-block">
+                        ₹{discountAmount.toFixed(2)}
+                      </span>
+                      <span>on this order</span>
+                    </p>
                   </div>
                 </div>
+                <Sparkles className="h-4 w-4 text-amber-300 shrink-0 animate-bounce" />
               </div>
             )}
 

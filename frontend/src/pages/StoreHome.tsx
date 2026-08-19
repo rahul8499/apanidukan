@@ -158,9 +158,11 @@ function Storefront() {
     try {
       const today = new Date().toISOString().split('T')[0]
       const scratchedKey = `qs_scratched_${store.id}`
+      const shownKey = `qs_scratch_shown_${store.id}`
       const lastScratched = localStorage.getItem(scratchedKey)
+      const alreadyShownInSession = sessionStorage.getItem(shownKey)
 
-      if (lastScratched !== today) {
+      if (lastScratched !== today && !alreadyShownInSession) {
         const configKey = `qs_scratch_config_${store.id}`
         const configSaved = localStorage.getItem(configKey)
         const config: ScratchCardConfig = configSaved ? JSON.parse(configSaved) : {
@@ -175,6 +177,7 @@ function Storefront() {
 
         if (config.enabled) {
           setScratchCardConfig(config)
+          sessionStorage.setItem(shownKey, 'true')
           const timer = setTimeout(() => {
             setScratchCardModalOpen(true)
           }, 1200)
@@ -916,8 +919,22 @@ function Storefront() {
                 {visibleProducts.map((p) => {
                   const isOutOfStock = p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) <= 0
                   const cartItem = cart.items.find((item: any) => item.id === p.id)
-                  const activeCoupon = storeCoupons.find((c: any) => c.product_id === p.id) || storeCoupons.find((c: any) => !c.product_id)
-                  const mockMrp = activeCoupon ? null : Math.round(Number(p.price) * 1.25)
+
+                  const productCoupons = storeCoupons.filter((c: any) => {
+                    if (!c) return false
+                    if (c.product_id && (Number(c.product_id) === Number(p.id) || String(c.product_id) === String(p.id))) {
+                      return true
+                    }
+                    if (c.product_name && c.product_name.toLowerCase() === p.name.toLowerCase()) {
+                      return true
+                    }
+                    return false
+                  })
+
+                  const storewideCoupons = storeCoupons.filter((c: any) => !c.product_id && !c.product_name)
+                  const displayCoupons = productCoupons.length > 0 ? productCoupons : storewideCoupons.slice(0, 1)
+                  const bogoCoupon = productCoupons.find((c: any) => c.discount_type === 'BOGO') || storeCoupons.find((c: any) => c.discount_type === 'BOGO' && (!c.product_id || Number(c.product_id) === Number(p.id)))
+                  const mockMrp = displayCoupons.length > 0 ? null : Math.round(Number(p.price) * 1.25)
 
                   return (
                     <div
@@ -925,13 +942,36 @@ function Storefront() {
                       className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border ${storeTheme.card_bg_class} transition-all duration-200`}
                     >
                       <Link to={`/store/${storeSlug}/product/${p.slug}`} className="block relative">
-                        {/* Deal Overlay */}
-                        {activeCoupon && (
-                          <div className="absolute top-1.5 left-1.5 z-10">
-                            <span className="inline-flex items-center gap-0.5 rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white shadow-xs">
-                              <Tag className="h-2 w-2" />
-                              {activeCoupon.discount_type === 'PERCENTAGE' ? `${activeCoupon.discount_value}% OFF` : `FLAT ₹${activeCoupon.discount_value}`}
-                            </span>
+                        {/* Deal Overlay Badges */}
+                        {displayCoupons.length > 0 && (
+                          <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-1 max-w-[85%]">
+                            {displayCoupons.map((c: any) => {
+                              const isBogo = c.discount_type === 'BOGO'
+                              const isFreeDel = c.discount_type === 'FREE_DELIVERY'
+                              return (
+                                <span
+                                  key={c.id || c.code}
+                                  className={`inline-flex items-center gap-0.5 rounded-lg px-1.5 py-0.5 text-[9px] font-black text-white shadow-md border ${
+                                    isBogo
+                                      ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 border-purple-300 animate-pulse'
+                                      : isFreeDel
+                                      ? 'bg-sky-600 border-sky-300'
+                                      : 'bg-emerald-600 border-emerald-300'
+                                  }`}
+                                >
+                                  <Tag className="h-2.5 w-2.5" />
+                                  {isBogo ? (
+                                    <span>🎁 BUY 1 GET 1 FREE</span>
+                                  ) : isFreeDel ? (
+                                    <span>🚚 FREE SHIPPING</span>
+                                  ) : c.discount_type === 'PERCENTAGE' ? (
+                                    <span>🎟️ {c.discount_value}% OFF</span>
+                                  ) : (
+                                    <span>🎟️ FLAT ₹{c.discount_value} OFF</span>
+                                  )}
+                                </span>
+                              )
+                            })}
                           </div>
                         )}
 
@@ -974,6 +1014,12 @@ function Storefront() {
                               </span>
                             )}
                           </div>
+
+                          {bogoCoupon && (
+                            <div className="inline-flex items-center gap-1 rounded bg-purple-100 text-purple-900 border border-purple-300 px-1.5 py-0.5 text-[9px] font-black shadow-2xs mt-1">
+                              <span>🎁 Buy 1 Get 1 FREE Offer</span>
+                            </div>
+                          )}
 
                           {p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) > 0 && Number(p.stock_quantity) <= 5 && (
                             <p className="text-[9px] font-bold text-amber-500">

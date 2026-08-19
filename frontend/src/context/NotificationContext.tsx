@@ -308,7 +308,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             const body = `Total ₹${order.total} by ${order.customer_name || 'Customer'} (${order.customer_phone || 'No phone'})`
 
             playNotificationAudio('seller')
-            speakSoundboxAlert(`QuickStore naya order aaya hai! Total ${order.total} rupaye by ${order.customer_name || 'Grahak'}`)
+            const custText = order.customer_name ? `${order.customer_name} se ` : ''
+            const amtText = order.total ? `kul ${Number(order.total).toFixed(0)} rupaye ka ` : ''
+            speakSoundboxAlert(`QuickStore par ${custText}${amtText}naya order praapt hua.`)
 
             const notifItem: AppNotification = {
               id: `order_${order.id}_${Date.now()}`,
@@ -401,14 +403,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             playNotificationAudio(notifType === 'product' ? 'customer' : 'seller')
 
             if (notifType === 'order' && data.order && currentIsSeller) {
-              const cust = data.order.customer_name || 'Grahak'
-              const tot = data.order.total || data.order.subtotal || ''
-              speakSoundboxAlert(`QuickStore naya order aaya hai! Total ${tot} rupaye by ${cust}`)
+              const custText = data.order.customer_name ? `${data.order.customer_name} se ` : ''
+              const totalVal = data.order.total || data.order.subtotal
+              const amtText = totalVal ? `kul ${Number(totalVal).toFixed(0)} rupaye ka ` : ''
+              speakSoundboxAlert(`QuickStore par ${custText}${amtText}naya order praapt hua.`)
             } else if (notifType === 'request' && currentIsSeller) {
-              speakSoundboxAlert(`QuickStore naya product request aaya hai! ${data.item_name || 'Item'} by ${data.customer_name || 'Grahak'}`)
+              speakSoundboxAlert(`QuickStore par naya product request aaya hai: ${data.item_name || 'Item'}.`)
             } else if (notifType === 'product' && !currentIsSeller) {
               const pName = data.product?.name || data.product_name || data.item_name || 'Naya item'
-              speakSoundboxAlert(`Store par naya product live ho gaya hai: ${pName}`)
+              speakSoundboxAlert(`Store par naya product live ho gaya hai: ${pName}.`)
             }
 
             const notifItem: AppNotification = {

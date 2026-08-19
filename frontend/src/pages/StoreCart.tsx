@@ -6,9 +6,10 @@ import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
 import NotificationBellHeader from '../components/NotificationBellHeader'
 import CustomerScratchCardModal, { ScratchCardConfig } from '../components/CustomerScratchCardModal'
+import InstallAppButton from '../pwa/InstallAppButton'
 import {
   Tag, Sparkles, Check, X, MapPin, Zap, ArrowLeft, Trash2, Plus, Minus,
-  ShieldCheck, ShoppingBag, CreditCard, ChevronRight, CheckCircle2, AlertCircle
+  ShieldCheck, ShoppingBag, CreditCard, ChevronRight, CheckCircle2, AlertCircle, Smartphone
 } from 'lucide-react'
 
 export default function StoreCart() {
@@ -27,6 +28,12 @@ function CartContent() {
   const cart = useStoreCart()
   const [store, setStore] = useState<any>(null)
   const [error, setError] = useState('')
+
+  const isStandalone = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true ||
+    localStorage.getItem('multistore-installed-type') === 'customer'
+  )
 
   const [customerName, setCustomerName] = useState(() => localStorage.getItem('qs_chat_name') || '')
   const [customerPhone, setCustomerPhone] = useState(() => localStorage.getItem('qs_chat_phone') || '')
@@ -458,12 +465,30 @@ function CartContent() {
               <p className="text-[10px] font-bold uppercase text-indigo-400 tracking-wider">
                 {store?.name || 'Store'}
               </p>
-              <h1 className="font-extrabold text-xs sm:text-sm text-white">
-                My Shopping Cart ({cart.count})
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-extrabold text-xs sm:text-sm text-white">
+                  My Shopping Cart ({cart.count})
+                </h1>
+                {isStandalone ? (
+                  <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[9px] font-black text-emerald-300">
+                    <Smartphone className="h-2.5 w-2.5 text-emerald-400" />
+                    <span>ANDROID PWA APP</span>
+                  </span>
+                ) : (
+                  <InstallAppButton storeSlug={storeSlug!} variant="header_pill" />
+                )}
+              </div>
             </div>
           </div>
-          <NotificationBellHeader />
+          <div className="flex items-center gap-2">
+            {isStandalone && (
+              <span className="sm:hidden flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[9px] font-black text-emerald-300">
+                <Smartphone className="h-2.5 w-2.5 text-emerald-400" />
+                <span>APP MODE</span>
+              </span>
+            )}
+            <NotificationBellHeader />
+          </div>
         </div>
 
         {/* Flipkart / Amazon Style Checkout Progress Stepper */}
@@ -1020,20 +1045,38 @@ function CartContent() {
       </main>
 
       {/* MOBILE STICKY CHECKOUT BAR (FLOATS ABOVE BOTTOM NAV) */}
-      <div className="fixed bottom-[50px] sm:bottom-[58px] left-0 right-0 z-45 lg:hidden bg-slate-950/95 backdrop-blur-md border-t border-slate-800/80 px-3.5 py-2 text-white shadow-[0_-10px_25px_rgba(0,0,0,0.3)]">
+      <div className={`fixed bottom-[50px] sm:bottom-[58px] left-0 right-0 z-45 lg:hidden px-3.5 py-2.5 text-white shadow-[0_-10px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl border-t ${
+        isStandalone 
+          ? 'bg-slate-950/95 border-emerald-500/40' 
+          : 'bg-slate-950/95 border-slate-800/80'
+      }`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
           <div>
-            <p className="text-[10px] text-slate-400 font-semibold uppercase">Total Payable</p>
-            <p className="text-sm sm:text-base font-black text-amber-300 leading-none">
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                {isStandalone ? '📱 Android App Total' : 'Total Payable'}
+              </span>
+              {discountAmount > 0 && (
+                <span className="text-[9px] font-black text-emerald-400 bg-emerald-950 border border-emerald-500/40 px-1 rounded">
+                  Save ₹{Math.round(discountAmount)}
+                </span>
+              )}
+            </div>
+            <p className="text-sm sm:text-base font-black text-emerald-400 leading-none mt-0.5">
               ₹{finalTotalAmount.toFixed(2)}
             </p>
           </div>
 
           <button
             onClick={orderOnWhatsApp}
-            className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-md hover:bg-emerald-500 active:scale-95 transition-all cursor-pointer shrink-0"
+            className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white shadow-lg active:scale-95 transition-all cursor-pointer shrink-0 border ${
+              isStandalone
+                ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 border-emerald-400/40 shadow-emerald-600/30'
+                : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500'
+            }`}
           >
-            <span>Order Now ↗</span>
+            <span>{isStandalone ? '📲 Order on WhatsApp' : 'Order Now ↗'}</span>
+            <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

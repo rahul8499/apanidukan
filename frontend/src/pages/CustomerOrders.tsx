@@ -43,70 +43,31 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     document.referrer.includes('android-app://')
   )
 
-  const fetchStoreAndOrders = async (phoneToUse?: string) => {
-    setIsSyncing(true)
+  const loadLocalOrders = () => {
     try {
-      const storeRes = await api.get(`/public/stores/${storeSlug}/`)
-      setStore(storeRes.data.data || storeRes.data)
-    } catch {}
+      const storeRes = api.get(`/public/stores/${storeSlug}/`)
+        .then(res => setStore(res.data.data || res.data))
+        .catch(() => {})
 
-    const storedPhone = phoneToUse || localStorage.getItem(`qs_customer_phone_${storeSlug}`) || ''
-    if (storedPhone) {
-      setCustomerPhone(storedPhone)
-      setPhoneInput(storedPhone)
-    }
-
-    let localSaved: any[] = []
-    try {
-      localSaved = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
-    } catch {}
-
-    const references = localSaved.map((o: any) => o.reference).filter(Boolean).join(',')
-
-    // Query backend for all orders matching phone or local references
-    try {
-      const backendRes = await api.get(`/public/stores/${storeSlug}/customer-orders/`, {
-        params: { phone: storedPhone, references }
-      })
-      const backendOrders = Array.isArray(backendRes.data) ? backendRes.data : []
-      
-      // Merge backend orders with local orders without duplicates
-      const orderMap = new Map<string, any>()
-      backendOrders.forEach(o => orderMap.set(o.reference, o))
-      localSaved.forEach(o => {
-        if (!orderMap.has(o.reference)) {
-          orderMap.set(o.reference, o)
-        } else {
-          orderMap.set(o.reference, { ...orderMap.get(o.reference), ...o })
-        }
-      })
-
-      const mergedList = Array.from(orderMap.values()).sort((a, b) => {
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-      })
-
-      setOrders(mergedList)
-      try {
-        localStorage.setItem(`qs_customer_orders_${storeSlug}`, JSON.stringify(mergedList))
-      } catch {}
+      const saved = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
+      setOrders(Array.isArray(saved) ? saved : [])
     } catch {
-      setOrders(localSaved)
-    } finally {
-      setIsSyncing(false)
+      setOrders([])
     }
   }
 
   useEffect(() => {
-    fetchStoreAndOrders()
+    loadLocalOrders()
   }, [storeSlug])
 
-  const handlePhoneSyncSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!phoneInput.trim()) return
-    localStorage.setItem(`qs_customer_phone_${storeSlug}`, phoneInput.trim())
-    setCustomerPhone(phoneInput.trim())
-    setShowPhoneSync(false)
-    fetchStoreAndOrders(phoneInput.trim())
+  const handleClearOrders = () => {
+    try {
+      localStorage.removeItem(`qs_customer_orders_${storeSlug}`)
+      localStorage.removeItem(`qs_customer_phone_${storeSlug}`)
+    } catch {}
+    setOrders([])
+    setCustomerPhone('')
+    setPhoneInput('')
   }
 
   // Filtered orders list
@@ -184,43 +145,18 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => fetchStoreAndOrders()}
-              title="Refresh Live Orders"
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-current hover:bg-white/20 transition-colors cursor-pointer"
-            >
-              <span className={`text-xs ${isSyncing ? 'animate-spin' : ''}`}>↻</span>
-            </button>
-            <button
-              onClick={() => setShowPhoneSync(!showPhoneSync)}
-              className="hidden sm:inline-flex items-center gap-1 rounded-xl border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-bold text-current hover:bg-white/20 transition-colors cursor-pointer"
-            >
-              <span>📱 Find Orders</span>
-            </button>
+            {orders.length > 0 && (
+              <button
+                onClick={handleClearOrders}
+                title="Clear All Customer Orders"
+                className="inline-flex items-center gap-1 rounded-xl border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[10.5px] font-extrabold text-rose-300 hover:bg-rose-500/20 transition-all cursor-pointer"
+              >
+                <span>🗑️ Clear History</span>
+              </button>
+            )}
             <NotificationBellHeader />
           </div>
         </div>
-
-        {/* PHONE NUMBER ORDER LOOKUP DRAWER */}
-        {(showPhoneSync || (!customerPhone && orders.length === 0)) && (
-          <div className="border-t border-white/10 bg-black/20 p-3">
-            <form onSubmit={handlePhoneSyncSubmit} className="mx-auto max-w-4xl flex items-center gap-2">
-              <input
-                type="tel"
-                value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value)}
-                placeholder="Enter WhatsApp Phone # to sync past orders..."
-                className="flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-1.5 text-xs text-white placeholder-white/60 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="rounded-xl bg-white text-slate-950 font-black px-4 py-1.5 text-xs hover:bg-slate-100 transition-all shrink-0 cursor-pointer"
-              >
-                {isSyncing ? 'Syncing...' : 'Sync Orders'}
-              </button>
-            </form>
-          </div>
-        )}
 
         {/* SEARCH & FILTER STRIP */}
         <div className={`border-t px-3.5 py-2 ${storeTheme.sub_bar_bg_class}`}>

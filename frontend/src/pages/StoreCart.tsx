@@ -1026,12 +1026,16 @@ function CartContent() {
                 </div>
               )}
 
-              {/* CHECKOUT BUTTON (VISIBLE ON ALL MOBILE & DESKTOP SCREENS) */}
+              {/* MAIN CHECKOUT BUTTON (ALWAYS VISIBLE) */}
               <button
                 onClick={orderOnWhatsApp}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 px-4 text-xs sm:text-sm font-black text-white shadow-lg shadow-emerald-200 hover:bg-emerald-500 active:scale-98 transition-all cursor-pointer mt-2"
+                className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs sm:text-sm font-black text-white shadow-lg transition-all cursor-pointer active:scale-98 mt-2 border ${
+                  isStandalone
+                    ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 border-emerald-400/40 shadow-emerald-600/30'
+                    : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500 shadow-emerald-200'
+                }`}
               >
-                <span>Order Now ↗ (₹{finalTotalAmount.toFixed(2)})</span>
+                <span>{isStandalone ? '📲 Order on WhatsApp' : 'Order Now ↗'} (₹{finalTotalAmount.toFixed(2)})</span>
               </button>
             </div>
 
@@ -1039,43 +1043,6 @@ function CartContent() {
 
         </div>
       </main>
-
-      {/* MOBILE STICKY CHECKOUT BAR (FLOATS ABOVE BOTTOM NAV) */}
-      <div className={`fixed bottom-[50px] sm:bottom-[58px] left-0 right-0 z-45 lg:hidden px-3.5 py-2.5 text-white shadow-[0_-10px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl border-t ${
-        isStandalone 
-          ? 'bg-slate-950/95 border-emerald-500/40' 
-          : 'bg-slate-950/95 border-slate-800/80'
-      }`}>
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
-          <div>
-            <div className="flex items-center gap-1">
-              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                {isStandalone ? '📱 Android App Total' : 'Total Payable'}
-              </span>
-              {discountAmount > 0 && (
-                <span className="text-[9px] font-black text-emerald-400 bg-emerald-950 border border-emerald-500/40 px-1 rounded">
-                  Save ₹{Math.round(discountAmount)}
-                </span>
-              )}
-            </div>
-            <p className="text-sm sm:text-base font-black text-emerald-400 leading-none mt-0.5">
-              ₹{finalTotalAmount.toFixed(2)}
-            </p>
-          </div>
-
-          <button
-            onClick={orderOnWhatsApp}
-            className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white shadow-lg active:scale-95 transition-all cursor-pointer shrink-0 border ${
-              isStandalone
-                ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 border-emerald-400/40 shadow-emerald-600/30'
-                : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500'
-            }`}
-          >
-            <span>{isStandalone ? '📲 Order on WhatsApp' : 'Order Now ↗'}</span>
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
 
       {/* Scratch Card Modal on Cart Page */}
       {showScratchModal && scratchConfig && store && (
@@ -1090,7 +1057,42 @@ function CartContent() {
         />
       )}
 
-      <CustomerBottomNav storeSlug={storeSlug!} active="cart" />
+      {/* CUSTOMER BOTTOM NAV WITH INTEGRATED MOBILE CHECKOUT BAR */}
+      <CustomerBottomNav
+        storeSlug={storeSlug!}
+        active="cart"
+        topBar={
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-1">
+                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                  {isStandalone ? '📱 Android App Total' : 'Total Payable'}
+                </span>
+                {discountAmount > 0 && (
+                  <span className="text-[9px] font-black text-emerald-400 bg-emerald-950 border border-emerald-500/40 px-1 rounded">
+                    Save ₹{Math.round(discountAmount)}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm sm:text-base font-black text-emerald-400 leading-none mt-0.5">
+                ₹{finalTotalAmount.toFixed(2)}
+              </p>
+            </div>
+
+            <button
+              onClick={orderOnWhatsApp}
+              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white shadow-lg active:scale-95 transition-all cursor-pointer shrink-0 border ${
+                isStandalone
+                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 border-emerald-400/40 shadow-emerald-600/30'
+                  : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500'
+              }`}
+            >
+              <span>{isStandalone ? '📲 Order on WhatsApp' : 'Order Now ↗'}</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        }
+      />
       <CustomerChatWidget storeSlug={storeSlug!} />
     </div>
   )

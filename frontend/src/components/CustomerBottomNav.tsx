@@ -5,7 +5,15 @@ import { Home, ShoppingCart, PackageCheck, MessageCircle } from 'lucide-react'
 import api from '../services/api'
 import { getStoreTheme } from '../utils/storeTheme'
 
-export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: string; active?: 'home' | 'shop' | 'cart' | 'orders' | 'chat' }) {
+export default function CustomerBottomNav({
+  storeSlug,
+  active,
+  topBar
+}: {
+  storeSlug: string;
+  active?: 'home' | 'shop' | 'cart' | 'orders' | 'chat';
+  topBar?: React.ReactNode;
+}) {
   const cart = useStoreCart()
   const [storeTheme, setStoreTheme] = useState<any>(() => getStoreTheme(null))
 
@@ -31,9 +39,9 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 w-full border-t border-slate-800/80 bg-slate-950/95 px-2.5 sm:px-8 pt-2.5 pb-8 sm:py-2.5 backdrop-blur-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
+      className="fixed bottom-0 left-0 right-0 z-40 w-full border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
       style={{
-        paddingBottom: typeof window !== 'undefined' && window.innerWidth >= 640 ? '0.625rem' : 'max(2.4rem, env(safe-area-inset-bottom))'
+        paddingBottom: typeof window !== 'undefined' && window.innerWidth >= 640 ? '0.5rem' : 'max(0.4rem, env(safe-area-inset-bottom))'
       }}
     >
       {/* Dynamic Ambient Stroke matching Theme Accent */}
@@ -45,7 +53,14 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
         }}
       />
 
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-around gap-1.5 sm:gap-6">
+      {/* Integrated Top Bar (Cart Sticky Checkout Bar) */}
+      {topBar && (
+        <div className="border-b border-slate-800/80 bg-slate-900/90 px-3 py-1.5">
+          {topBar}
+        </div>
+      )}
+
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-around gap-1 sm:gap-6 px-2 sm:px-8 py-1">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = active === tab.key
@@ -54,9 +69,9 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
             <Link
               key={tab.key}
               to={tab.path}
-              className={`group relative flex flex-1 flex-col sm:flex-row items-center justify-center py-1.5 sm:py-2 px-1.5 sm:px-6 rounded-xl sm:rounded-2xl transition-all duration-300 ${
+              className={`group relative flex flex-1 flex-col sm:flex-row items-center justify-center py-1 sm:py-1.5 px-1 sm:px-5 rounded-xl transition-all duration-200 ${
                 isActive
-                  ? 'text-white font-black shadow-lg'
+                  ? 'text-white font-black shadow-md'
                   : 'text-slate-400 hover:bg-slate-900/80 hover:text-slate-100 font-medium'
               }`}
               style={isActive ? {
@@ -64,16 +79,16 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
                 borderColor: `${primaryCol}50`,
                 borderWidth: '1px',
                 borderStyle: 'solid',
-                boxShadow: `0 0 16px ${primaryCol}30`,
+                boxShadow: `0 0 12px ${primaryCol}25`,
               } : undefined}
             >
               {/* Active top glow indicator bar */}
               {isActive && (
                 <span
-                  className="absolute -top-1.5 sm:-top-2 h-1 w-8 sm:w-16 rounded-full"
+                  className="absolute -top-1 h-0.5 w-6 sm:w-12 rounded-full"
                   style={{
                     backgroundColor: primaryCol,
-                    boxShadow: `0 0 10px ${primaryCol}`,
+                    boxShadow: `0 0 8px ${primaryCol}`,
                   }}
                 />
               )}
@@ -81,8 +96,8 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
               {/* Icon container */}
               <div className="relative flex items-center justify-center shrink-0">
                 <Icon
-                  className={`h-5 w-5 sm:h-5 sm:w-5 transition-transform duration-300 ${
-                    isActive ? 'scale-110' : 'group-hover:scale-105 group-hover:text-slate-200'
+                  className={`h-4.5 w-4.5 sm:h-5 sm:w-5 transition-transform duration-200 ${
+                    isActive ? 'scale-105' : 'group-hover:scale-105 group-hover:text-slate-200'
                   }`}
                   style={isActive ? { color: primaryCol } : undefined}
                   strokeWidth={isActive ? 2.5 : 1.9}
@@ -90,7 +105,7 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
 
                 {/* Notification Badge */}
                 {!!tab.badge && tab.badge > 0 && (
-                  <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 text-white font-black text-[9px] px-1 border border-slate-950 shadow-[0_0_8px_rgba(244,63,94,0.9)] animate-pulse">
+                  <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-rose-500 text-white font-black text-[8.5px] px-1 border border-slate-950 shadow-xs animate-pulse">
                     {tab.badge > 99 ? '99+' : tab.badge}
                   </span>
                 )}
@@ -98,7 +113,7 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
 
               {/* Label */}
               <span
-                className={`mt-1 sm:mt-0 sm:ml-2.5 text-[11px] sm:text-xs tracking-wide transition-colors ${
+                className={`mt-0.5 sm:mt-0 sm:ml-2 text-[10px] sm:text-xs tracking-tight transition-colors ${
                   isActive ? 'font-black text-white' : 'text-slate-400 group-hover:text-slate-200 font-bold'
                 }`}
               >
@@ -112,9 +127,9 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('qs-open-chat'))}
-          className={`group relative flex flex-1 flex-col sm:flex-row items-center justify-center py-1.5 sm:py-2 px-1.5 sm:px-6 rounded-xl sm:rounded-2xl transition-all duration-300 ${
+          className={`group relative flex flex-1 flex-col sm:flex-row items-center justify-center py-1 sm:py-1.5 px-1 sm:px-5 rounded-xl transition-all duration-200 ${
             active === 'chat'
-              ? 'text-white font-black shadow-lg'
+              ? 'text-white font-black shadow-md'
               : 'text-slate-400 hover:bg-slate-900/80 hover:text-slate-100 font-medium'
           }`}
           style={active === 'chat' ? {
@@ -122,29 +137,29 @@ export default function CustomerBottomNav({ storeSlug, active }: { storeSlug: st
             borderColor: `${primaryCol}50`,
             borderWidth: '1px',
             borderStyle: 'solid',
-            boxShadow: `0 0 16px ${primaryCol}30`,
+            boxShadow: `0 0 12px ${primaryCol}25`,
           } : undefined}
         >
           {active === 'chat' && (
             <span
-              className="absolute -top-1.5 sm:-top-2 h-1 w-8 sm:w-16 rounded-full"
+              className="absolute -top-1 h-0.5 w-6 sm:w-12 rounded-full"
               style={{
                 backgroundColor: primaryCol,
-                boxShadow: `0 0 10px ${primaryCol}`,
+                boxShadow: `0 0 8px ${primaryCol}`,
               }}
             />
           )}
           <div className="relative flex items-center justify-center shrink-0">
             <MessageCircle
-              className={`h-5 w-5 sm:h-5 sm:w-5 transition-transform duration-300 ${
-                active === 'chat' ? 'scale-110' : 'group-hover:scale-105 group-hover:text-slate-200'
+              className={`h-4.5 w-4.5 sm:h-5 sm:w-5 transition-transform duration-200 ${
+                active === 'chat' ? 'scale-105' : 'group-hover:scale-105 group-hover:text-slate-200'
               }`}
               style={active === 'chat' ? { color: primaryCol } : undefined}
               strokeWidth={active === 'chat' ? 2.5 : 1.9}
             />
           </div>
           <span
-            className={`mt-1 sm:mt-0 sm:ml-2.5 text-[11px] sm:text-xs tracking-wide transition-colors ${
+            className={`mt-0.5 sm:mt-0 sm:ml-2 text-[10px] sm:text-xs tracking-tight transition-colors ${
               active === 'chat' ? 'font-black text-white' : 'text-slate-400 group-hover:text-slate-200 font-bold'
             }`}
           >

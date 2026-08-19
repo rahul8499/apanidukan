@@ -26,6 +26,7 @@ interface NotificationContextType {
   addNotification: (notif: Omit<AppNotification, 'id' | 'time' | 'read'>) => void
   activeStoreId: number | null
   setActiveStoreId: (id: number | null) => void
+  testVoiceAlert: () => void
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
@@ -87,35 +88,48 @@ export function speakSoundboxAlert(text: string) {
   try {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
 
-    // Android Chrome SpeechSynthesizer unstick
-    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-      window.speechSynthesis.cancel()
+    const synth = window.speechSynthesis
+    if (synth.speaking || synth.pending) {
+      synth.cancel()
     }
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume()
+    if (synth.paused) {
+      synth.resume()
     }
 
     const utterance = new SpeechSynthesisUtterance(text + '.')
     utterance.lang = 'hi-IN'
-    utterance.rate = 0.9
+    utterance.rate = 0.95
     utterance.pitch = 1.0
     utterance.volume = 1.0
 
-    const voices = window.speechSynthesis.getVoices()
-    if (voices && voices.length > 0) {
-      const hindiVoice = voices.find(v =>
-        v.lang.toLowerCase().includes('hi') ||
-        v.lang.toLowerCase().includes('hi_in') ||
-        v.lang.toLowerCase().includes('in') ||
-        v.name.toLowerCase().includes('hindi') ||
-        v.name.toLowerCase().includes('india')
-      )
-      if (hindiVoice) {
-        utterance.voice = hindiVoice
-      }
+    const speakNow = () => {
+      try {
+        const voices = synth.getVoices()
+        if (voices && voices.length > 0) {
+          const hindiVoice = voices.find(v =>
+            v.lang.toLowerCase().includes('hi') ||
+            v.lang.toLowerCase().includes('in') ||
+            v.name.toLowerCase().includes('hindi') ||
+            v.name.toLowerCase().includes('india') ||
+            v.name.toLowerCase().includes('google')
+          )
+          if (hindiVoice) {
+            utterance.voice = hindiVoice
+          }
+        }
+      } catch {}
+      synth.speak(utterance)
     }
 
-    window.speechSynthesis.speak(utterance)
+    if (synth.getVoices().length === 0) {
+      synth.onvoiceschanged = () => {
+        speakNow()
+        synth.onvoiceschanged = null
+      }
+      speakNow()
+    } else {
+      speakNow()
+    }
   } catch (e) {
     console.error('Soundbox alert error:', e)
   }
@@ -567,6 +581,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }
 
+  function testVoiceAlert() {
+    playNotificationAudio('seller')
+    speakSoundboxAlert('QuickStore soundbox notification voice active aur ready hai!')
+  }
+
   return (
     <NotificationContext.Provider
       value={{
@@ -581,7 +600,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         removeNotification,
         addNotification,
         activeStoreId,
-        setActiveStoreId
+        setActiveStoreId,
+        testVoiceAlert
       }}
     >
       {children}

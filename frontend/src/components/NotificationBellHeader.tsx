@@ -25,6 +25,9 @@ export default function NotificationBellHeader({ className = '' }: { className?:
   const navigate = useNavigate()
 
   function testAlert() {
+    if (notifContext?.testVoiceAlert) {
+      notifContext.testVoiceAlert()
+    }
     addNotification({
       type: 'order',
       title: '🎁 Test Live Order Notification',

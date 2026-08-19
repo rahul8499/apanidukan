@@ -1,4 +1,6 @@
 from datetime import timedelta
+from django.db import models
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, status
@@ -116,7 +118,7 @@ class PublicCustomerOrdersListView(APIView):
         queryset = WhatsAppOrder.objects.filter(store=store)
 
         if phone and ref_list:
-            queryset = queryset.filter(models.Q(customer_phone__icontains=phone) | models.Q(reference__in=ref_list))
+            queryset = queryset.filter(Q(customer_phone__icontains=phone) | Q(reference__in=ref_list))
         elif phone:
             queryset = queryset.filter(customer_phone__icontains=phone)
         elif ref_list:

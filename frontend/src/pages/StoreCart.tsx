@@ -69,7 +69,7 @@ function CartContent() {
         minOrder: 299
       }
       setScratchConfig(config)
-    } catch {}
+    } catch { }
   }, [store?.id])
 
   useEffect(() => {
@@ -129,7 +129,7 @@ function CartContent() {
         const item = localStorage.getItem(k as string)
         if (item) return JSON.parse(item)
       }
-    } catch {}
+    } catch { }
     return { active: true, discount: 25, title: '⚡ EVENING CLEARANCE FLASH SALE IS LIVE!' }
   })
 
@@ -147,7 +147,7 @@ function CartContent() {
           setFlashSale(JSON.parse(item))
           break
         }
-      } catch {}
+      } catch { }
     }
 
     const handleUpdate = (e: any) => {
@@ -171,7 +171,7 @@ function CartContent() {
           setCouponInput(parsed.code)
         }
       }
-    } catch {}
+    } catch { }
   }, [storeSlug, appliedCoupons, couponInput])
 
   const applyCouponCode = async (codeToApply: string) => {
@@ -189,7 +189,7 @@ function CartContent() {
     if (storeSlug) {
       try {
         sessionStorage.removeItem(`qs_user_removed_coupon_${storeSlug}`)
-      } catch {}
+      } catch { }
     }
 
     setCouponError('')
@@ -209,7 +209,7 @@ function CartContent() {
         scratchType = parsed.discountType === 'percentage' ? 'PERCENTAGE' : 'FIXED'
         scratchMin = parsed.minOrder || 0
       }
-    } catch {}
+    } catch { }
 
     // Check min_order_amount locally if available in availableCoupons
     const localCoupon = (availableCoupons || []).find((c: any) => c.code?.toUpperCase() === code)
@@ -285,7 +285,7 @@ function CartContent() {
       try {
         localStorage.removeItem(`qs_claimed_coupon_${storeSlug}`)
         sessionStorage.setItem(`qs_user_removed_coupon_${storeSlug}`, 'true')
-      } catch {}
+      } catch { }
     }
   }
 
@@ -656,11 +656,10 @@ function CartContent() {
                       <button
                         type="button"
                         onClick={() => setOrderType('HOME_DELIVERY')}
-                        className={`flex items-center justify-center gap-1.5 p-2 py-1.5 rounded-xl border text-[11px] font-black transition-all cursor-pointer ${
-                          orderType === 'HOME_DELIVERY'
-                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-1 ring-indigo-300'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
+                        className={`flex items-center justify-center gap-1.5 p-2 py-1.5 rounded-xl border text-[11px] font-black transition-all cursor-pointer ${orderType === 'HOME_DELIVERY'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-1 ring-indigo-300'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                          }`}
                       >
                         <span className="text-xs">🚚</span>
                         <span>Home Delivery</span>
@@ -671,11 +670,10 @@ function CartContent() {
                       <button
                         type="button"
                         onClick={() => setOrderType('STORE_PICKUP')}
-                        className={`flex items-center justify-center gap-1.5 p-2 py-1.5 rounded-xl border text-[11px] font-black transition-all cursor-pointer ${
-                          orderType === 'STORE_PICKUP'
-                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-1 ring-indigo-300'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
+                        className={`flex items-center justify-center gap-1.5 p-2 py-1.5 rounded-xl border text-[11px] font-black transition-all cursor-pointer ${orderType === 'STORE_PICKUP'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-1 ring-indigo-300'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                          }`}
                       >
                         <span className="text-xs">🏪</span>
                         <span>Walk-in / Pickup</span>
@@ -885,23 +883,21 @@ function CartContent() {
                           return (
                             <div
                               key={coupon.id}
-                              className={`flex items-center justify-between rounded-xl border p-2 text-xs shadow-2xs transition-all ${
-                                isCurrent
-                                  ? 'bg-emerald-50 border-emerald-400 ring-1 ring-emerald-400'
-                                  : coupon.is_scratch 
-                                  ? 'bg-amber-50/70 border-amber-300/80' 
+                              className={`flex items-center justify-between rounded-xl border p-2 text-xs shadow-2xs transition-all ${isCurrent
+                                ? 'bg-emerald-50 border-emerald-400 ring-1 ring-emerald-400'
+                                : coupon.is_scratch
+                                  ? 'bg-amber-50/70 border-amber-300/80'
                                   : 'bg-white border-slate-200'
-                              }`}
+                                }`}
                             >
                               <div className="min-w-0 pr-1">
                                 <div className="flex items-center gap-1.5">
-                                  <span className={`font-mono font-black text-[10px] px-1.5 py-0.5 rounded border ${
-                                    isCurrent
-                                      ? 'text-emerald-900 bg-emerald-200 border-emerald-400'
-                                      : coupon.is_scratch 
-                                      ? 'text-amber-900 bg-amber-200/80 border-amber-400' 
+                                  <span className={`font-mono font-black text-[10px] px-1.5 py-0.5 rounded border ${isCurrent
+                                    ? 'text-emerald-900 bg-emerald-200 border-emerald-400'
+                                    : coupon.is_scratch
+                                      ? 'text-amber-900 bg-amber-200/80 border-amber-400'
                                       : 'text-indigo-700 bg-indigo-50 border-indigo-200'
-                                  }`}>
+                                    }`}>
                                     {coupon.code}
                                   </span>
                                   {coupon.is_scratch && (
@@ -924,49 +920,49 @@ function CartContent() {
                                 </p>
                               </div>
 
-                               {(() => {
-                                 const minAmt = Number(coupon.min_order_amount || 0)
-                                 const isBelowMin = minAmt > 0 && cart.total < minAmt
-                                 const needed = minAmt - cart.total
+                              {(() => {
+                                const minAmt = Number(coupon.min_order_amount || 0)
+                                const isBelowMin = minAmt > 0 && cart.total < minAmt
+                                const needed = minAmt - cart.total
 
-                                 if (isCurrent) {
-                                   return (
-                                     <button
-                                       type="button"
-                                       onClick={() => removeAppliedCoupon(coupon.code)}
-                                       className="rounded-lg bg-emerald-600 hover:bg-rose-600 px-2.5 py-1 text-[10px] font-black text-white shrink-0 shadow-2xs flex items-center gap-1 cursor-pointer transition-colors"
-                                     >
-                                       ✓ APPLIED (✕)
-                                     </button>
-                                   )
-                                 }
+                                if (isCurrent) {
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => removeAppliedCoupon(coupon.code)}
+                                      className="rounded-lg bg-emerald-600 hover:bg-rose-600 px-2.5 py-1 text-[10px] font-black text-white shrink-0 shadow-2xs flex items-center gap-1 cursor-pointer transition-colors"
+                                    >
+                                      ✓ APPLIED (✕)
+                                    </button>
+                                  )
+                                }
 
-                                 if (isBelowMin) {
-                                   return (
-                                     <button
-                                       type="button"
-                                       disabled
-                                       className="rounded-lg bg-slate-100 text-slate-400 border border-slate-200 px-2 py-1 text-[9px] font-bold shrink-0 cursor-not-allowed"
-                                       title={`Add ₹${needed.toFixed(2)} more to unlock this coupon`}
-                                     >
-                                       Add ₹{needed > 1000 ? Math.round(needed) : needed.toFixed(0)} more
-                                     </button>
-                                   )
-                                 }
+                                if (isBelowMin) {
+                                  return (
+                                    <button
+                                      type="button"
+                                      disabled
+                                      className="rounded-lg bg-slate-100 text-slate-400 border border-slate-200 px-2 py-1 text-[9px] font-bold shrink-0 cursor-not-allowed"
+                                      title={`Add ₹${needed.toFixed(2)} more to unlock this coupon`}
+                                    >
+                                      Add ₹{needed > 1000 ? Math.round(needed) : needed.toFixed(0)} more
+                                    </button>
+                                  )
+                                }
 
-                                 return (
-                                   <button
-                                     type="button"
-                                     onClick={() => {
-                                       setCouponInput(coupon.code)
-                                       applyCouponCode(coupon.code)
-                                     }}
-                                     className="rounded-lg bg-indigo-600 px-2.5 py-1 text-[10px] font-extrabold text-white hover:bg-indigo-500 cursor-pointer shrink-0 shadow-2xs"
-                                   >
-                                     + APPLY
-                                   </button>
-                                 )
-                               })()}
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCouponInput(coupon.code)
+                                      applyCouponCode(coupon.code)
+                                    }}
+                                    className="rounded-lg bg-indigo-600 px-2.5 py-1 text-[10px] font-extrabold text-white hover:bg-indigo-500 cursor-pointer shrink-0 shadow-2xs"
+                                  >
+                                    + APPLY
+                                  </button>
+                                )
+                              })()}
                             </div>
                           )
                         })}
@@ -1029,13 +1025,12 @@ function CartContent() {
               {/* MAIN CHECKOUT BUTTON (ALWAYS VISIBLE) */}
               <button
                 onClick={orderOnWhatsApp}
-                className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs sm:text-sm font-black text-white shadow-lg transition-all cursor-pointer active:scale-98 mt-2 border ${
-                  isStandalone
-                    ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 border-emerald-400/40 shadow-emerald-600/30'
-                    : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500 shadow-emerald-200'
-                }`}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs sm:text-sm font-black text-white shadow-lg transition-all cursor-pointer active:scale-98 mt-2 border ${isStandalone
+                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 border-emerald-400/40 shadow-emerald-600/30'
+                  : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500 shadow-emerald-200'
+                  }`}
               >
-                <span>{isStandalone ? '📲 Order on WhatsApp' : 'Order Now ↗'} (₹{finalTotalAmount.toFixed(2)})</span>
+                <span>{isStandalone ? '📲 Order Now' : 'Order Now ↗'} (₹{finalTotalAmount.toFixed(2)})</span>
               </button>
             </div>
 
@@ -1057,38 +1052,35 @@ function CartContent() {
         />
       )}
 
-      {/* CUSTOMER BOTTOM NAV WITH INTEGRATED MOBILE CHECKOUT BAR */}
+      {/* CUSTOMER BOTTOM NAV WITH INTEGRATED ULTRA-MICRO MOBILE CHECKOUT BAR */}
       <CustomerBottomNav
         storeSlug={storeSlug!}
         active="cart"
         topBar={
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                  {isStandalone ? '📱 Android App Total' : 'Total Payable'}
-                </span>
-                {discountAmount > 0 && (
-                  <span className="text-[9px] font-black text-emerald-400 bg-emerald-950 border border-emerald-500/40 px-1 rounded">
-                    Save ₹{Math.round(discountAmount)}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm sm:text-base font-black text-emerald-400 leading-none mt-0.5">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 py-0">
+            <div className="flex items-center gap-1.5 leading-none min-w-0">
+              <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-tight shrink-0">
+                {isStandalone ? '📱 App Total:' : 'Total:'}
+              </span>
+              <span className="text-xs font-black text-emerald-400 shrink-0">
                 ₹{finalTotalAmount.toFixed(2)}
-              </p>
+              </span>
+              {discountAmount > 0 && (
+                <span className="text-[7.5px] font-black text-emerald-300 bg-emerald-950/80 border border-emerald-500/30 px-1 py-0.2 rounded truncate">
+                  Saved ₹{Math.round(discountAmount)}
+                </span>
+              )}
             </div>
 
             <button
               onClick={orderOnWhatsApp}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white shadow-lg active:scale-95 transition-all cursor-pointer shrink-0 border ${
-                isStandalone
-                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 border-emerald-400/40 shadow-emerald-600/30'
-                  : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500'
-              }`}
+              className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] sm:text-[11px] font-black text-white shadow-xs active:scale-95 transition-all cursor-pointer shrink-0 border ${isStandalone
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400/40'
+                : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500'
+                }`}
             >
               <span>{isStandalone ? '📲 Order on WhatsApp' : 'Order Now ↗'}</span>
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-2.5 w-2.5" />
             </button>
           </div>
         }

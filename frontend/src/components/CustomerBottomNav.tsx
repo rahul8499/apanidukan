@@ -55,7 +55,7 @@ export default function CustomerBottomNav({
 
       {/* Integrated Top Bar (Cart Sticky Checkout Bar) */}
       {topBar && (
-        <div className="border-b border-slate-800/80 bg-slate-900/90 px-3 py-1.5">
+        <div className="border-b border-slate-800/80 bg-slate-900/90 px-2.5 py-0.5">
           {topBar}
         </div>
       )}

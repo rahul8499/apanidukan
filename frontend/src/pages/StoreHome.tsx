@@ -932,8 +932,7 @@ function Storefront() {
                   })
 
                   const storewideCoupons = storeCoupons.filter((c: any) => !c.product_id && !c.product_name)
-                  const displayCoupons = productCoupons.length > 0 ? productCoupons : storewideCoupons.slice(0, 1)
-                  const bogoCoupon = productCoupons.find((c: any) => c.discount_type === 'BOGO') || storeCoupons.find((c: any) => c.discount_type === 'BOGO' && (!c.product_id || Number(c.product_id) === Number(p.id)))
+                  const displayCoupons = productCoupons.length > 0 ? productCoupons : storewideCoupons.slice(0, 2)
                   const mockMrp = displayCoupons.length > 0 ? null : Math.round(Number(p.price) * 1.25)
 
                   return (
@@ -942,16 +941,16 @@ function Storefront() {
                       className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border ${storeTheme.card_bg_class} transition-all duration-200`}
                     >
                       <Link to={`/store/${storeSlug}/product/${p.slug}`} className="block relative">
-                        {/* Deal Overlay Badges */}
+                        {/* Deal Overlay Badges (All active product & storewide offers) */}
                         {displayCoupons.length > 0 && (
-                          <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-1 max-w-[85%]">
+                          <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-1 max-w-[88%]">
                             {displayCoupons.map((c: any) => {
                               const isBogo = c.discount_type === 'BOGO'
                               const isFreeDel = c.discount_type === 'FREE_DELIVERY'
                               return (
                                 <span
                                   key={c.id || c.code}
-                                  className={`inline-flex items-center gap-0.5 rounded-lg px-1.5 py-0.5 text-[9px] font-black text-white shadow-md border ${
+                                  className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white shadow-md border ${
                                     isBogo
                                       ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 border-purple-300 animate-pulse'
                                       : isFreeDel
@@ -1014,12 +1013,6 @@ function Storefront() {
                               </span>
                             )}
                           </div>
-
-                          {bogoCoupon && (
-                            <div className="inline-flex items-center gap-1 rounded bg-purple-100 text-purple-900 border border-purple-300 px-1.5 py-0.5 text-[9px] font-black shadow-2xs mt-1">
-                              <span>🎁 Buy 1 Get 1 FREE Offer</span>
-                            </div>
-                          )}
 
                           {p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) > 0 && Number(p.stock_quantity) <= 5 && (
                             <p className="text-[9px] font-bold text-amber-500">

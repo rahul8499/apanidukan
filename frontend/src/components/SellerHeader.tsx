@@ -503,25 +503,34 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
         />
       )}
 
-      {/* Slide-over Clean Premium App Settings Sidebar Drawer */}
+      {/* Slide-over Clean Premium Mobile-Native App & Web Settings Sidebar Drawer */}
       <aside
-        className={`fixed top-0 right-0 z-50 h-full w-96 max-w-[92vw] bg-slate-50 text-slate-900 border-l border-slate-200/90 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 z-50 h-full w-full sm:w-96 sm:max-w-[92vw] bg-slate-50 text-slate-900 border-l border-slate-200/90 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
-        {/* Ultra-Premium Drawer Header with Store Identity */}
-        <div className="relative overflow-hidden bg-slate-950 px-5 py-4.5 text-white border-b border-slate-800 shadow-md">
+        {/* Ultra-Premium Mobile App Header with Store Identity */}
+        <div className="relative shrink-0 overflow-hidden bg-slate-950 px-4 sm:px-5 py-4 text-white border-b border-slate-800 shadow-md">
           {/* Subtle Ambient Glow */}
           <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none" />
 
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="relative h-11 w-11 shrink-0 rounded-2xl bg-white/10 p-0.5 border border-white/20 shadow-md overflow-hidden flex items-center justify-center">
+              {/* Mobile Close Button */}
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white active:scale-95 transition-all cursor-pointer border border-white/10 shrink-0"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="relative h-10 w-10 shrink-0 rounded-2xl bg-white/10 p-0.5 border border-white/20 shadow-md overflow-hidden flex items-center justify-center">
                 {currentLogoUrl ? (
                   <img src={currentLogoUrl} alt={store.name} className="h-full w-full rounded-xl object-cover" />
                 ) : (
                   <Store className="h-5 w-5 text-indigo-300" />
                 )}
-                <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-emerald-400' : 'bg-amber-400'}`} />
               </div>
 
               <div className="min-w-0">
@@ -536,13 +545,18 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsSettingsOpen(false)}
-              className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white transition-colors cursor-pointer border border-white/10 shrink-0"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {store.slug && (
+                <Link
+                  to={`/s/${store.slug}`}
+                  target="_blank"
+                  className="flex h-8 px-2.5 items-center justify-center gap-1 rounded-xl bg-indigo-600/80 text-white text-[11px] font-bold hover:bg-indigo-600 active:scale-95 transition-all cursor-pointer border border-indigo-500/30"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Store</span>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1167,54 +1181,57 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             </div>
           </div>
 
-          {/* SECTION 7: 🔗 Customer Link & Custom Domain & Logout */}
+          {/* Print Counter Standee & Custom Domain */}
+          <div className="space-y-2">
+            <button
+              type="button"
+              disabled
+              title="Custom Domain feature is locked for now."
+              className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-slate-100/90 py-2 px-3 text-xs font-bold text-slate-400 opacity-75 cursor-not-allowed shadow-2xs"
+            >
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-slate-400" />
+                <span>Custom Domain</span>
+              </div>
+              <div className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-600 border border-amber-500/20">
+                <Lock className="h-3 w-3 text-amber-600" />
+                <span>Locked</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setShowQrModal(true)
+              }}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-2.5 text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 active:scale-98 transition-all shadow-md cursor-pointer"
+            >
+              <span>🖨️ Print Counter QR Standee</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Sticky Responsive Mobile Bottom Action Footer */}
+        <div className="sticky bottom-0 shrink-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 shadow-lg flex items-center gap-2 z-20">
           {store.slug && (
-            <div className="space-y-2">
-              <button
-                type="button"
-                disabled
-                title="Custom Domain feature is locked for now."
-                className="w-full flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-100/90 py-2.5 px-3 text-xs font-bold text-slate-400 opacity-75 cursor-not-allowed shadow-2xs"
-              >
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-slate-400" />
-                  <span>Custom Domain</span>
-                </div>
-                <div className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-600 border border-amber-500/20">
-                  <Lock className="h-3 w-3 text-amber-600" />
-                  <span>Locked</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSettingsOpen(false)
-                  setShowQrModal(true)
-                }}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3 text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 transition-all shadow-md cursor-pointer"
-              >
-                <span>🖨️ Print Counter QR Standee</span>
-              </button>
-
-              <Link
-                to={`/s/${store.slug}`}
-                target="_blank"
-                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 py-2.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all shadow-2xs"
-              >
-                <ExternalLink className="h-4 w-4 text-indigo-600" />
-                <span>Open Customer Storefront ↗</span>
-              </Link>
-            </div>
+            <Link
+              to={`/s/${store.slug}`}
+              target="_blank"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 py-2.5 px-3 text-xs font-black text-indigo-700 hover:bg-indigo-100 active:scale-95 transition-all shadow-xs"
+            >
+              <ExternalLink className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+              <span className="truncate">Open Storefront</span>
+            </Link>
           )}
 
           <button
             type="button"
             onClick={() => { auth.logout(); navigate('/login') }}
-            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 py-3 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all cursor-pointer shadow-2xs"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 py-2.5 px-3 text-xs font-black text-rose-700 hover:bg-rose-100 active:scale-95 transition-all cursor-pointer shadow-xs"
           >
-            <LogOut className="h-4 w-4 text-rose-600" />
-            <span>Logout from Workspace</span>
+            <LogOut className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+            <span className="truncate">Logout</span>
           </button>
         </div>
       </aside>

@@ -103,6 +103,32 @@ class PublicWhatsAppOrderView(APIView):
         return Response(order_data, status=status.HTTP_201_CREATED)
 
 
+class PublicCustomerOrdersListView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, slug):
+        store = get_object_or_404(Store, slug=slug)
+        phone = request.query_params.get('phone', '').strip()
+        references = request.query_params.get('references', '').strip()
+
+        ref_list = [r.strip() for r in references.split(',') if r.strip()] if references else []
+
+        queryset = WhatsAppOrder.objects.filter(store=store)
+
+        if phone and ref_list:
+            queryset = queryset.filter(models.Q(customer_phone__icontains=phone) | models.Q(reference__in=ref_list))
+        elif phone:
+            queryset = queryset.filter(customer_phone__icontains=phone)
+        elif ref_list:
+            queryset = queryset.filter(reference__in=ref_list)
+        else:
+            return Response([])
+
+        queryset = queryset.order_by('-created_at')[:50]
+        serializer = WhatsAppOrderSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
 class PublicWhatsAppOrderDetailView(APIView):
     permission_classes = [permissions.AllowAny]
 

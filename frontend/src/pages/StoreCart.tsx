@@ -384,6 +384,9 @@ function CartContent() {
           : cart.items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, image: i.image }))
       }
       localStorage.setItem(orderHistoryKey, JSON.stringify([entry, ...savedOrders.filter((item: any) => item.reference !== order.reference)].slice(0, 30)))
+      if (trimmedPhone) {
+        localStorage.setItem(`qs_customer_phone_${storeSlug}`, trimmedPhone)
+      }
       const paymentLabel = order.payment_type === 'ONLINE' ? 'Online Payment' : 'COD'
       const fulfillmentLabel = orderType === 'STORE_PICKUP' ? '🏪 Walk-in Store Pickup' : '🚚 Home Delivery'
       const trackingUrl = `${window.location.origin}/store/${storeSlug}/order/${order.reference}`

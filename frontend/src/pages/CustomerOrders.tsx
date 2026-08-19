@@ -31,6 +31,11 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
   const [orders, setOrders] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'ACTIVE' | 'DELIVERED' | 'CANCELLED'>('ALL')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [phoneInput, setPhoneInput] = useState('')
+  const [showPhoneSync, setShowPhoneSync] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [displayCount, setDisplayCount] = useState(10)
 
   const isStandalone = typeof window !== 'undefined' && (
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -38,47 +43,71 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     document.referrer.includes('android-app://')
   )
 
-  useEffect(() => {
-    // Load store details
-    api.get(`/public/stores/${storeSlug}/`)
-      .then(res => setStore(res.data.data || res.data))
-      .catch(() => {})
-
-    // Load order history saved on this device
+  const fetchStoreAndOrders = async (phoneToUse?: string) => {
+    setIsSyncing(true)
     try {
-      const saved = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
-      const initialOrders = Array.isArray(saved) ? saved : []
-      setOrders(initialOrders)
+      const storeRes = await api.get(`/public/stores/${storeSlug}/`)
+      setStore(storeRes.data.data || storeRes.data)
+    } catch {}
 
-      // Auto fetch item details for any order missing item list
-      if (initialOrders.length > 0) {
-        let hasMissing = false
-        const promises = initialOrders.map(async (o: any) => {
-          if (!o.items || !Array.isArray(o.items) || o.items.length === 0 || !o.items[0]?.image) {
-            try {
-              const res = await api.get(`/public/stores/${storeSlug}/orders/${o.reference}/`)
-              if (res.data && res.data.items) {
-                hasMissing = true
-                return { ...o, ...res.data }
-              }
-            } catch {}
-          }
-          return o
-        })
-
-        Promise.all(promises).then(enriched => {
-          if (hasMissing) {
-            setOrders(enriched)
-            try {
-              localStorage.setItem(`qs_customer_orders_${storeSlug}`, JSON.stringify(enriched))
-            } catch {}
-          }
-        })
-      }
-    } catch {
-      setOrders([])
+    const storedPhone = phoneToUse || localStorage.getItem(`qs_customer_phone_${storeSlug}`) || ''
+    if (storedPhone) {
+      setCustomerPhone(storedPhone)
+      setPhoneInput(storedPhone)
     }
+
+    let localSaved: any[] = []
+    try {
+      localSaved = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
+    } catch {}
+
+    const references = localSaved.map((o: any) => o.reference).filter(Boolean).join(',')
+
+    // Query backend for all orders matching phone or local references
+    try {
+      const backendRes = await api.get(`/public/stores/${storeSlug}/customer-orders/`, {
+        params: { phone: storedPhone, references }
+      })
+      const backendOrders = Array.isArray(backendRes.data) ? backendRes.data : []
+      
+      // Merge backend orders with local orders without duplicates
+      const orderMap = new Map<string, any>()
+      backendOrders.forEach(o => orderMap.set(o.reference, o))
+      localSaved.forEach(o => {
+        if (!orderMap.has(o.reference)) {
+          orderMap.set(o.reference, o)
+        } else {
+          orderMap.set(o.reference, { ...orderMap.get(o.reference), ...o })
+        }
+      })
+
+      const mergedList = Array.from(orderMap.values()).sort((a, b) => {
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      })
+
+      setOrders(mergedList)
+      try {
+        localStorage.setItem(`qs_customer_orders_${storeSlug}`, JSON.stringify(mergedList))
+      } catch {}
+    } catch {
+      setOrders(localSaved)
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchStoreAndOrders()
   }, [storeSlug])
+
+  const handlePhoneSyncSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!phoneInput.trim()) return
+    localStorage.setItem(`qs_customer_phone_${storeSlug}`, phoneInput.trim())
+    setCustomerPhone(phoneInput.trim())
+    setShowPhoneSync(false)
+    fetchStoreAndOrders(phoneInput.trim())
+  }
 
   // Filtered orders list
   const filteredOrders = orders.filter(order => {
@@ -93,6 +122,8 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     if (activeFilter === 'CANCELLED') return order.status === 'CANCELLED'
     return true
   })
+
+  const paginatedOrders = filteredOrders.slice(0, displayCount)
 
   const storeTheme = getStoreTheme(store)
 
@@ -151,8 +182,45 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
               </h1>
             </div>
           </div>
-          <NotificationBellHeader />
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => fetchStoreAndOrders()}
+              title="Refresh Live Orders"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-current hover:bg-white/20 transition-colors cursor-pointer"
+            >
+              <span className={`text-xs ${isSyncing ? 'animate-spin' : ''}`}>↻</span>
+            </button>
+            <button
+              onClick={() => setShowPhoneSync(!showPhoneSync)}
+              className="hidden sm:inline-flex items-center gap-1 rounded-xl border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-bold text-current hover:bg-white/20 transition-colors cursor-pointer"
+            >
+              <span>📱 Find Orders</span>
+            </button>
+            <NotificationBellHeader />
+          </div>
         </div>
+
+        {/* PHONE NUMBER ORDER LOOKUP DRAWER */}
+        {(showPhoneSync || (!customerPhone && orders.length === 0)) && (
+          <div className="border-t border-white/10 bg-black/20 p-3">
+            <form onSubmit={handlePhoneSyncSubmit} className="mx-auto max-w-4xl flex items-center gap-2">
+              <input
+                type="tel"
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value)}
+                placeholder="Enter WhatsApp Phone # to sync past orders..."
+                className="flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-1.5 text-xs text-white placeholder-white/60 focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="rounded-xl bg-white text-slate-950 font-black px-4 py-1.5 text-xs hover:bg-slate-100 transition-all shrink-0 cursor-pointer"
+              >
+                {isSyncing ? 'Syncing...' : 'Sync Orders'}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* SEARCH & FILTER STRIP */}
         <div className={`border-t px-3.5 py-2 ${storeTheme.sub_bar_bg_class}`}>
@@ -227,7 +295,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
         ) : (
           /* CLEAN ADAPTIVE RETAIL ORDER CARDS */
           <div className="space-y-3">
-            {filteredOrders.map((order) => {
+            {paginatedOrders.map((order) => {
               const statusInfo = getStatusDisplay(order.status, order.created_at)
               const itemsList = Array.isArray(order.items) ? order.items : []
               const firstItem = itemsList[0]
@@ -364,6 +432,19 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                 </div>
               )
             })}
+
+            {/* PAGINATION / LOAD MORE BUTTON */}
+            {filteredOrders.length > displayCount && (
+              <div className="pt-3 text-center">
+                <button
+                  type="button"
+                  onClick={() => setDisplayCount((prev) => prev + 10)}
+                  className={`inline-flex items-center gap-1.5 rounded-2xl border ${storeTheme.card_border_class} bg-white dark:bg-slate-900 px-6 py-2 text-xs font-black ${storeTheme.text_primary_class} shadow-sm hover:shadow-md transition-all cursor-pointer`}
+                >
+                  <span>Load More Orders (+{filteredOrders.length - displayCount} remaining)</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 

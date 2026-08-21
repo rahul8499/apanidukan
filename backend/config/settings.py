@@ -204,7 +204,8 @@ REST_FRAMEWORK = {
         'webhook': '120/minute',     # Payment Webhooks (Razorpay callback limit)
         'public_chat': '60/hour',
         'public_tracking': '60/hour',
-        'download': '60/hour'
+        'download': '60/hour',
+        'public_report': '5/day'
     },
 }
 

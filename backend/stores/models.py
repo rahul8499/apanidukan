@@ -128,3 +128,38 @@ class ProductRequest(models.Model):
 
     def __str__(self):
         return f"Request for '{self.product_name}' by {self.customer_name}"
+
+
+class StoreReport(models.Model):
+    STATUS_OPEN = 'OPEN'
+    STATUS_REVIEWING = 'REVIEWING'
+    STATUS_RESOLVED = 'RESOLVED'
+    STATUS_DISMISSED = 'DISMISSED'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Open'),
+        (STATUS_REVIEWING, 'Reviewing'),
+        (STATUS_RESOLVED, 'Resolved'),
+        (STATUS_DISMISSED, 'Dismissed'),
+    ]
+
+    REASON_CHOICES = [
+        ('FRAUD', 'Fraud or scam concern'),
+        ('PRODUCT', 'Product or service issue'),
+        ('PAYMENT', 'Payment issue'),
+        ('ABUSE', 'Abusive or inappropriate content'),
+        ('OTHER', 'Other'),
+    ]
+
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='reports')
+    reason = models.CharField(max_length=30, choices=REASON_CHOICES)
+    details = models.TextField(max_length=1500)
+    contact_phone = models.CharField(max_length=40, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Report #{self.id} for {self.store.name}: {self.reason}'

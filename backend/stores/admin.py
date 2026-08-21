@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Store, StoreSettings, SearchQuery, ProductRequest
+from .models import Store, StoreSettings, SearchQuery, ProductRequest, StoreReport
 
 
 @admin.register(Store)
@@ -26,3 +26,24 @@ class ProductRequestAdmin(admin.ModelAdmin):
     list_display = ('id', 'store', 'product_name', 'customer_name', 'customer_phone', 'created_at')
     search_fields = ('product_name', 'customer_name', 'customer_phone', 'store__name')
     list_filter = ('store',)
+
+
+@admin.register(StoreReport)
+class StoreReportAdmin(admin.ModelAdmin):
+    list_display = ('id', 'store', 'reason', 'status', 'contact_phone', 'created_at')
+    list_filter = ('status', 'reason', 'created_at')
+    search_fields = ('store__name', 'store__slug', 'details', 'contact_phone')
+    readonly_fields = ('store', 'reason', 'details', 'contact_phone', 'created_at', 'updated_at')
+    actions = ('mark_reviewing', 'mark_resolved', 'mark_dismissed')
+
+    @admin.action(description='Mark selected reports as reviewing')
+    def mark_reviewing(self, request, queryset):
+        queryset.update(status=StoreReport.STATUS_REVIEWING)
+
+    @admin.action(description='Mark selected reports as resolved')
+    def mark_resolved(self, request, queryset):
+        queryset.update(status=StoreReport.STATUS_RESOLVED)
+
+    @admin.action(description='Dismiss selected reports')
+    def mark_dismissed(self, request, queryset):
+        queryset.update(status=StoreReport.STATUS_DISMISSED)

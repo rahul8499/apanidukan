@@ -1,7 +1,7 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, serializers, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Store
+from .models import Store, StoreReport
 from .serializers import PublicStoreSerializer
 from categories.models import Category
 from categories.serializers import CategorySerializer
@@ -272,3 +272,22 @@ class PublicValidateCouponView(generics.GenericAPIView):
             'detail': message_detail
         })
 
+
+
+class StoreReportSerializer(serializers.Serializer):
+    reason = serializers.ChoiceField(choices=[choice[0] for choice in StoreReport.REASON_CHOICES])
+    details = serializers.CharField(min_length=10, max_length=1500, trim_whitespace=True)
+    contact_phone = serializers.CharField(required=False, allow_blank=True, max_length=40)
+
+
+class PublicStoreReportView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = StoreReportSerializer
+    throttle_scope = 'public_report'
+
+    def post(self, request, slug):
+        store = get_public_store_or_404(request, slug)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        report = StoreReport.objects.create(store=store, **serializer.validated_data)
+        return Response({'success': True, 'report_id': report.id, 'message': 'Your report has been submitted for review.'}, status=status.HTTP_201_CREATED)

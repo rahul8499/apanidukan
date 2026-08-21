@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   Menu, Search, ShoppingBag, ShoppingCart, Sparkles, PackageCheck, MessageCircle, X, ChevronRight,
-  ShieldCheck, Home, Plus, Minus, Star, MapPin, Zap, TrendingUp, Tag, Layers, Crown
+  ShieldCheck, Home, Plus, Minus, Star, MapPin, Zap, TrendingUp, Tag, Layers, Crown, Flag
 } from 'lucide-react'
 import api from '../services/api'
 import InstallAppButton from '../pwa/InstallAppButton'
@@ -38,6 +38,12 @@ function Storefront() {
   const [aiSearchOpen, setAiSearchOpen] = useState(false)
   const [aiSearchProducts, setAiSearchProducts] = useState<any[] | null>(null)
   const [aiSearchQuery, setAiSearchQuery] = useState('')
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState('PRODUCT')
+  const [reportDetails, setReportDetails] = useState('')
+  const [reportContact, setReportContact] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [reportMessage, setReportMessage] = useState('')
 
   // Flipkart / Amazon style Delivery Location State
   const [userLocation, setUserLocation] = useState(() => localStorage.getItem('multistore_user_delivery_address') || '')
@@ -78,6 +84,18 @@ function Storefront() {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )
+  }
+
+  async function submitStoreReport(e: React.FormEvent) {
+    e.preventDefault()
+    if (reportDetails.trim().length < 10) { setReportMessage('Please add at least 10 characters so our team can review the issue.'); return }
+    setReportSubmitting(true); setReportMessage('')
+    try {
+      await api.post(`/public/stores/${storeSlug}/report/`, { reason: reportReason, details: reportDetails.trim(), contact_phone: reportContact.trim() })
+      setReportMessage('Report submitted. Our team will review it.')
+      setReportDetails(''); setReportContact('')
+    } catch (err: any) { setReportMessage(err?.response?.data?.detail || 'Could not submit the report. Please try again later.') }
+    finally { setReportSubmitting(false) }
   }
 
   function playCustomerChime() {
@@ -523,14 +541,6 @@ function Storefront() {
 
               {/* Right Tools */}
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <Link
-                  to={`/store/${storeSlug}/orders`}
-                  className="hidden sm:flex h-8 items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 px-2.5 text-[11px] font-bold text-slate-300 hover:text-white"
-                >
-                  <PackageCheck className="h-3.5 w-3.5 text-indigo-400" />
-                  <span>Orders</span>
-                </Link>
-
                 <NotificationBellHeader />
                 <InstallAppButton storeSlug={storeSlug} />
 
@@ -750,6 +760,21 @@ function Storefront() {
                         <span>Chat with Seller</span>
                       </div>
                       <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false)
+                        setReportOpen(true)
+                        setReportMessage('')
+                      }}
+                      className="flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-rose-300 hover:bg-rose-500/10 hover:text-rose-200 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Flag className="h-4 w-4 text-rose-400" />
+                        <span>Report this store</span>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-500" />
                     </button>
 
                     <button
@@ -1276,6 +1301,21 @@ function Storefront() {
                   Apply & Shop Now →
                 </button>
               </div>
+            </div>
+          )}
+
+          {reportOpen && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+              <form onSubmit={submitStoreReport} className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
+                <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3"><div><h3 className="text-base font-black text-slate-900">Report this store</h3><p className="mt-1 text-xs text-slate-500">Reports are reviewed by the platform team. The store is not notified of your identity.</p></div><button type="button" onClick={() => { setReportOpen(false); setReportMessage('') }} className="text-slate-400 hover:text-slate-700">✕</button></div>
+                <div className="mt-4 space-y-3">
+                  <select value={reportReason} onChange={(e) => setReportReason(e.target.value)} className="w-full rounded-xl border border-slate-200 p-2.5 text-xs font-semibold text-slate-800"><option value="FRAUD">Fraud or scam concern</option><option value="PRODUCT">Product or service issue</option><option value="PAYMENT">Payment issue</option><option value="ABUSE">Abusive or inappropriate content</option><option value="OTHER">Other</option></select>
+                  <textarea value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} required minLength={10} maxLength={1500} placeholder="Explain what happened (minimum 10 characters)" className="min-h-28 w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-800" />
+                  <input value={reportContact} onChange={(e) => setReportContact(e.target.value)} inputMode="tel" maxLength={40} placeholder="Your phone number (optional, for follow-up)" className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800" />
+                  {reportMessage && <p className="rounded-lg bg-slate-50 p-2 text-xs font-semibold text-slate-700">{reportMessage}</p>}
+                  <button disabled={reportSubmitting} className="w-full rounded-xl bg-rose-600 py-2.5 text-xs font-black text-white disabled:opacity-50">{reportSubmitting ? 'Submitting…' : 'Submit report'}</button>
+                </div>
+              </form>
             </div>
           )}
 

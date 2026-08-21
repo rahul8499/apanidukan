@@ -28,12 +28,15 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
+    phone_number = models.CharField(max_length=20, unique=True, null=True, blank=True)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    deletion_requested_at = models.DateTimeField(null=True, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     objects = UserManager()
 
@@ -41,4 +44,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.email
+        return self.email or self.phone_number or f"User-{self.id}"
+
+
+class PhoneOTP(models.Model):
+    phone_number = models.CharField(max_length=20, db_index=True)
+    otp_code = models.CharField(max_length=6)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def is_valid(self):
+        return not self.is_verified and timezone.now() <= self.expires_at
+
+    def __str__(self):
+        return f"OTP for {self.phone_number}: {self.otp_code} (verified={self.is_verified})"
+

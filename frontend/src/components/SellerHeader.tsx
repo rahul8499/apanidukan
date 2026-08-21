@@ -79,6 +79,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false)
   const [showQrModal, setShowQrModal] = useState(false)
   const [message, setMessage] = useState('')
+  const [isDeactivating, setIsDeactivating] = useState(false)
   const navigate = useNavigate()
 
   // Fulfillment & Delivery Options State
@@ -125,6 +126,18 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
     } finally {
       setIsUpdatingDeliverySettings(false)
     }
+  }
+
+  const deactivateAccount = async () => {
+    if (!window.confirm('Deactivate your account? Your store will be unpublished. Active customer orders must be resolved first.')) return
+    try {
+      setIsDeactivating(true)
+      await api.post('/auth/account/deactivate/')
+      auth.logout()
+      navigate('/login')
+    } catch (error: any) {
+      alert(error?.response?.data?.detail || 'Could not deactivate account.')
+    } finally { setIsDeactivating(false) }
   }
 
   const [scratchConfig, setScratchConfig] = useState<ScratchCardConfig>(() => {
@@ -751,6 +764,12 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-3.5">
+            <p className="text-xs font-black text-red-800">Danger zone</p>
+            <p className="mt-1 text-[11px] text-red-700">Deactivate only after all customer orders are delivered, cancelled, or refunded.</p>
+            <button type="button" disabled={isDeactivating} onClick={deactivateAccount} className="mt-3 w-full rounded-xl border border-red-300 bg-white py-2 text-xs font-black text-red-700 hover:bg-red-100 disabled:opacity-50">{isDeactivating ? 'Deactivating...' : 'Deactivate account'}</button>
           </div>
 
           {/* SECTION 1.5: 🚚 Fulfillment & Delivery Modes Controls */}

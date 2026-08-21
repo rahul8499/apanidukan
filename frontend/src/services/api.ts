@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const getApiBase = () => {
   const envBase = (import.meta as any).env?.VITE_API_BASE
-  if (envBase && !envBase.includes('localhost') && !envBase.includes('127.0.0.1')) {
+  if (envBase) {
     return envBase
   }
   return `${window.location.protocol}//${window.location.hostname}:8000/api/v1`

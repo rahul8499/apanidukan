@@ -11,22 +11,13 @@ from config.websocket import broadcast_order_event_sync
 
 class PublicStoreChatView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_chat'
 
     def post(self, request, slug):
         store = get_object_or_404(Store, slug=slug)
         session_id = request.data.get('session_id') or generate_session_id()
         cust_phone = (request.data.get('customer_phone') or '').strip()
         cust_name = (request.data.get('customer_name') or '').strip()
-        order_ref = (request.data.get('order_reference') or '').strip()
-
-        if order_ref and not cust_phone:
-            order = store.whatsapp_orders.filter(reference=order_ref).first()
-            if order:
-                if order.customer_phone:
-                    cust_phone = order.customer_phone
-                if order.customer_name and not cust_name:
-                    cust_name = order.customer_name
-
         conversation = store.conversations.filter(session_id=session_id).first()
 
         if not conversation and cust_phone:
@@ -69,6 +60,7 @@ class PublicStoreChatView(APIView):
 
 class PublicSendChatMessageView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_chat'
 
     def post(self, request, slug):
         store = get_object_or_404(Store, slug=slug)
@@ -238,6 +230,7 @@ class SellerConversationMessagesView(APIView):
 
 class PublicProductRequestAutoReplyView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_chat'
 
     def post(self, request, slug):
         store = get_object_or_404(Store, slug=slug)

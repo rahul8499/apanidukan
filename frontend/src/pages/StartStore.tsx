@@ -5,7 +5,7 @@ import api from '../services/api'
 
 const errorMessage = (error: any) => {
   const data = error?.response?.data
-  if (!data) return error?.message || 'Server se connection nahi hua. Backend running hai ya nahi check karein.';
+  if (!data) return 'Server se connection nahi hua. Backend running hai ya nahi check karein.'
   return data.detail || Object.values(data).flat().join(' ') || 'Details check karke phir try karein.'
 }
 
@@ -59,7 +59,7 @@ export default function StartStore() {
     }
   }, [searchParams])
 
-  // Send OTP via MSG91 SecureOTPWidget9U4D
+  // Send OTP
   async function handleSendOTP() {
     setError('')
     setSuccessMsg('')
@@ -74,8 +74,8 @@ export default function StartStore() {
     try {
       const res = await auth.sendOTP(cleanPhone)
       setOtpSent(true)
-      setCountdown(10)
-      setSuccessMsg(res.message || 'OTP sent successfully via MSG91!')
+      setCountdown(30)
+      setSuccessMsg(res.message || 'OTP sent successfully!')
     } catch (err: any) {
       setError(errorMessage(err))
     } finally {
@@ -90,7 +90,7 @@ export default function StartStore() {
 
     const cleanPhone = phone.replace(/\D/g, '')
     if (!otp || otp.trim().length < 4) {
-      setError('Please enter the 4-digit OTP code.')
+      setError('Please enter the OTP code sent to your mobile number.')
       return
     }
 
@@ -98,6 +98,7 @@ export default function StartStore() {
     try {
       const res = await auth.verifyOTP(cleanPhone, otp)
       if (!res.is_new_user) {
+        // User already exists, redirect to dashboard
         navigate('/dashboard')
         return
       }
@@ -275,9 +276,9 @@ export default function StartStore() {
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    maxLength={4}
+                    maxLength={6}
                     autoComplete="one-time-code"
-                    placeholder="Enter 4-digit OTP"
+                    placeholder="Enter 6-digit OTP"
                     className="premium-input flex-1 text-center font-bold text-lg tracking-widest border-2 border-indigo-300 focus:border-indigo-600 rounded-xl"
                   />
                   <button

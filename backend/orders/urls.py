@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     CreateOrderView, ListOrdersView, OrderDetailView, ListAccessesView,
-    PublicWhatsAppOrderView, PublicCustomerOrdersListView, PublicWhatsAppOrderDetailView, PublicQuickReorderView,
+    PublicCheckoutPhoneOTPSendView, PublicCheckoutPhoneOTPVerifyView, PublicWhatsAppOrderView, PublicCustomerOrdersListView, PublicWhatsAppOrderDetailView, PublicQuickReorderView,
     SellerWhatsAppOrdersView, PublicCustomerWalletView
 )
 
@@ -10,6 +10,8 @@ urlpatterns = [
     path('orders/list/', ListOrdersView.as_view(), name='list-orders'),
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
     path('orders/accesses/', ListAccessesView.as_view(), name='list-accesses'),
+    path('public/stores/<slug:slug>/checkout-phone/send-otp/', PublicCheckoutPhoneOTPSendView.as_view(), name='public-checkout-phone-send-otp'),
+    path('public/stores/<slug:slug>/checkout-phone/verify-otp/', PublicCheckoutPhoneOTPVerifyView.as_view(), name='public-checkout-phone-verify-otp'),
     path('public/stores/<slug:slug>/whatsapp-orders/', PublicWhatsAppOrderView.as_view(), name='public-whatsapp-order'),
     path('public/stores/<slug:slug>/customer-orders/', PublicCustomerOrdersListView.as_view(), name='public-customer-orders-list'),
     path('public/stores/<slug:slug>/orders/<str:reference>/', PublicWhatsAppOrderDetailView.as_view(), name='public-whatsapp-order-detail'),

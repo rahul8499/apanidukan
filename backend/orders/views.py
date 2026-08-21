@@ -1,6 +1,5 @@
 from datetime import timedelta
 from django.db import models
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, status
@@ -9,8 +8,14 @@ from rest_framework.views import APIView
 from config.websocket import broadcast_order_event_sync
 from downloads.models import DownloadToken
 from stores.models import Store
-from .models import Order, ProductAccess, WhatsAppOrder
-from .serializers import OrderSerializer, WhatsAppOrderCreateSerializer, WhatsAppOrderSerializer
+from .models import Order, ProductAccess, WhatsAppOrder, CheckoutPhoneVerification
+from accounts.services import normalize_phone, verify_msg91_widget_token
+from .serializers import (
+    OrderSerializer,
+    WhatsAppOrderCreateSerializer,
+    WhatsAppOrderSerializer,
+    WhatsAppOrderStatusUpdateSerializer,
+)
 
 
 class CreateOrderView(generics.CreateAPIView):
@@ -85,6 +90,40 @@ class ListAccessesView(APIView):
 from config.websocket import broadcast_order_event_sync
 
 
+class PublicCheckoutPhoneOTPSendView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_order'
+
+    def post(self, request, slug):
+        get_object_or_404(Store, slug=slug, is_published=True)
+        phone = normalize_phone(request.data.get('phone_number', ''))
+        if len(phone) != 10:
+            return Response({'detail': 'Enter a valid 10-digit mobile number.'}, status=status.HTTP_400_BAD_REQUEST)
+        # OTP is delivered by the MSG91 Web Widget, matching the login flow.
+        return Response({'success': True, 'message': 'OTP sent to your mobile number.'})
+
+
+class PublicCheckoutPhoneOTPVerifyView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_order'
+
+    def post(self, request, slug):
+        store = get_object_or_404(Store, slug=slug, is_published=True)
+        phone = normalize_phone(request.data.get('phone_number', ''))
+        access_token = str(request.data.get('access_token', '')).strip()
+        verified = verify_msg91_widget_token(access_token) if access_token else {'success': False}
+        verified_phone = normalize_phone(verified.get('data', {}).get('mobile', '')) if verified.get('success') else ''
+        if not verified.get('success') or (verified_phone and verified_phone != phone):
+            return Response({'detail': 'MSG91 phone verification failed. Please request a new OTP.'}, status=status.HTTP_400_BAD_REQUEST)
+        verification = CheckoutPhoneVerification.objects.create(
+            store=store, customer_phone=phone, expires_at=timezone.now() + timedelta(minutes=10)
+        )
+        return Response({
+            'success': True, 'message': 'Phone number verified.',
+            'verification_token': str(verification.token), 'expires_in_seconds': 600,
+        })
+
+
 class PublicWhatsAppOrderView(APIView):
     permission_classes = [permissions.AllowAny]
     throttle_scope = 'public_order'
@@ -107,22 +146,14 @@ class PublicWhatsAppOrderView(APIView):
 
 class PublicCustomerOrdersListView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_tracking'
 
     def get(self, request, slug):
         store = get_object_or_404(Store, slug=slug)
-        phone = request.query_params.get('phone', '').strip()
-        references = request.query_params.get('references', '').strip()
-
-        ref_list = [r.strip() for r in references.split(',') if r.strip()] if references else []
-
-        queryset = WhatsAppOrder.objects.filter(store=store)
-
-        if phone and ref_list:
-            queryset = queryset.filter(Q(customer_phone__icontains=phone) | Q(reference__in=ref_list))
-        elif phone:
-            queryset = queryset.filter(customer_phone__icontains=phone)
-        elif ref_list:
-            queryset = queryset.filter(reference__in=ref_list)
+        tokens = [value.strip() for value in request.query_params.get('tracking_tokens', '').split(',') if value.strip()]
+        if not tokens:
+            return Response({'detail': 'A tracking token is required.'}, status=status.HTTP_403_FORBIDDEN)
+        queryset = WhatsAppOrder.objects.filter(store=store, tracking_token__in=tokens)
 
         queryset = queryset.order_by('-created_at')[:50]
         serializer = WhatsAppOrderSerializer(queryset, many=True)
@@ -131,10 +162,12 @@ class PublicCustomerOrdersListView(APIView):
 
 class PublicWhatsAppOrderDetailView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_tracking'
 
     def get(self, request, slug, reference):
         store = get_object_or_404(Store, slug=slug)
-        order = get_object_or_404(WhatsAppOrder, store=store, reference=reference)
+        token = request.query_params.get('tracking_token', '').strip()
+        order = get_object_or_404(WhatsAppOrder, store=store, reference=reference, tracking_token=token)
         data = WhatsAppOrderSerializer(order).data
         data['store_name'] = store.name
         data['store_phone'] = store.phone_number
@@ -149,7 +182,8 @@ class PublicQuickReorderView(APIView):
 
     def post(self, request, slug, reference):
         store = get_object_or_404(Store, slug=slug, is_published=True)
-        previous_order = get_object_or_404(WhatsAppOrder, store=store, reference=reference)
+        token = request.data.get('tracking_token', '').strip()
+        previous_order = get_object_or_404(WhatsAppOrder, store=store, reference=reference, tracking_token=token)
 
         # Prices and availability are always revalidated by the normal order serializer;
         # never trust the historical item price stored in the old order.
@@ -199,10 +233,10 @@ class SellerWhatsAppOrdersView(APIView):
         order = get_object_or_404(WhatsAppOrder, id=order_id, store=store)
         if set(request.data.keys()) != {'status'}:
             return Response({'detail': 'Only order status can be updated.'}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = WhatsAppOrderSerializer(order, data=request.data, partial=True)
+        serializer = WhatsAppOrderStatusUpdateSerializer(order, data=request.data)
         serializer.is_valid(raise_exception=True)
         updated_order = serializer.save()
-        order_data = serializer.data
+        order_data = WhatsAppOrderSerializer(updated_order).data
 
         # Broadcast real-time status update to customer tracking screen & seller dashboard
         broadcast_order_event_sync(f"order_{updated_order.reference}", {
@@ -235,5 +269,4 @@ class PublicCustomerWalletView(APIView):
             'total_earned': str(wallet.total_earned),
             'total_redeemed': str(wallet.total_redeemed),
         })
-
 

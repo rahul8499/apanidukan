@@ -51,8 +51,9 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     } catch {}
 
     try {
-      const params: any = {}
-      if (phoneToQuery) params.phone = phoneToQuery
+      const savedOrders = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
+      const tokens = savedOrders.map((order: any) => order.tracking_token).filter(Boolean)
+      const params: any = { tracking_tokens: tokens.join(',') }
 
       const res = await api.get(`/public/stores/${storeSlug}/customer-orders/`, { params })
       const liveOrders = Array.isArray(res.data) ? res.data : []

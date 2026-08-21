@@ -12,7 +12,7 @@ RAZORPAY_KEY_SECRET = (os.environ.get('RAZORPAY_KEY_SECRET') or '').strip(" '\""
 RAZORPAY_WEBHOOK_SECRET = (os.environ.get('RAZORPAY_WEBHOOK_SECRET') or '').strip(" '\"")
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret')
-DEBUG = os.environ.get('DEBUG', '1') == '1'
+DEBUG = os.environ.get('DEBUG', '0') == '1'
 
 _allowed_hosts = os.environ.get('ALLOWED_HOSTS')
 if _allowed_hosts:
@@ -21,6 +21,20 @@ if _allowed_hosts:
         ALLOWED_HOSTS.append('*')
 else:
     ALLOWED_HOSTS = ['*'] if DEBUG else ['localhost', '127.0.0.1']
+
+if not DEBUG:
+    if SECRET_KEY == 'dev-secret' or len(SECRET_KEY) < 32:
+        raise ImproperlyConfigured('Set a strong SECRET_KEY before running with DEBUG=False.')
+    if not _allowed_hosts:
+        raise ImproperlyConfigured('Set ALLOWED_HOSTS before running with DEBUG=False.')
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', '1') == '1'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -50,6 +64,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'config.middleware.HideApiFromBrowserMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -61,7 +76,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -163,6 +178,12 @@ RATE_LIMIT_WHITELIST_IPS = [ip.strip() for ip in _whitelist_env.split(',') if ip
 
 # Django REST Framework Rate Limiting & Security Throttling (With IP Whitelisting)
 REST_FRAMEWORK = {
+    # Do not expose DRF's browsable API, forms or permission pages in a
+    # production browser. The frontend communicates with these endpoints as
+    # JSON only.
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -181,6 +202,9 @@ REST_FRAMEWORK = {
         'public_order': '30/hour',   # Order placement throttling
         'ai_assistant': '30/hour',   # AI assistant request quota
         'webhook': '120/minute',     # Payment Webhooks (Razorpay callback limit)
+        'public_chat': '60/hour',
+        'public_tracking': '60/hour',
+        'download': '60/hour'
     },
 }
 

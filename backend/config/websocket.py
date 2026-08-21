@@ -28,13 +28,13 @@ async def remove_subscriber(topic: str, send_func):
 async def broadcast_to_topic(topic: str, data: dict):
     async with _subscriber_lock:
         subscribers = list(_topic_subscribers.get(topic, []))
-    
+
     if not subscribers:
         return
 
     payload = json.dumps(data)
     message = {'type': 'websocket.send', 'text': payload}
-    
+
     for send_func in subscribers:
         try:
             await send_func(message)
@@ -72,6 +72,12 @@ async def websocket_application(scope, receive, send):
     if len(parts) >= 3 and parts[0] == 'ws':
         topic_type = parts[1]
         topic_id = parts[2]
+        # Customer order updates are delivered through the token-protected
+        # HTTP tracking endpoint. Do not expose order updates on a public,
+        # reference-only WebSocket channel.
+        if topic_type == 'order':
+            await send({'type': 'websocket.close', 'code': 4403})
+            return
         topic = f"{topic_type}_{topic_id}"
     else:
         topic = 'general'

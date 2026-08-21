@@ -139,51 +139,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const auth = useAuth()
   const [activeStoreId, setActiveStoreId] = useState<number | null>(null)
 
-  // 1. Dedicated Seller Notification State (Orders, Messages, Stock, Requests)
-  const [sellerNotifications, setSellerNotifications] = useState<AppNotification[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('qs_seller_notifications')
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed
-        }
-      } catch { }
-    }
-    return [
-      {
-        id: 'seller_welcome',
-        type: 'system',
-        title: '🔔 Seller Command Center Live',
-        body: 'Real-time soundbox order alerts, customer messages, and requests active.',
-        time: 'Just now',
-        read: false
-      }
-    ]
-  })
-
-  // 2. Dedicated Customer Notification State (Product Releases, Coupons, Order Tracking)
-  const [customerNotifications, setCustomerNotifications] = useState<AppNotification[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('qs_customer_notifications')
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed
-        }
-      } catch { }
-    }
-    return [
-      {
-        id: 'customer_welcome',
-        type: 'system',
-        title: '🛍️ Storefront Updates Active',
-        body: 'Explore live store offers and stay updated on new product releases.',
-        time: 'Just now',
-        read: false
-      }
-    ]
-  })
+  // Notification history is loaded only for the active seller/store or customer/store scope.
+  const [sellerNotifications, setSellerNotifications] = useState<AppNotification[]>([])
+  const [customerNotifications, setCustomerNotifications] = useState<AppNotification[]>([])
 
   // Android / iOS Mobile gesture unlock on any touch, tap, scroll, or pointerdown
   useEffect(() => {
@@ -221,24 +179,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [])
 
-  // Sync seller notifications to localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('qs_seller_notifications', JSON.stringify(sellerNotifications.slice(0, 50)))
-      } catch { }
-    }
-  }, [sellerNotifications])
-
-  // Sync customer notifications to localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('qs_customer_notifications', JSON.stringify(customerNotifications.slice(0, 50)))
-      } catch { }
-    }
-  }, [customerNotifications])
-
   const [showNotifDrawer, setShowNotifDrawer] = useState(false)
   const [permission, setPermission] = useState<string>(
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
@@ -270,13 +210,46 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return activeStoreId
   }
 
-  const effectiveStoreId = getCurrentStoreId()
-
   const isSellerRoute = () => {
     if (typeof window === 'undefined') return false
     const path = window.location.pathname
     return path.startsWith('/stores/') || path === '/dashboard' || path === '/platform'
   }
+
+  const effectiveStoreId = getCurrentStoreId()
+  const trackingToken = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null
+  const customerIdentity = typeof window !== 'undefined' ? (() => {
+    const key = 'qs_notification_visitor_id'
+    let value = localStorage.getItem(key)
+    if (!value) {
+      value = crypto.randomUUID ? crypto.randomUUID() : `visitor_${Math.random().toString(36).slice(2)}`
+      localStorage.setItem(key, value)
+    }
+    return value
+  })() : 'server'
+  const notificationScope = isSellerRoute()
+    ? `seller_${auth.user?.id || 'anonymous'}_store_${effectiveStoreId || 'none'}`
+    : `customer_store_${effectiveStoreId || 'none'}_${trackingToken || customerIdentity}`
+  const notificationStorageKey = `qs_notifications_${notificationScope}`
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const saved = JSON.parse(localStorage.getItem(notificationStorageKey) || '[]')
+      const notifications = Array.isArray(saved) ? saved : []
+      if (isSellerRoute()) setSellerNotifications(notifications)
+      else setCustomerNotifications(notifications)
+    } catch {
+      if (isSellerRoute()) setSellerNotifications([])
+      else setCustomerNotifications([])
+    }
+  }, [notificationStorageKey])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const notifications = isSellerRoute() ? sellerNotifications : customerNotifications
+    try { localStorage.setItem(notificationStorageKey, JSON.stringify(notifications.slice(0, 50))) } catch { }
+  }, [notificationStorageKey, sellerNotifications, customerNotifications])
 
   // Fast polling backup sync for instant bell icon notifications (Every 4 seconds - Seller Only)
   const knownOrderIdsRef = React.useRef<Set<number>>(new Set())

@@ -98,6 +98,7 @@ class WhatsAppOrder(models.Model):
 
     store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='whatsapp_orders')
     reference = models.CharField(max_length=16, unique=True, default=generate_order_number, editable=False)
+    tracking_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, null=True, blank=True)
     order_type = models.CharField(max_length=30, choices=ORDER_TYPE_CHOICES, default='HOME_DELIVERY')
     customer_name = models.CharField(max_length=150, blank=True)
     customer_phone = models.CharField(max_length=40, blank=True)
@@ -142,3 +143,16 @@ class CustomerWallet(models.Model):
     def __str__(self):
         return f'Wallet {self.customer_phone} ({self.store.name}): ₹{self.balance}'
 
+
+
+class CheckoutPhoneVerification(models.Model):
+    """Single-use proof that a customer controls the order phone number."""
+    store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='checkout_phone_verifications')
+    customer_phone = models.CharField(max_length=40, db_index=True)
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def is_valid(self):
+        return not self.is_used and timezone.now() <= self.expires_at

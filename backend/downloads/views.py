@@ -9,6 +9,7 @@ from django.http import FileResponse, HttpResponseRedirect
 
 class DownloadView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'download'
 
     def get(self, request, token):
         dt = get_object_or_404(DownloadToken, token=token)

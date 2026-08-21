@@ -1,8 +1,9 @@
 from rest_framework import serializers
-from .models import Order, OrderItem, Payment, WhatsAppOrder, CustomerWallet
+from .models import Order, OrderItem, Payment, WhatsAppOrder, CustomerWallet, CheckoutPhoneVerification
 from products.models import Product, Coupon
 from django.db import transaction, models
 from django.utils import timezone
+from accounts.services import normalize_phone
 from decimal import Decimal
 
 
@@ -35,7 +36,7 @@ class OrderSerializer(serializers.ModelSerializer):
                 product_id = item['product'].id if isinstance(item['product'], Product) else item['product']
                 product = products_by_id[product_id]
                 quantity = item.get('quantity', 1)
-                
+
                 if product.stock_quantity <= 0:
                     raise serializers.ValidationError(f"'{product.name}' is out of stock.")
                 if product.stock_quantity < quantity:
@@ -67,15 +68,23 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
     coupon_code = serializers.CharField(required=False, allow_blank=True, max_length=50)
     discount_amount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, default=Decimal('0.00'))
     wallet_points_to_redeem = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, default=Decimal('0.00'))
+    checkout_verification_token = serializers.UUIDField(write_only=True)
 
     def validate_customer_phone(self, value):
-        value = value.strip()
-        if not value:
-            raise serializers.ValidationError('WhatsApp phone number is required.')
+        value = normalize_phone(value)
+        if len(value) != 10:
+            raise serializers.ValidationError('Enter a valid 10-digit WhatsApp phone number.')
         return value
 
     def create(self, validated_data):
         store = self.context['store']
+        verification = CheckoutPhoneVerification.objects.filter(
+            token=validated_data.pop('checkout_verification_token'),
+            store=store,
+            customer_phone=validated_data.get('customer_phone', '').strip(),
+        ).first()
+        if not verification or not verification.is_valid():
+            raise serializers.ValidationError({'checkout_verification_token': 'Verify this phone number before placing the order.'})
         requested = validated_data['items']
         product_ids = [item.get('id') for item in requested]
         if any(not isinstance(product_id, int) for product_id in product_ids) or len(product_ids) != len(set(product_ids)):
@@ -84,7 +93,7 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
         if products.count() != len(product_ids):
             raise serializers.ValidationError('One or more cart items are no longer available.')
         product_map = {product.id: product for product in products}
-        
+
         # Stock check validation before transaction
         for item in requested:
             quantity = item.get('quantity', 1)
@@ -123,7 +132,7 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
             if order_type == 'HOME_DELIVERY':
                 if getattr(store, 'allow_home_delivery', True) is False:
                     raise serializers.ValidationError({'order_type': 'Home delivery is currently not offered by this store.'})
-                
+
                 min_del = Decimal(str(getattr(store, 'min_delivery_order', 0) or 0))
                 if min_del > Decimal('0.00') and subtotal < min_del:
                     raise serializers.ValidationError({
@@ -192,10 +201,10 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                             server_delivery_fee = Decimal('0.00')
                         else:
                             server_discount += coupon.discount_value
-                        
+
                         # Increment coupon usage count atomically
                         Coupon.objects.filter(id=coupon.id).update(usage_count=models.F('usage_count') + 1)
-                
+
                 # Check if there was also an active client-side flash sale discount
                 client_disc = Decimal(str(validated_data.get('discount_amount', 0)))
                 if client_disc > server_discount:
@@ -269,6 +278,8 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                 wallet_points_redeemed=wallet_redeemed,
                 wallet_cashback_earned=cashback_earned,
             )
+            verification.is_used = True
+            verification.save(update_fields=['is_used'])
         return order
 
 
@@ -276,13 +287,46 @@ class WhatsAppOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = WhatsAppOrder
         fields = (
-            'id', 'reference', 'order_type', 'customer_name', 'customer_phone',
+            'id', 'reference', 'tracking_token', 'order_type', 'customer_name', 'customer_phone',
             'payment_type', 'delivery_address', 'delivery_fee', 'delivery_distance_km',
             'location_url', 'coupon_code', 'discount_amount', 'wallet_points_redeemed',
             'wallet_cashback_earned', 'items', 'total',
             'currency', 'status', 'created_at', 'updated_at'
         )
-        read_only_fields = ('id', 'reference', 'items', 'total', 'currency', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'reference', 'tracking_token', 'items', 'total', 'currency', 'created_at', 'updated_at')
+
+
+class WhatsAppOrderStatusUpdateSerializer(serializers.ModelSerializer):
+    """The seller's only permitted post-order change is fulfillment status."""
+
+    ALLOWED_TRANSITIONS = {
+        WhatsAppOrder.STATUS_NEW: {
+            WhatsAppOrder.STATUS_CONFIRMED,
+            WhatsAppOrder.STATUS_CANCELLED,
+        },
+        WhatsAppOrder.STATUS_CONFIRMED: {
+            WhatsAppOrder.STATUS_PAID,
+            WhatsAppOrder.STATUS_DELIVERED,
+            WhatsAppOrder.STATUS_CANCELLED,
+        },
+        WhatsAppOrder.STATUS_PAID: {WhatsAppOrder.STATUS_DELIVERED},
+        WhatsAppOrder.STATUS_DELIVERED: set(),
+        WhatsAppOrder.STATUS_CANCELLED: set(),
+    }
+
+    class Meta:
+        model = WhatsAppOrder
+        fields = ('status',)
+
+    def validate_status(self, value):
+        current_status = self.instance.status
+        if value == current_status:
+            return value
+        if value not in self.ALLOWED_TRANSITIONS[current_status]:
+            raise serializers.ValidationError(
+                f"An order cannot move from {current_status} to {value}."
+            )
+        return value
 
 
 class CustomerWalletSerializer(serializers.ModelSerializer):

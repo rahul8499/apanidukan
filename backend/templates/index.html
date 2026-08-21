@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Permission denied</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        align-items: center;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(99, 102, 241, .22), transparent 34%),
+          #050505;
+        color: #f8fafc;
+        display: flex;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        justify-content: center;
+        margin: 0;
+        min-height: 100vh;
+        padding: 24px;
+      }
+      main {
+        background: rgba(18, 18, 20, .92);
+        border: 1px solid #29292e;
+        border-radius: 24px;
+        box-shadow: 0 28px 80px rgba(0, 0, 0, .55);
+        max-width: 440px;
+        padding: 44px 32px 36px;
+        text-align: center;
+        width: 100%;
+      }
+      .lock {
+        align-items: center;
+        background: linear-gradient(145deg, #29292e, #16161a);
+        border: 1px solid #3d3d45;
+        border-radius: 18px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 28px rgba(0,0,0,.35);
+        display: flex;
+        height: 72px;
+        justify-content: center;
+        margin: 0 auto 24px;
+        width: 72px;
+      }
+      .lock svg { height: 34px; stroke: #fff; width: 34px; }
+      .code { color: #a5b4fc; font-size: 12px; font-weight: 800; letter-spacing: .16em; }
+      h1 { font-size: 30px; letter-spacing: -.045em; margin: 10px 0 12px; }
+      p { color: #a1a1aa; line-height: 1.6; margin: 0; }
+      a {
+        background: #fff;
+        border-radius: 12px;
+        color: #09090b;
+        display: inline-block;
+        font-weight: 700;
+        margin-top: 26px;
+        padding: 13px 20px;
+        text-decoration: none;
+      }
+      a:hover { background: #e4e4e7; }
+      .note { color: #71717a; font-size: 12px; margin-top: 22px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="lock" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="10" width="16" height="10" rx="2"></rect>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+          <path d="M12 14v2"></path>
+        </svg>
+      </div>
+      <div class="code">ERROR 403</div>
+      <h1>Permission denied</h1>
+      <p>This area is protected. Please use the store application to continue.</p>
+      <a href="{{ frontend_url }}">Open store</a>
+      <div class="note">Protected API access</div>
+    </main>
+  </body>
+</html>

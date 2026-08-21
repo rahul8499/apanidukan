@@ -305,7 +305,10 @@ class RazorpaySubscriptionWebhookView(APIView):
                     is_valid = True
                     break
 
-        if not is_valid and received_sig:
+        if not webhook_secret and not emergency_secret:
+            logger.critical('Razorpay webhook rejected: no webhook secret configured.')
+            return Response({'status': 'webhook unavailable'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        if not is_valid:
             logger.error("Razorpay Webhook signature validation failed!")
             return Response({'status': 'invalid signature'}, status=status.HTTP_400_BAD_REQUEST)
 

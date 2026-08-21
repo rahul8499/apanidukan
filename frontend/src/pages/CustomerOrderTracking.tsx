@@ -38,11 +38,12 @@ function CustomerOrderTrackingContent() {
   const [wsConnected, setWsConnected] = useState(false)
   const [reordering, setReordering] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const trackingToken = new URLSearchParams(window.location.search).get('token') || ''
 
   const fetchOrder = async () => {
     try {
       const [orderRes, storeRes] = await Promise.allSettled([
-        api.get(`/public/stores/${storeSlug}/orders/${reference}/`),
+        api.get(`/public/stores/${storeSlug}/orders/${reference}/`, { params: { tracking_token: trackingToken } }),
         api.get(`/public/stores/${storeSlug}/`)
       ])
 
@@ -65,7 +66,7 @@ function CustomerOrderTrackingContent() {
 
   useEffect(() => {
     fetchOrder()
-  }, [storeSlug, reference])
+  }, [storeSlug, reference, trackingToken])
 
   // WebSocket Live Connection + Polling Fallback
   useEffect(() => {
@@ -149,14 +150,14 @@ function CustomerOrderTrackingContent() {
       if (socket) socket.close()
       clearInterval(interval)
     }
-  }, [reference])
+  }, [reference, trackingToken])
 
   const quickReorder = async () => {
     if (!storeSlug || !reference || reordering) return
     setReordering(true)
     setError('')
     try {
-      const response = await api.post(`/public/stores/${storeSlug}/orders/${reference}/quick-reorder/`)
+      const response = await api.post(`/public/stores/${storeSlug}/orders/${reference}/quick-reorder/`, { tracking_token: trackingToken })
       const newOrder = response.data
       const number = String(order?.store_phone || '').replace(/\D/g, '')
       if (number) {
@@ -170,7 +171,7 @@ function CustomerOrderTrackingContent() {
         ]
         window.open(`https://wa.me/${number}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer')
       }
-      navigate(`/store/${storeSlug}/order/${newOrder.reference}`)
+      navigate(`/store/${storeSlug}/order/${newOrder.reference}?token=${newOrder.tracking_token}`)
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Some items are no longer available. Please add them from store again.')
     } finally {

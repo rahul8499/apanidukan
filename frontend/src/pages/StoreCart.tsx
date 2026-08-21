@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { StoreCartProvider, useStoreCart } from '../context/StoreCartContext'
 import api from '../services/api'
+import { sendMsg91WidgetOtp, verifyMsg91WidgetOtp } from '../context/AuthContext'
 import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
 import NotificationBellHeader from '../components/NotificationBellHeader'
@@ -42,6 +43,10 @@ function CartContent() {
   const [deliveryAddress, setDeliveryAddress] = useState(() => localStorage.getItem('multistore_user_delivery_address') || '')
   const [locationUrl, setLocationUrl] = useState('')
   const [locationLoading, setLocationLoading] = useState(false)
+  const [checkoutOtp, setCheckoutOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [checkoutVerificationToken, setCheckoutVerificationToken] = useState('')
 
   // Coupons State
   const [availableCoupons, setAvailableCoupons] = useState<any[]>([])
@@ -327,6 +332,22 @@ function CartContent() {
     )
   }
 
+  async function sendCheckoutOtp() {
+    const phone = customerPhone.trim()
+    if (!/^\d{10}$/.test(phone.replace(/\D/g, ''))) { setError('Enter a valid 10-digit phone number first.'); return }
+    setOtpLoading(true); setError('')
+    try { await sendMsg91WidgetOtp(phone); await api.post(`/public/stores/${storeSlug}/checkout-phone/send-otp/`, { phone_number: phone }); setOtpSent(true); setCheckoutVerificationToken('') }
+    catch (err: any) { setError(err?.response?.data?.detail || err?.message || 'Could not send OTP.') }
+    finally { setOtpLoading(false) }
+  }
+
+  async function verifyCheckoutOtp() {
+    setOtpLoading(true); setError('')
+    try { const accessToken = await verifyMsg91WidgetOtp(checkoutOtp); const response = await api.post(`/public/stores/${storeSlug}/checkout-phone/verify-otp/`, { phone_number: customerPhone.trim(), access_token: accessToken }); setCheckoutVerificationToken(response.data.verification_token); setOtpSent(false) }
+    catch (err: any) { setError(err?.response?.data?.detail || 'Invalid or expired OTP.') }
+    finally { setOtpLoading(false) }
+  }
+
   async function orderOnWhatsApp() {
     const trimmedName = customerName.trim()
     const trimmedPhone = customerPhone.trim()
@@ -334,6 +355,10 @@ function CartContent() {
 
     if (!trimmedPhone) {
       setError('WhatsApp phone number is required to place your order.')
+      return
+    }
+    if (!checkoutVerificationToken) {
+      setError('Verify your phone number with OTP before placing the order.')
       return
     }
     if (!number) {
@@ -361,6 +386,7 @@ function CartContent() {
         items: cart.items.map(item => ({ id: item.id, quantity: item.quantity })),
         customer_name: trimmedName,
         customer_phone: trimmedPhone,
+        checkout_verification_token: checkoutVerificationToken,
         payment_type: paymentType,
         delivery_address: finalDeliveryAddress,
         location_url: locationUrl,
@@ -379,6 +405,7 @@ function CartContent() {
         delivery_fee: order.delivery_fee || 0,
         customer_name: trimmedName,
         customer_phone: trimmedPhone,
+        tracking_token: order.tracking_token,
         items: (order.items && order.items.length > 0)
           ? order.items
           : cart.items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, image: i.image }))
@@ -387,29 +414,48 @@ function CartContent() {
       if (trimmedPhone) {
         localStorage.setItem(`qs_customer_phone_${storeSlug}`, trimmedPhone)
       }
-      const paymentLabel = order.payment_type === 'ONLINE' ? 'Online Payment' : 'COD'
-      const fulfillmentLabel = orderType === 'STORE_PICKUP' ? '🏪 Walk-in Store Pickup' : '🚚 Home Delivery'
-      const trackingUrl = `${window.location.origin}/store/${storeSlug}/order/${order.reference}`
+      const paymentLabel = order.payment_type === 'ONLINE' ? 'Online payment' : 'Cash on delivery'
+      const fulfillmentLabel = orderType === 'STORE_PICKUP' ? 'Store pickup' : 'Home delivery'
+      const itemLines = order.items.map((item: any) => {
+        const unitPrice = Number(item.price || 0)
+        const quantity = Number(item.quantity || 1)
+        return `• ${item.name || 'Item'} × ${quantity} — ₹${(unitPrice * quantity).toFixed(2)}`
+      })
+      const itemSubtotal = order.items.reduce((total: number, item: any) => total + (Number(item.price || 0) * Number(item.quantity || 1)), 0)
 
+      // WhatsApp opens from the customer's device, so it must contain a real,
+      // complete order slip for the seller—not an internal dashboard alert.
       const lines = [
-        `🛒 New ${paymentLabel} Order #${order.reference}`,
-        `📦 Order Type: ${fulfillmentLabel}`,
-        `Customer: ${order.customer_name || 'Not provided'}`,
-        ...(order.customer_phone ? [`Phone: ${order.customer_phone}`] : []),
-        `Items: ${order.items.map((item: any) => `${item.name} × ${item.quantity}`).join(', ')}`,
-        `Subtotal: ₹${cart.total.toFixed(2)}`,
-        ...(flashSale?.active && flashSaleDiscount > 0 ? [`⚡ Flash Sale (${flashSale.discount}% OFF): -₹${flashSaleDiscount.toFixed(2)}`] : []),
-        ...(appliedCoupons.length > 0 ? [`🎟️ Coupons (${appliedCodes}): -₹${couponDiscount.toFixed(2)}`] : []),
-        `Total Payable: ₹${finalTotal.toFixed(2)}`,
-        ...(orderType === 'STORE_PICKUP' ? [`Pickup Shop Address: ${store?.address || store?.name}`] : (order.delivery_address ? [`Delivery Address: ${order.delivery_address}`] : [])),
-        ...(order.location_url ? [`GPS Location: ${order.location_url}`] : []),
-        `\n📌 Track Order Live & Invoice:`,
-        `${trackingUrl}`
+        `*NEW ORDER* #${order.reference}`,
+        '',
+        '*Customer details*',
+        `Name: ${order.customer_name || 'Customer'}`,
+        `Phone: ${order.customer_phone || trimmedPhone} (Verified ✓)`,
+        '',
+        '*Order items*',
+        ...itemLines,
+        '',
+        '*Payment & delivery*',
+        `Payment: ${paymentLabel}`,
+        `Fulfilment: ${fulfillmentLabel}`,
+        ...(orderType === 'STORE_PICKUP'
+          ? [`Pickup from: ${store?.address || store?.name || 'Store location'}`]
+          : [`Delivery address: ${order.delivery_address || 'Not provided'}`]),
+        ...(order.location_url ? [`Location: ${order.location_url}`] : []),
+        '',
+        '*Bill summary*',
+        `Items subtotal: ₹${itemSubtotal.toFixed(2)}`,
+        ...(Number(order.discount_amount || 0) > 0 ? [`Discount: -₹${Number(order.discount_amount).toFixed(2)}`] : []),
+        ...(Number(order.delivery_fee || 0) > 0 ? [`Delivery fee: ₹${Number(order.delivery_fee).toFixed(2)}`] : []),
+        `*Total payable: ₹${Number(order.total).toFixed(2)}*`,
+        '',
+        'Please confirm this order with the customer.'
       ]
       window.open(`https://wa.me/${number}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer')
 
       cart.clear()
-      navigate(`/store/${storeSlug}/order/${order.reference}`)
+      navigate(`/store/${storeSlug}/order/${order.reference}?token=${order.tracking_token}`)
+
     } catch (requestError: any) {
       setError(requestError?.response?.data?.detail || 'Order could not be created. Please try again.')
     }
@@ -714,8 +760,13 @@ function CartContent() {
                       inputMode="tel"
                       placeholder="e.g. 9876543210"
                       value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      onChange={(e) => { setCustomerPhone(e.target.value); setCheckoutVerificationToken(''); setOtpSent(false) }}
                     />
+                    {checkoutVerificationToken ? <p className="mt-1 text-[10px] font-bold text-emerald-600">✓ Phone number verified</p> : !otpSent ? (
+                      <button type="button" onClick={sendCheckoutOtp} disabled={otpLoading} className="mt-1 text-[10px] font-extrabold text-indigo-600 hover:underline disabled:opacity-50">{otpLoading ? 'Sending OTP…' : 'Verify phone with OTP'}</button>
+                    ) : (
+                      <div className="mt-1 flex gap-1.5"><input value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" placeholder="Enter OTP" className="min-w-0 flex-1 rounded-lg border border-indigo-200 p-2 text-xs" /><button type="button" onClick={verifyCheckoutOtp} disabled={otpLoading || checkoutOtp.length < 4} className="rounded-lg bg-indigo-600 px-2 text-[10px] font-bold text-white disabled:opacity-50">{otpLoading ? '…' : 'Verify'}</button></div>
+                    )}
                   </div>
                 </div>
 

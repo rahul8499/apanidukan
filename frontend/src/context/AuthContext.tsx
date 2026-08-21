@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import api from '../services/api'
 
-export type User = { 
-  id: number; 
-  email: string; 
+export type User = {
+  id: number;
+  email: string;
   phone_number?: string;
-  first_name?: string; 
-  last_name?: string; 
-  is_staff?: boolean 
+  first_name?: string;
+  last_name?: string;
+  is_staff?: boolean
 }
 
 type AuthContextType = {
@@ -78,6 +78,24 @@ function ensureMsg91Widget(): Promise<void> {
   return msg91Ready
 }
 
+export async function sendMsg91WidgetOtp(phoneNumber: string) {
+  await ensureMsg91Widget()
+  await new Promise<void>((resolve, reject) => {
+    if (!window.sendOtp) return reject(new Error('MSG91 sendOtp is unavailable.'))
+    window.sendOtp('91' + phoneNumber.replace(/\D/g, '').slice(-10), () => resolve(), (error: any) => reject(msg91Error(error)))
+  })
+}
+
+export async function verifyMsg91WidgetOtp(otp: string): Promise<string> {
+  await ensureMsg91Widget()
+  const token = await new Promise<string>((resolve, reject) => {
+    if (!window.verifyOtp) return reject(new Error('MSG91 verifyOtp is unavailable.'))
+    window.verifyOtp(otp, (data: any) => resolve(data?.accessToken || data?.access_token || data?.token || data?.message || data?.data?.accessToken || data?.data?.message || ''), (error: any) => reject(msg91Error(error)))
+  })
+  if (!token) throw new Error('MSG91 did not return a verification token.')
+  return token
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
@@ -111,21 +129,13 @@ export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
   }
 
   async function sendOTP(phone_number: string) {
-    await ensureMsg91Widget()
-    await new Promise<void>((resolve, reject) => {
-      if (!window.sendOtp) return reject(new Error('MSG91 sendOtp is unavailable.'))
-      window.sendOtp('91' + phone_number, () => resolve(), (error: any) => reject(msg91Error(error)))
-    })
+    await sendMsg91WidgetOtp(phone_number)
     const exists = await api.post('/auth/otp/send/', { phone_number, provider_only: true })
     return { success: true, message: 'OTP sent to your mobile number.', phone_number, user_exists: Boolean(exists.data.user_exists) }
   }
 
   async function verifyOTP(phone_number: string, otp: string, access_token?: string) {
-    await ensureMsg91Widget()
-    const verifiedToken = access_token || await new Promise<string>((resolve, reject) => {
-      if (!window.verifyOtp) return reject(new Error('MSG91 verifyOtp is unavailable.'))
-      window.verifyOtp(otp, (data: any) => resolve(data?.accessToken || data?.access_token || data?.token || data?.message || data?.data?.accessToken || data?.data?.message || ''), (error: any) => reject(msg91Error(error)))
-    })
+    const verifiedToken = access_token || await verifyMsg91WidgetOtp(otp)
     if (!verifiedToken) throw new Error('MSG91 did not return a verification token.')
     const res = await api.post('/auth/otp/verify/', { phone_number, otp: '', access_token: verifiedToken })
     const data = res.data

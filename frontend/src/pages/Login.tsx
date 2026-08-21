@@ -22,7 +22,7 @@ export default function Login() {
   const auth = useAuth()
   const navigate = useNavigate()
 
-  // Countdown timer for OTP resend (10s resend timer matching MSG91 widget settings)
+  // Countdown timer for OTP resend
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
@@ -46,7 +46,7 @@ export default function Login() {
     }
   }
 
-  // Send OTP via MSG91 SecureOTPWidget9U4D
+  // Send OTP
   async function handleSendOTP(e?: React.FormEvent) {
     if (e) e.preventDefault()
     setError(null)
@@ -62,10 +62,10 @@ export default function Login() {
     try {
       const res = await auth.sendOTP(cleanPhone)
       setOtpSent(true)
-      setCountdown(10) // 10 seconds resend matching SecureOTPWidget9U4D
-      setSuccessMsg(res.message || 'OTP sent successfully via MSG91!')
+      setCountdown(30)
+      setSuccessMsg(res.message || 'OTP sent successfully!')
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Failed to send OTP. Try again.')
+      setError(err?.response?.data?.detail || err?.message || 'Failed to send OTP. Try again.')
     } finally {
       setLoading(false)
     }
@@ -79,7 +79,7 @@ export default function Login() {
 
     const cleanPhone = phone.replace(/\D/g, '')
     if (!otp || otp.trim().length < 4) {
-      setError('Please enter the 4-digit OTP code.')
+      setError('Please enter the OTP code sent to your mobile number.')
       return
     }
 
@@ -87,6 +87,7 @@ export default function Login() {
     try {
       const res = await auth.verifyOTP(cleanPhone, otp)
       if (res.is_new_user) {
+        // User doesn't exist, redirect to registration with phone prefilled
         navigate(`/start?phone=${cleanPhone}&otp=${otp}`)
       } else {
         const user = res.user
@@ -126,7 +127,7 @@ export default function Login() {
                 : 'text-slate-600 hover:text-slate-900'
               }`}
           >
-            <span>📱</span> Mobile OTP (MSG91)
+            <span>📱</span> Mobile OTP
           </button>
           <button
             type="button"
@@ -188,7 +189,7 @@ export default function Login() {
                   disabled={loading}
                   className="primary-button w-full flex justify-center items-center gap-2 py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md hover:shadow-indigo-200"
                 >
-                  {loading ? 'Sending OTP via MSG91...' : 'Send OTP →'}
+                  {loading ? 'Sending OTP...' : 'Send OTP →'}
                 </button>
               </form>
             ) : (
@@ -196,14 +197,14 @@ export default function Login() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-semibold text-slate-700">
-                      Enter 4-Digit OTP Code
+                      Enter 6-Digit OTP Code
                     </label>
                     <button
                       type="button"
                       onClick={() => setOtpSent(false)}
                       className="text-xs text-indigo-600 hover:underline font-semibold"
                     >
-                      Change (+91 {phone})
+                      Change Number (+91 {phone})
                     </button>
                   </div>
                   <input
@@ -213,10 +214,10 @@ export default function Login() {
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    maxLength={4}
+                    maxLength={6}
                     autoComplete="one-time-code"
-                    placeholder="Enter 4-Digit OTP (e.g. 1234)"
-                    className="premium-input w-full text-center text-2xl font-bold tracking-widest py-3 border-2 border-indigo-200 focus:border-indigo-600 rounded-xl"
+                    placeholder="Enter OTP (e.g. 123456)"
+                    className="premium-input w-full text-center text-xl font-bold tracking-widest py-3 border-2 border-indigo-200 focus:border-indigo-600 rounded-xl"
                   />
                 </div>
 
@@ -229,7 +230,7 @@ export default function Login() {
                 </button>
 
                 <div className="flex items-center justify-between text-xs text-slate-500 pt-2">
-                  <span>Didn't receive SMS/WhatsApp?</span>
+                  <span>Didn't receive SMS?</span>
                   {countdown > 0 ? (
                     <span className="font-semibold text-slate-400">Resend in {countdown}s</span>
                   ) : (

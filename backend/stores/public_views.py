@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions, serializers, status
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import Store, StoreReport
@@ -15,6 +16,13 @@ from config.websocket import broadcast_order_event_sync
 
 from django.http import Http404
 
+
+class StoreOfflineException(APIException):
+    status_code = 400
+    default_detail = 'Store is currently offline for maintenance.'
+    default_code = 'store_offline'
+
+
 def get_public_store_or_404(request, slug):
     store = Store.objects.filter(models.Q(slug=slug) | models.Q(custom_domain=slug)).first()
     if not store:
@@ -23,7 +31,7 @@ def get_public_store_or_404(request, slug):
         if request.user and request.user.is_authenticated and store.owner == request.user:
             pass
         else:
-            raise Http404("Store is not published")
+            raise StoreOfflineException()
     return store
 
 
@@ -291,3 +299,54 @@ class PublicStoreReportView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         report = StoreReport.objects.create(store=store, **serializer.validated_data)
         return Response({'success': True, 'report_id': report.id, 'message': 'Your report has been submitted for review.'}, status=status.HTTP_201_CREATED)
+
+from .serializers import CustomerNotificationSerializer
+from .models import CustomerNotification
+
+class PublicCustomerNotificationsView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = CustomerNotificationSerializer
+
+    def get_queryset(self):
+        slug = self.kwargs.get('slug')
+        store_id = self.kwargs.get('store_id')
+        if store_id:
+            from django.shortcuts import get_object_or_404
+            store = get_object_or_404(Store, id=store_id)
+        else:
+            store = get_public_store_or_404(self.request, slug)
+        token = self.request.query_params.get('token')
+        if not token:
+            return CustomerNotification.objects.none()
+        return CustomerNotification.objects.filter(store=store, customer_id=token)[:50]
+
+    def post(self, request, *args, **kwargs):
+        slug = self.kwargs.get('slug')
+        store_id = self.kwargs.get('store_id')
+        if store_id:
+            from django.shortcuts import get_object_or_404
+            store = get_object_or_404(Store, id=store_id)
+        else:
+            store = get_public_store_or_404(self.request, slug)
+        token = request.data.get('token') or request.query_params.get('token')
+        if not token:
+            return Response({'success': False})
+        
+        action = request.data.get('action')
+        if action == 'create':
+            notif = CustomerNotification.objects.create(
+                store=store,
+                customer_id=token,
+                notification_type=request.data.get('type', 'system'),
+                title=request.data.get('title', ''),
+                body=request.data.get('body', ''),
+                link=request.data.get('link', '')
+            )
+            return Response({'success': True, 'id': notif.id})
+            
+        notif_id = request.data.get('id')
+        if notif_id:
+            CustomerNotification.objects.filter(store=store, customer_id=token, id=notif_id).update(is_read=True)
+        else:
+            CustomerNotification.objects.filter(store=store, customer_id=token, is_read=False).update(is_read=True)
+        return Response({'success': True})

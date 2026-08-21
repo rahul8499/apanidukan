@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    SellerChatCountView,
     PublicStoreChatView,
     PublicSendChatMessageView,
     PublicProductRequestAutoReplyView,
@@ -16,4 +17,5 @@ urlpatterns = [
     # Seller endpoints
     path('seller/stores/<int:store_id>/conversations/', SellerListConversationsView.as_view(), name='seller-list-conversations'),
     path('seller/stores/<int:store_id>/conversations/<int:conversation_id>/messages/', SellerConversationMessagesView.as_view(), name='seller-conversation-messages'),
+    path('seller/stores/<int:store_id>/chat-count/', SellerChatCountView.as_view(), name='seller-chat-count'),
 ]

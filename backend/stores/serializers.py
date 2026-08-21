@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Store, StoreSettings
+from .models import Store, StoreSettings, StoreScratchConfig, SellerNotification, CustomerNotification
 
 
 class StoreSettingsSerializer(serializers.ModelSerializer):
@@ -64,6 +64,27 @@ class PublicStoreSerializer(serializers.ModelSerializer):
             'delivery_flat_fee', 'delivery_per_km_fee', 'free_delivery_above',
             'delivery_estimated_time', 'pickup_instructions',
             'enable_loyalty_cashback', 'loyalty_cashback_percent', 'loyalty_min_order_amount',
-            'custom_domain', 'custom_domain_verified'
+            'custom_domain', 'custom_domain_verified', 'is_published'
         )
 
+
+class StoreScratchConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoreScratchConfig
+        fields = '__all__'
+        read_only_fields = ('store',)
+
+
+class SellerNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SellerNotification
+        fields = '__all__'
+        read_only_fields = ('store', 'created_at')
+
+
+
+class CustomerNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerNotification
+        fields = '__all__'
+        read_only_fields = ('store', 'created_at')

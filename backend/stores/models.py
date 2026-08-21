@@ -93,11 +93,60 @@ class StoreSettings(models.Model):
     font_family = models.CharField(max_length=100, blank=True)
     banner_image = models.ImageField(upload_to='stores/banners/', null=True, blank=True)
     favicon = models.ImageField(upload_to='stores/favicons/', null=True, blank=True)
+    soundbox_enabled = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Settings for {self.store.name}"
+
+
+class StoreScratchConfig(models.Model):
+    store = models.OneToOneField(Store, on_delete=models.CASCADE, related_name='scratch_config')
+    enabled = models.BooleanField(default=True)
+    title = models.CharField(max_length=150, default="🎉 Scratch & Win Welcome Gift!")
+    reward_text = models.CharField(max_length=200, default="Flat ₹5 OFF on orders above ₹10")
+    coupon_code = models.CharField(max_length=50, default="LUCKY50")
+    discount_type = models.CharField(max_length=20, choices=[('fixed', 'Fixed'), ('percentage', 'Percentage')], default='fixed')
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('5.00'))
+    min_order = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('10.00'))
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Scratch Config for {self.store.name}"
+
+
+class SellerNotification(models.Model):
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=50) # e.g., 'order', 'system', 'chat'
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    link = models.CharField(max_length=255, blank=True, null=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.notification_type} - {self.store.name}"
+
+
+class CustomerNotification(models.Model):
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='customer_notifications')
+    customer_id = models.CharField(max_length=150, db_index=True)
+    notification_type = models.CharField(max_length=50)
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    link = models.CharField(max_length=255, blank=True, null=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.notification_type} - {self.customer_id}"
 
 
 class SearchQuery(models.Model):

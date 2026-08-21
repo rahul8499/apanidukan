@@ -1,8 +1,8 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Store
-from .serializers import StoreSerializer
+from .serializers import StoreSerializer, StoreScratchConfigSerializer, SellerNotificationSerializer
+from .models import Store, StoreScratchConfig, SellerNotification
 
 
 class IsOwner(permissions.BasePermission):
@@ -19,6 +19,30 @@ class StoreViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        if 'is_published' in request.data and str(request.data['is_published']).lower() == 'false':
+            from orders.models import WhatsAppOrder, Order
+            has_active_wa_orders = instance.whatsapp_orders.filter(
+                status__in=[WhatsAppOrder.STATUS_NEW, WhatsAppOrder.STATUS_CONFIRMED, WhatsAppOrder.STATUS_PAID]
+            ).exists()
+            has_active_orders = instance.orders.filter(
+                status__in=[Order.STATUS_PENDING, Order.STATUS_PAID]
+            ).exists()
+            
+            if has_active_wa_orders or has_active_orders:
+                return Response(
+                    {'detail': 'Resolve all pending or paid customer orders before switching the store to Draft mode.'}, 
+                    status=status.HTTP_409_CONFLICT
+                )
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def publish(self, request, pk=None):
@@ -148,3 +172,30 @@ class StoreViewSet(viewsets.ModelViewSet):
                 'createdAt': r.created_at
             })
         return Response(data)
+
+    @action(detail=True, methods=['get', 'patch'])
+    def scratch_config(self, request, pk=None):
+        store = self.get_object()
+        config, _ = StoreScratchConfig.objects.get_or_create(store=store)
+        if request.method == 'PATCH':
+            serializer = StoreScratchConfigSerializer(config, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = StoreScratchConfigSerializer(config)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get', 'post'])
+    def notifications(self, request, pk=None):
+        store = self.get_object()
+        if request.method == 'GET':
+            notifs = store.notifications.all()[:50]
+            return Response(SellerNotificationSerializer(notifs, many=True).data)
+        elif request.method == 'POST':
+            notif_id = request.data.get('id')
+            if notif_id:
+                store.notifications.filter(id=notif_id).update(is_read=True)
+            else:
+                store.notifications.filter(is_read=False).update(is_read=True)
+            return Response({'status': 'ok'})

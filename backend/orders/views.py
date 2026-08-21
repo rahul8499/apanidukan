@@ -135,6 +135,16 @@ class PublicWhatsAppOrderView(APIView):
         order = serializer.save()
         order_data = WhatsAppOrderSerializer(order).data
         
+        from stores.models import SellerNotification
+        order_ref = order.reference or order.id
+        SellerNotification.objects.create(
+            store=store,
+            notification_type='order',
+            title=f"🛍️ New Order #{order_ref}",
+            body=f"Total ₹{order.total} by {order.customer_name or 'Customer'} ({order.customer_phone or 'No phone'})",
+            link=f"/stores/{store.id}/orders"
+        )
+        
         # Broadcast WS event to seller workspace
         broadcast_order_event_sync(f"store_{store.id}", {
             "type": "new_order",

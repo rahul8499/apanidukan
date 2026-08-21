@@ -13,6 +13,7 @@ from stores.public_views import (
     PublicStoreCouponsView,
     PublicValidateCouponView,
     PublicStoreReportView,
+    PublicCustomerNotificationsView
 )
 
 urlpatterns = [
@@ -39,6 +40,8 @@ urlpatterns = [
     path('api/v1/public/stores/<slug:slug>/coupons/', PublicStoreCouponsView.as_view()),
     path('api/v1/public/stores/<slug:slug>/validate-coupon/', PublicValidateCouponView.as_view()),
     path('api/v1/public/stores/<slug:slug>/report/', PublicStoreReportView.as_view()),
+    path('api/v1/public/stores/<slug:slug>/notifications/', PublicCustomerNotificationsView.as_view()),
+    path('api/v1/public/stores/id/<int:store_id>/notifications/', PublicCustomerNotificationsView.as_view()),
 ]
 
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns

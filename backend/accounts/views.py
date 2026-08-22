@@ -69,7 +69,7 @@ class PasswordResetRequestView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             link = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password/{uid}/{token}"
-            send_mail('Reset your QuickStore password', f'Use this link to reset your password:\n{link}', settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+            send_mail('Reset your Apani Dukan password', f'Use this link to reset your password:\n{link}', settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
         return Response({'success': True, 'message': 'If this email exists, a reset link has been sent.'})
 
 

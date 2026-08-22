@@ -328,7 +328,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
 
     checkNewOrders()
-    const interval = setInterval(checkNewOrders, 4000)
+    const interval = setInterval(checkNewOrders, 120000)
     return () => clearInterval(interval)
   }, [auth.user, effectiveStoreId])
 

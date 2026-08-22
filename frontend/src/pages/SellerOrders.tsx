@@ -52,7 +52,7 @@ export default function SellerOrders() {
         const response = await api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
         setOrders(response.data)
       } catch {}
-    }, 8000)
+    }, 120000)
 
     return () => clearInterval(interval)
   }, [storeId, wsConnected])

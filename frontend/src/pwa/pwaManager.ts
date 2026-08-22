@@ -38,7 +38,13 @@ export function updateDynamicManifest({
       icons: [
         {
           src: iconUrl,
-          sizes: '192x192 512x512 any',
+          sizes: '192x192',
+          type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
+          purpose: 'any maskable',
+        },
+        {
+          src: iconUrl,
+          sizes: '512x512',
           type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
           purpose: 'any maskable',
         },

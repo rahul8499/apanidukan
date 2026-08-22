@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import NotificationBellHeader from './NotificationBellHeader'
@@ -131,11 +132,11 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const handleToggleDeliverySetting = async (field: 'allow_home_delivery' | 'allow_store_pickup', value: boolean) => {
     if (!value) {
       if (field === 'allow_home_delivery' && !allowStorePickup) {
-        alert('At least one fulfillment option (Home Delivery or Walk-in Store Pickup) must remain enabled!')
+        toast.error('At least one fulfillment option (Home Delivery or Walk-in Store Pickup) must remain enabled!')
         return
       }
       if (field === 'allow_store_pickup' && !allowHomeDelivery) {
-        alert('At least one fulfillment option (Home Delivery or Walk-in Store Pickup) must remain enabled!')
+        toast.error('At least one fulfillment option (Home Delivery or Walk-in Store Pickup) must remain enabled!')
         return
       }
     }
@@ -153,9 +154,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
         allow_home_delivery: nextHomeDelivery,
         allow_store_pickup: nextStorePickup
       })
+      toast.success('Fulfillment settings updated!')
       if (onStoreUpdate) onStoreUpdate()
     } catch {
-      alert('Failed to update fulfillment settings.')
+      toast.error('Failed to update fulfillment settings.')
+      // Revert on fail
+      setAllowHomeDelivery(allowHomeDelivery)
+      setAllowStorePickup(allowStorePickup)
     } finally {
       setIsUpdatingDeliverySettings(false)
     }
@@ -172,6 +177,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
     } catch (error: any) {
       const msg = error?.response?.data?.detail || error?.response?.data?.error || 'Resolve all pending or paid customer orders before deactivating the account.'
       setDeactivateError(msg)
+      toast.error(msg)
     } finally {
       setIsDeactivating(false)
     }
@@ -304,9 +310,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           body: 'You will receive real-time push alerts for orders & low stock items.',
           icon: '/favicon.ico',
         })
-        setMessage('🔔 Web Push Notifications Enabled! You will receive alerts on Web & PWA.')
+        toast.success('🔔 Web Push Notifications Enabled! You will receive alerts on Web & PWA.')
       } else {
-        setMessage('⚠️ Notification permission was denied in browser settings.')
+        toast.error('⚠️ Notification permission was denied in browser settings.')
       }
     }
   }
@@ -363,10 +369,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   async function toggleManageInApp(newValue: boolean) {
     try {
       await api.patch(`/stores/${store.id}/`, { manage_in_app: newValue })
-      setMessage(newValue ? '🟢 Manage in App activated!' : '⚪ Standard WhatsApp mode active.')
+      toast.success(newValue ? '🟢 Manage in App activated!' : '⚪ Standard WhatsApp mode active.')
       if (onStoreUpdate) onStoreUpdate()
     } catch {
-      setMessage('Failed to update setting.')
+      toast.error('Failed to update setting.')
     }
   }
 
@@ -381,14 +387,16 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
   async function executePublish(nextState: boolean) {
     setUnpublishError(null)
+    const toastId = toast.loading('Updating store status...')
     try {
       await api.patch(`/stores/${store.id}/`, { is_published: nextState })
-      setMessage(nextState ? '🟢 Store is now LIVE!' : '⚪ Store is now in DRAFT mode (Offline).')
+      toast.success(nextState ? '🟢 Store is now LIVE!' : '⚪ Store is now in DRAFT mode (Offline).', { id: toastId })
       setShowUnpublishConfirm(false)
       if (onStoreUpdate) onStoreUpdate()
     } catch (error: any) {
       const msg = error?.response?.data?.detail || error?.response?.data?.error || 'Resolve all pending or paid customer orders before turning store offline.'
       setUnpublishError(msg)
+      toast.error(msg, { id: toastId })
     }
   }
 
@@ -411,11 +419,11 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       if (res.data?.logo) {
         setLogoPreview(res.data.logo)
       }
-      setMessage('✓ Store profile updated successfully!')
+      toast.success('✓ Store profile updated successfully!')
       setIsProfileEditing(false)
       if (onStoreUpdate) onStoreUpdate()
     } catch {
-      setMessage('Failed to update store profile.')
+      toast.error('Failed to update store profile.')
     } finally {
       setIsSavingProfile(false)
     }
@@ -486,7 +494,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 {/* Desktop Inline Tagline */}
                 <p className="hidden sm:flex items-center gap-1.5 text-[11px] font-extrabold tracking-tight text-amber-300 mt-0.5 truncate">
                   <Sparkles className="h-2.5 w-2.5 text-amber-400 shrink-0 animate-pulse" />
-                  <span className="text-amber-300 text-[12px] italic tracking-wide" style={{ fontFamily: '"Caveat", "Comic Sans MS", cursive', fontWeight: 800 }}>Demand Dekho, Product lao, Sell Karo</span>
+                  <span className="text-amber-300 text-[10px] sm:text-[11px] font-black uppercase tracking-widest drop-shadow-sm">Demand Dekho. Product Lao. Sell Karo.</span>
                   {activeTabTitle && (
                     <span className="font-bold text-teal-300">
                       <span className="text-slate-500 mx-1">•</span>
@@ -535,7 +543,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           <div className="sm:hidden flex items-center justify-between bg-amber-500/10 border border-amber-400/25 rounded-md px-2 py-0.5 text-[9px] font-black text-amber-300">
             <span className="flex items-center gap-1 min-w-0 truncate">
               <Sparkles className="h-2.5 w-2.5 text-amber-400 shrink-0 animate-pulse" />
-              <span className="truncate italic tracking-wide text-[10px]" style={{ fontFamily: '"Caveat", "Comic Sans MS", cursive', fontWeight: 800 }}>Demand Dekho, Product lao, Sell Karo</span>
+              <span className="truncate font-black uppercase tracking-widest text-[8px] drop-shadow-sm">Demand Dekho. Product Lao. Sell Karo.</span>
             </span>
             {activeTabTitle && (
               <span className="text-[8px] font-bold text-teal-300 shrink-0 ml-1">
@@ -631,12 +639,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <Lock className="h-4 w-4 text-slate-400" />
           </button>
 
-          {message && (
-            <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-xs font-bold text-teal-900 flex items-center gap-2">
-              <Zap className="h-4 w-4 text-teal-600 shrink-0" />
-              <span>{message}</span>
-            </div>
-          )}
+
 
           {/* ⚡ SECTION 1: FAST NAVIGATION SUITE */}
           <div className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5 shadow-xs">

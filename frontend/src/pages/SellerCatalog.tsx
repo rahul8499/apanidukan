@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
@@ -56,7 +57,7 @@ export default function SellerCatalog() {
       setCategories(categoryResult.data || [])
       setProducts((productResult.data || []).filter((item: any) => item.store === found.id))
     } catch {
-      setMessage('Failed to load catalog data.')
+      toast.error('Failed to load catalog data.')
     }
   }
 
@@ -147,30 +148,30 @@ export default function SellerCatalog() {
       await api.patch(`/products/${editingProduct.id}/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      setMessage(`✏️ '${editName}' updated successfully!`)
+      toast.success(`✏️ '${editName}' updated successfully!`)
       setEditingProduct(null)
       setEditNewImages([])
       await loadData()
     } catch (err) {
-      setMessage(errorMessage(err))
+      toast.error(errorMessage(err))
     } finally {
       setIsUpdatingProduct(false)
     }
   }
 
   async function handleSetPrimaryCardImage(productId: number, imageId: number) {
-    setMessage('⏳ Updating main card photo...')
+    const loadingToast = toast.loading('⏳ Updating main card photo...')
     try {
       const res = await api.patch(`/products/${productId}/images/`, {
         set_primary_id: imageId
       })
-      setMessage('⭐ Primary card photo updated!')
+      toast.success('⭐ Primary card photo updated!', { id: loadingToast })
       if (editingProduct && editingProduct.id === productId) {
         setEditingProduct(res.data.product)
       }
       await loadData()
     } catch (error) {
-      setMessage(errorMessage(error))
+      toast.error(errorMessage(error), { id: loadingToast })
     }
   }
 
@@ -183,27 +184,27 @@ export default function SellerCatalog() {
         ...prev,
         images: (prev.images || []).filter((img: any) => img.id !== imageId)
       } : null)
-      setMessage('🖼️ Gallery image deleted successfully.')
+      toast.success('🖼️ Gallery image deleted successfully.')
       await loadData()
     } catch (error) {
-      setMessage(errorMessage(error))
+      toast.error(errorMessage(error))
     }
   }
 
   async function handleDirectProductImageUpload(productId: number, files: FileList | File[]) {
     const fileArray = Array.from(files)
     if (fileArray.length === 0) return
-    setMessage(`⏳ Uploading ${fileArray.length} image(s)...`)
+    const loadingToast = toast.loading(`⏳ Uploading ${fileArray.length} image(s)...`)
     try {
       const formData = new FormData()
       fileArray.forEach((f) => formData.append('images', f))
       const res = await api.post(`/products/${productId}/images/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      setMessage(`🖼️ Uploaded ${fileArray.length} photo(s) to catalog product!`)
+      toast.success(`🖼️ Uploaded ${fileArray.length} photo(s) to catalog product!`, { id: loadingToast })
       await loadData()
     } catch (error) {
-      setMessage(errorMessage(error))
+      toast.error(errorMessage(error), { id: loadingToast })
     }
   }
 
@@ -211,10 +212,10 @@ export default function SellerCatalog() {
     if (!window.confirm('Kya aap is product ko delete karna chahte hain?')) return
     try {
       await api.delete(`/products/${productId}/`)
-      setMessage('Product deleted successfully.')
+      toast.success('Product deleted successfully.')
       await loadData()
     } catch (error) {
-      setMessage(errorMessage(error))
+      toast.error(errorMessage(error))
     }
   }
 
@@ -248,7 +249,7 @@ export default function SellerCatalog() {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 
-      setMessage(`✓ Product '${newProdName}' added successfully with ${newProdImages.length || (newProdImage ? 1 : 0)} photos!`)
+      toast.success(`✓ Product '${newProdName}' added successfully with ${newProdImages.length || (newProdImage ? 1 : 0)} photos!`)
       setNewProdName('')
       setNewProdPrice('0')
       setNewProdStock('100')
@@ -259,7 +260,7 @@ export default function SellerCatalog() {
       setShowAddModal(false)
       await loadData()
     } catch (err) {
-      setMessage(errorMessage(err))
+      toast.error(errorMessage(err))
     } finally {
       setIsAddingProduct(false)
     }
@@ -319,12 +320,7 @@ export default function SellerCatalog() {
           </div>
         </div>
 
-        {message && (
-          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-xs font-semibold text-indigo-950 flex items-center justify-between shadow-xs">
-            <span>{message}</span>
-            <button onClick={() => setMessage('')} className="text-slate-400 font-bold hover:text-slate-600">✕</button>
-          </div>
-        )}
+
 
         {/* Search & Category Filter Controls */}
         <div className="flex flex-col sm:flex-row gap-3">

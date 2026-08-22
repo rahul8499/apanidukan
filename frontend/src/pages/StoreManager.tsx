@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { useNotifications } from '../context/NotificationContext'
 import NotificationBellHeader from '../components/NotificationBellHeader'
@@ -79,6 +80,7 @@ export default function StoreManager() {
   const [isUpdatingProduct, setIsUpdatingProduct] = useState(false)
   const [isAddingProduct, setIsAddingProduct] = useState(false)
   const [isPublishingStore, setIsPublishingStore] = useState(false)
+  const [isAddingCategory, setIsAddingCategory] = useState(false)
 
   function openEditModal(prod: any) {
     setEditingProduct(prod)
@@ -99,11 +101,11 @@ export default function StoreManager() {
         stock_quantity: parseInt(editStock || '0', 10),
         category: editCategory ? parseInt(editCategory, 10) : null
       })
-      setMessage(`✏️ '${editName}' updated successfully!`)
+      toast.success(`✏️ '${editName}' updated successfully!`)
       setEditingProduct(null)
       load()
     } catch (err) {
-      setMessage(errorMessage(err))
+      toast.error(errorMessage(err))
     } finally {
       setIsUpdatingProduct(false)
     }
@@ -126,9 +128,9 @@ export default function StoreManager() {
           body: 'You will receive real-time push alerts for orders & low stock items.',
           icon: '/favicon.ico'
         })
-        setMessage('🔔 Web Push Notifications Enabled! You will receive alerts on Web & PWA.')
+        toast.success('🔔 Web Push Notifications Enabled! You will receive alerts on Web & PWA.')
       } else {
-        setMessage('⚠️ Notification permission was denied in browser settings.')
+        toast.error('⚠️ Notification permission was denied in browser settings.')
       }
     }
   }
@@ -137,13 +139,13 @@ export default function StoreManager() {
     const newStock = Math.max(0, currentStock) + addAmount
     try {
       await api.patch(`/products/${productId}/`, { stock_quantity: newStock })
-      setMessage(`⚡ Restocked +${addAmount} units! New Stock: ${newStock}`)
+      toast.success(`⚡ Restocked +${addAmount} units! New Stock: ${newStock}`)
       if (notificationPermission === 'granted' && typeof window !== 'undefined' && 'Notification' in window) {
         new Notification('⚡ Stock Updated', { body: `Product restocked to ${newStock} units.` })
       }
       await load()
     } catch (err) {
-      setMessage(errorMessage(err))
+      toast.error(errorMessage(err))
     }
   }
 
@@ -260,7 +262,7 @@ export default function StoreManager() {
         body: testNotif.body,
         icon: '/icons/multistore-icon.svg'
       })
-      setMessage('⚡ Sent test Web Push Notification!')
+      toast.success('⚡ Sent test Web Push Notification!')
     } else {
       requestNotificationPermission()
     }
@@ -314,19 +316,23 @@ export default function StoreManager() {
   async function addCategory(e: React.FormEvent) {
     e.preventDefault()
     if (!store || !categoryName.trim()) return
+    setIsAddingCategory(true)
     try {
       await api.post(`/stores/${store.id}/categories/`, { name: categoryName })
       setCategoryName('')
-      setMessage('Category add ho gayi.')
+      toast.success('Category add ho gayi.')
       load()
-    } catch (error) { setMessage(errorMessage(error)) }
+    } catch (error) { toast.error(errorMessage(error)) }
+    finally {
+      setIsAddingCategory(false)
+    }
   }
 
   async function addProduct(e: React.FormEvent) {
     e.preventDefault()
     if (!store || !productName.trim()) return
     setIsAddingProduct(true)
-    setMessage('⏳ Uploading images & publishing product to S3 Cloud...')
+    const toastId = toast.loading('⏳ Uploading images & publishing product to S3 Cloud...')
     try {
       const data = new FormData()
       data.append('store', String(store.id))
@@ -357,10 +363,10 @@ export default function StoreManager() {
       await api.post('/products/', data, { headers: { 'Content-Type': 'multipart/form-data' } })
       const addedName = productName
       setProductName(''); setPrice('0'); setStockQuantity('100'); setCategory(''); setFile(null); setProductImages([]); setProductPrimaryIndex(0)
-      setMessage(`🎉 SUCCESS: Product '${addedName}' published to store with ${productImages.length || 1} photo(s)!`)
+      toast.success(`🎉 SUCCESS: Product '${addedName}' published to store with ${productImages.length || 1} photo(s)!`, { id: toastId })
       load()
     } catch (error) { 
-      setMessage(errorMessage(error)) 
+      toast.error(errorMessage(error), { id: toastId }) 
     } finally {
       setIsAddingProduct(false)
     }
@@ -449,22 +455,22 @@ export default function StoreManager() {
     }).filter(i => i.name.trim() !== '')
 
     if (items.length === 0) {
-      setMessage('Please enter at least one product name in the text area.')
+      toast.error('Please enter at least one product name in the text area.')
       return
     }
 
-    setMessage('⏳ Importing products directly from text list...')
+    const toastId = toast.loading('⏳ Importing products directly from text list...')
     try {
       const res = await api.post('/products/bulk-create/', {
         store_id: store.id,
         category_id: bulkCategory || null,
         products: items
       })
-      setMessage(`🚀 ${res.data.created_count} products created with price & stock in 1-Click!`)
+      toast.success(`🚀 ${res.data.created_count} products created with price & stock in 1-Click!`, { id: toastId })
       setBulkRawText('')
       load()
     } catch (error) {
-      setMessage(errorMessage(error))
+      toast.error(errorMessage(error), { id: toastId })
     }
   }
 
@@ -473,11 +479,11 @@ export default function StoreManager() {
     if (!store) return
     const validItems = bulkRows.filter(r => r.name.trim() !== '')
     if (validItems.length === 0) {
-      setMessage('Please enter at least one product name.')
+      toast.error('Please enter at least one product name.')
       return
     }
 
-    setMessage('⏳ Adding products & uploading photos...')
+    const toastId = toast.loading('⏳ Adding products & uploading photos...')
     try {
       const formData = new FormData()
       formData.append('store_id', String(store.id))
@@ -506,7 +512,7 @@ export default function StoreManager() {
       const res = await api.post('/products/bulk-create/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      setMessage(`🚀 ${res.data.created_count} products added with stock & images in 1-Click!`)
+      toast.success(`🚀 ${res.data.created_count} products added with stock & images in 1-Click!`, { id: toastId })
       setBulkRows([
         { name: '', price: '', stock: '100' },
         { name: '', price: '', stock: '100' },
@@ -516,7 +522,7 @@ export default function StoreManager() {
       setBulkRawText('')
       load()
     } catch (error) {
-      setMessage(errorMessage(error))
+      toast.error(errorMessage(error), { id: toastId })
     }
   }
 
@@ -645,7 +651,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
       }
 
       setCsvPreview(parsedItems)
-      setMessage(`📁 Loaded ${parsedItems.length} products with stock quantities! Next: select local images (optional) & click Import.`)
+      toast.success(`📁 Loaded ${parsedItems.length} products with stock quantities! Next: select local images (optional) & click Import.`)
     }
     reader.readAsText(selected)
   }
@@ -679,7 +685,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
 
     setCsvPreview(updated)
     const matchCount = updated.filter(i => i.image_file).length
-    setMessage(`🖼️ Matched ${matchCount} local product images with CSV items!`)
+    toast.success(`🖼️ Matched ${matchCount} local product images with CSV items!`)
   }
 
   function handleSingleItemImageSelect(index: number, file: File) {
@@ -723,12 +729,12 @@ Bluetooth Wireless Earbuds - 1299 - 15`
       const res = await api.post('/products/bulk-create/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      setMessage(`🚀 Successfully created ${res.data.created_count} products, categories & images in 1-Click!`)
+      toast.success(`🚀 Successfully created ${res.data.created_count} products, categories & images in 1-Click!`)
       setCsvPreview([])
       setCsvFile(null)
       await load()
     } catch (error) {
-      setMessage(errorMessage(error))
+      toast.error(errorMessage(error))
     } finally {
       setIsImporting(false)
     }
@@ -737,12 +743,13 @@ Bluetooth Wireless Earbuds - 1299 - 15`
   async function publish() {
     if (!store) return
     setIsPublishingStore(true)
+    const loadingToast = toast.loading('Publishing store...')
     try {
       await api.post(`/stores/${store.id}/publish/`)
-      setMessage('🚀 SUCCESS: Store LIVE ho gaya! Customer link active hai.')
+      toast.success('🚀 SUCCESS: Store LIVE ho gaya! Customer link active hai.', { id: loadingToast })
       load()
     } catch (error) { 
-      setMessage(errorMessage(error)) 
+      toast.error(errorMessage(error), { id: loadingToast }) 
     } finally {
       setIsPublishingStore(false)
     }
@@ -750,17 +757,17 @@ Bluetooth Wireless Earbuds - 1299 - 15`
 
   async function handleDirectProductImageUpload(productId: number, file: File) {
     if (!file) return
-    setMessage('⏳ Uploading image to product...')
+    const loadingToast = toast.loading('⏳ Uploading image to product...')
     try {
       const data = new FormData()
       data.append('image', file)
       await api.patch(`/products/${productId}/`, data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      setMessage('🖼️ Product image updated successfully!')
+      toast.success('🖼️ Product image updated successfully!', { id: loadingToast })
       await load()
     } catch (error) {
-      setMessage(errorMessage(error))
+      toast.error(errorMessage(error), { id: loadingToast })
     }
   }
 
@@ -768,10 +775,10 @@ Bluetooth Wireless Earbuds - 1299 - 15`
     if (!window.confirm('Kya aap is product ko delete karna chahte hain?')) return
     try {
       await api.delete(`/products/${productId}/`)
-      setMessage('Product deleted successfully.')
+      toast.success('Product deleted successfully.')
       await load()
     } catch (error) {
-      setMessage(errorMessage(error))
+      toast.error(errorMessage(error))
     }
   }
 
@@ -781,8 +788,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
     try {
       const response = await api.patch(`/stores/${store.id}/`, { phone_number: phoneNumber })
       setStore(response.data)
-      setMessage('WhatsApp order number saved.')
-    } catch (error) { setMessage(errorMessage(error)) }
+      toast.success('WhatsApp order number saved.')
+    } catch (error) { toast.error(errorMessage(error)) }
   }
 
   async function toggleManageInApp(newValue: boolean) {
@@ -790,13 +797,13 @@ Bluetooth Wireless Earbuds - 1299 - 15`
     try {
       const response = await api.patch(`/stores/${store.id}/`, { manage_in_app: newValue })
       setStore(response.data)
-      setMessage(newValue ? 'Manage in App ON ho gaya. Orders tab mein status change karke live updates de sakte hain.' : 'Manage in App OFF ho gaya.')
-    } catch (error) { setMessage(errorMessage(error)) }
+      toast.success(newValue ? 'Manage in App ON ho gaya. Orders tab mein status change karke live updates de sakte hain.' : 'Manage in App OFF ho gaya.')
+    } catch (error) { toast.error(errorMessage(error)) }
   }
 
   async function copyLink() {
     await navigator.clipboard.writeText(publicUrl)
-    setMessage('Customer link copy ho gaya.')
+    toast.success('Customer link copy ho gaya.')
   }
 
   if (!store && !message) return <div className="p-6">Loading your store...</div>
@@ -807,20 +814,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
     <SellerHeader store={store} activeTabTitle="Store Setup" onStoreUpdate={load} />
 
     <div className="space-y-3 sm:space-y-5 p-2.5 sm:p-6">
-      {message && (
-        <div className="rounded-2xl border border-emerald-400/60 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-4 text-xs font-black text-white flex items-center justify-between shadow-xl animate-fade-in border-l-4 border-l-emerald-400">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🔔</span>
-            <span className="leading-snug">{message}</span>
-          </div>
-          <button
-            onClick={() => setMessage('')}
-            className="text-slate-300 hover:text-white font-black px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-xs shrink-0 cursor-pointer"
-          >
-            ✕ Close
-          </button>
-        </div>
-      )}
+
       {/* Enterprise Store Status Banner — Compact & Powerful Mobile Express Launcher */}
       <div className="relative overflow-hidden rounded-xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3 sm:p-6 text-white shadow-md sm:shadow-2xl border border-indigo-500/30 backdrop-blur-xl">
         {/* Glow & Sparkle Accents */}
@@ -1440,8 +1434,18 @@ Bluetooth Wireless Earbuds - 1299 - 15`
             placeholder="e.g. E-books, Groceries, Electronics"
             className="flex-1 rounded-lg sm:rounded-xl border border-slate-200 bg-white p-2 text-xs font-medium text-slate-900 focus:border-slate-900 focus:outline-none transition-all shadow-2xs"
           />
-          <button className="rounded-lg sm:rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 whitespace-nowrap cursor-pointer transition-all">
-            + Add
+          <button disabled={isAddingCategory} className="rounded-lg sm:rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 whitespace-nowrap cursor-pointer transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
+            {isAddingCategory ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5 text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Adding...
+              </>
+            ) : (
+              '+ Add'
+            )}
           </button>
         </form>
 

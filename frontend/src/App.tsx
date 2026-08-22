@@ -175,12 +175,42 @@ function AppContent() {
   )
 }
 
+import { Toaster } from 'react-hot-toast'
+
 export default function App() {
   return (
     <GlobalErrorBoundary>
       <AuthProvider>
         <NotificationProvider>
           <AppContent />
+          <Toaster 
+            position="top-center" 
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#1e293b',
+                color: '#fff',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                borderRadius: '12px',
+                padding: '12px 16px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                zIndex: 999999
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#f43f5e',
+                  secondary: '#fff',
+                },
+              },
+            }} 
+          />
         </NotificationProvider>
       </AuthProvider>
     </GlobalErrorBoundary>

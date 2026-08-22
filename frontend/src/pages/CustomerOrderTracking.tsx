@@ -505,7 +505,7 @@ function CustomerOrderTrackingContent() {
                 {order.store_phone && (
                   <a
                     href={`https://wa.me/${order.store_phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                      `Hi! Checking status for Order #${order.reference}:\n${window.location.origin}/store/${storeSlug}/order/${order.reference}`
+                      `Hi! Checking status for Order #${order.reference}:\n${window.location.origin}/store/${storeSlug}/order/${order.reference}?token=${trackingToken}`
                     )}`}
                     target="_blank"
                     rel="noreferrer"
@@ -519,7 +519,7 @@ function CustomerOrderTrackingContent() {
                 <button
                   type="button"
                   onClick={() => {
-                    const url = `${window.location.origin}/store/${storeSlug}/order/${order.reference}`
+                    const url = `${window.location.origin}/store/${storeSlug}/order/${order.reference}?token=${trackingToken}`
                     const shareMsg = `📦 Track my Order #${order.reference} live here:\n${url}`
                     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg)}`, '_blank')
                   }}

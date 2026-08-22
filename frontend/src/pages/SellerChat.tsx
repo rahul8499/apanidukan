@@ -437,7 +437,7 @@ export default function SellerChat() {
                       </p>
                     </div>
                     <Link
-                      to={`/store/${store.slug}/order/${associatedOrder.reference}`}
+                      to={`/store/${store.slug}/order/${associatedOrder.reference}?token=${associatedOrder.tracking_token}`}
                       target="_blank"
                       className="rounded-xl bg-slate-900 text-white px-3 py-1 text-[10px] font-bold shadow-xs hover:bg-slate-800"
                     >

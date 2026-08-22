@@ -245,8 +245,13 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
       {/* MAIN CONTENT CONTAINER */}
       <main className="mx-auto max-w-4xl p-3 sm:p-5 space-y-3.5">
         
-        {/* EMPTY STATE */}
-        {filteredOrders.length === 0 ? (
+        {/* EMPTY STATE OR LOADING */}
+        {isSyncing && orders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center space-y-3 my-12">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"></div>
+            <p className="text-xs font-bold text-slate-500">Loading your orders...</p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
           <div className={`rounded-3xl border ${storeTheme.card_bg_class} p-8 text-center shadow-sm space-y-4 my-6`}>
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-black/5 dark:bg-white/5 text-4xl shadow-inner border border-current/10">
               🛍️
@@ -396,7 +401,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                       </button>
 
                       <Link
-                        to={`/store/${storeSlug}/order/${order.reference}`}
+                        to={`/store/${storeSlug}/order/${order.reference}?token=${order.tracking_token}`}
                         className={`inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r ${storeTheme.btn_gradient} px-4 py-1.5 text-xs font-black text-white shadow-sm hover:opacity-95 active:scale-95 transition-all`}
                       >
                         <span>Track Order Live</span>

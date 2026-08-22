@@ -620,7 +620,7 @@ export default function SellerOrders() {
                   ) : null}
 
                   <Link
-                    to={`/store/${store.slug}/order/${order.reference}`}
+                    to={`/store/${store.slug}/order/${order.reference}?token=${order.tracking_token}`}
                     target="_blank"
                     className="rounded-lg bg-slate-900 py-1 px-2 text-[10px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-slate-800 transition-all flex items-center justify-center gap-1 col-span-2 sm:col-span-1"
                   >

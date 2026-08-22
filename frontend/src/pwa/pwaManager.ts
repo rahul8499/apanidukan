@@ -27,6 +27,9 @@ export function updateDynamicManifest({
   id,
 }: ManifestConfig) {
   try {
+    const isAbsoluteUrl = iconUrl.startsWith('http://') || iconUrl.startsWith('https://')
+    const finalIconSrc = isAbsoluteUrl ? iconUrl : window.location.origin + iconUrl
+
     const manifestObj = {
       id: id || startUrl,
       name: name,
@@ -40,13 +43,13 @@ export function updateDynamicManifest({
       theme_color: themeColor,
       icons: [
         {
-          src: window.location.origin + iconUrl,
+          src: finalIconSrc,
           sizes: '192x192',
           type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
           purpose: 'any maskable',
         },
         {
-          src: window.location.origin + iconUrl,
+          src: finalIconSrc,
           sizes: '512x512',
           type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
           purpose: 'any maskable',

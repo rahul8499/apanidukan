@@ -823,7 +823,7 @@ function Storefront() {
 
                 {/* FOOTER ACTIONS */}
                 <div className="pt-4 border-t border-slate-100 space-y-3">
-                  <InstallAppButton storeSlug={storeSlug} />
+                  <InstallAppButton storeSlug={storeSlug} variant="drawer_item" />
                 </div>
               </div>
             </div>

@@ -13,6 +13,7 @@ interface ManifestConfig {
   themeColor: string
   backgroundColor: string
   iconUrl?: string
+  id?: string
 }
 
 export function updateDynamicManifest({
@@ -23,9 +24,11 @@ export function updateDynamicManifest({
   themeColor,
   backgroundColor,
   iconUrl = '/apanidukan1.png',
+  id,
 }: ManifestConfig) {
   try {
     const manifestObj = {
+      id: id || startUrl,
       name: name,
       short_name: shortName,
       description: description,
@@ -97,6 +100,7 @@ export function setupCustomerStorePwa(store: { id?: string | number; name: strin
     themeColor: '#020617',
     backgroundColor: '#ffffff',
     iconUrl: store.logo || '/apanidukan1.png',
+    id: `customer-store-${store.slug}`,
   })
 }
 
@@ -117,6 +121,7 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
     themeColor: '#f8fafc',
     backgroundColor: '#f8fafc',
     iconUrl: '/apanidukan1.png',
+    id: `seller-hub-${store.id}`,
   })
 }
 
@@ -132,5 +137,6 @@ export function resetGenericPlatformPwa() {
     themeColor: '#f8fafc',
     backgroundColor: '#f8fafc',
     iconUrl: '/apanidukan1.png',
+    id: 'platform-generic',
   })
 }

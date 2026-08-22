@@ -100,11 +100,11 @@ export default function InstallAppButton({ storeSlug, variant = 'header_pill' }:
         <button
           type="button"
           onClick={handleInstallClick}
-          className="flex h-7 w-7 sm:w-auto sm:h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white sm:px-2.5 text-[10px] sm:text-xs font-black text-slate-900 shadow-xs hover:bg-slate-50 hover:border-slate-300 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          className="flex w-auto h-7 sm:h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 sm:px-2.5 text-[10px] sm:text-xs font-black text-slate-900 shadow-xs hover:bg-slate-50 hover:border-slate-300 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           title="Install App on Phone"
         >
-          <Smartphone className="h-3.5 w-3.5 sm:h-3.5 sm:w-3.5 text-indigo-600 animate-pulse shrink-0" />
-          <span className="hidden sm:inline text-slate-900 font-black">Install App</span>
+          <Smartphone className="h-3.5 w-3.5 text-indigo-600 animate-pulse shrink-0" />
+          <span className="inline text-slate-900 font-black">Install</span>
         </button>
       )}
 

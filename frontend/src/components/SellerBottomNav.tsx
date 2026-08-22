@@ -23,11 +23,9 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
 
     fetchCount()
     window.addEventListener('qs-chat-count-updated', fetchCount)
-    const interval = setInterval(fetchCount, 120000)
 
     return () => {
       window.removeEventListener('qs-chat-count-updated', fetchCount)
-      clearInterval(interval)
     }
   }, [storeId])
 

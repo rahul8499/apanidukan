@@ -328,8 +328,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
 
     checkNewOrders()
-    const interval = setInterval(checkNewOrders, 120000)
-    return () => clearInterval(interval)
+    // Polling removed in favor of WebSockets
   }, [auth.user, effectiveStoreId])
 
   // Persistent Global WebSocket connection for active store (Seller & Customer)
@@ -375,6 +374,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             body = `"${data.text}" (${data.customer_phone || 'No phone'})`
             notifType = 'message'
             link = `/stores/${effectiveStoreId}/chat`
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('qs-chat-count-updated'))
+            }
 
           } else if (data.type === 'new_product_request') {
             if (!currentIsSeller) return

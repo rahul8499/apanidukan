@@ -10,6 +10,8 @@ import {
   ChevronRight, MessageSquare, ShoppingBag, Truck, XCircle, Package
 } from 'lucide-react'
 import { getStoreTheme } from '../utils/storeTheme'
+import StoreOfflinePage from './StoreOfflinePage'
+import { isStoreOffline } from '../utils/storeStatus'
 
 const mediaUrl = (url: string) => {
   if (!url) return ''
@@ -36,6 +38,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
   const [showPhoneSync, setShowPhoneSync] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [displayCount, setDisplayCount] = useState(10)
+  const [storeOffline, setStoreOffline] = useState(false)
 
   const isStandalone = typeof window !== 'undefined' && (
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -48,7 +51,11 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     try {
       const storeRes = await api.get(`/public/stores/${storeSlug}/`)
       setStore(storeRes.data.data || storeRes.data)
-    } catch {}
+    } catch (error) {
+      if (isStoreOffline(error)) {
+        setStoreOffline(true)
+      }
+    }
 
     try {
       const savedOrders = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
@@ -127,9 +134,11 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
 
   return (
     <div className={`mx-auto min-h-screen w-full ${storeTheme.page_bg_class} pb-32 text-xs sm:text-sm font-sans transition-colors duration-300`}>
-      
-      {/* RETAIL ADAPTIVE HEADER NAVBAR */}
-      <header className={`sticky top-0 z-40 border-b shadow-md backdrop-blur-xl ${storeTheme.header_bg_class}`}>
+      {storeOffline && <StoreOfflinePage />}
+      {!storeOffline && (
+        <>
+          {/* RETAIL ADAPTIVE HEADER NAVBAR */}
+          <header className={`sticky top-0 z-40 border-b shadow-md backdrop-blur-xl ${storeTheme.header_bg_class}`}>
         <div className="mx-auto flex max-w-4xl items-center justify-between px-3.5 py-2.5 sm:px-6">
           <div className="flex items-center gap-3">
             <Link
@@ -417,6 +426,8 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
         )}
 
       </main>
+      </>
+      )}
 
       <CustomerBottomNav storeSlug={storeSlug!} active="orders" />
       <CustomerChatWidget storeSlug={storeSlug!} />

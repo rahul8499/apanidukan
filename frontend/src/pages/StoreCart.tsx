@@ -12,6 +12,8 @@ import {
   Tag, Sparkles, Check, X, MapPin, Zap, ArrowLeft, Trash2, Plus, Minus,
   ShieldCheck, ShoppingBag, CreditCard, ChevronRight, CheckCircle2, AlertCircle, Smartphone
 } from 'lucide-react'
+import StoreOfflinePage from './StoreOfflinePage'
+import { isStoreOffline } from '../utils/storeStatus'
 
 export default function StoreCart() {
   const { storeSlug } = useParams()
@@ -29,6 +31,7 @@ function CartContent() {
   const cart = useStoreCart()
   const [store, setStore] = useState<any>(null)
   const [error, setError] = useState('')
+  const [storeOffline, setStoreOffline] = useState(false)
 
   const isStandalone = typeof window !== 'undefined' && (
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -107,7 +110,14 @@ function CartContent() {
           document.title = `Cart - ${data.name}`
         }
       })
-      .catch(() => setError('Store details could not be loaded.'))
+      .catch((error) => {
+        if (isStoreOffline(error)) {
+          setStoreOffline(true)
+          document.title = 'Store Under Maintenance'
+        } else {
+          setError('Store details could not be loaded.')
+        }
+      })
 
     api.get(`/public/stores/${storeSlug}/coupons/`)
       .then(res => {
@@ -468,6 +478,10 @@ function CartContent() {
   const finalTotalAmount = Math.max(0, cart.total - discountAmount)
 
   // Empty Cart View
+  if (storeOffline) {
+    return <StoreOfflinePage />
+  }
+
   if (!cart.items.length) {
     return (
       <div className="mx-auto min-h-screen w-full bg-slate-50 pb-28 text-xs sm:text-sm font-sans flex flex-col justify-between">

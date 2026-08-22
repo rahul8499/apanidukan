@@ -11,6 +11,8 @@ import {
   Maximize2, Store as StoreIcon, CheckCircle
 } from 'lucide-react'
 import { getStoreTheme } from '../utils/storeTheme'
+import StoreOfflinePage from './StoreOfflinePage'
+import { isStoreOffline } from '../utils/storeStatus'
 
 export default function ProductPage() {
   const { storeSlug } = useParams()
@@ -33,6 +35,7 @@ function ProductContent() {
   const [coupons, setCoupons] = useState<any[]>([])
   const [selectedImgIndex, setSelectedImgIndex] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [storeOffline, setStoreOffline] = useState(false)
 
   // Interactive UI States
   const [quantity, setQuantity] = useState(1)
@@ -47,6 +50,7 @@ function ProductContent() {
   useEffect(() => {
     if (!storeSlug || !productSlug) return
     setLoading(true)
+    setStoreOffline(false)
 
     // Fetch Product Details
     api.get(`/public/stores/${storeSlug}/products/${productSlug}/`)
@@ -70,7 +74,12 @@ function ProductContent() {
           document.title = `${storeData.name} - Online Store`
         }
       })
-      .catch(() => { })
+      .catch((error) => {
+        if (isStoreOffline(error)) {
+          setStoreOffline(true)
+          document.title = 'Store Under Maintenance'
+        }
+      })
 
     // Fetch Store Products for Similar Items
     api.get(`/public/stores/${storeSlug}/products/`)
@@ -84,7 +93,9 @@ function ProductContent() {
     // Fetch Store Coupons
     api.get(`/public/stores/${storeSlug}/coupons/`)
       .then((res) => {
-        setCoupons(Array.isArray(res.data) ? res.data : [])
+        if (Array.isArray(res.data)) {
+          setCoupons(res.data)
+        }
       })
       .catch(() => { })
   }, [storeSlug, productSlug])
@@ -106,6 +117,10 @@ function ProductContent() {
         </div>
       </div>
     )
+  }
+
+  if (storeOffline) {
+    return <StoreOfflinePage />
   }
 
   if (!product) {

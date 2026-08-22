@@ -15,6 +15,8 @@ import NotificationBellHeader from '../components/NotificationBellHeader'
 import CustomerScratchCardModal, { ScratchCardConfig } from '../components/CustomerScratchCardModal'
 import { getStoreTheme } from '../utils/storeTheme'
 import { setupCustomerStorePwa } from '../pwa/pwaManager'
+import StoreOfflinePage from './StoreOfflinePage'
+import { isStoreOffline } from '../utils/storeStatus'
 
 export default function StoreHome() {
   const { storeSlug } = useParams()
@@ -118,12 +120,14 @@ function Storefront() {
   }
 
   const [loading, setLoading] = useState(true)
+  const [storeOffline, setStoreOffline] = useState(false)
 
   const { setActiveStoreId } = useNotifications()
 
   const fetchStoreData = () => {
     if (!storeSlug) return
     setLoading(true)
+    setStoreOffline(false)
     api.get(`/public/stores/${storeSlug}/`)
       .then(res => {
         const data = res.data.data || res.data
@@ -140,7 +144,12 @@ function Storefront() {
         }
       })
       .catch((error) => {
-        setLoadError(error?.response?.status === 404 ? 'This store is currently set to Draft mode by the seller. The seller needs to turn ON the 🟢 LIVE toggle switch in their dashboard.' : 'Store could not be opened. Please check your network connection.')
+        if (isStoreOffline(error)) {
+          setStoreOffline(true)
+          document.title = 'Store Under Maintenance'
+        } else {
+          setLoadError(error?.response?.status === 404 ? 'This store is currently set to Draft mode by the seller. The seller needs to turn ON the 🟢 LIVE toggle switch in their dashboard.' : 'Store could not be opened. Please check your network connection.')
+        }
       })
       .finally(() => {
         setLoading(false)
@@ -202,7 +211,7 @@ function Storefront() {
           return () => clearTimeout(timer)
         }
       }
-    } catch {}
+    } catch { }
   }, [store?.id])
 
   const handleClaimScratchCoupon = (code: string, discountValue: number, discountType: 'fixed' | 'percentage') => {
@@ -212,7 +221,7 @@ function Storefront() {
         localStorage.setItem(`qs_scratched_${store.id}`, today)
         localStorage.setItem(`qs_claimed_coupon_${storeSlug}`, JSON.stringify({ code, discountValue, discountType }))
       }
-    } catch {}
+    } catch { }
   }
 
   const storeWideCoupon = useMemo(() => {
@@ -231,7 +240,7 @@ function Storefront() {
         const item = localStorage.getItem(k as string)
         if (item) return JSON.parse(item)
       }
-    } catch {}
+    } catch { }
     return { active: true, discount: 25, title: '⚡ EVENING CLEARANCE FLASH SALE IS LIVE!' }
   })
 
@@ -249,7 +258,7 @@ function Storefront() {
           setFlashSale(JSON.parse(item))
           break
         }
-      } catch {}
+      } catch { }
     }
 
     const handleUpdate = (e: any) => {
@@ -388,6 +397,10 @@ function Storefront() {
     setSearchTerm(requestedItem)
   }
 
+  if (storeOffline) {
+    return <StoreOfflinePage />
+  }
+
   return (
     <div className={`mx-auto min-h-screen w-full ${storeTheme.page_bg_class} pb-24 lg:pb-12 text-xs sm:text-sm font-sans transition-colors duration-300`}>
       {loading ? (
@@ -431,6 +444,14 @@ function Storefront() {
         </div>
       ) : (
         <>
+          {/* Draft Preview Banner */}
+          {store?.is_published === false && (
+            <div className="relative z-50 bg-rose-600 px-3 py-1.5 text-center text-white text-[11px] font-black tracking-wide shadow-md flex items-center justify-center gap-2 border-b border-rose-700">
+              <span className="animate-pulse">⚠️ DRAFT PREVIEW MODE</span>
+              <span className="font-medium text-rose-100">- Customers see "Under Maintenance"</span>
+            </div>
+          )}
+
           {/* Top Promotional Ticker */}
           {storeWideCoupon && (
             <div className="relative z-50 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 px-3 py-1.5 text-slate-950 font-bold text-[10px] sm:text-xs shadow-xs border-b border-amber-300 flex items-center justify-between gap-2">
@@ -541,8 +562,8 @@ function Storefront() {
 
               {/* Right Tools */}
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <NotificationBellHeader />
                 <InstallAppButton storeSlug={storeSlug} />
+                <NotificationBellHeader />
 
                 <Link
                   to={`/store/${storeSlug}/cart`}
@@ -668,36 +689,36 @@ function Storefront() {
 
           {/* SLIDE-OUT MENU DRAWER */}
           {mobileMenuOpen && (
-            <div className="fixed inset-0 z-50 flex font-sans animate-fade-in">
+            <div className="fixed inset-0 z-[100] flex font-sans animate-fade-in">
               <div
                 onClick={() => setMobileMenuOpen(false)}
-                className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm transition-opacity"
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
               />
 
-              <div className="relative z-10 flex w-76 max-w-[85vw] flex-col justify-between bg-slate-950/95 backdrop-blur-3xl p-5 text-white shadow-2xl border-r border-slate-800/90 h-full overflow-y-auto font-sans">
+              <div className="relative z-[110] flex w-76 max-w-[85vw] flex-col justify-between bg-white p-5 text-slate-900 shadow-2xl border-r border-slate-200/80 h-full overflow-y-auto font-sans">
                 <div className="space-y-6">
 
                   {/* STORE BRAND HEADER */}
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-800/80">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                     <div className="flex items-center gap-3 min-w-0">
                       {store.logo ? (
-                        <img src={mediaUrl(store.logo)} alt="" className="h-10 w-10 rounded-xl object-cover border border-slate-700 shadow-md shrink-0" />
+                        <img src={mediaUrl(store.logo)} alt="" className="h-10 w-10 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0" />
                       ) : (
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 font-black text-white text-sm shadow-md border border-white/20 shrink-0">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 font-black text-white text-sm shadow-sm border border-slate-100 shrink-0">
                           {store.name[0]?.toUpperCase()}
                         </span>
                       )}
                       <div className="min-w-0">
-                        <h3 className="font-extrabold text-sm text-white truncate">{store.name}</h3>
-                        <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
-                          <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                        <h3 className="font-extrabold text-sm text-slate-900 truncate">{store.name}</h3>
+                        <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                          <ShieldCheck className="h-3 w-3 text-emerald-500" />
                           <span>Verified Store</span>
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition-all cursor-pointer shrink-0"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 border border-slate-200 transition-all cursor-pointer shrink-0 shadow-xs"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -705,29 +726,29 @@ function Storefront() {
 
                   {/* NAVIGATION LINKS */}
                   <div className="space-y-1.5 text-xs">
-                    <p className="px-2 text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">
+                    <p className="px-2 text-[9.5px] font-black uppercase tracking-wider text-slate-400 mb-2">
                       Store Navigation
                     </p>
 
                     <Link
                       to={`/store/${storeSlug}`}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-2xl px-3.5 py-2.5 font-extrabold text-slate-100 bg-slate-900/80 border border-slate-800 hover:bg-slate-800 transition-all"
+                      className="flex items-center gap-3 rounded-2xl px-3.5 py-2.5 font-extrabold text-indigo-700 bg-indigo-50/80 border border-indigo-100 hover:bg-indigo-100/60 transition-all shadow-xs"
                     >
-                      <Home className="h-4 w-4 text-indigo-400" />
+                      <Home className="h-4 w-4 text-indigo-600" />
                       <span>Store Home</span>
                     </Link>
 
                     <Link
                       to={`/store/${storeSlug}/orders`}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-slate-300 hover:bg-slate-900/80 hover:text-white transition-all"
+                      className="flex items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-slate-700 bg-transparent border border-transparent hover:bg-slate-50 hover:border-slate-200 transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <PackageCheck className="h-4 w-4 text-emerald-400" />
+                        <PackageCheck className="h-4 w-4 text-emerald-600" />
                         <span>My Orders</span>
                       </div>
-                      <span className="text-[9px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                      <span className="text-[9px] font-extrabold bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
                         Live Tracking
                       </span>
                     </Link>
@@ -735,10 +756,10 @@ function Storefront() {
                     <Link
                       to={`/store/${storeSlug}/cart`}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-slate-300 hover:bg-slate-900/80 hover:text-white transition-all"
+                      className="flex items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-slate-700 bg-transparent border border-transparent hover:bg-slate-50 hover:border-slate-200 transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <ShoppingBag className="h-4 w-4 text-purple-400" />
+                        <ShoppingBag className="h-4 w-4 text-purple-600" />
                         <span>Shopping Cart</span>
                       </div>
                       {cart.count > 0 && (
@@ -753,10 +774,10 @@ function Storefront() {
                         setMobileMenuOpen(false)
                         window.dispatchEvent(new CustomEvent('qs-open-chat'))
                       }}
-                      className="flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-slate-300 hover:bg-slate-900/80 hover:text-white transition-all cursor-pointer"
+                      className="flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-slate-700 bg-transparent border border-transparent hover:bg-slate-50 hover:border-slate-200 transition-all cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <MessageCircle className="h-4 w-4 text-emerald-400" />
+                        <MessageCircle className="h-4 w-4 text-emerald-500" />
                         <span>Chat with Seller</span>
                       </div>
                       <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -765,37 +786,39 @@ function Storefront() {
                     <button
                       onClick={() => {
                         setMobileMenuOpen(false)
-                        setReportOpen(true)
-                        setReportMessage('')
-                      }}
-                      className="flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-rose-300 hover:bg-rose-500/10 hover:text-rose-200 transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Flag className="h-4 w-4 text-rose-400" />
-                        <span>Report this store</span>
-                      </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-500" />
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setMobileMenuOpen(false)
                         setRequestOpen(true)
                       }}
-                      className="flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-slate-300 hover:bg-slate-900/80 hover:text-white transition-all cursor-pointer"
+                      className="flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-slate-700 bg-transparent border border-transparent hover:bg-slate-50 hover:border-slate-200 transition-all cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <Sparkles className="h-4 w-4 text-amber-400" />
+                        <Sparkles className="h-4 w-4 text-amber-500" />
                         <span>Request Product</span>
                       </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-500" />
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                     </button>
+                    
+                    <div className="pt-2">
+                      <button
+                        onClick={() => {
+                          setMobileMenuOpen(false)
+                          setReportOpen(true)
+                          setReportMessage('')
+                        }}
+                        className="flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 font-bold text-rose-600 bg-transparent border border-transparent hover:bg-rose-50 hover:border-rose-100 transition-all cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Flag className="h-4 w-4 text-rose-500" />
+                          <span>Report this store</span>
+                        </div>
+                        <ChevronRight className="h-3.5 w-3.5 text-rose-400" />
+                      </button>
+                    </div>
                   </div>
 
                 </div>
 
                 {/* FOOTER ACTIONS */}
-                <div className="pt-4 border-t border-slate-800/80 space-y-3">
+                <div className="pt-4 border-t border-slate-100 space-y-3">
                   <InstallAppButton storeSlug={storeSlug} />
                 </div>
               </div>
@@ -893,11 +916,10 @@ function Storefront() {
             </section>
 
             {/* Quick Unlisted Product Request Micro-Banner */}
-            <div className={`flex items-center justify-between rounded-xl border p-2.5 sm:p-3 shadow-2xs ${
-              storeTheme.is_dark_mode 
-                ? 'bg-slate-900/80 border-slate-800 text-white' 
+            <div className={`flex items-center justify-between rounded-xl border p-2.5 sm:p-3 shadow-2xs ${storeTheme.is_dark_mode
+                ? 'bg-slate-900/80 border-slate-800 text-white'
                 : 'bg-white border-slate-200/90 text-slate-900'
-            }`}>
+              }`}>
               <div className="flex items-center gap-2 min-w-0">
                 <span
                   className="flex h-7 w-7 items-center justify-center rounded-lg text-white font-black text-xs shrink-0"
@@ -974,26 +996,24 @@ function Storefront() {
                   return (
                     <div
                       key={p.id}
-                      className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 ${
-                        storeTheme.is_dark_mode 
-                          ? 'bg-slate-900/90 border-slate-800/90 hover:border-slate-700 hover:shadow-indigo-500/10' 
+                      className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 ${storeTheme.is_dark_mode
+                          ? 'bg-slate-900/90 border-slate-800/90 hover:border-slate-700 hover:shadow-indigo-500/10'
                           : 'bg-white border-slate-200/90 hover:border-indigo-200 hover:shadow-slate-300/40 shadow-2xs'
-                      }`}
+                        }`}
                     >
                       <Link to={`/store/${storeSlug}/product/${p.slug}`} className="block relative">
                         {/* Real-App Ultra Deal Overlay Badges */}
                         {primaryCoupon && (
                           <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 max-w-[92%] pointer-events-none">
                             <span
-                              className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[9px] sm:text-[10px] font-black text-white shadow-lg backdrop-blur-xs border ${
-                                primaryCoupon.discount_type === 'BOGO'
+                              className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[9px] sm:text-[10px] font-black text-white shadow-lg backdrop-blur-xs border ${primaryCoupon.discount_type === 'BOGO'
                                   ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 border-purple-300/80 shadow-purple-600/30 animate-pulse'
                                   : primaryCoupon.discount_type === 'FREE_DELIVERY'
-                                  ? 'bg-gradient-to-r from-sky-600 to-blue-600 border-sky-300/80 shadow-sky-500/20'
-                                  : (primaryCoupon.product_id || primaryCoupon.product_name)
-                                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 border-amber-300/80 shadow-amber-500/30'
-                                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400/80 shadow-emerald-600/30'
-                              }`}
+                                    ? 'bg-gradient-to-r from-sky-600 to-blue-600 border-sky-300/80 shadow-sky-500/20'
+                                    : (primaryCoupon.product_id || primaryCoupon.product_name)
+                                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 border-amber-300/80 shadow-amber-500/30'
+                                      : 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400/80 shadow-emerald-600/30'
+                                }`}
                             >
                               <Tag className="h-2.5 w-2.5 shrink-0" />
                               <span className="truncate">
@@ -1018,9 +1038,8 @@ function Storefront() {
                         )}
 
                         {/* Image Showcase Container */}
-                        <div className={`relative flex aspect-[5/4] sm:aspect-square w-full items-center justify-center p-2 overflow-hidden transition-all ${
-                          storeTheme.is_dark_mode ? 'bg-slate-950/50 group-hover:bg-slate-950/80' : 'bg-slate-50/90 group-hover:bg-slate-100/80'
-                        }`}>
+                        <div className={`relative flex aspect-[5/4] sm:aspect-square w-full items-center justify-center p-2 overflow-hidden transition-all ${storeTheme.is_dark_mode ? 'bg-slate-950/50 group-hover:bg-slate-950/80' : 'bg-slate-50/90 group-hover:bg-slate-100/80'
+                          }`}>
                           {p.image ? (
                             <img
                               src={mediaUrl(p.image)}

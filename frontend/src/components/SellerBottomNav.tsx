@@ -8,33 +8,25 @@ interface SellerBottomNavProps {
 }
 
 export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavProps) {
-  const [unreadCount, setUnreadCount] = React.useState<number>(() => {
-    try {
-      const cached = localStorage.getItem(`unread_chat_count_${storeId}`)
-      return cached ? parseInt(cached, 10) : 0
-    } catch {
-      return 0
-    }
-  })
+  const [unreadCount, setUnreadCount] = React.useState<number>(0)
 
   React.useEffect(() => {
     if (!storeId) return
 
-    const updateFromCache = () => {
-      try {
-        const cached = localStorage.getItem(`unread_chat_count_${storeId}`)
-        setUnreadCount(cached ? parseInt(cached, 10) : 0)
-      } catch {
-        setUnreadCount(0)
-      }
+    const fetchCount = () => {
+      import('../services/api').then(({ default: api }) => {
+         api.get(`/seller/stores/${storeId}/chat-count/`)
+           .then(res => setUnreadCount(res.data.unread_count || 0))
+           .catch(() => {})
+      })
     }
 
-    window.addEventListener('qs-chat-count-updated', updateFromCache)
-
-    const interval = setInterval(updateFromCache, 3000)
+    fetchCount()
+    window.addEventListener('qs-chat-count-updated', fetchCount)
+    const interval = setInterval(fetchCount, 5000)
 
     return () => {
-      window.removeEventListener('qs-chat-count-updated', updateFromCache)
+      window.removeEventListener('qs-chat-count-updated', fetchCount)
       clearInterval(interval)
     }
   }, [storeId])

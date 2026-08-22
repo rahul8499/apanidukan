@@ -78,8 +78,13 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
         order_reference: orderReference,
         init_chat: true,
       })
-      setConversation(res.data)
-      setMessages(res.data.messages || [])
+      if (res.data && res.data.id) {
+        setConversation(res.data)
+        setMessages(res.data.messages || [])
+      } else {
+        setConversation(null)
+        setMessages([])
+      }
     } catch (err) {
       console.error('Failed to init customer chat:', err)
     }
@@ -214,10 +219,14 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
         customer_phone: customerPhone,
       })
 
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === res.data.id)) return prev
-        return [...prev, res.data]
-      })
+      if (!conversation) {
+        await initChat()
+      } else {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === res.data.id)) return prev
+          return [...prev, res.data]
+        })
+      }
     } catch (err) {
       alert('Message sending failed. Please try again.')
     }

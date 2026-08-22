@@ -478,6 +478,7 @@ export function getStoreTheme(store: any): StoreThemeConfig {
     category: categoryKey,
     preset_id: customTheme.preset_id || basePreset.preset_id,
     name: customTheme.name || basePreset.name,
+    tier: basePreset.tier || 'basic',
     icon: customTheme.icon || basePreset.icon,
     primary_color: customTheme.primary_color || basePreset.primary_color,
     secondary_color: customTheme.secondary_color || basePreset.secondary_color,

@@ -10,6 +10,8 @@ import {
   Share2, RefreshCw, MessageSquare, ShoppingBag, AlertCircle, Copy, ExternalLink, Zap
 } from 'lucide-react'
 import { getStoreTheme } from '../utils/storeTheme'
+import StoreOfflinePage from './StoreOfflinePage'
+import { isStoreOffline } from '../utils/storeStatus'
 
 const ORDER_STEPS = [
   { key: 'NEW', label: 'Order Placed', desc: 'Received by store' },
@@ -35,6 +37,7 @@ function CustomerOrderTrackingContent() {
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [storeOffline, setStoreOffline] = useState(false)
   const [wsConnected, setWsConnected] = useState(false)
   const [reordering, setReordering] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
@@ -56,6 +59,10 @@ function CustomerOrderTrackingContent() {
 
       if (storeRes.status === 'fulfilled') {
         setStore(storeRes.value.data.data || storeRes.value.data)
+      } else if (storeRes.status === 'rejected') {
+        if (isStoreOffline(storeRes.reason)) {
+          setStoreOffline(true)
+        }
       }
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Order details could not be loaded.')
@@ -197,6 +204,10 @@ function CustomerOrderTrackingContent() {
         </div>
       </div>
     )
+  }
+
+  if (storeOffline) {
+    return <StoreOfflinePage />
   }
 
   if (error || !order) {

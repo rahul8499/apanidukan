@@ -87,7 +87,16 @@ class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode },
 function AppContent() {
   const auth = useAuth()
   const location = useLocation()
-  const isSellerArea = location.pathname.startsWith('/store/') || location.pathname.startsWith('/s/') || location.pathname.startsWith('/stores/') || location.pathname === '/dashboard' || location.pathname === '/platform'
+  const hideHeader = location.pathname.startsWith('/store/') ||
+    location.pathname.startsWith('/s/') ||
+    location.pathname.startsWith('/stores/') ||
+    location.pathname.startsWith('/reset-password') ||
+    location.pathname === '/dashboard' ||
+    location.pathname === '/platform' ||
+    location.pathname === '/login' ||
+    location.pathname === '/start' ||
+    location.pathname === '/register' ||
+    location.pathname === '/forgot-password'
 
   useEffect(() => {
     const isCustomerOrSellerStore = location.pathname.startsWith('/s/') || location.pathname.startsWith('/store/') || location.pathname.startsWith('/stores/')
@@ -98,7 +107,7 @@ function AppContent() {
 
   return (
     <div className="app-shell">
-      {!isSellerArea && (
+      {!hideHeader && (
         <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
             <Link to="/" className="flex items-center gap-2 font-bold text-slate-950">

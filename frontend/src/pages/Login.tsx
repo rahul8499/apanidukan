@@ -101,203 +101,216 @@ export default function Login() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-10 sm:py-14">
-      <div className="premium-card p-6 sm:p-8 shadow-xl border border-slate-100 rounded-3xl bg-white">
+    <div className="min-h-screen w-full bg-slate-50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100 via-white to-teal-50 flex flex-col justify-start items-center px-4 pt-0 sm:pt-2 pb-0 font-sans">
+      <div className="w-full max-w-md">
 
-        {/* Header */}
-        <div className="text-center sm:text-left">
-          <span className="section-label text-xs font-semibold tracking-wider text-indigo-600 uppercase">
-            Welcome back
-          </span>
-          <h1 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            Login to your store
-          </h1>
-          <p className="mt-1.5 text-sm text-slate-500">
-            Manage your products and share your storefront.
-          </p>
+        {/* Logo outside card for premium feel */}
+        <div className="flex justify-center mb-0 mt-4 sm:mt-0">
+          <img
+            src="/apanidukan1.png"
+            alt="Apani Dukan"
+            className="h-28 sm:h-32 md:h-40 lg:h-48 w-auto object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+          />
         </div>
 
-        {/* Tab Switcher: Mobile OTP vs Email */}
-        <div className="mt-6 flex rounded-2xl bg-slate-100 p-1">
-          <button
-            type="button"
-            onClick={() => { setAuthMethod('otp'); setError(null); setSuccessMsg(null); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-xl transition-all ${authMethod === 'otp'
-                ? 'bg-white text-indigo-600 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-              }`}
-          >
-            <span>📱</span> Mobile OTP
-          </button>
-          <button
-            type="button"
-            onClick={() => { setAuthMethod('email'); setError(null); setSuccessMsg(null); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-xl transition-all ${authMethod === 'email'
-                ? 'bg-white text-indigo-600 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-              }`}
-          >
-            <span>✉️</span> Email & Password
-          </button>
-        </div>
+        <div className="p-4 sm:p-5 shadow-2xl shadow-slate-500/10 border border-white/80 rounded-3xl bg-white/60 backdrop-blur-2xl">
 
-        {/* Error Alert */}
-        {error && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs sm:text-sm text-red-700 flex items-start gap-2">
-            <span>⚠️</span>
-            <div className="flex-1">{error}</div>
+          {/* Header */}
+          <div className="text-center mb-1.5">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[9px] font-black tracking-widest text-slate-600 uppercase mb-1 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+              Seller Dashboard
+            </span>
+            <h1 className="text-lg sm:text-xl leading-tight font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 pb-0.5">
+              Manage Your Store
+            </h1>
+            <p className="mt-0.5 text-[10px] sm:text-xs text-slate-500 font-bold max-w-xs mx-auto leading-tight hidden sm:block">
+              View live orders, update products, and interact with customers.
+            </p>
           </div>
-        )}
 
-        {/* Success Alert */}
-        {successMsg && (
-          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs sm:text-sm text-emerald-700 flex items-start gap-2">
-            <span>✅</span>
-            <div className="flex-1">{successMsg}</div>
+          {/* Tab Switcher: Mobile OTP vs Email */}
+          <div className="mt-2 flex rounded-lg bg-slate-100/80 p-0.5 shadow-inner border border-slate-200/50">
+            <button
+              type="button"
+              onClick={() => { setAuthMethod('otp'); setError(null); setSuccessMsg(null); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-black rounded transition-all duration-300 ${authMethod === 'otp'
+                ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/50 scale-[1.02]'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'
+                }`}
+            >
+              <span>📱</span> OTP Login
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAuthMethod('email'); setError(null); setSuccessMsg(null); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-black rounded transition-all duration-300 ${authMethod === 'email'
+                ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/50 scale-[1.02]'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'
+                }`}
+            >
+              <span>✉️</span> Email Login
+            </button>
           </div>
-        )}
 
-        {/* --- OPTION A: MOBILE OTP LOGIN --- */}
-        {authMethod === 'otp' && (
-          <div className="mt-6">
-            {!otpSent ? (
-              <form onSubmit={handleSendOTP} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Mobile Number
-                  </label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-3.5 text-sm font-semibold text-slate-500">
-                      +91
-                    </span>
+          {/* Error Alert */}
+          {error && (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs sm:text-sm text-red-700 flex items-start gap-2">
+              <span>⚠️</span>
+              <div className="flex-1">{error}</div>
+            </div>
+          )}
+
+          {/* Success Alert */}
+          {successMsg && (
+            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs sm:text-sm text-emerald-700 flex items-start gap-2">
+              <span>✅</span>
+              <div className="flex-1">{successMsg}</div>
+            </div>
+          )}
+
+          {/* --- OPTION A: MOBILE OTP LOGIN --- */}
+          {authMethod === 'otp' && (
+            <div className="mt-3">
+              {!otpSent ? (
+                <form onSubmit={handleSendOTP} className="space-y-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-0.5">
+                      Mobile Number
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 text-sm font-semibold text-slate-500">
+                        +91
+                      </span>
+                      <input
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        required
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={10}
+                        placeholder="9876543210"
+                        className="w-full pl-12 pr-3 py-2 bg-white/80 border border-slate-200 shadow-sm rounded-lg text-sm font-bold tracking-wide text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex justify-center items-center gap-1.5 py-2 rounded-lg font-black text-sm bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-md shadow-slate-900/20 hover:shadow-slate-900/30 hover:-translate-y-0.5 mt-1"
+                  >
+                    {loading ? 'Sending OTP...' : 'Send OTP ➔'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOTP} className="space-y-2.5">
+                  <div>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <label className="block text-[11px] font-bold text-slate-700">
+                        Enter 6-Digit OTP
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setOtpSent(false)}
+                        className="text-[10px] text-indigo-600 hover:underline font-bold"
+                      >
+                        Change (+91 {phone})
+                      </button>
+                    </div>
                     <input
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
+                      value={otp}
+                      onChange={e => setOtp(e.target.value)}
                       required
-                      type="tel"
+                      type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      maxLength={10}
-                      placeholder="9876543210"
-                      className="premium-input pl-14 w-full text-base font-medium tracking-wide"
+                      maxLength={6}
+                      autoComplete="one-time-code"
+                      placeholder="123456"
+                      className="w-full text-center text-lg font-bold tracking-widest py-2 bg-white/80 border-2 border-indigo-200 shadow-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
                     />
                   </div>
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="primary-button w-full flex justify-center items-center gap-2 py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md hover:shadow-indigo-200"
-                >
-                  {loading ? 'Sending OTP...' : 'Send OTP →'}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyOTP} className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Enter 6-Digit OTP Code
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setOtpSent(false)}
-                      className="text-xs text-indigo-600 hover:underline font-semibold"
-                    >
-                      Change Number (+91 {phone})
-                    </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex justify-center items-center gap-1.5 py-2 rounded-lg font-black text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 hover:-translate-y-0.5 mt-1"
+                  >
+                    {loading ? 'Verifying...' : 'Verify & Login ➔'}
+                  </button>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                    <span>Didn't receive SMS?</span>
+                    {countdown > 0 ? (
+                      <span className="font-semibold text-slate-400">Resend in {countdown}s</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSendOTP}
+                        className="font-bold text-indigo-600 hover:underline"
+                      >
+                        Resend OTP Now
+                      </button>
+                    )}
                   </div>
-                  <input
-                    value={otp}
-                    onChange={e => setOtp(e.target.value)}
-                    required
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={6}
-                    autoComplete="one-time-code"
-                    placeholder="Enter OTP (e.g. 123456)"
-                    className="premium-input w-full text-center text-xl font-bold tracking-widest py-3 border-2 border-indigo-200 focus:border-indigo-600 rounded-xl"
-                  />
-                </div>
+                </form>
+              )}
+            </div>
+          )}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="primary-button w-full flex justify-center items-center gap-2 py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md hover:shadow-indigo-200"
-                >
-                  {loading ? 'Verifying OTP...' : 'Verify & Login →'}
-                </button>
+          {/* --- OPTION B: EMAIL & PASSWORD LOGIN (ORIGINAL FLOW PRESERVED) --- */}
+          {authMethod === 'email' && (
+            <form onSubmit={handleEmailSubmit} className="mt-3 space-y-2">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Email Address</label>
+                <input
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  type="email"
+                  placeholder="store@gmail.com"
+                  className="w-full px-3 py-2 bg-white/80 border border-slate-200 shadow-sm rounded-lg text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Password</label>
+                <input
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••••"
+                  type="password"
+                  className="w-full px-3 py-2 bg-white/80 border border-slate-200 shadow-sm rounded-lg text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+                />
+              </div>
 
-                <div className="flex items-center justify-between text-xs text-slate-500 pt-2">
-                  <span>Didn't receive SMS?</span>
-                  {countdown > 0 ? (
-                    <span className="font-semibold text-slate-400">Resend in {countdown}s</span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleSendOTP}
-                      className="font-bold text-indigo-600 hover:underline"
-                    >
-                      Resend OTP Now
-                    </button>
-                  )}
-                </div>
-              </form>
-            )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center items-center gap-1.5 py-2 rounded-lg font-black text-sm bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-md shadow-slate-900/20 hover:shadow-slate-900/30 hover:-translate-y-0.5 mt-2"
+              >
+                {loading ? 'Logging in...' : 'Secure Login ➔'}
+              </button>
+
+              <div className="mt-1.5 text-right">
+                <Link to="/forgot-password" className="text-[10px] font-bold text-indigo-600 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+            </form>
+          )}
+
+          {/* Footer Link */}
+          <div className="mt-3 text-center text-[11px] font-bold text-slate-500 border-t border-slate-200/60 pt-3 flex justify-center items-center gap-1">
+            <span>Don't have an account?</span>
+            <Link to="/start" className="text-slate-900 hover:text-indigo-600 transition-colors flex items-center gap-0.5 group bg-slate-100 hover:bg-indigo-50 px-2 py-0.5 rounded border border-slate-200 hover:border-indigo-200">
+              Create your store <span className="group-hover:translate-x-0.5 transition-transform">➔</span>
+            </Link>
           </div>
-        )}
 
-        {/* --- OPTION B: EMAIL & PASSWORD LOGIN (ORIGINAL FLOW PRESERVED) --- */}
-        {authMethod === 'email' && (
-          <form onSubmit={handleEmailSubmit} className="mt-6 space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
-              <input
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                type="email"
-                placeholder="store@gmail.com"
-                className="premium-input w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-              <input
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                placeholder="••••••••••"
-                type="password"
-                className="premium-input w-full"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="primary-button w-full flex justify-center items-center gap-2 py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md"
-            >
-              {loading ? 'Logging in...' : 'Login →'}
-            </button>
-
-            <div className="mt-3 text-right">
-              <Link to="/forgot-password" className="text-xs font-semibold text-indigo-600 hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-          </form>
-        )}
-
-        {/* Footer Link */}
-        <div className="mt-6 text-center text-xs sm:text-sm text-slate-500 border-t border-slate-100 pt-5">
-          Don't have an account?{' '}
-          <Link to="/start" className="font-semibold text-indigo-600 hover:underline">
-            Create your store
-          </Link>
         </div>
-
       </div>
     </div>
   )

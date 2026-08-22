@@ -84,7 +84,15 @@ export function playNotificationAudio(type: 'seller' | 'customer' = 'seller') {
   }
 }
 
-export function speakSoundboxAlert(text: string) {
+export function speakSoundboxAlert(text: string, delayMs: number = 0) {
+  if (delayMs > 0) {
+    setTimeout(() => executeSpeak(text), delayMs);
+    return;
+  }
+  executeSpeak(text);
+}
+
+function executeSpeak(text: string) {
   try {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
 
@@ -234,22 +242,36 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    try {
-      const saved = JSON.parse(localStorage.getItem(notificationStorageKey) || '[]')
-      const notifications = Array.isArray(saved) ? saved : []
-      if (isSellerRoute()) setSellerNotifications(notifications)
-      else setCustomerNotifications(notifications)
-    } catch {
-      if (isSellerRoute()) setSellerNotifications([])
-      else setCustomerNotifications([])
+    if (isSellerRoute() && effectiveStoreId) {
+      api.get(`/stores/${effectiveStoreId}/notifications/`).then(res => {
+         const dbNotifs = res.data.map((n: any) => ({
+             id: String(n.id),
+             type: n.notification_type,
+             title: n.title,
+             body: n.body,
+             time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+             read: n.is_read,
+             link: n.link
+         }))
+         setSellerNotifications(dbNotifs)
+      }).catch(console.error)
+    } else if (effectiveStoreId) {
+      api.get(`/public/stores/id/${effectiveStoreId}/notifications/?token=${trackingToken || customerIdentity}`).then(res => {
+         const dbNotifs = res.data.map((n: any) => ({
+             id: String(n.id),
+             type: n.notification_type,
+             title: n.title,
+             body: n.body,
+             time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+             read: n.is_read,
+             link: n.link
+         }))
+         setCustomerNotifications(dbNotifs)
+      }).catch(console.error)
     }
-  }, [notificationStorageKey])
+  }, [effectiveStoreId, auth.user])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const notifications = isSellerRoute() ? sellerNotifications : customerNotifications
-    try { localStorage.setItem(notificationStorageKey, JSON.stringify(notifications.slice(0, 50))) } catch { }
-  }, [notificationStorageKey, sellerNotifications, customerNotifications])
+
 
   // Fast polling backup sync for instant bell icon notifications (Every 4 seconds - Seller Only)
   const knownOrderIdsRef = React.useRef<Set<number>>(new Set())
@@ -283,7 +305,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             playNotificationAudio('seller')
             const custText = order.customer_name ? `${order.customer_name} se ` : ''
             const amtText = order.total ? `kul ${Number(order.total).toFixed(0)} rupaye ka ` : ''
-            speakSoundboxAlert(`Aapke Store par ${custText}${amtText}naya order praapt hua.`)
+            speakSoundboxAlert(`Aapke Store par ${custText}${amtText}naya order praapt hua.`, 800)
 
             const notifItem: AppNotification = {
               id: `order_${order.id}_${Date.now()}`,
@@ -379,9 +401,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               const custText = data.order.customer_name ? `${data.order.customer_name} se ` : ''
               const totalVal = data.order.total || data.order.subtotal
               const amtText = totalVal ? `kul ${Number(totalVal).toFixed(0)} rupaye ka ` : ''
-              speakSoundboxAlert(`QuickStore par ${custText}${amtText}naya order praapt hua.`)
+              speakSoundboxAlert(`QuickStore par ${custText}${amtText}naya order praapt hua.`, 800)
             } else if (notifType === 'request' && currentIsSeller) {
-              speakSoundboxAlert(`QuickStore par naya product request aaya hai: ${data.item_name || 'Item'}.`)
+              speakSoundboxAlert(`QuickStore par naya product request aaya hai: ${data.item_name || 'Item'}.`, 800)
             } else if (notifType === 'product' && !currentIsSeller) {
               const pName = data.product?.name || data.product_name || data.item_name || 'Naya item'
               speakSoundboxAlert(`Store par naya product live ho gaya hai: ${pName}.`)
@@ -496,15 +518,33 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }
 
   function markAllRead() {
-    setActiveNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    if (effectiveStoreId) {
+       if (isSellerRoute()) {
+         api.post(`/stores/${effectiveStoreId}/notifications/`, {}).catch(console.error)
+       } else {
+         const token = trackingToken || customerIdentity;
+         api.post(`/public/stores/id/${effectiveStoreId}/notifications/`, { token }).catch(console.error)
+       }
+    }
+    
+    if (isSellerRoute()) {
+      setSellerNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    } else {
+      setCustomerNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    }
   }
 
   function clearAll() {
-    setActiveNotifications([])
+    if (isSellerRoute()) setSellerNotifications([]);
+    else setCustomerNotifications([]);
   }
 
   function removeNotification(id: string) {
-    setActiveNotifications(prev => prev.filter(n => n.id !== id))
+    if (isSellerRoute()) {
+      setSellerNotifications(prev => prev.filter(n => n.id !== id));
+    } else {
+      setCustomerNotifications(prev => prev.filter(n => n.id !== id));
+    }
   }
 
   function addNotification(notif: Omit<AppNotification, 'id' | 'time' | 'read'>) {
@@ -527,8 +567,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       read: false
     }
 
-    if (notif.type === 'product') {
+    if (notif.type === 'product' || !currentIsSeller) {
       setCustomerNotifications(prev => [newN, ...prev])
+      if (effectiveStoreId) {
+        const token = trackingToken || customerIdentity;
+        api.post(`/public/stores/id/${effectiveStoreId}/notifications/`, {
+          action: 'create',
+          token,
+          type: notif.type,
+          title: notif.title,
+          body: notif.body,
+          link: notif.link || ''
+        }).catch(() => {})
+      }
     } else {
       setSellerNotifications(prev => [newN, ...prev])
     }

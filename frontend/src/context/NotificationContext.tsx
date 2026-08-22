@@ -334,15 +334,31 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Persistent Global WebSocket connection for active store (Seller & Customer)
   useEffect(() => {
     if (!effectiveStoreId) return
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const isLocal = typeof window !== 'undefined' && (
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.port === '5173' ||
-      window.location.port === '3000'
-    )
-    const host = isLocal ? `${window.location.hostname}:8000` : window.location.host
-    const wsUrl = `${protocol}//${host}/ws/store/${effectiveStoreId}/`
+    let wsHost = window.location.host
+    let wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const envBase = (import.meta as any).env?.VITE_API_BASE
+    
+    if (envBase) {
+      try {
+        const url = new URL(envBase)
+        wsHost = url.host
+        wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+      } catch (e) {
+        // Fallback if parsing fails
+      }
+    } else {
+      const isLocal = typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.port === '5173' ||
+        window.location.port === '3000'
+      )
+      if (isLocal) {
+        wsHost = `${window.location.hostname}:8000`
+      }
+    }
+    
+    const wsUrl = `${wsProtocol}//${wsHost}/ws/store/${effectiveStoreId}/`
 
     let socket: WebSocket | null = null
     try {

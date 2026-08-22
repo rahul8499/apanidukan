@@ -22,7 +22,7 @@ export function updateDynamicManifest({
   startUrl,
   themeColor,
   backgroundColor,
-  iconUrl = '/icons/multistore-icon.svg',
+  iconUrl = '/apanidukan1.png',
 }: ManifestConfig) {
   try {
     const manifestObj = {
@@ -39,7 +39,7 @@ export function updateDynamicManifest({
         {
           src: iconUrl,
           sizes: '192x192 512x512 any',
-          type: 'image/svg+xml',
+          type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
           purpose: 'any maskable',
         },
       ],
@@ -90,7 +90,7 @@ export function setupCustomerStorePwa(store: { id?: string | number; name: strin
     startUrl: `/s/${store.slug}`,
     themeColor: '#020617',
     backgroundColor: '#ffffff',
-    iconUrl: store.logo || '/icons/multistore-icon.svg',
+    iconUrl: store.logo || '/apanidukan1.png',
   })
 }
 
@@ -110,7 +110,7 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
     startUrl: `/stores/${store.id}/orders`,
     themeColor: '#0f172a',
     backgroundColor: '#0f172a',
-    iconUrl: '/icons/multistore-icon.svg',
+    iconUrl: '/apanidukan1.png',
   })
 }
 
@@ -125,6 +125,6 @@ export function resetGenericPlatformPwa() {
     startUrl: '/start',
     themeColor: '#0f172a',
     backgroundColor: '#0f172a',
-    iconUrl: '/icons/multistore-icon.svg',
+    iconUrl: '/apanidukan1.png',
   })
 }

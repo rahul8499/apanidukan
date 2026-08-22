@@ -1,6 +1,6 @@
 {
-  "name": "QuickStore - Digital Storefront & Orders",
-  "short_name": "QuickStore",
+  "name": "Apani Dukan - Digital Storefront & Orders",
+  "short_name": "Apani Dukan",
   "description": "Shop products directly from local verified seller stores with instant live tracking.",
   "start_url": "/",
   "scope": "/",
@@ -9,7 +9,7 @@
   "background_color": "#020617",
   "theme_color": "#020617",
   "icons": [
-    { "src": "/icons/multistore-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icons/multistore-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "/apanidukan1.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/apanidukan1.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

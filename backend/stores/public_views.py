@@ -189,7 +189,7 @@ class PublicValidateCouponView(generics.GenericAPIView):
         if not coupon:
             # Auto-create/register dynamic scratch card coupon in database ONLY if explicitly scratch reward code
             is_scratch = request.data.get('is_scratch')
-            if is_scratch and code.startswith('SCRATCH'):
+            if is_scratch:
                 scratch_val = float(request.data.get('scratch_discount_value', 50.0))
                 scratch_type = str(request.data.get('scratch_discount_type', 'FIXED')).upper()
                 scratch_min = float(request.data.get('scratch_min_order', 0.0))

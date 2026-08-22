@@ -114,8 +114,8 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
     shortName: 'Apani Dukan',
     description: 'Manage store orders, catalog, coupons & customer chats in real-time.',
     startUrl: `/stores/${store.id}/orders`,
-    themeColor: '#0f172a',
-    backgroundColor: '#0f172a',
+    themeColor: '#f8fafc',
+    backgroundColor: '#f8fafc',
     iconUrl: '/apanidukan1.png',
   })
 }
@@ -129,8 +129,8 @@ export function resetGenericPlatformPwa() {
     shortName: 'Apani Dukan',
     description: 'Create and launch your online store in seconds.',
     startUrl: '/start',
-    themeColor: '#0f172a',
-    backgroundColor: '#0f172a',
+    themeColor: '#f8fafc',
+    backgroundColor: '#f8fafc',
     iconUrl: '/apanidukan1.png',
   })
 }

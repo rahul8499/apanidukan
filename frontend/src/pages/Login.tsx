@@ -101,8 +101,15 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100 via-white to-teal-50 flex flex-col justify-start items-center px-4 pt-0 sm:pt-2 pb-0 font-sans">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen w-full bg-slate-50 flex flex-col justify-start items-center px-4 pt-0 sm:pt-2 pb-0 font-sans overflow-hidden">
+      {/* Premium Animated Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-500/10 blur-[100px] animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-teal-500/10 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full bg-blue-500/10 blur-[80px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+      
+      <div className="w-full max-w-md relative z-10">
 
         {/* Logo outside card for premium feel */}
         <div className="flex justify-center mb-0 mt-4 sm:mt-0">

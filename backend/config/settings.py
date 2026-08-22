@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'config.middleware.HideApiFromBrowserMiddleware',
@@ -222,6 +223,7 @@ SIMPLE_JWT = {
 
 _cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS')
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(',') if origin.strip()] if _cors_origins else ['http://localhost:3000', 'http://localhost:5173']
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 # Enable private-network development URLs only while DEBUG is on. In production
 # set CORS_ALLOWED_ORIGINS and ALLOWED_HOSTS to the deployed domain explicitly.
 if DEBUG:

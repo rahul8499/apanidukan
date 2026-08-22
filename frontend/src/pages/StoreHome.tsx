@@ -550,6 +550,7 @@ function Storefront() {
                       <X className="h-3 w-3" />
                     </button>
                   )}
+                  {/* AI Search disabled
                   <button
                     onClick={() => setAiSearchOpen(true)}
                     className="absolute right-1 flex items-center gap-1 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white hover:opacity-90 transition-all cursor-pointer"
@@ -557,6 +558,7 @@ function Storefront() {
                     <Sparkles className="h-2.5 w-2.5" />
                     <span>AI</span>
                   </button>
+                  */}
                 </div>
               </div>
 
@@ -602,6 +604,7 @@ function Storefront() {
                     <X className="h-3 w-3" />
                   </button>
                 )}
+                {/* AI Search disabled
                 <button
                   onClick={() => setAiSearchOpen(true)}
                   className="absolute right-1 flex items-center gap-1 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 px-2 py-1 text-[10px] font-bold text-white shadow cursor-pointer"
@@ -609,6 +612,7 @@ function Storefront() {
                   <Sparkles className="h-2.5 w-2.5" />
                   <span>AI</span>
                 </button>
+                */}
               </div>
             </div>
 

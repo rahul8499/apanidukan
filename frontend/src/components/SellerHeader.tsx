@@ -612,22 +612,23 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           {/* PWA Install Button */}
           <InstallAppButton storeSlug={store?.slug} variant="drawer_item" />
 
-          {/* AI Copilot Drawer Item */}
+          {/* AI Copilot Drawer Item (Disabled) */}
           <button
             type="button"
-            onClick={() => { setIsAiModalOpen(true); setIsSettingsOpen(false); }}
-            className="w-full flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-500/10 to-teal-500/10 border border-amber-400/40 p-2.5 text-left text-xs font-black text-amber-900 hover:bg-amber-100/50 hover:scale-[1.02] transition-all cursor-pointer shadow-xs"
+            disabled
+            title="AI Copilot is currently locked."
+            className="w-full flex items-center justify-between rounded-xl bg-gradient-to-r from-slate-200 to-slate-100 border border-slate-300/40 p-2.5 text-left text-xs font-black text-slate-500 opacity-75 cursor-not-allowed shadow-xs"
           >
             <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/20 text-amber-600 font-bold text-xs shadow-inner">
-                ✨
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-300/50 text-slate-500 font-bold text-xs shadow-inner">
+                <Lock className="h-4 w-4" />
               </span>
               <div>
-                <p className="text-[11px] font-black text-slate-900">AI Copilot Assistant</p>
-                <p className="text-[9px] font-medium text-slate-500">Intelligent business insights</p>
+                <p className="text-[11px] font-black text-slate-500">AI Copilot Assistant</p>
+                <p className="text-[9px] font-medium text-slate-400">Feature locked</p>
               </div>
             </div>
-            <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+            <Lock className="h-4 w-4 text-slate-400" />
           </button>
 
           {message && (
@@ -1440,7 +1441,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
         }}
       />
 
-      {/* Global Floating AI Copilot Chatbot Icon (Draggable) */}
+      {/* Global Floating AI Copilot Chatbot Icon (Draggable) - DISABLED */}
+      {/* 
       <button
         type="button"
         onPointerDown={handlePointerDown}
@@ -1452,6 +1454,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       >
         <Sparkles className="h-6 w-6 animate-pulse group-hover:animate-none" />
       </button>
+      */}
     </>
   )
 }

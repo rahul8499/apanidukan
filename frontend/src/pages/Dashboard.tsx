@@ -5,40 +5,97 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Dashboard(){
   const [stores, setStores] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const auth = useAuth()
   const navigate = useNavigate()
 
   useEffect(()=>{
     api.get('/stores/').then(res=> {
       setStores(res.data)
-      // A seller with a store should go directly to their own management area.
-      if (res.data.length === 1) navigate(`/stores/${res.data[0].id}/manage`, { replace: true })
-    }).catch(()=>{})
+      // A seller with a single store should go directly to their own management area.
+      if (res.data.length === 1) {
+        navigate(`/stores/${res.data[0].id}/manage`, { replace: true })
+      } else {
+        setLoading(false)
+      }
+    }).catch(()=>{
+      setLoading(false)
+    })
   },[navigate])
 
-  return (
-    <div className="p-4">
-      <div className="flex justify-between items-center"><h1 className="text-xl font-semibold">Create your first store</h1><button onClick={() => { auth.logout(); navigate('/login') }} className="px-3 py-1 border rounded">Logout</button></div>
-      <div className="mt-6">
-        <Link to="/stores/create" className="px-4 py-2 bg-green-600 text-white rounded">Create Store</Link>
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center p-6">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto h-12 w-12 rounded-2xl border-4 border-indigo-500/20 border-t-teal-400 animate-spin"></div>
+          <p className="text-sm font-bold text-slate-400">Loading your workspace...</p>
+        </div>
       </div>
-      {stores.length > 1 && <section className="mt-6">
-        <h2 className="text-lg font-medium">My Stores</h2>
-        <ul className="mt-3 space-y-2">
-          {stores.map(s=> (
-            <li key={s.id} className="p-3 bg-white rounded shadow flex justify-between">
-              <div>
-                <div className="font-semibold">{s.name}</div>
-                <div className="text-sm text-gray-600">/{`store/${s.slug}`}</div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-slate-50 font-sans p-6 pb-20">
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+          <h1 className="text-xl font-black text-slate-900">Your Storefronts</h1>
+          <button 
+            onClick={() => { auth.logout(); navigate('/login') }} 
+            className="px-4 py-2 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-bold text-xs rounded-xl transition-all"
+          >
+            Logout
+          </button>
+        </div>
+        
+        {stores.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center shadow-md space-y-6">
+            <div className="text-5xl">🏪</div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black text-slate-900">No stores found</h2>
+              <p className="text-sm font-medium text-slate-500 max-w-sm mx-auto">
+                You haven't created any digital storefronts yet. Let's build your first store and start selling online.
+              </p>
+            </div>
+            <Link 
+              to="/start" 
+              className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-600 to-teal-500 text-white font-black rounded-2xl shadow-lg hover:opacity-95 transition-all hover:-translate-y-0.5"
+            >
+              Create New Store ➔
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            <h2 className="text-sm font-black uppercase text-slate-400 tracking-wider pl-2">Select a store to manage</h2>
+            {stores.map(s=> (
+              <div key={s.id} className="p-5 bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-all flex items-center justify-between">
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-lg">{s.name}</h3>
+                  <a href={`/store/${s.slug}`} target="_blank" rel="noreferrer" className="text-xs font-semibold text-indigo-600 hover:underline">
+                    apanidukan.com/store/{s.slug} ↗
+                  </a>
+                </div>
+                <div className="flex gap-2">
+                  <Link 
+                    to={`/stores/${s.id}/manage`} 
+                    className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all shadow-xs"
+                  >
+                    Manage Dashboard
+                  </Link>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Link to={`/store/${s.slug}`} className="text-blue-600">Open</Link>
-                <Link to={`/stores/${s.id}/manage`} className="text-gray-600">Manage</Link>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>}
+            ))}
+            
+            <div className="pt-6 text-center">
+               <Link 
+                to="/start" 
+                className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition-all"
+              >
+                + Create another store
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

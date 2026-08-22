@@ -37,13 +37,13 @@ export function updateDynamicManifest({
       theme_color: themeColor,
       icons: [
         {
-          src: iconUrl,
+          src: window.location.origin + iconUrl,
           sizes: '192x192',
           type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
           purpose: 'any maskable',
         },
         {
-          src: iconUrl,
+          src: window.location.origin + iconUrl,
           sizes: '512x512',
           type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
           purpose: 'any maskable',
@@ -110,8 +110,8 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
   localStorage.setItem('multistore-installed-seller-id', String(store.id))
 
   updateDynamicManifest({
-    name: `${store.name || 'Store'} - Seller Hub`,
-    shortName: 'Seller Hub',
+    name: 'Apani Dukan - Seller',
+    shortName: 'Apani Dukan',
     description: 'Manage store orders, catalog, coupons & customer chats in real-time.',
     startUrl: `/stores/${store.id}/orders`,
     themeColor: '#0f172a',
@@ -125,8 +125,8 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
  */
 export function resetGenericPlatformPwa() {
   updateDynamicManifest({
-    name: 'QuickStore Platform',
-    shortName: 'QuickStore',
+    name: 'Apani Dukan',
+    shortName: 'Apani Dukan',
     description: 'Create and launch your online store in seconds.',
     startUrl: '/start',
     themeColor: '#0f172a',

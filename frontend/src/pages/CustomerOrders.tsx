@@ -97,11 +97,20 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     } catch { }
 
     try {
-      const savedOrders = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
-      const tokens = savedOrders.map((order: any) => order.tracking_token).filter(Boolean)
-      const params: any = { tracking_tokens: tokens.join(',') }
+      const storedPhone = phoneToQuery || customerPhone || localStorage.getItem(`qs_customer_phone_${storeSlug}`) || localStorage.getItem(`qs_chat_phone`) || ''
+      if (storedPhone && !customerPhone) {
+        setCustomerPhone(storedPhone)
+        setPhoneInput(storedPhone)
+      }
 
-      const res = await api.get(`/public/stores/${storeSlug}/customer-orders/`, { params })
+      if (!storedPhone) {
+        setOrders([])
+        return
+      }
+
+      const res = await api.get(`/public/stores/${storeSlug}/customer-orders/`, {
+        params: { phone: storedPhone }
+      })
       const liveOrders = Array.isArray(res.data) ? res.data : []
       setOrders(liveOrders)
     } catch {
@@ -118,9 +127,14 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
   const handlePhoneSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!phoneInput.trim()) return
-    setCustomerPhone(phoneInput.trim())
+    const cleaned = phoneInput.trim()
+    setCustomerPhone(cleaned)
+    if (storeSlug) {
+      localStorage.setItem(`qs_customer_phone_${storeSlug}`, cleaned)
+      localStorage.setItem(`qs_chat_phone`, cleaned)
+    }
     setShowPhoneSync(false)
-    fetchDynamicOrders(phoneInput.trim())
+    fetchDynamicOrders(cleaned)
   }
 
   // Filtered orders list
@@ -291,27 +305,51 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
             <p className="text-xs font-bold text-slate-500">Loading your orders...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className={`rounded-3xl border ${storeTheme.card_bg_class} p-8 text-center shadow-sm space-y-4 my-6`}>
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-black/5 dark:bg-white/5 text-4xl shadow-inner border border-current/10">
-              🛍️
+          <div className="space-y-4 my-6">
+            <div className={`rounded-3xl border ${storeTheme.card_bg_class} p-6 sm:p-8 text-center shadow-sm space-y-4`}>
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-black/5 dark:bg-white/5 text-4xl shadow-inner border border-current/10">
+                🛍️
+              </div>
+              <div className="space-y-1 max-w-sm mx-auto">
+                <h2 className={`text-base sm:text-lg font-black ${storeTheme.text_primary_class}`}>
+                  {orders.length === 0 ? 'No Orders Yet on this Device' : 'No Matching Orders'}
+                </h2>
+                <p className={`text-xs ${storeTheme.text_secondary_class} font-medium leading-relaxed`}>
+                  {orders.length === 0
+                    ? 'Your placed orders will appear here. Placed orders on another browser or phone? Sync using your phone number below!'
+                    : 'Try searching with a different order ID or filter tab.'}
+                </p>
+              </div>
+
+              {/* Phone sync inline box for mobile/PWA users */}
+              <form onSubmit={handlePhoneSearchSubmit} className="max-w-md mx-auto pt-2">
+                <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 p-1.5 rounded-2xl border border-current/10">
+                  <input
+                    type="tel"
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    placeholder="Enter WhatsApp Phone Number..."
+                    className="flex-1 rounded-xl bg-transparent px-3 py-1.5 text-xs text-current font-bold placeholder-current/40 focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className={`rounded-xl bg-gradient-to-r ${storeTheme.btn_gradient} text-white font-black px-4 py-2 text-xs shadow-md hover:scale-105 transition-all shrink-0 cursor-pointer flex items-center gap-1`}
+                  >
+                    <span>{isSyncing ? 'Syncing...' : 'Find My Orders'}</span>
+                  </button>
+                </div>
+              </form>
+
+              <div className="pt-2">
+                <Link
+                  to={`/store/${storeSlug}`}
+                  className={`inline-flex items-center gap-2 rounded-2xl border border-current/20 bg-black/5 dark:bg-white/5 px-6 py-2.5 text-xs font-black ${storeTheme.text_primary_class} hover:bg-black/10 transition-all`}
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  <span>Explore Store</span>
+                </Link>
+              </div>
             </div>
-            <div className="space-y-1 max-w-sm mx-auto">
-              <h2 className={`text-base sm:text-lg font-black ${storeTheme.text_primary_class}`}>
-                {orders.length === 0 ? 'No Orders Yet' : 'No Matching Orders'}
-              </h2>
-              <p className={`text-xs ${storeTheme.text_secondary_class} font-medium leading-relaxed`}>
-                {orders.length === 0
-                  ? 'Your placed orders will appear here with live tracking & digital receipts.'
-                  : 'Try searching with a different order ID or filter tab.'}
-              </p>
-            </div>
-            <Link
-              to={`/store/${storeSlug}`}
-              className={`inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r ${storeTheme.btn_gradient} px-6 py-2.5 text-xs font-black text-white shadow-md hover:scale-105 transition-all`}
-            >
-              <ShoppingBag className="h-4 w-4" />
-              <span>Explore Store</span>
-            </Link>
           </div>
         ) : (
           /* CLEAN ADAPTIVE RETAIL ORDER CARDS */

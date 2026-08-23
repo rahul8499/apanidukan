@@ -154,6 +154,9 @@ class PublicWhatsAppOrderView(APIView):
         return Response(order_data, status=status.HTTP_201_CREATED)
 
 
+from django.db.models import Q, F
+
+
 class PublicCustomerOrdersListView(APIView):
     permission_classes = [permissions.AllowAny]
     throttle_scope = 'public_tracking'
@@ -161,13 +164,22 @@ class PublicCustomerOrdersListView(APIView):
     def get(self, request, slug):
         store = get_object_or_404(Store, slug=slug)
         tokens = [value.strip() for value in request.query_params.get('tracking_tokens', '').split(',') if value.strip()]
-        if not tokens:
-            return Response({'detail': 'A tracking token is required.'}, status=status.HTTP_403_FORBIDDEN)
-        queryset = WhatsAppOrder.objects.filter(store=store, tracking_token__in=tokens)
+        phone = request.query_params.get('phone', '').strip()
+        cleaned_phone = ''.join(filter(str.isdigit, phone)) if phone else ''
 
-        queryset = queryset.order_by('-created_at')[:50]
+        if not tokens and not cleaned_phone:
+            return Response([])
+
+        filters = Q()
+        if tokens:
+            filters |= Q(tracking_token__in=tokens)
+        if cleaned_phone and len(cleaned_phone) >= 7:
+            filters |= Q(customer_phone__icontains=cleaned_phone[-10:])
+
+        queryset = WhatsAppOrder.objects.filter(store=store).filter(filters).distinct().order_by('-created_at')[:50]
         serializer = WhatsAppOrderSerializer(queryset, many=True)
         return Response(serializer.data)
+
 
 
 class PublicWhatsAppOrderDetailView(APIView):

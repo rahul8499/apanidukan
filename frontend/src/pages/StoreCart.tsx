@@ -404,25 +404,9 @@ function CartContent() {
         discount_amount: totalDiscountAmt,
       })
       const order = result.data
-      const orderHistoryKey = `qs_customer_orders_${storeSlug}`
-      const savedOrders = JSON.parse(localStorage.getItem(orderHistoryKey) || '[]')
-      const entry = {
-        reference: order.reference,
-        total: finalTotal,
-        status: order.status,
-        created_at: order.created_at,
-        order_type: orderType,
-        delivery_fee: order.delivery_fee || 0,
-        customer_name: trimmedName,
-        customer_phone: trimmedPhone,
-        tracking_token: order.tracking_token,
-        items: (order.items && order.items.length > 0)
-          ? order.items
-          : cart.items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, image: i.image }))
-      }
-      localStorage.setItem(orderHistoryKey, JSON.stringify([entry, ...savedOrders.filter((item: any) => item.reference !== order.reference)].slice(0, 30)))
       if (trimmedPhone) {
         localStorage.setItem(`qs_customer_phone_${storeSlug}`, trimmedPhone)
+        localStorage.setItem(`qs_chat_phone`, trimmedPhone)
       }
       const paymentLabel = order.payment_type === 'ONLINE' ? 'Online payment' : 'Cash on delivery'
       const fulfillmentLabel = orderType === 'STORE_PICKUP' ? 'Store pickup' : 'Home delivery'

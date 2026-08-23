@@ -57,7 +57,7 @@ class StoreSubscription(models.Model):
     ]
 
     store = models.OneToOneField(Store, on_delete=models.CASCADE, related_name='subscription')
-    plan_name = models.CharField(max_length=20, choices=PLAN_CHOICES, default=PLAN_BASIC)
+    plan_name = models.CharField(max_length=20, choices=PLAN_CHOICES, default=PLAN_PREMIUM)
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='subscriptions')
     razorpay_plan_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_subscription_id = models.CharField(max_length=100, blank=True, null=True, db_index=True)

@@ -209,7 +209,25 @@ class GetStoreSubscriptionStatusView(APIView):
 
         ensure_default_plans_exist()
 
-        subscription, _ = StoreSubscription.objects.get_or_create(store=store)
+        subscription, created = StoreSubscription.objects.get_or_create(
+            store=store,
+            defaults={
+                'plan_name': StoreSubscription.PLAN_PREMIUM,
+                'status': StoreSubscription.STATUS_ACTIVE,
+                'current_start': timezone.now(),
+                'current_end': timezone.now() + timedelta(days=3650),
+            }
+        )
+
+        # Ensure store gets Premium plan by default
+        if created or subscription.plan_name == StoreSubscription.PLAN_BASIC:
+            subscription.plan_name = StoreSubscription.PLAN_PREMIUM
+            subscription.status = StoreSubscription.STATUS_ACTIVE
+            if not subscription.current_start:
+                subscription.current_start = timezone.now()
+            if not subscription.current_end:
+                subscription.current_end = timezone.now() + timedelta(days=3650)
+            subscription.save()
         payments = subscription.payments.all()[:20]
 
         payments_list = [

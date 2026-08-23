@@ -1235,7 +1235,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <span className="text-xs font-black uppercase text-indigo-200">Active Subscription</span>
               </div>
               <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                {subStatus?.plan_name || 'BASIC'} PLAN
+                {subStatus?.plan_name || 'PREMIUM'} PLAN
               </span>
             </div>
             <Link

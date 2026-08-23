@@ -452,44 +452,59 @@ function Storefront() {
             </div>
           )}
 
-          {/* Dynamic Top Announcement Ticker (Seller Custom Copy OR Active Coupon) */}
-          {storeTheme.show_announcement_bar && (storeTheme.announcement_text || storeWideCoupon) && (
-            <div
-              className={`relative z-50 px-3 py-1.5 text-center text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-black/10 flex items-center justify-between gap-2 ${
-                storeTheme.announcement_text ? 'text-white' : 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 border-amber-300'
-              }`}
-              style={storeTheme.announcement_text ? { backgroundColor: storeTheme.primary_color } : undefined}
-            >
-              <div className="flex items-center gap-1.5 min-w-0 mx-auto">
-                <Sparkles className={`h-3.5 w-3.5 shrink-0 animate-bounce ${storeTheme.announcement_text ? 'text-amber-300' : 'text-slate-950'}`} />
-                {storeTheme.announcement_text ? (
-                  <span className="truncate tracking-wide drop-shadow-xs">{storeTheme.announcement_text}</span>
-                ) : storeWideCoupon ? (
-                  <span className="truncate">
-                    SPECIAL OFFER: Get{' '}
-                    <strong className="underline font-black">
-                      {storeWideCoupon.discount_type === 'PERCENTAGE'
-                        ? `${storeWideCoupon.discount_value}% OFF`
-                        : `FLAT ₹${storeWideCoupon.discount_value} OFF`}
-                    </strong>{' '}
-                    Code:{' '}
-                    <span className="font-mono bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded text-[10px]">
-                      {storeWideCoupon.code}
+          {/* Dynamic Top Announcement Ticker (Selected Featured Coupon OR Auto Best Coupon) */}
+          {(() => {
+            const featuredCoupon = storeTheme.featured_coupon_code
+              ? storeCoupons.find((c: any) => c.code.toUpperCase() === storeTheme.featured_coupon_code?.toUpperCase())
+              : null
+            const activeBannerCoupon = featuredCoupon || storeWideCoupon
+
+            if (!storeTheme.show_announcement_bar || (!storeTheme.announcement_text && !activeBannerCoupon)) {
+              return null
+            }
+
+            return (
+              <div
+                className={`relative z-50 px-3 py-1.5 text-center text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-black/10 flex items-center justify-between gap-2 ${
+                  storeTheme.announcement_text ? 'text-white' : 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 border-amber-300'
+                }`}
+                style={storeTheme.announcement_text ? { backgroundColor: storeTheme.primary_color } : undefined}
+              >
+                <div className="flex items-center gap-1.5 min-w-0 mx-auto">
+                  <Sparkles className={`h-3.5 w-3.5 shrink-0 animate-bounce ${storeTheme.announcement_text ? 'text-amber-300' : 'text-slate-950'}`} />
+                  {storeTheme.announcement_text ? (
+                    <span className="truncate tracking-wide drop-shadow-xs">{storeTheme.announcement_text}</span>
+                  ) : activeBannerCoupon ? (
+                    <span className="truncate">
+                      SPECIAL OFFER: Get{' '}
+                      <strong className="underline font-black">
+                        {activeBannerCoupon.discount_type === 'BOGO'
+                          ? 'BUY 1 GET 1 FREE'
+                          : activeBannerCoupon.discount_type === 'FREE_DELIVERY'
+                            ? 'FREE SHIPPING'
+                            : activeBannerCoupon.discount_type === 'PERCENTAGE'
+                              ? `${activeBannerCoupon.discount_value}% OFF`
+                              : `FLAT ₹${activeBannerCoupon.discount_value} OFF`}
+                      </strong>{' '}
+                      Code:{' '}
+                      <span className="font-mono bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded text-[10px]">
+                        {activeBannerCoupon.code}
+                      </span>
                     </span>
-                  </span>
-                ) : null}
+                  ) : null}
+                </div>
+                {activeBannerCoupon && !storeTheme.announcement_text && (
+                  <button
+                    onClick={() => copyCouponCode(activeBannerCoupon.code)}
+                    className="hidden sm:inline-flex items-center gap-1 rounded bg-slate-950 px-2 py-0.5 text-[9px] font-black text-amber-300 hover:bg-slate-900 transition-all shrink-0 cursor-pointer"
+                  >
+                    <Tag className="h-2.5 w-2.5 text-amber-400" />
+                    <span>{copiedToast ? 'COPIED!' : 'COPY'}</span>
+                  </button>
+                )}
               </div>
-              {storeWideCoupon && !storeTheme.announcement_text && (
-                <button
-                  onClick={() => copyCouponCode(storeWideCoupon.code)}
-                  className="hidden sm:inline-flex items-center gap-1 rounded bg-slate-950 px-2 py-0.5 text-[9px] font-black text-amber-300 hover:bg-slate-900 transition-all shrink-0 cursor-pointer"
-                >
-                  <Tag className="h-2.5 w-2.5 text-amber-400" />
-                  <span>{copiedToast ? 'COPIED!' : 'COPY'}</span>
-                </button>
-              )}
-            </div>
-          )}
+            )
+          })()}
 
           {/* ========================================================================= */}
           {/* BLACK HEADER NAVBAR SECTION                                               */}

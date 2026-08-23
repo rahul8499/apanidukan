@@ -29,11 +29,27 @@ export default function SellerThemeCustomizerModal({
   // ULTRA-ADVANCED COMPETITOR-BEATING CONTROLS
   const [showAnnouncementBar, setShowAnnouncementBar] = useState<boolean>(currentTheme.show_announcement_bar ?? true)
   const [announcementText, setAnnouncementText] = useState<string>(currentTheme.announcement_text || '')
+  const [featuredCouponCode, setFeaturedCouponCode] = useState<string>(currentTheme.featured_coupon_code || '')
+  const [availableCoupons, setAvailableCoupons] = useState<any[]>([])
   const [trustBadges, setTrustBadges] = useState<string[]>(currentTheme.trust_badges || ['10MIN', 'GENUINE', 'WHATSAPP'])
   const [soundFxPlaying, setSoundFxPlaying] = useState<boolean>(false)
 
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('')
+
+  React.useEffect(() => {
+    const fetchStoreCoupons = async () => {
+      try {
+        const res = await api.get('/coupons/')
+        const list = Array.isArray(res.data) ? res.data : (res.data.results || [])
+        const storeCoupons = list.filter((c: any) => String(c.store) === String(store.id) && c.is_active)
+        setAvailableCoupons(storeCoupons)
+      } catch (err) {
+        console.error('Failed to fetch coupons for theme studio:', err)
+      }
+    }
+    fetchStoreCoupons()
+  }, [store.id])
 
 
   const handleSelectPreset = (catKey: string) => {
@@ -134,6 +150,7 @@ export default function SellerThemeCustomizerModal({
       card_radius: borderRadius,
       show_announcement_bar: showAnnouncementBar,
       announcement_text: announcementText,
+      featured_coupon_code: featuredCouponCode,
       trust_badges: trustBadges,
       is_dark_mode: basePreset.is_dark_mode,
       page_bg_class: basePreset.page_bg_class,
@@ -477,16 +494,16 @@ export default function SellerThemeCustomizerModal({
               />
             </div>
 
-            {/* Step 5: Dynamic Coupon Announcement Ticker Bar Switch */}
-            <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
+            {/* Step 5: Dynamic Coupon Announcement Ticker Bar Switch & Selector */}
+            <div className="space-y-2.5 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                     <Tag className="h-3.5 w-3.5 text-amber-400" />
-                    <span>5. Top Dynamic Coupon Ticker Bar</span>
+                    <span>5. Top Coupon Ticker & Selection</span>
                   </label>
                   <p className="text-[10px] text-slate-400">
-                    Automatically fetches & features your active store coupons (e.g. 20% OFF Code: WELCOME20) at top of customer app.
+                    Feature a specific coupon offer at the top of your customer storefront!
                   </p>
                 </div>
 
@@ -506,9 +523,36 @@ export default function SellerThemeCustomizerModal({
               </div>
 
               {showAnnouncementBar && (
-                <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-2 text-[10px] text-amber-300 flex items-center gap-2">
-                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-400 animate-bounce" />
-                  <span>100% Dynamic: Automatically syncs with coupons created in your Offer & Coupon Manager!</span>
+                <div className="space-y-2 pt-1 border-t border-slate-800/80">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-300 flex items-center justify-between">
+                      <span>Select Specific Coupon Code to Feature:</span>
+                      {availableCoupons.length === 0 && (
+                        <span className="text-amber-400 text-[9px] font-bold">No Active Coupons</span>
+                      )}
+                    </label>
+                    <select
+                      value={featuredCouponCode}
+                      onChange={(e) => setFeaturedCouponCode(e.target.value)}
+                      className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-black text-amber-300 focus:border-amber-500 focus:outline-none cursor-pointer"
+                    >
+                      <option value="">✨ Automatic (Highest Discount Coupon)</option>
+                      {availableCoupons.map((c: any) => (
+                        <option key={c.id} value={c.code}>
+                          🎟️ {c.code} - {c.discount_type === 'BOGO' ? 'BUY 1 GET 1 FREE' : c.discount_type === 'FREE_DELIVERY' ? 'FREE SHIPPING' : c.discount_type === 'PERCENTAGE' ? `${c.discount_value}% OFF` : `FLAT ₹${c.discount_value} OFF`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-2 text-[10px] text-amber-300 flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-400 animate-bounce" />
+                    <span>
+                      {featuredCouponCode
+                        ? `Featured Code "${featuredCouponCode}" will be pinned at the top!`
+                        : 'Auto-Select Mode: Shows best active coupon dynamically!'}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>

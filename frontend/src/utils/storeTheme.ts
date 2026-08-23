@@ -16,6 +16,7 @@ export interface StoreThemeConfig {
   card_radius?: 'rounded-lg' | 'rounded-2xl' | 'rounded-3xl'
   show_announcement_bar?: boolean
   announcement_text?: string
+  featured_coupon_code?: string
   trust_badges?: string[]
 
   // Visual Theme Properties (Clean Crisp White Background with Dynamic Theme Highlights)
@@ -498,6 +499,7 @@ export function getStoreTheme(store: any): StoreThemeConfig {
     card_radius: customTheme.card_radius || 'rounded-2xl',
     show_announcement_bar: customTheme.show_announcement_bar ?? true,
     announcement_text: customTheme.announcement_text || '',
+    featured_coupon_code: customTheme.featured_coupon_code || '',
     trust_badges: customTheme.trust_badges || ['10MIN', 'GENUINE', 'WHATSAPP'],
 
     // Clean Crisp White Canvas Theming

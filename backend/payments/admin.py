@@ -71,10 +71,13 @@ class SubscriptionPaymentHistoryAdmin(admin.ModelAdmin):
     search_fields = ('razorpay_payment_id', 'razorpay_subscription_id', 'subscription__store__name')
     list_filter = ('status', 'currency')
 
+    @admin.display(description='Store Name')
     def subscription_store(self, obj):
-        return obj.subscription.store.name
-    subscription_store.short_description = 'Store Name'
+        try:
+            return obj.subscription.store.name if (obj and obj.subscription and obj.subscription.store) else "Unknown Store"
+        except Exception:
+            return "Unknown Store"
 
+    @admin.display(description='Amount')
     def formatted_amount(self, obj):
         return f"₹{obj.amount:.2f}"
-        formatted_amount.short_description = 'Amount'

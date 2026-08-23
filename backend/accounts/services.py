@@ -96,6 +96,14 @@ def create_and_send_otp(phone_number: str) -> tuple[bool, str, str]:
     if not clean_phone or len(clean_phone) < 10:
         return False, "", "Please enter a valid 10-digit mobile number."
 
+    # Rate limit: prevent requesting another OTP for the same number within 45 seconds
+    recent_otp = PhoneOTP.objects.filter(
+        phone_number=clean_phone,
+        created_at__gte=timezone.now() - timedelta(seconds=45)
+    ).first()
+    if recent_otp:
+        return False, "", "Please wait 45 seconds before requesting another OTP."
+
     # Generate 4-digit OTP matching MSG91 SecureOTPWidget9U4D widget settings
     otp_code = f"{random.randint(1000, 9999)}"
     expires_at = timezone.now() + timedelta(minutes=15)

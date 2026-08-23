@@ -313,18 +313,20 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
               </div>
             </div>
 
-            {/* VERIFIED PHONE STRIP */}
+            {/* FLIPKART / AMAZON STYLE PERSISTENT VERIFIED ACCOUNT BAR */}
             {isPhoneVerified && customerPhone && (
-              <div className="bg-emerald-900/30 border-t border-emerald-500/20 px-3.5 py-1.5 flex items-center justify-between text-xs text-emerald-200 font-medium">
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Verified Customer Account: <strong>+91 {customerPhone}</strong></span>
+              <div className="bg-emerald-950/40 border-t border-emerald-500/30 px-3.5 py-1.5 flex items-center justify-between text-xs text-emerald-200 font-semibold backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-400/30 text-[10px]">
+                    ✓
+                  </div>
+                  <span>Account Linked: <strong className="text-white font-extrabold">+91 {customerPhone}</strong></span>
                 </div>
                 <button
                   onClick={handleLogoutPhone}
-                  className="text-[10.5px] font-black text-emerald-300 underline hover:text-white"
+                  className="text-[10.5px] font-black text-emerald-300 hover:text-white underline cursor-pointer"
                 >
-                  Change
+                  Switch Account ➔
                 </button>
               </div>
             )}

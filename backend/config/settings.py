@@ -1,7 +1,21 @@
 import os
+import copy
 from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
+import django.template.context as dtc
+
+# Hotfix for Python 3.14 super().__copy__() compatibility bug in Django templates
+def _safe_context_copy(self):
+    obj = object.__new__(self.__class__)
+    obj.dicts = [d.copy() if hasattr(d, 'copy') else d for d in self.dicts]
+    if hasattr(self, 'request'):
+        obj.request = self.request
+    return obj
+
+dtc.BaseContext.__copy__ = _safe_context_copy
+dtc.Context.__copy__ = _safe_context_copy
+dtc.RequestContext.__copy__ = _safe_context_copy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR.parent / '.env')

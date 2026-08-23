@@ -452,16 +452,76 @@ function Storefront() {
             </div>
           )}
 
-          {/* Dynamic Top Announcement Ticker (Exclusively Active Backend Coupons) */}
+          {/* Dynamic Top Announcement Ticker (Supports All Offer Types: Coupons, Scratch Gift, Cashback, Flash Sale) */}
           {(() => {
-            const featuredCoupon = storeTheme.featured_coupon_code
-              ? storeCoupons.find((c: any) => c.code.toUpperCase() === storeTheme.featured_coupon_code?.toUpperCase())
+            if (!storeTheme.show_announcement_bar) return null
+
+            const selectedKey = storeTheme.featured_coupon_code || ''
+
+            // 1. Scratch Card Selection
+            if (selectedKey.startsWith('SCRATCH:')) {
+              const code = selectedKey.split(':')[1] || 'LUCKY50'
+              return (
+                <div className="relative z-50 px-3 py-1.5 text-center text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-purple-400 flex items-center justify-between gap-2 bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-700 text-white">
+                  <div className="flex items-center gap-1.5 min-w-0 mx-auto">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0 animate-bounce text-amber-300" />
+                    <span className="truncate">
+                      🎁 WELCOME GIFT CARD: Claim Special Discount! Code:{' '}
+                      <span className="font-mono bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded text-[10px]">
+                        {code}
+                      </span>
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => copyCouponCode(code)}
+                    className="hidden sm:inline-flex items-center gap-1 rounded bg-slate-950 px-2 py-0.5 text-[9px] font-black text-amber-300 hover:bg-slate-900 transition-all shrink-0 cursor-pointer"
+                  >
+                    <Tag className="h-2.5 w-2.5 text-amber-400" />
+                    <span>{copiedToast ? 'COPIED!' : 'COPY'}</span>
+                  </button>
+                </div>
+              )
+            }
+
+            // 2. Loyalty Cashback Selection
+            if (selectedKey.startsWith('CASHBACK:')) {
+              const pct = selectedKey.split(':')[1] || store?.loyalty_cashback_percent || '5'
+              return (
+                <div className="relative z-50 px-3 py-1.5 text-center text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-amber-400 flex items-center justify-between gap-2 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950">
+                  <div className="flex items-center gap-1.5 min-w-0 mx-auto">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0 animate-bounce text-slate-950" />
+                    <span className="truncate">
+                      🪙 CUSTOMER LOYALTY REWARD: Earn <strong>{pct}% Cashback Coins</strong> on Every Order Today!
+                    </span>
+                  </div>
+                </div>
+              )
+            }
+
+            // 3. Flash Sale Selection
+            if (selectedKey.startsWith('FLASH:')) {
+              const disc = selectedKey.split(':')[1] || '25'
+              return (
+                <div className="relative z-50 px-3 py-1.5 text-center text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-rose-400 flex items-center justify-between gap-2 bg-gradient-to-r from-rose-600 via-rose-500 to-rose-600 text-white animate-pulse">
+                  <div className="flex items-center gap-1.5 min-w-0 mx-auto">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-300" />
+                    <span className="truncate">
+                      ⚡ EVENING CLEARANCE FLASH SALE: Flat <strong>{disc}% OFF</strong> Across All Items Live Now!
+                    </span>
+                  </div>
+                </div>
+              )
+            }
+
+            // 4. Standard Coupon Selection or Auto-Select
+            const cleanCode = selectedKey.startsWith('COUPON:') ? selectedKey.split(':')[1] : selectedKey
+            const featuredCoupon = cleanCode
+              ? storeCoupons.find((c: any) => c.code.toUpperCase() === cleanCode.toUpperCase())
               : null
+
             const activeBannerCoupon = featuredCoupon || storeWideCoupon
 
-            if (!storeTheme.show_announcement_bar || !activeBannerCoupon) {
-              return null
-            }
+            if (!activeBannerCoupon) return null
 
             return (
               <div className="relative z-50 px-3 py-1.5 text-center text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-amber-300 flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950">

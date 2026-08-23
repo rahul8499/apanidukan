@@ -34,6 +34,22 @@ export default function SellerThemeCustomizerModal({
   const [trustBadges, setTrustBadges] = useState<string[]>(currentTheme.trust_badges || ['10MIN', 'GENUINE', 'WHATSAPP'])
   const [soundFxPlaying, setSoundFxPlaying] = useState<boolean>(false)
 
+  const [scratchConfig] = useState<any>(() => {
+    try {
+      const saved = localStorage.getItem(`qs_scratch_config_${store.id}`)
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return { enabled: true, couponCode: 'LUCKY50', discountValue: 50, rewardText: 'Flat ₹50 OFF' }
+  })
+
+  const [flashSaleConfig] = useState<any>(() => {
+    try {
+      const saved = localStorage.getItem(`qs_flash_sale_${store.id}`)
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return { active: false, discount: 25, title: 'Evening Clearance Sale' }
+  })
+
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('')
 
@@ -526,9 +542,9 @@ export default function SellerThemeCustomizerModal({
                 <div className="space-y-2 pt-1 border-t border-slate-800/80">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-300 flex items-center justify-between">
-                      <span>Select Specific Coupon Code to Feature:</span>
-                      {availableCoupons.length === 0 && (
-                        <span className="text-amber-400 text-[9px] font-bold">No Active Coupons</span>
+                      <span>Select Offer / Promo to Feature at Header:</span>
+                      {availableCoupons.length === 0 && !scratchConfig?.enabled && !store?.enable_loyalty_cashback && !flashSaleConfig?.active && (
+                        <span className="text-amber-400 text-[9px] font-bold">No Active Offers</span>
                       )}
                     </label>
                     <select
@@ -536,12 +552,45 @@ export default function SellerThemeCustomizerModal({
                       onChange={(e) => setFeaturedCouponCode(e.target.value)}
                       className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-black text-amber-300 focus:border-amber-500 focus:outline-none cursor-pointer"
                     >
-                      <option value="">✨ Automatic (Highest Discount Coupon)</option>
-                      {availableCoupons.map((c: any) => (
-                        <option key={c.id} value={c.code}>
-                          🎟️ {c.code} - {c.discount_type === 'BOGO' ? 'BUY 1 GET 1 FREE' : c.discount_type === 'FREE_DELIVERY' ? 'FREE SHIPPING' : c.discount_type === 'PERCENTAGE' ? `${c.discount_value}% OFF` : `FLAT ₹${c.discount_value} OFF`}
-                        </option>
-                      ))}
+                      <option value="">✨ Automatic Best Offer (Auto-Select Highest Discount)</option>
+
+                      {/* Group 1: Store Coupons */}
+                      {availableCoupons.length > 0 && (
+                        <optgroup label="🎟️ Store Coupons">
+                          {availableCoupons.map((c: any) => (
+                            <option key={c.id} value={`COUPON:${c.code}`}>
+                              🎟️ Coupon "{c.code}" - {c.discount_type === 'BOGO' ? 'BUY 1 GET 1 FREE' : c.discount_type === 'FREE_DELIVERY' ? 'FREE SHIPPING' : c.discount_type === 'PERCENTAGE' ? `${c.discount_value}% OFF` : `FLAT ₹${c.discount_value} OFF`}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+
+                      {/* Group 2: Welcome Scratch Gift Card */}
+                      {scratchConfig?.enabled && (
+                        <optgroup label="🎁 Welcome Scratch Gift">
+                          <option value={`SCRATCH:${scratchConfig.couponCode || 'LUCKY50'}`}>
+                            🎁 Scratch Card Gift - Code "{scratchConfig.couponCode || 'LUCKY50'}" ({scratchConfig.rewardText || `Flat ₹${scratchConfig.discountValue || 50} OFF`})
+                          </option>
+                        </optgroup>
+                      )}
+
+                      {/* Group 3: Customer Loyalty Cashback */}
+                      {store?.enable_loyalty_cashback && (
+                        <optgroup label="🪙 Customer Loyalty Cashback">
+                          <option value={`CASHBACK:${store.loyalty_cashback_percent || 5}`}>
+                            🪙 Loyalty Reward - Earn {store.loyalty_cashback_percent || 5}% Cashback Coins on Every Order
+                          </option>
+                        </optgroup>
+                      )}
+
+                      {/* Group 4: Evening Flash Sale */}
+                      {flashSaleConfig?.active && (
+                        <optgroup label="⚡ Evening Flash Sale">
+                          <option value={`FLASH:${flashSaleConfig.discount || 25}`}>
+                            ⚡ Flash Sale - Flat {flashSaleConfig.discount || 25}% OFF Live Now
+                          </option>
+                        </optgroup>
+                      )}
                     </select>
                   </div>
 
@@ -549,8 +598,8 @@ export default function SellerThemeCustomizerModal({
                     <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-400 animate-bounce" />
                     <span>
                       {featuredCouponCode
-                        ? `Featured Code "${featuredCouponCode}" will be pinned at the top!`
-                        : 'Auto-Select Mode: Shows best active coupon dynamically!'}
+                        ? `Selected Offer "${featuredCouponCode}" will be pinned at the top header!`
+                        : 'Auto-Select Mode: Shows best active coupon or promo dynamically!'}
                     </span>
                   </div>
                 </div>

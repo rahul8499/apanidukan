@@ -7,11 +7,16 @@ import django.template.context as dtc
 
 # Hotfix for Python 3.14 super().__copy__() compatibility bug in Django templates
 def _safe_context_copy(self):
-    obj = object.__new__(self.__class__)
-    obj.dicts = [d.copy() if hasattr(d, 'copy') else d for d in self.dicts]
-    if hasattr(self, 'request'):
-        obj.request = self.request
-    return obj
+    duplicate = object.__new__(self.__class__)
+    duplicate.dicts = [d.copy() if hasattr(d, 'copy') else d for d in self.dicts]
+    rc = dtc.RenderContext()
+    if hasattr(self, 'render_context') and hasattr(self.render_context, 'dicts'):
+        rc.dicts = [d.copy() if hasattr(d, 'copy') else d for d in self.render_context.dicts]
+    duplicate.render_context = rc
+    for attr in ('request', 'template', 'template_name', 'autoescape', 'use_tz', 'use_l10n'):
+        if hasattr(self, attr):
+            setattr(duplicate, attr, getattr(self, attr))
+    return duplicate
 
 dtc.BaseContext.__copy__ = _safe_context_copy
 dtc.Context.__copy__ = _safe_context_copy

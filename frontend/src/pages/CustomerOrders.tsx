@@ -15,7 +15,34 @@ import { isStoreOffline } from '../utils/storeStatus'
 
 const mediaUrl = (url: string) => {
   if (!url) return ''
-  return url.startsWith('http') ? url : `${window.location.protocol}//${window.location.hostname}:8000${url}`
+  if (url.startsWith('http')) return url
+  const apiBase = ((import.meta as any).env?.VITE_API_URL || '').replace(/\/api\/?$/, '')
+  if (apiBase) {
+    return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+  }
+  return url.startsWith('/') ? url : `${window.location.protocol}//${window.location.hostname}:8000${url.startsWith('/') ? '' : '/'}${url}`
+}
+
+const getItemImageUrl = (item: any, productMap?: Record<string | number, any>) => {
+  if (!item) return ''
+  const pId = item.product_id || item.id || item.product || item.product?.id
+  const matchedProd = productMap && pId ? productMap[pId] : null
+
+  const raw = item.image || 
+              item.product_image || 
+              item.image_url || 
+              item.primary_image || 
+              item.product?.image || 
+              item.product?.product_image || 
+              item.product?.image_url || 
+              item.product?.primary_image ||
+              item.product_details?.image ||
+              item.product_details?.primary_image ||
+              matchedProd?.image ||
+              matchedProd?.product_image ||
+              matchedProd?.primary_image
+  if (!raw) return ''
+  return mediaUrl(raw)
 }
 
 export default function CustomerOrders() {
@@ -31,6 +58,7 @@ export default function CustomerOrders() {
 function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
   const [store, setStore] = useState<any>(null)
   const [orders, setOrders] = useState<any[]>([])
+  const [productMap, setProductMap] = useState<Record<string | number, any>>({})
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'ACTIVE' | 'DELIVERED' | 'CANCELLED'>('ALL')
   const [customerPhone, setCustomerPhone] = useState('')
@@ -56,6 +84,17 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
         setStoreOffline(true)
       }
     }
+
+    try {
+      const prodRes = await api.get(`/public/stores/${storeSlug}/products/`)
+      if (Array.isArray(prodRes.data)) {
+        const map: Record<string | number, any> = {}
+        prodRes.data.forEach((p: any) => {
+          if (p.id) map[p.id] = p
+        })
+        setProductMap(map)
+      }
+    } catch { }
 
     try {
       const savedOrders = JSON.parse(localStorage.getItem(`qs_customer_orders_${storeSlug}`) || '[]')
@@ -307,31 +346,41 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                   <div className="p-3.5 sm:p-4 space-y-3">
                     
                     <div className="flex items-start gap-3">
-                      {/* Product Thumbnail Gallery / Multi-Item Strip */}
+                      {/* Product Thumbnail Gallery / Multi-Item Strip (LEFT SIDE) */}
                       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 shrink-0 max-w-[160px] sm:max-w-[220px]">
                         {itemsList.length > 0 ? (
                           itemsList.slice(0, 3).map((item: any, idx: number) => {
-                            const imgPath = item.image || item.product_image || item.product?.image
+                            const imgUrl = getItemImageUrl(item, productMap)
                             return (
                               <div
                                 key={idx}
-                                className="relative flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden p-1 shadow-2xs"
+                                className="relative flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-1 shadow-xs overflow-hidden group/img"
                               >
-                                {imgPath ? (
+                                {imgUrl ? (
                                   <img
-                                    src={mediaUrl(imgPath)}
+                                    src={imgUrl}
                                     alt={item.name || 'Product'}
-                                    className="h-full w-full object-contain"
+                                    className="h-full w-full object-cover rounded-xl transition-transform duration-300 group-hover/img:scale-105"
                                     onError={(e) => {
-                                      // Fallback on broken image
-                                      (e.target as HTMLElement).style.display = 'none'
+                                      const target = e.target as HTMLImageElement
+                                      target.style.display = 'none'
+                                      const parent = target.parentElement
+                                      if (parent && !parent.querySelector('.img-fallback')) {
+                                        const fallbackDiv = document.createElement('div')
+                                        fallbackDiv.className = 'img-fallback flex flex-col items-center justify-center w-full h-full text-slate-400 text-base font-bold'
+                                        fallbackDiv.innerText = '📦'
+                                        parent.appendChild(fallbackDiv)
+                                      }
                                     }}
                                   />
                                 ) : (
-                                  <Package className="h-6 w-6 text-slate-400" />
+                                  <div className="flex flex-col items-center justify-center text-slate-400 gap-0.5">
+                                    <Package className="h-6 w-6 text-indigo-500/70" />
+                                    <span className="text-[8px] font-bold text-slate-400">Item</span>
+                                  </div>
                                 )}
                                 {item.quantity > 1 && (
-                                  <span className="absolute bottom-0.5 right-0.5 bg-black/80 text-white font-black text-[9px] px-1 py-0.2 rounded">
+                                  <span className="absolute bottom-1 right-1 bg-slate-950/90 text-white font-black text-[9.5px] px-1.5 py-0.3 rounded-md shadow-xs ring-1 ring-white/20">
                                     x{item.quantity}
                                   </span>
                                 )}
@@ -339,8 +388,8 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                             )
                           })
                         ) : (
-                          <div className="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                            <Package className="h-6 w-6 text-slate-400" />
+                          <div className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 shadow-xs">
+                            <Package className="h-7 w-7 text-indigo-500/70" />
                           </div>
                         )}
                       </div>

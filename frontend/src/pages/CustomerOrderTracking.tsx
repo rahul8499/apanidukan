@@ -20,6 +20,38 @@ const ORDER_STEPS = [
   { key: 'DELIVERED', label: 'Delivered', desc: 'Order delivered successfully!' },
 ]
 
+const mediaUrl = (url: string) => {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  const apiBase = ((import.meta as any).env?.VITE_API_URL || '').replace(/\/api\/?$/, '')
+  if (apiBase) {
+    return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`
+  }
+  return url.startsWith('/') ? url : `${window.location.protocol}//${window.location.hostname}:8000${url.startsWith('/') ? '' : '/'}${url}`
+}
+
+const getItemImageUrl = (item: any, productMap?: Record<string | number, any>) => {
+  if (!item) return ''
+  const pId = item.product_id || item.id || item.product || item.product?.id
+  const matchedProd = productMap && pId ? productMap[pId] : null
+
+  const raw = item.image || 
+              item.product_image || 
+              item.image_url || 
+              item.primary_image || 
+              item.product?.image || 
+              item.product?.product_image || 
+              item.product?.image_url || 
+              item.product?.primary_image ||
+              item.product_details?.image ||
+              item.product_details?.primary_image ||
+              matchedProd?.image ||
+              matchedProd?.product_image ||
+              matchedProd?.primary_image
+  if (!raw) return ''
+  return mediaUrl(raw)
+}
+
 export default function CustomerOrderTracking() {
   const { storeSlug } = useParams()
   if (!storeSlug) return null
@@ -35,6 +67,7 @@ function CustomerOrderTrackingContent() {
   const navigate = useNavigate()
   const [store, setStore] = useState<any>(null)
   const [order, setOrder] = useState<any>(null)
+  const [productMap, setProductMap] = useState<Record<string | number, any>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [storeOffline, setStoreOffline] = useState(false)
@@ -45,9 +78,10 @@ function CustomerOrderTrackingContent() {
 
   const fetchOrder = async () => {
     try {
-      const [orderRes, storeRes] = await Promise.allSettled([
+      const [orderRes, storeRes, prodRes] = await Promise.allSettled([
         api.get(`/public/stores/${storeSlug}/orders/${reference}/`, { params: { tracking_token: trackingToken } }),
-        api.get(`/public/stores/${storeSlug}/`)
+        api.get(`/public/stores/${storeSlug}/`),
+        api.get(`/public/stores/${storeSlug}/products/`)
       ])
 
       if (orderRes.status === 'fulfilled') {
@@ -63,6 +97,14 @@ function CustomerOrderTrackingContent() {
         if (isStoreOffline(storeRes.reason)) {
           setStoreOffline(true)
         }
+      }
+
+      if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value.data)) {
+        const map: Record<string | number, any> = {}
+        prodRes.value.data.forEach((p: any) => {
+          if (p.id) map[p.id] = p
+        })
+        setProductMap(map)
       }
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Order details could not be loaded.')
@@ -550,21 +592,42 @@ function CustomerOrderTrackingContent() {
 
               <div className="divide-y divide-slate-100 space-y-2 pt-1">
                 {Array.isArray(order.items) &&
-                  order.items.map((item: any, idx: number) => (
-                    <div key={idx} className="flex items-center justify-between pt-2 text-xs">
-                      <div className="min-w-0 pr-2">
-                        <p className="font-bold text-slate-900 truncate">
-                          {item.name || item.product_name}
-                        </p>
-                        <p className="text-[10px] text-slate-500 font-semibold">
-                          Qty: {item.quantity || 1} × ₹{Number(item.price || 0).toFixed(2)}
-                        </p>
+                  order.items.map((item: any, idx: number) => {
+                    const imgUrl = getItemImageUrl(item, productMap)
+                    return (
+                      <div key={idx} className="flex items-center justify-between pt-2 text-xs gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5 overflow-hidden flex items-center justify-center">
+                            {imgUrl ? (
+                              <img
+                                src={imgUrl}
+                                alt={item.name || item.product_name}
+                                className="h-full w-full object-cover rounded-lg"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = 'none'
+                                }}
+                              />
+                            ) : (
+                              <ShoppingBag className="h-4 w-4 text-slate-400" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-slate-900 truncate">
+                              {item.name || item.product_name}
+                            </p>
+                            <p className="text-[10px] text-slate-500 font-semibold">
+                              Qty: {item.quantity || 1} × ₹{Number(item.price || 0).toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span className="font-black text-slate-950 shrink-0">
+                          ₹{((Number(item.price) || 0) * (item.quantity || 1)).toFixed(2)}
+                        </span>
                       </div>
-                      <span className="font-black text-slate-950 shrink-0">
-                        ₹{((Number(item.price) || 0) * (item.quantity || 1)).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
+                    )
+                  })}
               </div>
 
               <div className="border-t border-slate-200 pt-2.5 space-y-1.5 text-xs">

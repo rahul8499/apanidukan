@@ -841,238 +841,256 @@ export default function SellerAnalytics() {
       {/* Unified Seller Header */}
       <SellerHeader store={store} activeTabTitle="Store Analytics" onStoreUpdate={loadData} />
 
-      <div className="space-y-3 sm:space-y-5 p-2.5 sm:p-6">
+      <div className="space-y-2 sm:space-y-5 p-1.5 sm:p-6">
         {message && (
-          <div className="rounded-xl border border-teal-200 bg-teal-50 p-2.5 sm:p-3 text-xs font-bold text-teal-900 flex items-center justify-between">
+          <div className="rounded-xl border border-teal-200 bg-teal-50 p-2 sm:p-3 text-xs font-bold text-teal-900 flex items-center justify-between">
             <span>{message}</span>
             <button onClick={() => setMessage('')} className="text-teal-700 font-bold hover:text-teal-900 cursor-pointer">✕</button>
           </div>
         )}
 
         {/* 1. Header & Time Range Filter Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-white shadow-md">
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-              <h1 className="text-xs sm:text-base font-black text-white">Executive Sales Analytics</h1>
+        <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 bg-gradient-to-r from-slate-950 via-indigo-950 via-slate-900 to-teal-950 p-3 sm:p-4.5 rounded-2xl text-white shadow-xl border border-teal-500/30 backdrop-blur-md">
+          {/* Ambient Decorative Glow */}
+          <div className="absolute -right-8 -bottom-8 h-28 w-28 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute -left-8 -top-8 h-28 w-28 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div className="min-w-0 z-10">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-400"></span>
+              </span>
+              <h1 className="text-xs sm:text-lg font-black tracking-tight text-white truncate">
+                📊 Executive Sales Analytics
+              </h1>
+              <span className="hidden xs:inline-flex items-center rounded-full bg-teal-500/20 px-2 py-0.5 text-[9px] font-extrabold text-teal-300 border border-teal-500/40">
+                LIVE
+              </span>
             </div>
-            <p className="text-[10px] sm:text-xs text-teal-300 font-medium mt-0.5">
-              Live metrics & customer insights for {store.name}
+            <p className="text-[10px] sm:text-xs text-teal-300/90 font-medium mt-0.5 truncate flex items-center gap-1">
+              <span>Real-time revenue & order insights for</span>
+              <span className="font-bold text-white underline decoration-teal-400/50 underline-offset-2">{store.name}</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 self-start sm:self-auto flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 z-10 flex-wrap sm:flex-nowrap">
             {/* Time Range Filter Tabs */}
-            <div className="flex items-center gap-0.5 bg-slate-800/80 p-0.5 sm:p-1 rounded-lg sm:rounded-xl border border-slate-700">
+            <div className="flex items-center gap-0.5 sm:gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-700/80 shadow-inner">
               {(['today', 'week', 'month', 'all'] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => setTimeRange(r)}
-                  className={`rounded-md sm:rounded-lg px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-extrabold transition-all cursor-pointer ${timeRange === r ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
-                    }`}
+                  className={`rounded-lg h-7 sm:h-8 px-2 sm:px-3 text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                    timeRange === r 
+                      ? 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-md' 
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  }`}
                 >
                   {r === 'today' ? 'Today' : r === 'week' ? '7D' : r === 'month' ? '30D' : 'All'}
                 </button>
               ))}
             </div>
 
-            {/* Refresh Icon Button */}
-            <button
-              type="button"
-              onClick={async () => {
-                setIsRefreshingData(true)
-                await loadData()
-                setTimeout(() => setIsRefreshingData(false), 500)
-              }}
-              className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl border border-teal-500/40 bg-teal-900/60 text-teal-200 hover:bg-teal-800 hover:text-white transition-all cursor-pointer shadow-xs shrink-0 active:scale-95"
-              title="Refresh live analytics data"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshingData ? 'animate-spin' : ''}`} />
-            </button>
+            <div className="flex items-center gap-1.5">
+              {/* Refresh Icon Button */}
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsRefreshingData(true)
+                  await loadData()
+                  setTimeout(() => setIsRefreshingData(false), 500)
+                }}
+                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl border border-teal-500/40 bg-teal-950/80 text-teal-300 hover:bg-teal-900 hover:text-white hover:border-teal-400 transition-all cursor-pointer shadow-md shrink-0 active:scale-95"
+                title="Refresh live analytics data"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isRefreshingData ? 'animate-spin' : ''}`} />
+              </button>
 
-            {/* CSV Export Button */}
-            <button
-              type="button"
-              onClick={downloadCSVReport}
-              className="flex h-7 sm:h-8 items-center gap-1 px-2 sm:px-2.5 rounded-lg sm:rounded-xl border border-emerald-400/40 bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-500 hover:to-teal-600 text-[10px] sm:text-xs font-bold transition-all cursor-pointer shadow-xs shrink-0 active:scale-95"
-              title="Download CSV"
-            >
-              <FileSpreadsheet className="h-3 w-3" />
-              <span className="hidden xs:inline">CSV</span>
-            </button>
+              {/* CSV Export Button */}
+              <button
+                type="button"
+                onClick={downloadCSVReport}
+                className="flex h-7 sm:h-8 items-center gap-1 px-2.5 sm:px-3.5 rounded-xl border border-emerald-400/40 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white hover:from-emerald-500 hover:to-teal-500 text-[10px] sm:text-xs font-black transition-all cursor-pointer shadow-md shrink-0 active:scale-95"
+                title="Download CSV Report"
+              >
+                <FileSpreadsheet className="h-3 w-3" />
+                <span>CSV</span>
+              </button>
 
-            {/* PDF Report Button */}
-            <button
-              type="button"
-              onClick={downloadPDFReport}
-              className="flex h-7 sm:h-8 items-center gap-1 px-2 sm:px-2.5 rounded-lg sm:rounded-xl border border-teal-400/40 bg-gradient-to-r from-teal-500 to-indigo-600 text-white hover:from-teal-400 hover:to-indigo-500 text-[10px] sm:text-xs font-bold transition-all cursor-pointer shadow-xs shrink-0 active:scale-95"
-              title="Download PDF"
-            >
-              <Download className="h-3 w-3" />
-              <span className="hidden xs:inline">PDF</span>
-            </button>
+              {/* PDF Report Button */}
+              <button
+                type="button"
+                onClick={downloadPDFReport}
+                className="flex h-7 sm:h-8 items-center gap-1 px-2.5 sm:px-3.5 rounded-xl border border-teal-400/40 bg-gradient-to-r from-teal-600 via-indigo-600 to-purple-600 text-white hover:from-teal-500 hover:to-indigo-500 text-[10px] sm:text-xs font-black transition-all cursor-pointer shadow-md shrink-0 active:scale-95"
+                title="Download PDF Report"
+              >
+                <Download className="h-3 w-3" />
+                <span>PDF</span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* SECTION 1: 📊 EXECUTIVE SALES PERFORMANCE (5 KPI CARDS) */}
-        <section className="space-y-1.5">
+        <section className="space-y-1 sm:space-y-1.5">
           <div className="flex items-center justify-between px-0.5">
-            <h2 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+            <h2 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1">
               <span>📊 Sales & Orders Overview</span>
             </h2>
-            <span className="text-[9px] font-bold text-slate-400">Time Range: {timeRange.toUpperCase()}</span>
+            <span className="text-[8px] sm:text-[9px] font-bold text-slate-400">Range: {timeRange.toUpperCase()}</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-3">
+          <div className="grid grid-cols-5 sm:grid-cols-3 lg:grid-cols-5 gap-1 sm:gap-3">
             {/* Gross Sales Volume */}
             <div
               onClick={() => navigate(`/stores/${store.id}/orders`)}
-              className="rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              className="rounded-md sm:rounded-2xl border border-slate-200/90 bg-white p-1 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between min-w-0"
               title="Click to view all orders"
             >
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-500 truncate">Gross Sales</span>
-                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-teal-50 text-teal-600 text-[10px] sm:text-xs font-bold">
+              <div className="flex items-center justify-between gap-0.5">
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-500 truncate">Gross Sales</span>
+                <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-teal-50 text-teal-600 text-[7px] sm:text-xs font-bold">
                   💰
                 </span>
               </div>
-              <p className="mt-1 text-sm sm:text-xl font-black text-slate-900 tracking-tight truncate">
+              <p className="mt-0.5 text-[9px] sm:text-xl font-black text-slate-900 tracking-tight truncate leading-none">
                 ₹{grossSales.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
               </p>
-              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-slate-100">
-                <span className="font-bold text-emerald-600">Valid ({validOrders.length})</span>
-                <span className="text-teal-600 font-extrabold group-hover:underline">Orders ➔</span>
+              <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-slate-100">
+                <span className="font-bold text-emerald-600 truncate">Valid ({validOrders.length})</span>
+                <span className="text-teal-600 font-extrabold group-hover:underline hidden sm:inline">Orders ➔</span>
               </div>
             </div>
 
             {/* New Pending (Action Needed) */}
             <div
               onClick={() => navigate(`/stores/${store.id}/orders?status=NEW`)}
-              className="rounded-xl sm:rounded-2xl border border-amber-200/90 bg-gradient-to-br from-white via-amber-50/40 to-amber-100/30 p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              className="rounded-md sm:rounded-2xl border border-amber-200/90 bg-gradient-to-br from-white via-amber-50/40 to-amber-100/30 p-1 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between min-w-0"
               title="Click to review new pending orders"
             >
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-amber-800 truncate">Pending</span>
-                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-amber-100 text-amber-700 text-[10px] sm:text-xs font-bold animate-pulse">
+              <div className="flex items-center justify-between gap-0.5">
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-amber-800 truncate">Pending</span>
+                <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-amber-100 text-amber-700 text-[7px] sm:text-xs font-bold animate-pulse">
                   ⏳
                 </span>
               </div>
-              <p className="mt-1 text-sm sm:text-2xl font-black text-amber-600 tracking-tight">
+              <p className="mt-0.5 text-[9px] sm:text-2xl font-black text-amber-600 tracking-tight leading-none">
                 {pendingCount}
               </p>
-              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-amber-200/50">
-                <span className="font-extrabold text-amber-800 bg-amber-100 px-1 py-0.2 rounded text-[8px] sm:text-[10px]">Action Needed</span>
-                <span className="text-amber-700 font-extrabold group-hover:underline">Review ➔</span>
+              <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-amber-200/50">
+                <span className="font-extrabold text-amber-800 bg-amber-100 px-0.5 py-0.1 sm:px-1 sm:py-0.2 rounded text-[6.5px] sm:text-[10px] truncate">Action</span>
+                <span className="text-amber-700 font-extrabold group-hover:underline hidden sm:inline">Review ➔</span>
               </div>
             </div>
 
             {/* Customer Demand (Product Requests) */}
             <div
               onClick={() => navigate(`/stores/${store.id}/requests`)}
-              className="rounded-xl sm:rounded-2xl border border-rose-200/90 bg-gradient-to-br from-white via-rose-50/40 to-rose-100/30 p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              className="rounded-md sm:rounded-2xl border border-rose-200/90 bg-gradient-to-br from-white via-rose-50/40 to-rose-100/30 p-1 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between min-w-0"
               title="Click to open Product Request Queue"
             >
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-rose-800 truncate">Demand</span>
-                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-rose-100 text-rose-600 text-[10px] sm:text-xs font-bold animate-pulse">
+              <div className="flex items-center justify-between gap-0.5">
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-rose-800 truncate">Demand</span>
+                <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-rose-100 text-rose-600 text-[7px] sm:text-xs font-bold animate-pulse">
                   💡
                 </span>
               </div>
-              <p className="mt-1 text-sm sm:text-2xl font-black text-rose-700 tracking-tight">
+              <p className="mt-0.5 text-[9px] sm:text-2xl font-black text-rose-700 tracking-tight leading-none">
                 {filteredProductRequests.length}
               </p>
-              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-rose-200/50">
-                <span className="font-extrabold text-rose-700 bg-rose-100 px-1 py-0.2 rounded text-[8px] sm:text-[10px]">Unmet</span>
-                <span className="text-rose-600 font-extrabold group-hover:underline">Queue ➔</span>
+              <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-rose-200/50">
+                <span className="font-extrabold text-rose-700 bg-rose-100 px-0.5 py-0.1 sm:px-1 sm:py-0.2 rounded text-[6.5px] sm:text-[10px] truncate">Unmet</span>
+                <span className="text-rose-600 font-extrabold group-hover:underline hidden sm:inline">Queue ➔</span>
               </div>
             </div>
 
             {/* Completed Orders */}
             <div
               onClick={() => navigate(`/stores/${store.id}/orders?status=DELIVERED`)}
-              className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-white via-indigo-50/40 to-indigo-100/30 p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              className="rounded-md sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-white via-indigo-50/40 to-indigo-100/30 p-1 sm:p-4 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between min-w-0"
               title="Click to view delivered completed orders"
             >
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-indigo-800 truncate">Completed</span>
-                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-indigo-100 text-indigo-700 text-[10px] sm:text-xs font-bold">
+              <div className="flex items-center justify-between gap-0.5">
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-indigo-800 truncate">Done</span>
+                <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-indigo-100 text-indigo-700 text-[7px] sm:text-xs font-bold">
                   ✅
                 </span>
               </div>
-              <p className="mt-1 text-sm sm:text-2xl font-black text-indigo-900 tracking-tight">
+              <p className="mt-0.5 text-[9px] sm:text-2xl font-black text-indigo-900 tracking-tight leading-none">
                 {completedCount}
               </p>
-              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-indigo-200/50">
-                <span className="font-bold text-indigo-700">Delivered</span>
-                <span className="text-indigo-600 font-extrabold group-hover:underline">Orders ➔</span>
+              <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-indigo-200/50">
+                <span className="font-bold text-indigo-700 truncate">Delivered</span>
+                <span className="text-indigo-600 font-extrabold group-hover:underline hidden sm:inline">Orders ➔</span>
               </div>
             </div>
 
             {/* Average Order Value (AOV) */}
-            <div className="col-span-2 sm:col-span-1 rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between">
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-500 truncate">Avg Order</span>
-                <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-xl bg-purple-50 text-purple-600 text-[10px] sm:text-xs font-bold">
+            <div className="rounded-md sm:rounded-2xl border border-slate-200/90 bg-white p-1 sm:p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between min-w-0">
+              <div className="flex items-center justify-between gap-0.5">
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-500 truncate">Avg Order</span>
+                <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-purple-50 text-purple-600 text-[7px] sm:text-xs font-bold">
                   📊
                 </span>
               </div>
-              <p className="mt-1 text-sm sm:text-xl font-black text-slate-900 tracking-tight truncate">
+              <p className="mt-0.5 text-[9px] sm:text-xl font-black text-slate-900 tracking-tight truncate leading-none">
                 ₹{avgOrderValue.toLocaleString('en-IN')}
               </p>
-              <div className="mt-1 flex items-center justify-between text-[9px] sm:text-[11px] pt-1 border-t border-slate-100">
-                <span className="font-bold text-purple-700">Average</span>
-                <span className="text-slate-400 font-medium">Basket</span>
+              <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-slate-100">
+                <span className="font-bold text-purple-700 truncate">Average</span>
+                <span className="text-slate-400 font-medium hidden sm:inline">Basket</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* SECTION 2: 📱 APP TRAFFIC, VISITORS & CONVERSION */}
-        <section className="rounded-xl sm:rounded-2xl border border-indigo-900/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-3 sm:p-4 text-white shadow-md space-y-2">
-          <div className="flex items-center justify-between border-b border-indigo-800/50 pb-1.5">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="flex h-5 w-5 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md sm:rounded-lg bg-teal-500/20 text-teal-300 font-black text-[10px] sm:text-sm border border-teal-500/30">
+        <section className="rounded-xl sm:rounded-2xl border border-indigo-900/40 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-2 sm:p-4 text-white shadow-md space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between border-b border-indigo-800/50 pb-1 sm:pb-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <span className="flex h-4 w-4 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-sm sm:rounded-lg bg-teal-500/20 text-teal-300 font-black text-[9px] sm:text-sm border border-teal-500/30">
                 📲
               </span>
               <div className="min-w-0">
-                <h2 className="text-[11px] sm:text-sm font-black text-white truncate">App Visitors & Store Conversion</h2>
-                <p className="text-[9px] sm:text-[10px] text-teal-300/90 font-medium truncate">Live traffic & storefront views</p>
+                <h2 className="text-[10px] sm:text-sm font-black text-white truncate">App Visitors & Store Conversion</h2>
+                <p className="text-[8px] sm:text-[10px] text-teal-300/90 font-medium truncate hidden sm:block">Live traffic & storefront views</p>
               </div>
             </div>
-            <span className="rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black uppercase tracking-wider shrink-0">
+            <span className="rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 px-1 py-0.1 sm:px-1.5 sm:py-0.2 text-[7px] sm:text-[9px] font-black uppercase tracking-wider shrink-0">
               Live ⚡
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
+          <div className="grid grid-cols-4 sm:grid-cols-4 gap-1 sm:gap-3">
             {/* Total Storefront Visitors */}
-            <div className="rounded-lg sm:rounded-xl bg-slate-900/90 p-2 sm:p-3 border border-slate-800/90 space-y-0.5">
-              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">👀 Visitors</p>
-              <p className="text-sm sm:text-2xl font-black text-white">{visits.toLocaleString()}</p>
-              <p className="text-[8px] sm:text-[10px] text-teal-400 font-extrabold">Storefront visits</p>
+            <div className="rounded-md sm:rounded-xl bg-slate-900/90 p-1 sm:p-3 border border-slate-800/90 space-y-0.5 min-w-0">
+              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">👀 Visitors</p>
+              <p className="text-[10px] sm:text-2xl font-black text-white leading-none truncate">{visits.toLocaleString()}</p>
+              <p className="text-[6.5px] sm:text-[10px] text-teal-400 font-extrabold truncate">Visits</p>
             </div>
 
             {/* Total Product Views */}
-            <div className="rounded-lg sm:rounded-xl bg-slate-900/90 p-2 sm:p-3 border border-slate-800/90 space-y-0.5">
-              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">🛍️ Views</p>
-              <p className="text-sm sm:text-2xl font-black text-indigo-300">{productViews.toLocaleString()}</p>
-              <p className="text-[8px] sm:text-[10px] text-indigo-400 font-extrabold">Product clicks</p>
+            <div className="rounded-md sm:rounded-xl bg-slate-900/90 p-1 sm:p-3 border border-slate-800/90 space-y-0.5 min-w-0">
+              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">🛍️ Views</p>
+              <p className="text-[10px] sm:text-2xl font-black text-indigo-300 leading-none truncate">{productViews.toLocaleString()}</p>
+              <p className="text-[6.5px] sm:text-[10px] text-indigo-400 font-extrabold truncate">Clicks</p>
             </div>
 
             {/* Total Unique Buyers */}
-            <div className="rounded-lg sm:rounded-xl bg-slate-900/90 p-2 sm:p-3 border border-slate-800/90 space-y-0.5">
-              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">👥 Buyers</p>
-              <p className="text-sm sm:text-2xl font-black text-emerald-400">{customerStats.totalUnique.toLocaleString()}</p>
-              <p className="text-[8px] sm:text-[10px] text-emerald-400 font-extrabold">Unique buyers</p>
+            <div className="rounded-md sm:rounded-xl bg-slate-900/90 p-1 sm:p-3 border border-slate-800/90 space-y-0.5 min-w-0">
+              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">👥 Buyers</p>
+              <p className="text-[10px] sm:text-2xl font-black text-emerald-400 leading-none truncate">{customerStats.totalUnique.toLocaleString()}</p>
+              <p className="text-[6.5px] sm:text-[10px] text-emerald-400 font-extrabold truncate">Buyers</p>
             </div>
 
             {/* Store Conversion Rate */}
-            <div className="rounded-lg sm:rounded-xl bg-slate-900/90 p-2 sm:p-3 border border-slate-800/90 space-y-0.5">
-              <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">📈 Conversion</p>
-              <p className="text-sm sm:text-2xl font-black text-amber-400">
+            <div className="rounded-md sm:rounded-xl bg-slate-900/90 p-1 sm:p-3 border border-slate-800/90 space-y-0.5 min-w-0">
+              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">📈 Conversion</p>
+              <p className="text-[10px] sm:text-2xl font-black text-amber-400 leading-none truncate">
                 {visits > 0 ? ((validOrders.length / visits) * 100).toFixed(1) : '0.0'}%
               </p>
-              <p className="text-[8px] sm:text-[10px] text-amber-400 font-extrabold">Visitors to orders</p>
+              <p className="text-[6.5px] sm:text-[10px] text-amber-400 font-extrabold truncate">Orders</p>
             </div>
           </div>
         </section>
@@ -1161,70 +1179,70 @@ export default function SellerAnalytics() {
         </section>
 
         {/* SECTION 4: 👥 BUYER RETENTION & TOP CUSTOMERS LEADERBOARD */}
-        <section className="rounded-xl sm:rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white via-indigo-50/30 to-slate-50 p-3 sm:p-4 shadow-2xs space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-indigo-100/80 pb-2">
-            <div className="flex items-center gap-1.5">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 text-xs font-black">
+        <section className="rounded-xl sm:rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white via-indigo-50/30 to-slate-50 p-2 sm:p-4 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between gap-1.5 border-b border-indigo-100/80 pb-1 sm:pb-2">
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <span className="flex h-4 w-4 sm:h-6 sm:w-6 items-center justify-center rounded-sm sm:rounded-lg bg-indigo-100 text-indigo-700 text-[9px] sm:text-xs font-black shrink-0">
                 👥
               </span>
-              <div>
-                <h2 className="text-xs sm:text-sm font-black text-slate-900">
+              <div className="min-w-0">
+                <h2 className="text-[10px] sm:text-sm font-black text-slate-900 truncate">
                   Customer Loyalty & Leaderboard
                 </h2>
-                <p className="text-[9px] sm:text-[10px] text-slate-500 font-medium">
+                <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium truncate hidden sm:block">
                   Repeat purchase rates & top buyer spend
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto">
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => setShowCrmModal(true)}
-                className="inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-black text-white shadow-xs hover:brightness-110 active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-0.5 sm:gap-1 rounded-md sm:rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 px-1.5 sm:px-3 py-0.5 sm:py-1 text-[8.5px] sm:text-xs font-black text-white shadow-xs hover:brightness-110 active:scale-95 cursor-pointer"
               >
-                <MessageSquare className="h-3 w-3" />
-                <span>WhatsApp CRM</span>
+                <MessageSquare className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <span>CRM</span>
               </button>
             </div>
           </div>
 
           {/* 4 Rich KPI Cards: Total, New, Repeat, Repeat Rate */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3">
+          <div className="grid grid-cols-4 sm:grid-cols-4 gap-1 sm:gap-3">
             {/* Total Unique Customers */}
-            <div className="rounded-lg sm:rounded-xl bg-white p-2.5 border border-slate-200/90 shadow-2xs space-y-0.5">
-              <span className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400">Total Buyers</span>
-              <p className="text-sm sm:text-xl font-black text-slate-900">
+            <div className="rounded-md sm:rounded-xl bg-white p-1 sm:p-2.5 border border-slate-200/90 shadow-2xs space-y-0.5 min-w-0">
+              <span className="text-[7px] sm:text-[10px] font-black uppercase text-slate-400 truncate block">Total Buyers</span>
+              <p className="text-[10px] sm:text-xl font-black text-slate-900 leading-none truncate">
                 {customerStats.totalUnique.toLocaleString()}
               </p>
-              <p className="text-[8px] sm:text-[10px] font-bold text-blue-600">Distinct contacts</p>
+              <p className="text-[6.5px] sm:text-[10px] font-bold text-blue-600 truncate">Contacts</p>
             </div>
 
             {/* New First-Time Customers */}
-            <div className="rounded-lg sm:rounded-xl bg-white p-2.5 border border-slate-200/90 shadow-2xs space-y-0.5">
-              <span className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400">New Buyers</span>
-              <p className="text-sm sm:text-xl font-black text-emerald-600">
+            <div className="rounded-md sm:rounded-xl bg-white p-1 sm:p-2.5 border border-slate-200/90 shadow-2xs space-y-0.5 min-w-0">
+              <span className="text-[7px] sm:text-[10px] font-black uppercase text-slate-400 truncate block">New Buyers</span>
+              <p className="text-[10px] sm:text-xl font-black text-emerald-600 leading-none truncate">
                 {customerStats.newCustomers.toLocaleString()}
               </p>
-              <p className="text-[8px] sm:text-[10px] font-bold text-emerald-700">1st-time orders</p>
+              <p className="text-[6.5px] sm:text-[10px] font-bold text-emerald-700 truncate">1st-time</p>
             </div>
 
             {/* Repeat Customers (>1 Order) */}
-            <div className="rounded-lg sm:rounded-xl bg-white p-2.5 border border-indigo-200 shadow-2xs space-y-0.5">
-              <span className="text-[8px] sm:text-[10px] font-black uppercase text-indigo-700">Repeat Buyers</span>
-              <p className="text-sm sm:text-xl font-black text-indigo-600">
+            <div className="rounded-md sm:rounded-xl bg-white p-1 sm:p-2.5 border border-indigo-200 shadow-2xs space-y-0.5 min-w-0">
+              <span className="text-[7px] sm:text-[10px] font-black uppercase text-indigo-700 truncate block">Repeat</span>
+              <p className="text-[10px] sm:text-xl font-black text-indigo-600 leading-none truncate">
                 {customerStats.repeatCustomers.toLocaleString()}
               </p>
-              <p className="text-[8px] sm:text-[10px] font-bold text-indigo-700">&gt; 1 order placed</p>
+              <p className="text-[6.5px] sm:text-[10px] font-bold text-indigo-700 truncate">&gt; 1 order</p>
             </div>
 
             {/* Repeat Customer Retention Rate */}
-            <div className="rounded-lg sm:rounded-xl bg-white p-2.5 border border-amber-200 shadow-2xs space-y-0.5">
-              <span className="text-[8px] sm:text-[10px] font-black uppercase text-amber-800">Repeat Rate</span>
-              <p className="text-sm sm:text-xl font-black text-amber-600">
+            <div className="rounded-md sm:rounded-xl bg-white p-1 sm:p-2.5 border border-amber-200 shadow-2xs space-y-0.5 min-w-0">
+              <span className="text-[7px] sm:text-[10px] font-black uppercase text-amber-800 truncate block">Repeat Rate</span>
+              <p className="text-[10px] sm:text-xl font-black text-amber-600 leading-none truncate">
                 {customerStats.repeatRate}%
               </p>
-              <p className="text-[8px] sm:text-[10px] font-bold text-amber-700">Retention index</p>
+              <p className="text-[6.5px] sm:text-[10px] font-bold text-amber-700 truncate">Retention</p>
             </div>
           </div>
 
@@ -1247,10 +1265,10 @@ export default function SellerAnalytics() {
                   return (
                     <div
                       key={c.phone || c.name || index}
-                      className="flex items-center justify-between p-2 hover:bg-slate-50/80 transition-colors"
+                      className="flex items-center justify-between p-1 sm:p-2 hover:bg-slate-50/80 transition-colors"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md font-black text-[10px] ${
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div className={`flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-sm sm:rounded-md font-black text-[9px] sm:text-[10px] ${
                           index === 0
                             ? 'bg-amber-100 text-amber-800'
                             : index === 1
@@ -1264,27 +1282,27 @@ export default function SellerAnalytics() {
 
                         <div className="min-w-0">
                           <div className="flex items-center gap-1">
-                            <p className="text-[11px] font-black text-slate-900 truncate">
+                            <p className="text-[10px] sm:text-[11px] font-black text-slate-900 truncate leading-tight">
                               {c.name || 'Customer'}
                             </p>
                             {isRepeat && (
-                              <span className="rounded bg-indigo-50 text-indigo-700 px-1 text-[8px] font-black">
+                              <span className="rounded bg-indigo-50 text-indigo-700 px-0.5 text-[7px] font-black">
                                 VIP
                               </span>
                             )}
                           </div>
-                          <p className="text-[9px] font-mono text-slate-400 truncate">
+                          <p className="text-[8px] sm:text-[9px] font-mono text-slate-400 truncate leading-tight">
                             {c.phone || 'Phone N/A'}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0 text-right">
+                      <div className="flex items-center gap-1.5 shrink-0 text-right">
                         <div>
-                          <p className="text-[11px] font-black text-slate-900">
+                          <p className="text-[10px] sm:text-[11px] font-black text-slate-900 leading-tight">
                             ₹{Number(c.totalSpent || 0).toFixed(0)}
                           </p>
-                          <p className="text-[8px] font-semibold text-slate-400">
+                          <p className="text-[7.5px] sm:text-[8px] font-semibold text-slate-400 leading-tight">
                             {c.ordersCount} orders
                           </p>
                         </div>
@@ -1294,7 +1312,7 @@ export default function SellerAnalytics() {
                             href={`https://wa.me/${formatPhoneForWhatsApp(c.phone)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all text-xs"
+                            className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-sm sm:rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all text-[10px] sm:text-xs"
                             title="Chat on WhatsApp"
                           >
                             💬

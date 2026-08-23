@@ -124,7 +124,8 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                     'name': product.name,
                     'price': str(product.price),
                     'quantity': quantity,
-                    'line_total': str(line_total)
+                    'line_total': str(line_total),
+                    'image': product.image.url if product.image else ''
                 })
                 subtotal += line_total
 

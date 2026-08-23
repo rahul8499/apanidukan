@@ -365,8 +365,8 @@ export default function StoreManager() {
       setProductName(''); setPrice('0'); setStockQuantity('100'); setCategory(''); setFile(null); setProductImages([]); setProductPrimaryIndex(0)
       toast.success(`🎉 SUCCESS: Product '${addedName}' published to store with ${productImages.length || 1} photo(s)!`, { id: toastId })
       load()
-    } catch (error) { 
-      toast.error(errorMessage(error), { id: toastId }) 
+    } catch (error) {
+      toast.error(errorMessage(error), { id: toastId })
     } finally {
       setIsAddingProduct(false)
     }
@@ -748,8 +748,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
       await api.post(`/stores/${store.id}/publish/`)
       toast.success('🚀 SUCCESS: Store LIVE ho gaya! Customer link active hai.', { id: loadingToast })
       load()
-    } catch (error) { 
-      toast.error(errorMessage(error), { id: loadingToast }) 
+    } catch (error) {
+      toast.error(errorMessage(error), { id: loadingToast })
     } finally {
       setIsPublishingStore(false)
     }

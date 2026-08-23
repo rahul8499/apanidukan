@@ -350,3 +350,69 @@ class PublicCustomerNotificationsView(generics.ListAPIView):
         else:
             CustomerNotification.objects.filter(store=store, customer_id=token, is_read=False).update(is_read=True)
         return Response({'success': True})
+
+
+from django.http import HttpResponse, Http404
+from django.conf import settings
+
+def public_store_og_view(request, slug):
+    store = Store.objects.filter(models.Q(slug=slug) | models.Q(custom_domain=slug)).first()
+    if not store:
+        return HttpResponse("Store not found", status=404)
+
+    store_name = store.name or "Online Store"
+    store_desc = store.description or f"Order online directly from {store_name}. Fast doorstep delivery & verified quality."
+    
+    logo_url = ""
+    if store.logo:
+        try:
+            logo_url = request.build_absolute_uri(store.logo.url)
+        except Exception:
+            logo_url = store.logo.url if hasattr(store.logo, 'url') else str(store.logo)
+    
+    if not logo_url:
+        frontend_base = getattr(settings, 'FRONTEND_URL', 'https://www.apanidukan.com').rstrip('/')
+        logo_url = f"{frontend_base}/apanidukan1.png"
+
+    frontend_base = getattr(settings, 'FRONTEND_URL', 'https://www.apanidukan.com').rstrip('/')
+    store_url = f"{frontend_base}/store/{store.slug}"
+
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{store_name} - Official Online Store</title>
+    <meta name="title" content="{store_name} - Official Online Store" />
+    <meta name="description" content="{store_desc}" />
+    
+    <!-- Open Graph / WhatsApp Social Preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{store_url}" />
+    <meta property="og:title" content="{store_name} - Official Online Store" />
+    <meta property="og:description" content="{store_desc}" />
+    <meta property="og:image" content="{logo_url}" />
+    <meta property="og:site_name" content="{store_name}" />
+    
+    <!-- Twitter Preview -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="{store_url}" />
+    <meta property="twitter:title" content="{store_name} - Official Online Store" />
+    <meta property="twitter:description" content="{store_desc}" />
+    <meta property="twitter:image" content="{logo_url}" />
+
+    <!-- Redirect Browser Visitors to React App -->
+    <script>
+        window.location.href = "{store_url}";
+    </script>
+</head>
+<body style="font-family:sans-serif;text-align:center;padding:50px;background:#f8fafc;color:#0f172a;">
+    <h1 style="font-size:24px;font-weight:900;">{store_name}</h1>
+    <p style="font-size:14px;color:#475569;">{store_desc}</p>
+    <a href="{store_url}" style="display:inline-block;margin-top:15px;padding:10px 20px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:bold;">
+        Open {store_name} Store ↗
+    </a>
+</body>
+</html>"""
+    return HttpResponse(html, content_type="text/html")
+

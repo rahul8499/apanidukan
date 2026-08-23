@@ -13,7 +13,8 @@ from stores.public_views import (
     PublicStoreCouponsView,
     PublicValidateCouponView,
     PublicStoreReportView,
-    PublicCustomerNotificationsView
+    PublicCustomerNotificationsView,
+    public_store_og_view
 )
 
 urlpatterns = [
@@ -30,7 +31,10 @@ urlpatterns = [
     path('api/v1/', include('payments.urls')),
     path('api/v1/', include('chat.urls')),
     path('api/v1/', include('ai_assistant.urls')), 
-    # Public storefront
+    # Dynamic Open Graph & Store Metadata URLs for Social Web Previews (WhatsApp, Facebook, etc.)
+    path('store/<slug:slug>/', public_store_og_view),
+    path('s/<slug:slug>/', public_store_og_view),
+    # Public storefront API
     path('api/v1/public/stores/<slug:slug>/', PublicStoreDetailView.as_view()),
     path('api/v1/public/stores/<slug:slug>/categories/', PublicStoreCategoriesView.as_view()),
     path('api/v1/public/stores/<slug:slug>/products/', PublicStoreProductsView.as_view()),

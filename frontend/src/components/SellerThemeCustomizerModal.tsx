@@ -25,6 +25,7 @@ export default function SellerThemeCustomizerModal({
   const [borderRadius, setBorderRadius] = useState<'rounded-lg' | 'rounded-2xl' | 'rounded-3xl'>('rounded-2xl')
   const [fontStyle, setFontStyle] = useState<'font-sans' | 'font-serif' | 'font-mono'>('font-sans')
   const [customTagline, setCustomTagline] = useState<string>(currentTheme.tagline || '')
+  const [customSubTagline, setCustomSubTagline] = useState<string>(currentTheme.sub_tagline || 'Order directly from our shop for fast doorstep delivery & verified quality.')
 
   // ULTRA-ADVANCED COMPETITOR-BEATING CONTROLS
   const [showAnnouncementBar, setShowAnnouncementBar] = useState<boolean>(currentTheme.show_announcement_bar ?? true)
@@ -157,6 +158,7 @@ export default function SellerThemeCustomizerModal({
       name: basePreset.name,
       tier: basePreset.tier || 'basic',
       tagline: customTagline || basePreset.tagline,
+      sub_tagline: customSubTagline,
       icon: basePreset.icon,
       primary_color: primaryColor || basePreset.primary_color,
       secondary_color: basePreset.secondary_color,
@@ -485,12 +487,12 @@ export default function SellerThemeCustomizerModal({
               </div>
             </div>
 
-            {/* Step 4: AI Storefront Tagline */}
-            <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
+            {/* Step 4: AI Storefront Tagline & Hero Description */}
+            <div className="space-y-3 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                  <span>4. Store Tagline & AI Copywriter</span>
+                  <span>4. Storefront Hero Headline & Description</span>
                 </label>
                 <button
                   type="button"
@@ -501,13 +503,29 @@ export default function SellerThemeCustomizerModal({
                 </button>
               </div>
 
-              <input
-                type="text"
-                value={customTagline}
-                onChange={(e) => setCustomTagline(e.target.value)}
-                placeholder="Enter store tagline..."
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-              />
+              {/* Main Headline */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400">Hero Banner Title / Main Tagline:</label>
+                <input
+                  type="text"
+                  value={customTagline}
+                  onChange={(e) => setCustomTagline(e.target.value)}
+                  placeholder="e.g. Clean & Fresh Grocery Theme"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-bold text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Sub-Description */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400">Banner Sub-Description / Quality Pitch:</label>
+                <input
+                  type="text"
+                  value={customSubTagline}
+                  onChange={(e) => setCustomSubTagline(e.target.value)}
+                  placeholder="e.g. Order directly from our shop for fast doorstep delivery & verified quality."
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
             </div>
 
             {/* Step 5: Dynamic Coupon Announcement Ticker Bar Switch & Selector */}

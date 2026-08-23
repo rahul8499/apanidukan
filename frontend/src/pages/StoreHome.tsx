@@ -990,7 +990,7 @@ function Storefront() {
                       {storeTheme.tagline || store.tagline || `Welcome to ${store.name}`}
                     </h2>
                     <p className="text-[11px] sm:text-xs text-slate-300 font-medium leading-snug">
-                      {store.description || 'Order directly from our shop for fast doorstep delivery & verified quality.'}
+                      {storeTheme.sub_tagline || store.description || 'Order directly from our shop for fast doorstep delivery & verified quality.'}
                     </p>
                   </div>
 

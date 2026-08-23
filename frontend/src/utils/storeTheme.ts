@@ -4,6 +4,7 @@ export interface StoreThemeConfig {
   name: string
   tier: 'basic' | 'premium'
   tagline?: string
+  sub_tagline?: string
   icon: string
   primary_color: string
   secondary_color: string
@@ -488,6 +489,7 @@ export function getStoreTheme(store: any): StoreThemeConfig {
     name: customTheme.name || basePreset.name,
     tier: basePreset.tier || 'basic',
     tagline: customTheme.tagline || basePreset.tagline,
+    sub_tagline: customTheme.sub_tagline || 'Order directly from our shop for fast doorstep delivery & verified quality.',
     icon: customTheme.icon || basePreset.icon,
     primary_color: customTheme.primary_color || basePreset.primary_color,
     secondary_color: customTheme.secondary_color || basePreset.secondary_color,

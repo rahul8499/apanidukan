@@ -1,17 +1,7 @@
 import os
-import copy
 from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
-from django.template.context import BaseContext
-
-# Fix Python 3.14 compatibility bug in Django 4.2 BaseContext.__copy__
-def _safe_context_copy(self):
-    obj = object.__new__(self.__class__)
-    obj.dicts = [d.copy() if hasattr(d, 'copy') else d for d in self.dicts]
-    return obj
-
-BaseContext.__copy__ = _safe_context_copy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR.parent / '.env')

@@ -46,13 +46,25 @@ export function updateDynamicManifest({
           src: finalIconSrc,
           sizes: '192x192',
           type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
-          purpose: 'any maskable',
+          purpose: 'any',
+        },
+        {
+          src: finalIconSrc,
+          sizes: '192x192',
+          type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
+          purpose: 'maskable',
         },
         {
           src: finalIconSrc,
           sizes: '512x512',
           type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
-          purpose: 'any maskable',
+          purpose: 'any',
+        },
+        {
+          src: finalIconSrc,
+          sizes: '512x512',
+          type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
+          purpose: 'maskable',
         },
       ],
     }
@@ -100,8 +112,8 @@ export function setupCustomerStorePwa(store: { id?: string | number; name: strin
     shortName: store.name || 'Store',
     description: `Shop online directly from ${store.name} with express delivery and COD.`,
     startUrl: `/s/${store.slug}`,
-    themeColor: '#020617',
-    backgroundColor: '#ffffff',
+    themeColor: '#f8fafc',
+    backgroundColor: '#f8fafc',
     iconUrl: store.logo || '/apanidukan1.png',
     id: `customer-store-${store.slug}`,
   })

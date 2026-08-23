@@ -11,6 +11,13 @@ export interface StoreThemeConfig {
   banner_bg_gradient: string
   gradient_name?: string
   
+  // Custom Typography & Shape Settings
+  font_style?: 'font-sans' | 'font-serif' | 'font-mono'
+  card_radius?: 'rounded-lg' | 'rounded-2xl' | 'rounded-3xl'
+  show_announcement_bar?: boolean
+  announcement_text?: string
+  trust_badges?: string[]
+
   // Visual Theme Properties (Clean Crisp White Background with Dynamic Theme Highlights)
   is_dark_mode: boolean
   page_bg_class: string
@@ -479,12 +486,19 @@ export function getStoreTheme(store: any): StoreThemeConfig {
     preset_id: customTheme.preset_id || basePreset.preset_id,
     name: customTheme.name || basePreset.name,
     tier: basePreset.tier || 'basic',
+    tagline: customTheme.tagline || basePreset.tagline,
     icon: customTheme.icon || basePreset.icon,
     primary_color: customTheme.primary_color || basePreset.primary_color,
     secondary_color: customTheme.secondary_color || basePreset.secondary_color,
     accent_color: customTheme.accent_color || basePreset.accent_color,
     banner_bg_gradient: customTheme.banner_bg_gradient || basePreset.banner_bg_gradient,
     gradient_name: basePreset.gradient_name || 'Vibrant Gradient',
+
+    font_style: customTheme.font_style || 'font-sans',
+    card_radius: customTheme.card_radius || 'rounded-2xl',
+    show_announcement_bar: customTheme.show_announcement_bar ?? true,
+    announcement_text: customTheme.announcement_text || '🔥 FREE Express Delivery on Orders Above ₹499!',
+    trust_badges: customTheme.trust_badges || ['10MIN', 'GENUINE', 'WHATSAPP'],
 
     // Clean Crisp White Canvas Theming
     is_dark_mode: false,

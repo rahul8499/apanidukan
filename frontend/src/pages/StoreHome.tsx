@@ -443,12 +443,22 @@ function Storefront() {
           </div>
         </div>
       ) : (
-        <>
+        <div className={`${storeTheme.page_bg_class} ${storeTheme.font_style || 'font-sans'} min-h-screen transition-all duration-300`}>
           {/* Draft Preview Banner */}
           {store?.is_published === false && (
             <div className="relative z-50 bg-rose-600 px-3 py-1.5 text-center text-white text-[11px] font-black tracking-wide shadow-md flex items-center justify-center gap-2 border-b border-rose-700">
               <span className="animate-pulse">⚠️ DRAFT PREVIEW MODE</span>
               <span className="font-medium text-rose-100">- Customers see "Under Maintenance"</span>
+            </div>
+          )}
+
+          {/* Seller Custom Announcement Bar */}
+          {storeTheme.show_announcement_bar && storeTheme.announcement_text && !storeWideCoupon && (
+            <div
+              className="relative z-50 px-3 py-1.5 text-center text-white text-[10px] sm:text-xs font-black shadow-xs overflow-hidden truncate transition-all border-b border-black/10"
+              style={{ backgroundColor: storeTheme.primary_color }}
+            >
+              <span>{storeTheme.announcement_text}</span>
             </div>
           )}
 
@@ -885,22 +895,34 @@ function Storefront() {
                     <Crown className="h-3 w-3 text-amber-400 animate-bounce" /> VERIFIED STORE
                   </span>
 
+                  {storeTheme.trust_badges?.includes('10MIN') && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black text-amber-300 border border-amber-400/40">
+                      ⚡ 10-Min Delivery
+                    </span>
+                  )}
+                  {storeTheme.trust_badges?.includes('GENUINE') && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-800/80 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-slate-200 border border-slate-700">
+                      <ShieldCheck className="h-3 w-3 text-emerald-400" /> 100% Genuine
+                    </span>
+                  )}
+                  {storeTheme.trust_badges?.includes('WHATSAPP') && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950/80 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-emerald-300 border border-emerald-500/40">
+                      💬 Instant WhatsApp Order
+                    </span>
+                  )}
+
                   {storeCoupons.length > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-emerald-300 border border-emerald-400/40">
                       <Tag className="h-2.5 w-2.5 text-emerald-400" /> Code "{storeCoupons[0].code}"
                     </span>
                   )}
-
-                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-800/80 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-slate-200 border border-slate-700">
-                    <ShieldCheck className="h-3 w-3 text-emerald-400" /> 100% Genuine • COD / UPI
-                  </span>
                 </div>
 
                 {/* Heading & Subtitle */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-0.5">
                   <div className="space-y-1 max-w-xl">
                     <h2 className="text-sm sm:text-lg lg:text-xl font-black text-white leading-tight tracking-tight">
-                      {store.tagline || `Welcome to ${store.name}`}
+                      {storeTheme.tagline || store.tagline || `Welcome to ${store.name}`}
                     </h2>
                     <p className="text-[11px] sm:text-xs text-slate-300 font-medium leading-snug">
                       {store.description || 'Order directly from our shop for fast doorstep delivery & verified quality.'}
@@ -1000,7 +1022,7 @@ function Storefront() {
                   return (
                     <div
                       key={p.id}
-                      className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 ${storeTheme.is_dark_mode
+                      className={`group relative flex flex-col justify-between overflow-hidden ${storeTheme.card_radius || 'rounded-2xl'} border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 ${storeTheme.is_dark_mode
                           ? 'bg-slate-900/90 border-slate-800/90 hover:border-slate-700 hover:shadow-indigo-500/10'
                           : 'bg-white border-slate-200/90 hover:border-indigo-200 hover:shadow-slate-300/40 shadow-2xs'
                         }`}
@@ -1366,7 +1388,7 @@ function Storefront() {
 
           <CustomerBottomNav storeSlug={storeSlug!} active="home" />
           <CustomerChatWidget storeSlug={storeSlug!} />
-        </>)}
+        </div>)}
     </div>
   )
 }

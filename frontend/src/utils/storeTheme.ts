@@ -497,7 +497,7 @@ export function getStoreTheme(store: any): StoreThemeConfig {
     font_style: customTheme.font_style || 'font-sans',
     card_radius: customTheme.card_radius || 'rounded-2xl',
     show_announcement_bar: customTheme.show_announcement_bar ?? true,
-    announcement_text: customTheme.announcement_text || '🔥 FREE Express Delivery on Orders Above ₹499!',
+    announcement_text: customTheme.announcement_text || '',
     trust_badges: customTheme.trust_badges || ['10MIN', 'GENUINE', 'WHATSAPP'],
 
     // Clean Crisp White Canvas Theming

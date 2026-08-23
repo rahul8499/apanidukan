@@ -27,9 +27,9 @@ export default function SellerThemeCustomizerModal({
   const [customTagline, setCustomTagline] = useState<string>(currentTheme.tagline || '')
 
   // ULTRA-ADVANCED COMPETITOR-BEATING CONTROLS
-  const [showAnnouncementBar, setShowAnnouncementBar] = useState<boolean>(true)
-  const [announcementText, setAnnouncementText] = useState<string>('🔥 FREE Express Delivery on Orders Above ₹499!')
-  const [trustBadges, setTrustBadges] = useState<string[]>(['10MIN', 'GENUINE', 'WHATSAPP'])
+  const [showAnnouncementBar, setShowAnnouncementBar] = useState<boolean>(currentTheme.show_announcement_bar ?? true)
+  const [announcementText, setAnnouncementText] = useState<string>(currentTheme.announcement_text || '')
+  const [trustBadges, setTrustBadges] = useState<string[]>(currentTheme.trust_badges || ['10MIN', 'GENUINE', 'WHATSAPP'])
   const [soundFxPlaying, setSoundFxPlaying] = useState<boolean>(false)
 
   const [isSaving, setIsSaving] = useState(false)

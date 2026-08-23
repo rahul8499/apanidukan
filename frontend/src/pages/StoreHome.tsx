@@ -452,35 +452,34 @@ function Storefront() {
             </div>
           )}
 
-          {/* Seller Custom Announcement Bar (Always visible at top of Header Navbar) */}
-          {storeTheme.show_announcement_bar && storeTheme.announcement_text && (
+          {/* Dynamic Top Announcement Ticker (Seller Custom Copy OR Active Coupon) */}
+          {storeTheme.show_announcement_bar && (storeTheme.announcement_text || storeWideCoupon) && (
             <div
-              className="relative z-50 px-3 py-1.5 text-center text-white text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-black/10 flex items-center justify-center gap-2"
-              style={{ backgroundColor: storeTheme.primary_color }}
+              className={`relative z-50 px-3 py-1.5 text-center text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-black/10 flex items-center justify-between gap-2 ${
+                storeTheme.announcement_text ? 'text-white' : 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 border-amber-300'
+              }`}
+              style={storeTheme.announcement_text ? { backgroundColor: storeTheme.primary_color } : undefined}
             >
-              <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-300 animate-bounce" />
-              <span className="truncate tracking-wide drop-shadow-xs">{storeTheme.announcement_text}</span>
-              <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-300 animate-bounce" />
-            </div>
-          )}
-
-          {/* Top Promotional Ticker */}
-          {storeWideCoupon && (
-            <div className="relative z-50 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 px-3 py-1.5 text-slate-950 font-bold text-[10px] sm:text-xs shadow-xs border-b border-amber-300 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 min-w-0 mx-auto">
-                <Sparkles className="h-3.5 w-3.5 shrink-0 text-slate-950 animate-bounce" />
-                <span className="truncate">
-                  SPECIAL OFFER: Get{' '}
-                  <strong className="underline font-black">
-                    {storeWideCoupon.discount_type === 'PERCENTAGE'
-                      ? `${storeWideCoupon.discount_value}% OFF`
-                      : `FLAT ₹${storeWideCoupon.discount_value} OFF`}
-                  </strong>{' '}
-                  Code:{' '}
-                  <span className="font-mono bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded text-[10px]">
-                    {storeWideCoupon.code}
+                <Sparkles className={`h-3.5 w-3.5 shrink-0 animate-bounce ${storeTheme.announcement_text ? 'text-amber-300' : 'text-slate-950'}`} />
+                {storeTheme.announcement_text ? (
+                  <span className="truncate tracking-wide drop-shadow-xs">{storeTheme.announcement_text}</span>
+                ) : storeWideCoupon ? (
+                  <span className="truncate">
+                    SPECIAL OFFER: Get{' '}
+                    <strong className="underline font-black">
+                      {storeWideCoupon.discount_type === 'PERCENTAGE'
+                        ? `${storeWideCoupon.discount_value}% OFF`
+                        : `FLAT ₹${storeWideCoupon.discount_value} OFF`}
+                    </strong>{' '}
+                    Code:{' '}
+                    <span className="font-mono bg-slate-950 text-amber-300 px-1.5 py-0.5 rounded text-[10px]">
+                      {storeWideCoupon.code}
+                    </span>
                   </span>
-                </span>
+                ) : null}
+              </div>
+              {storeWideCoupon && !storeTheme.announcement_text && (
                 <button
                   onClick={() => copyCouponCode(storeWideCoupon.code)}
                   className="hidden sm:inline-flex items-center gap-1 rounded bg-slate-950 px-2 py-0.5 text-[9px] font-black text-amber-300 hover:bg-slate-900 transition-all shrink-0 cursor-pointer"
@@ -488,7 +487,7 @@ function Storefront() {
                   <Tag className="h-2.5 w-2.5 text-amber-400" />
                   <span>{copiedToast ? 'COPIED!' : 'COPY'}</span>
                 </button>
-              </div>
+              )}
             </div>
           )}
 

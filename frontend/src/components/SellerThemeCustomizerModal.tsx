@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Check, Palette, Layers, Eye, Sparkles, Crown, Sprout, ShieldCheck, ShoppingCart, Search, Star, Smartphone, Monitor, Globe, RefreshCw, Type, CornerUpRight, ShoppingBag } from 'lucide-react'
+import { X, Check, Palette, Layers, Eye, Sparkles, Crown, Sprout, ShieldCheck, ShoppingCart, Search, Star, Smartphone, Monitor, Globe, RefreshCw, Type, CornerUpRight, ShoppingBag, Tag } from 'lucide-react'
 import api from '../services/api'
 import { STORE_THEME_PRESETS, StoreThemeConfig, getStoreTheme } from '../utils/storeTheme'
 
@@ -452,7 +452,7 @@ export default function SellerThemeCustomizerModal({
               </div>
             </div>
 
-            {/* Step 4: AI Tagline & Announcement Generator */}
+            {/* Step 4: AI Storefront Tagline */}
             <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
@@ -472,9 +472,45 @@ export default function SellerThemeCustomizerModal({
                 type="text"
                 value={customTagline}
                 onChange={(e) => setCustomTagline(e.target.value)}
-                placeholder="Enter store offer tagline..."
+                placeholder="Enter store tagline..."
                 className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
               />
+            </div>
+
+            {/* Step 5: Dynamic Coupon Announcement Ticker Bar Switch */}
+            <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                    <Tag className="h-3.5 w-3.5 text-amber-400" />
+                    <span>5. Top Dynamic Coupon Ticker Bar</span>
+                  </label>
+                  <p className="text-[10px] text-slate-400">
+                    Automatically fetches & features your active store coupons (e.g. 20% OFF Code: WELCOME20) at top of customer app.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAnnouncementBar(!showAnnouncementBar)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    showAnnouncementBar ? 'bg-emerald-500' : 'bg-slate-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      showAnnouncementBar ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {showAnnouncementBar && (
+                <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-2 text-[10px] text-amber-300 flex items-center gap-2">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-400 animate-bounce" />
+                  <span>100% Dynamic: Automatically syncs with coupons created in your Offer & Coupon Manager!</span>
+                </div>
+              )}
             </div>
 
             {/* Step 5: Typography & Card Shape Customizer */}

@@ -498,7 +498,7 @@ export function getStoreTheme(store: any): StoreThemeConfig {
     font_style: customTheme.font_style || 'font-sans',
     card_radius: customTheme.card_radius || 'rounded-2xl',
     show_announcement_bar: customTheme.show_announcement_bar ?? true,
-    announcement_text: customTheme.announcement_text || '',
+    announcement_text: (customTheme.announcement_text && !customTheme.announcement_text.includes('499') && !customTheme.announcement_text.includes('Express Delivery')) ? customTheme.announcement_text : '',
     featured_coupon_code: customTheme.featured_coupon_code || '',
     trust_badges: customTheme.trust_badges || ['10MIN', 'GENUINE', 'WHATSAPP'],
 

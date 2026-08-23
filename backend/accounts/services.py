@@ -104,6 +104,14 @@ def create_and_send_otp(phone_number: str) -> tuple[bool, str, str]:
     if recent_otp:
         return False, "", "Please wait 45 seconds before requesting another OTP."
 
+    # Daily Limit Check: Max 5 OTP requests per mobile number per 24 hours
+    daily_count = PhoneOTP.objects.filter(
+        phone_number=clean_phone,
+        created_at__gte=timezone.now() - timedelta(hours=24)
+    ).count()
+    if daily_count >= 5:
+        return False, "", "Daily OTP limit reached for this number (Max 5 per 24 hours). Please try again later."
+
     # Generate 4-digit OTP matching MSG91 SecureOTPWidget9U4D widget settings
     otp_code = f"{random.randint(1000, 9999)}"
     expires_at = timezone.now() + timedelta(minutes=15)

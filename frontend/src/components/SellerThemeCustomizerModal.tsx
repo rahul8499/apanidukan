@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Check, Palette, Layers, Eye, Sparkles, Crown, Sprout, ShieldCheck, ShoppingCart, Search, Star, Smartphone, Monitor } from 'lucide-react'
+import { X, Check, Palette, Layers, Eye, Sparkles, Crown, Sprout, ShieldCheck, ShoppingCart, Search, Star, Smartphone, Monitor, Globe, RefreshCw, Type, CornerUpRight, ShoppingBag } from 'lucide-react'
 import api from '../services/api'
 import { STORE_THEME_PRESETS, StoreThemeConfig, getStoreTheme } from '../utils/storeTheme'
 
@@ -21,6 +21,10 @@ export default function SellerThemeCustomizerModal({
   const [customGradient, setCustomGradient] = useState<string>(currentTheme.banner_bg_gradient || '')
   const [tierFilter, setTierFilter] = useState<'ALL' | 'BASIC' | 'PREMIUM'>('ALL')
   const [previewDevice, setPreviewDevice] = useState<'MOBILE' | 'DESKTOP'>('MOBILE')
+  const [previewTab, setPreviewTab] = useState<'HOME' | 'PRODUCT' | 'CART'>('HOME')
+  const [borderRadius, setBorderRadius] = useState<'rounded-lg' | 'rounded-2xl' | 'rounded-3xl'>('rounded-2xl')
+  const [fontStyle, setFontStyle] = useState<'font-sans' | 'font-serif' | 'font-mono'>('font-sans')
+  const [customTagline, setCustomTagline] = useState<string>(currentTheme.tagline || '')
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('')
 
@@ -30,7 +34,43 @@ export default function SellerThemeCustomizerModal({
     if (preset) {
       setPrimaryColor(preset.primary_color)
       setCustomGradient(preset.banner_bg_gradient)
+      setCustomTagline(preset.tagline || '')
     }
+  }
+
+  // AI Tagline Generator Presets based on Store Category
+  const aiTaglines: Record<string, string[]> = {
+    KIRANA: [
+      '⚡ 10-Minute Express Grocery Delivery to Your Doorstep!',
+      '🌾 100% Organic, Fresh & Wholesale Prices Daily',
+      '🚚 Free Doorstep Shipping on Orders Above ₹499',
+    ],
+    PHARMACY: [
+      '💊 100% Genuine Medicines & Licensed Healthcare Partner',
+      '🩸 Instant Prescription Upload & 24/7 Home Delivery',
+      '🩺 Authentic Wellness & Vital Care at Best Discount',
+    ],
+    BOUTIQUE: [
+      '👗 Premium Handpicked Designer Wear & Luxury Fabrics',
+      '✨ Trending Collections • Festive Offers Live',
+      '🛍️ Easy Returns & Cash on Delivery Available',
+    ],
+    ELECTRONICS: [
+      '📱 100% Brand Warranty & Express Gadget Delivery',
+      '🔥 Super Deals on Laptops, Mobiles & Accessories',
+      '⚡ Genuine Accessories with Instant Replacement',
+    ],
+    DEFAULT: [
+      '⚡ Fast Doorstep Delivery & Verified Quality Guarantee',
+      '🎉 Exclusive Special Discount on Direct Storefront Orders',
+      '⭐ Rated 4.9 Stars by Local Happy Customers',
+    ],
+  }
+
+  const handleAiTaglineGenerate = () => {
+    const list = aiTaglines[selectedCategory] || aiTaglines.DEFAULT
+    const randomIndex = Math.floor(Math.random() * list.length)
+    setCustomTagline(list[randomIndex])
   }
 
   const handleSave = async (e: React.FormEvent) => {
@@ -44,7 +84,7 @@ export default function SellerThemeCustomizerModal({
       preset_id: basePreset.preset_id,
       name: basePreset.name,
       tier: basePreset.tier || 'basic',
-      tagline: basePreset.tagline,
+      tagline: customTagline || basePreset.tagline,
       icon: basePreset.icon,
       primary_color: primaryColor || basePreset.primary_color,
       secondary_color: basePreset.secondary_color,
@@ -82,6 +122,7 @@ export default function SellerThemeCustomizerModal({
 
   const activePreset = STORE_THEME_PRESETS[selectedCategory] || STORE_THEME_PRESETS.KIRANA
   const activeGradient = customGradient || activePreset.banner_bg_gradient
+  const displayTagline = customTagline || activePreset.tagline || 'Fast Doorstep Delivery'
 
   const filteredPresets = Object.entries(STORE_THEME_PRESETS).filter(([_, p]) => {
     if (tierFilter === 'BASIC') return p.tier === 'basic'
@@ -118,8 +159,8 @@ export default function SellerThemeCustomizerModal({
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-2 sm:p-4 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-5xl h-[92vh] max-h-[850px] flex flex-col rounded-2xl sm:rounded-3xl border border-slate-700/80 bg-slate-900 shadow-2xl overflow-hidden my-auto text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-2 sm:p-4 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-6xl h-[94vh] max-h-[900px] flex flex-col rounded-2xl sm:rounded-3xl border border-slate-700/80 bg-slate-900 shadow-2xl overflow-hidden my-auto text-white">
 
         {/* SHOPIFY STYLE STUDIO HEADER */}
         <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-4 sm:px-6 py-3 shrink-0">
@@ -129,39 +170,39 @@ export default function SellerThemeCustomizerModal({
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-black text-white">Shopify Theme Studio</h2>
+                <h2 className="text-sm sm:text-base font-black text-white">Shopify Theme & Vibe Studio Pro</h2>
                 <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   Live Customizer
                 </span>
               </div>
               <p className="text-[10.5px] text-slate-400 font-medium">
-                Customize colors, templates, and storefront vibe for {store?.name || 'your store'}
+                Customize colors, typography, taglines & layout for {store?.name || 'your store'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Device Switcher */}
-            <div className="hidden sm:flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700">
+          <div className="flex items-center gap-2.5">
+            {/* Device Switcher (Mobile vs Desktop) */}
+            <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700">
               <button
                 type="button"
                 onClick={() => setPreviewDevice('MOBILE')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   previewDevice === 'MOBILE' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Smartphone className="h-3.5 w-3.5" />
-                <span>Mobile</span>
+                <span className="hidden sm:inline">Mobile View</span>
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewDevice('DESKTOP')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   previewDevice === 'DESKTOP' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Monitor className="h-3.5 w-3.5" />
-                <span>Desktop</span>
+                <span className="hidden sm:inline">Desktop View</span>
               </button>
             </div>
 
@@ -178,8 +219,8 @@ export default function SellerThemeCustomizerModal({
         {/* TWO COLUMN STUDIO BODY */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0 overflow-hidden bg-slate-900">
 
-          {/* LEFT PANEL: CONTROLS & THEME PRESETS (7 COLS ON DESKTOP) */}
-          <div className="md:col-span-7 flex flex-col overflow-y-auto p-4 space-y-4 border-r border-slate-800/80 bg-slate-900">
+          {/* LEFT PANEL: CONTROLS & THEME PRESETS (6 COLS ON DESKTOP) */}
+          <div className="md:col-span-6 flex flex-col overflow-y-auto p-4 space-y-4 border-r border-slate-800/80 bg-slate-900">
             {saveSuccessMsg && (
               <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/60 p-3 text-xs font-bold text-emerald-300 shadow-xs flex items-center gap-2">
                 <Check className="h-4 w-4 text-emerald-400 shrink-0" />
@@ -237,7 +278,7 @@ export default function SellerThemeCustomizerModal({
                       key={key}
                       type="button"
                       onClick={() => handleSelectPreset(key)}
-                      className={`flex flex-col justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs relative overflow-hidden group min-h-[92px] ${
+                      className={`flex flex-col justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs relative overflow-hidden group min-h-[90px] ${
                         isSelected
                           ? isPremium
                             ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400/40'
@@ -328,7 +369,7 @@ export default function SellerThemeCustomizerModal({
               </div>
             </div>
 
-            {/* Step 3: Primary Accent Color */}
+            {/* Step 3: Primary Accent & Button Color */}
             <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
@@ -366,7 +407,105 @@ export default function SellerThemeCustomizerModal({
               </div>
             </div>
 
-            {/* Bottom Actions */}
+            {/* Step 4: AI Tagline & Announcement Generator */}
+            <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                  <span>4. Store Tagline & AI Copywriter</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAiTaglineGenerate}
+                  className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-[10px] font-black text-white hover:brightness-110 cursor-pointer flex items-center gap-1"
+                >
+                  <RefreshCw className="h-3 w-3" /> AI Suggest
+                </button>
+              </div>
+
+              <input
+                type="text"
+                value={customTagline}
+                onChange={(e) => setCustomTagline(e.target.value)}
+                placeholder="Enter store offer tagline..."
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Step 5: Typography & Card Shape Customizer */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5 rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
+                <label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
+                  <Type className="h-3 w-3 text-indigo-400" /> Typography
+                </label>
+                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setFontStyle('font-sans')}
+                    className={`flex-1 py-1 text-[9.5px] font-black rounded-lg ${
+                      fontStyle === 'font-sans' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                    }`}
+                  >
+                    Modern
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFontStyle('font-serif')}
+                    className={`flex-1 py-1 text-[9.5px] font-serif font-black rounded-lg ${
+                      fontStyle === 'font-serif' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                    }`}
+                  >
+                    Royal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFontStyle('font-mono')}
+                    className={`flex-1 py-1 text-[9.5px] font-mono font-black rounded-lg ${
+                      fontStyle === 'font-mono' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                    }`}
+                  >
+                    Tech
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
+                <label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
+                  <CornerUpRight className="h-3 w-3 text-teal-400" /> Card Shape
+                </label>
+                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setBorderRadius('rounded-lg')}
+                    className={`flex-1 py-1 text-[9.5px] font-black rounded-lg ${
+                      borderRadius === 'rounded-lg' ? 'bg-teal-600 text-white' : 'text-slate-400'
+                    }`}
+                  >
+                    Sharp
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBorderRadius('rounded-2xl')}
+                    className={`flex-1 py-1 text-[9.5px] font-black rounded-lg ${
+                      borderRadius === 'rounded-2xl' ? 'bg-teal-600 text-white' : 'text-slate-400'
+                    }`}
+                  >
+                    Sleek
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBorderRadius('rounded-3xl')}
+                    className={`flex-1 py-1 text-[9.5px] font-black rounded-lg ${
+                      borderRadius === 'rounded-3xl' ? 'bg-teal-600 text-white' : 'text-slate-400'
+                    }`}
+                  >
+                    Pill
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Save Action */}
             <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800 mt-auto">
               <button
                 type="button"
@@ -387,46 +526,104 @@ export default function SellerThemeCustomizerModal({
             </div>
           </div>
 
-          {/* RIGHT PANEL: SHOPIFY LIVE STOREFRONT DEVICE PREVIEW (5 COLS ON DESKTOP) */}
-          <div className="md:col-span-5 bg-slate-950 p-4 flex flex-col items-center justify-center border-l border-slate-800/80 overflow-y-auto">
-            <div className="w-full max-w-sm space-y-2">
-              {/* Device Frame Header */}
-              <div className="flex items-center justify-between text-xs font-bold text-slate-400 px-1">
+          {/* RIGHT PANEL: SHOPIFY LIVE STOREFRONT DEVICE PREVIEW (6 COLS ON DESKTOP) */}
+          <div className="md:col-span-6 bg-slate-950 p-4 flex flex-col items-center justify-start border-l border-slate-800/80 overflow-y-auto">
+            
+            {/* Interactive Preview Bar Header */}
+            <div className="w-full flex items-center justify-between text-xs font-bold text-slate-400 mb-3 px-1">
+              <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1 text-teal-400 font-extrabold text-[11px]">
                   <Eye className="h-3.5 w-3.5" />
-                  <span>Real-Time Customer View</span>
-                </span>
-                <span className="text-[10px] text-slate-500 uppercase font-mono">
-                  {activePreset.name}
+                  <span>{previewDevice === 'DESKTOP' ? 'Desktop Browser Preview' : 'Mobile App View'}</span>
                 </span>
               </div>
 
-              {/* REALISTIC SHOPIFY MOBILE STOREFRONT MOCKUP FRAME */}
-              <div className="rounded-3xl border-4 border-slate-800 bg-slate-900 shadow-2xl overflow-hidden text-slate-900 transition-all duration-300 relative">
+              {/* View Tab Selector */}
+              <div className="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-800 text-[10px]">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('HOME')}
+                  className={`px-2.5 py-0.5 font-black rounded-lg ${
+                    previewTab === 'HOME' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                  }`}
+                >
+                  Home
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('PRODUCT')}
+                  className={`px-2.5 py-0.5 font-black rounded-lg ${
+                    previewTab === 'PRODUCT' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                  }`}
+                >
+                  Product Detail
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('CART')}
+                  className={`px-2.5 py-0.5 font-black rounded-lg ${
+                    previewTab === 'CART' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                  }`}
+                >
+                  Cart
+                </button>
+              </div>
+            </div>
 
-                {/* Mobile Top Notch & Battery Bar */}
-                <div className="bg-slate-950 px-4 py-1.5 flex items-center justify-between text-[9px] text-slate-400 font-mono border-b border-slate-800">
-                  <span>9:41</span>
-                  <div className="h-2 w-10 bg-slate-800 rounded-full" />
-                  <span>5G ⚡</span>
-                </div>
+            {/* DYNAMICALLY RESPONSIVE DEVICE MOCKUP FRAME */}
+            <div
+              className={`w-full transition-all duration-300 ${fontStyle} ${
+                previewDevice === 'DESKTOP' ? 'max-w-2xl' : 'max-w-[340px]'
+              }`}
+            >
+              <div className={`border-4 border-slate-800 bg-slate-900 shadow-2xl overflow-hidden text-slate-900 relative ${borderRadius}`}>
 
-                {/* Shopify Store Navbar */}
-                <div className="bg-slate-950 px-3.5 py-2 text-white flex items-center justify-between border-b border-white/10">
-                  <div className="flex items-center gap-2 min-w-0">
+                {/* TOP HEADER FRAME: CHROME BROWSER BAR (DESKTOP) VS NOTCH (MOBILE) */}
+                {previewDevice === 'DESKTOP' ? (
+                  <div className="bg-slate-950 px-3 py-2 flex items-center justify-between border-b border-slate-800 text-slate-400 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+                      <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                      <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-3 py-0.5 rounded-lg text-[10px] text-slate-300 font-mono w-64 truncate">
+                      <Globe className="h-3 w-3 text-teal-400 shrink-0" />
+                      <span>https://{store?.slug || 'store'}.apanidukan.com</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                      <span>Desktop 1080p</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-slate-950 px-4 py-1.5 flex items-center justify-between text-[9px] text-slate-400 font-mono border-b border-slate-800">
+                    <span>9:41</span>
+                    <div className="h-2 w-10 bg-slate-800 rounded-full" />
+                    <span>5G ⚡</span>
+                  </div>
+                )}
+
+                {/* SHOPIFY STORE NAVBAR */}
+                <div className="bg-slate-950 px-3.5 py-2.5 text-white flex items-center justify-between border-b border-white/10">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 text-base shrink-0">
                       {activePreset.icon}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-xs font-black text-white truncate">{store.name || 'Store Name'}</p>
-                      <p className="text-[8px] text-emerald-400 font-bold flex items-center gap-0.5 truncate">
-                        <ShieldCheck className="h-2.5 w-2.5" /> Verified Shop
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs sm:text-sm font-black text-white truncate">{store?.name || 'Apani Store'}</p>
+                        <span className="text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1 py-0.2 rounded font-bold flex items-center gap-0.5">
+                          <ShieldCheck className="h-2.5 w-2.5" /> Verified
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Search className="h-3.5 w-3.5 text-slate-400" />
-                    <div className="relative">
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="hidden sm:flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg text-[10px] text-slate-400">
+                      <Search className="h-3 w-3" />
+                      <span>Search items...</span>
+                    </div>
+                    <div className="relative cursor-pointer">
                       <ShoppingCart className="h-4 w-4 text-teal-400" />
                       <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
                         2
@@ -435,123 +632,216 @@ export default function SellerThemeCustomizerModal({
                   </div>
                 </div>
 
-                {/* Dynamic Hero Banner */}
-                <div className={`bg-gradient-to-br ${activeGradient} p-3.5 text-white space-y-2 relative overflow-hidden`}>
-                  {/* Subtle Ambient Glow */}
-                  <div
-                    className="absolute -top-8 -right-8 h-28 w-28 rounded-full blur-xl opacity-40 pointer-events-none"
-                    style={{ backgroundColor: primaryColor }}
-                  />
-                  <div className="relative z-10 space-y-1">
-                    <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-md bg-white/15 text-teal-300 border border-white/20">
-                      {activePreset.tagline || 'Fast Delivery'}
-                    </span>
-                    <h3 className="text-xs font-black leading-snug text-white">
-                      Welcome to {store.name || 'Apani Dukan'}
-                    </h3>
-                    <p className="text-[9.5px] text-slate-300 font-medium leading-tight">
-                      Order online & get instant doorstep delivery!
-                    </p>
-                  </div>
-                </div>
-
-                {/* Shopify Store Category Bar */}
-                <div className="bg-slate-900 px-3 py-2 flex items-center gap-1.5 overflow-x-auto text-[9.5px] font-bold text-slate-300 border-b border-slate-800">
-                  <span className="px-2.5 py-1 rounded-full text-white font-black shrink-0" style={{ backgroundColor: primaryColor }}>
-                    🔥 All Items
-                  </span>
-                  <span className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 shrink-0">
-                    Grocery
-                  </span>
-                  <span className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 shrink-0">
-                    Essentials
-                  </span>
-                </div>
-
-                {/* SHOPIFY PRODUCT GRID PREVIEW */}
-                <div className="p-3 bg-slate-950 space-y-2 min-h-[220px]">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-0.5">
-                    Featured Products
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* Demo Product Card 1 */}
-                    <div className="rounded-xl bg-slate-900 border border-slate-800 p-2 text-white space-y-1.5 flex flex-col justify-between shadow-sm">
-                      <div>
-                        <div className="h-16 rounded-lg bg-slate-800 flex items-center justify-center text-2xl relative overflow-hidden">
-                          🛍️
-                          <span className="absolute top-1 left-1 text-[7px] font-black px-1 rounded bg-rose-500 text-white">
-                            28% OFF
-                          </span>
-                        </div>
-                        <p className="text-[10.5px] font-black text-white truncate mt-1.5">
-                          Demo Product Item
+                {/* PREVIEW CONTENT SWITCHER (HOME / PRODUCT DETAIL / CART) */}
+                {previewTab === 'HOME' && (
+                  <>
+                    {/* DYNAMIC HERO BANNER */}
+                    <div className={`bg-gradient-to-br ${activeGradient} p-4 text-white space-y-2 relative overflow-hidden`}>
+                      <div
+                        className="absolute -top-8 -right-8 h-32 w-32 rounded-full blur-xl opacity-40 pointer-events-none"
+                        style={{ backgroundColor: primaryColor }}
+                      />
+                      <div className="relative z-10 space-y-1.5">
+                        <span className="text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-white/15 text-teal-300 border border-white/20 inline-block">
+                          {displayTagline}
+                        </span>
+                        <h3 className="text-xs sm:text-base font-black leading-snug text-white">
+                          Welcome to {store?.name || 'Apani Dukan'}
+                        </h3>
+                        <p className="text-[9.5px] sm:text-xs text-slate-300 font-medium">
+                          Order online & get instant doorstep delivery!
                         </p>
-                        <div className="flex items-center gap-1 text-[8.5px] text-amber-400 font-bold mt-0.5">
-                          <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
-                          <span>4.9 (42)</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-1 border-t border-slate-800 flex items-center justify-between gap-1">
-                        <div>
-                          <p className="text-xs font-black text-white">₹499</p>
-                          <p className="text-[8px] text-slate-500 line-through">₹699</p>
-                        </div>
-                        <button
-                          type="button"
-                          className="px-2 py-1 text-[9.5px] font-black rounded-lg text-white shadow-xs cursor-pointer active:scale-95 transition-all"
-                          style={{ backgroundColor: primaryColor }}
-                        >
-                          + Add
-                        </button>
                       </div>
                     </div>
 
-                    {/* Demo Product Card 2 */}
-                    <div className="rounded-xl bg-slate-900 border border-slate-800 p-2 text-white space-y-1.5 flex flex-col justify-between shadow-sm">
-                      <div>
-                        <div className="h-16 rounded-lg bg-slate-800 flex items-center justify-center text-2xl relative overflow-hidden">
-                          📦
-                          <span className="absolute top-1 left-1 text-[7px] font-black px-1 rounded bg-emerald-500 text-white">
-                            BEST SELLER
-                          </span>
-                        </div>
-                        <p className="text-[10.5px] font-black text-white truncate mt-1.5">
-                          Premium Daily Essential
+                    {/* SHOPIFY PRODUCT GRID */}
+                    <div className="p-3 bg-slate-950 space-y-2 min-h-[240px]">
+                      <div className="flex items-center justify-between px-0.5">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                          Featured Products
                         </p>
-                        <div className="flex items-center gap-1 text-[8.5px] text-amber-400 font-bold mt-0.5">
-                          <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
-                          <span>5.0 (98)</span>
-                        </div>
+                        <span className="text-[9px] font-bold text-teal-400">View All ➔</span>
                       </div>
 
-                      <div className="pt-1 border-t border-slate-800 flex items-center justify-between gap-1">
-                        <div>
-                          <p className="text-xs font-black text-white">₹299</p>
-                          <p className="text-[8px] text-slate-500 line-through">₹399</p>
+                      <div className={`grid gap-2 ${previewDevice === 'DESKTOP' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                        {/* Demo Product Card 1 */}
+                        <div className={`bg-slate-900 border border-slate-800 p-2 text-white space-y-1.5 flex flex-col justify-between shadow-sm ${borderRadius}`}>
+                          <div>
+                            <div className="h-16 sm:h-20 rounded-lg bg-slate-800 flex items-center justify-center text-2xl relative overflow-hidden">
+                              🛍️
+                              <span className="absolute top-1 left-1 text-[7px] font-black px-1.5 py-0.2 rounded bg-rose-500 text-white">
+                                28% OFF
+                              </span>
+                            </div>
+                            <p className="text-[10.5px] sm:text-xs font-black text-white truncate mt-1.5">
+                              Demo Product Item
+                            </p>
+                            <div className="flex items-center gap-1 text-[8.5px] text-amber-400 font-bold mt-0.5">
+                              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                              <span>4.9 (42 reviews)</span>
+                            </div>
+                          </div>
+
+                          <div className="pt-1.5 border-t border-slate-800 flex items-center justify-between gap-1">
+                            <div>
+                              <p className="text-xs sm:text-sm font-black text-white">₹499</p>
+                              <p className="text-[8px] text-slate-500 line-through">₹699</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="px-2.5 py-1 text-[9.5px] font-black rounded-lg text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                              style={{ backgroundColor: primaryColor }}
+                            >
+                              + Add
+                            </button>
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          className="px-2 py-1 text-[9.5px] font-black rounded-lg text-white shadow-xs cursor-pointer active:scale-95 transition-all"
-                          style={{ backgroundColor: primaryColor }}
-                        >
-                          + Add
-                        </button>
+
+                        {/* Demo Product Card 2 */}
+                        <div className={`bg-slate-900 border border-slate-800 p-2 text-white space-y-1.5 flex flex-col justify-between shadow-sm ${borderRadius}`}>
+                          <div>
+                            <div className="h-16 sm:h-20 rounded-lg bg-slate-800 flex items-center justify-center text-2xl relative overflow-hidden">
+                              📦
+                              <span className="absolute top-1 left-1 text-[7px] font-black px-1.5 py-0.2 rounded bg-emerald-500 text-white">
+                                BEST SELLER
+                              </span>
+                            </div>
+                            <p className="text-[10.5px] sm:text-xs font-black text-white truncate mt-1.5">
+                              Daily Essential Pack
+                            </p>
+                            <div className="flex items-center gap-1 text-[8.5px] text-amber-400 font-bold mt-0.5">
+                              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                              <span>5.0 (98 reviews)</span>
+                            </div>
+                          </div>
+
+                          <div className="pt-1.5 border-t border-slate-800 flex items-center justify-between gap-1">
+                            <div>
+                              <p className="text-xs sm:text-sm font-black text-white">₹299</p>
+                              <p className="text-[8px] text-slate-500 line-through">₹399</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="px-2.5 py-1 text-[9.5px] font-black rounded-lg text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                              style={{ backgroundColor: primaryColor }}
+                            >
+                              + Add
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Demo Product Card 3 (Shows on Desktop View) */}
+                        {previewDevice === 'DESKTOP' && (
+                          <div className={`bg-slate-900 border border-slate-800 p-2 text-white space-y-1.5 flex flex-col justify-between shadow-sm ${borderRadius}`}>
+                            <div>
+                              <div className="h-20 rounded-lg bg-slate-800 flex items-center justify-center text-2xl relative overflow-hidden">
+                                💎
+                                <span className="absolute top-1 left-1 text-[7px] font-black px-1.5 py-0.2 rounded bg-amber-500 text-slate-950">
+                                  NEW ARRIVAL
+                                </span>
+                              </div>
+                              <p className="text-xs font-black text-white truncate mt-1.5">
+                                Premium Special Combo
+                              </p>
+                              <div className="flex items-center gap-1 text-[8.5px] text-amber-400 font-bold mt-0.5">
+                                <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                                <span>4.8 (15 reviews)</span>
+                              </div>
+                            </div>
+
+                            <div className="pt-1.5 border-t border-slate-800 flex items-center justify-between gap-1">
+                              <div>
+                                <p className="text-sm font-black text-white">₹899</p>
+                                <p className="text-[8px] text-slate-500 line-through">₹1,199</p>
+                              </div>
+                              <button
+                                type="button"
+                                className="px-2.5 py-1 text-[9.5px] font-black rounded-lg text-white shadow-xs cursor-pointer active:scale-95 transition-all"
+                                style={{ backgroundColor: primaryColor }}
+                              >
+                                + Add
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </>
+                )}
 
-                {/* Footer Bar inside Mockup */}
+                {/* PRODUCT DETAIL CARD VIEW */}
+                {previewTab === 'PRODUCT' && (
+                  <div className="p-4 bg-slate-950 text-white space-y-3 min-h-[280px]">
+                    <div className="h-32 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-4xl relative">
+                      🛍️
+                      <span className="absolute top-2 left-2 text-[9px] font-black px-2 py-0.5 rounded bg-rose-500 text-white">
+                        28% OFF SPECIAL
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-black text-white">Demo Premium Item</h4>
+                      <p className="text-[10px] text-slate-400">High quality daily essential item direct from store.</p>
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="text-base font-black text-white">₹499.00</span>
+                        <span className="text-xs text-slate-500 line-through">₹699.00</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="w-full py-2.5 text-xs font-black text-white rounded-xl shadow-md cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                      <span>Buy Now / Add to Cart</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* CART DRAWER VIEW */}
+                {previewTab === 'CART' && (
+                  <div className="p-4 bg-slate-950 text-white space-y-3 min-h-[280px]">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <p className="text-xs font-black text-white">Your Shopping Cart (2)</p>
+                      <span className="text-[9px] text-teal-400 font-bold">Clear All</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span>🛍️</span>
+                          <div>
+                            <p className="font-bold text-white">Demo Product Item</p>
+                            <p className="text-[9px] text-slate-400">Qty: 1 • ₹499</p>
+                          </div>
+                        </div>
+                        <span className="font-black text-white">₹499</span>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span>Total Payable:</span>
+                        <span className="text-sm font-black text-emerald-400">₹499.00</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="w-full py-2 text-xs font-black text-white rounded-xl shadow-md cursor-pointer active:scale-95 transition-all"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        Proceed to WhatsApp Checkout ➔
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* FOOTER BAR INSIDE MOCKUP */}
                 <div className="bg-slate-950 px-3 py-2 text-center border-t border-slate-800">
                   <p className="text-[8.5px] font-bold text-slate-500">
-                    ⚡ Powered by Apani Dukan Storefront Engine
+                    ⚡ Powered by Apani Dukan Storefront Studio Engine
                   </p>
                 </div>
 
               </div>
             </div>
+
           </div>
 
         </div>

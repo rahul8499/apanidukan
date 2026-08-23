@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 
 export default function Dashboard(){
   const [stores, setStores] = useState<any[]>([])
@@ -24,14 +25,7 @@ export default function Dashboard(){
   },[navigate])
 
   if (loading) {
-    return (
-      <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center p-6">
-        <div className="space-y-4 text-center">
-          <div className="mx-auto h-12 w-12 rounded-2xl border-4 border-indigo-500/20 border-t-teal-400 animate-spin"></div>
-          <p className="text-sm font-bold text-slate-400">Loading your workspace...</p>
-        </div>
-      </div>
-    )
+    return <SellerSplashLoader label="Loading your store workspace..." />
   }
 
   return (

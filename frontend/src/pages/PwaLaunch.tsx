@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import api from '../services/api'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 
 /**
  * Multi-Tenant PWA & Desktop Web Route Controller:
@@ -85,14 +86,7 @@ export default function PwaLaunch() {
   }, [verifying, customerStore])
 
   if (verifying) {
-    return (
-      <div className="min-h-screen w-full bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
-          <p className="text-xs font-bold text-slate-300">Validating store connection…</p>
-        </div>
-      </div>
-    )
+    return <SellerSplashLoader label="Validating store connection..." />
   }
 
   if (targetRoute) {

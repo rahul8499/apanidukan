@@ -223,12 +223,40 @@ SIMPLE_JWT = {
 
 _cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS')
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(',') if origin.strip()] if _cors_origins else ['http://localhost:3000', 'http://localhost:5173']
-CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
-# Enable private-network development URLs only while DEBUG is on. In production
-# set CORS_ALLOWED_ORIGINS and ALLOWED_HOSTS to the deployed domain explicitly.
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOWED_ORIGIN_REGEXES = [r'^http://(?:(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?::\d+)?|\[(?:2402:8100:3151:4947:[0-9a-fA-F:]+|fe80:[0-9a-fA-F:]+|fc[0-9a-fA-F]:[0-9a-fA-F:]+)\](?::\d+)?)$']
+_csrf_origins = set(CORS_ALLOWED_ORIGINS)
+for host in ALLOWED_HOSTS:
+    if host not in {'*', 'localhost', '127.0.0.1'}:
+        _csrf_origins.add(f"https://{host}")
+        _csrf_origins.add(f"http://{host}")
+CSRF_TRUSTED_ORIGINS = list(_csrf_origins)
+
+WHITENOISE_MANIFEST_STRICT = False
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@multistore.local')
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')

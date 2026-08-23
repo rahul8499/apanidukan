@@ -703,22 +703,27 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             </div>
 
             {/* Hindi Voice Soundbox Toggle */}
-            <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-950 border border-amber-400/40 text-white shadow-md">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${soundboxOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
-                  {soundboxOn ? <Volume2 className="h-4 w-4 text-emerald-600" /> : <VolumeX className="h-4 w-4 text-slate-400" />}
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-sm shadow-sm ${soundboxOn ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 shadow-amber-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
+                  {soundboxOn ? <Volume2 className="h-4.5 w-4.5 text-slate-950 font-black" /> : <VolumeX className="h-4.5 w-4.5 text-slate-400" />}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-black text-slate-900 truncate">Hindi Voice Soundbox 🔊</p>
-                  <p className="text-[10px] text-slate-500 font-medium truncate">Speaks live orders & requests</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-black text-white truncate">Hindi Voice Soundbox 🔊</p>
+                    <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                      <Crown className="h-2 w-2" /> PRO
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-amber-200/80 font-medium truncate">Speaks live orders & requests</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={toggleSoundbox}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-600' : 'bg-slate-300'}`}
+                className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-500' : 'bg-slate-700'}`}
               >
-                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-4' : 'translate-x-0'}`} />
+                <span className={`pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-4.5' : 'translate-x-0'}`} />
               </button>
             </div>
 
@@ -729,13 +734,15 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 setIsSettingsOpen(false)
                 setShowThemeModal(true)
               }}
-              className="w-full flex items-center justify-between rounded-xl bg-white p-2.5 text-xs font-bold text-indigo-950 border border-indigo-200 hover:bg-indigo-50/60 transition-all cursor-pointer"
+              className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-3 text-xs font-black text-white border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-md"
             >
               <span className="flex items-center gap-2.5">
-                <Palette className="h-4 w-4 text-indigo-600 shrink-0" />
-                <span className="font-extrabold">🎨 Store Niche Theme Customizer</span>
+                <Palette className="h-4 w-4 text-amber-400 shrink-0" />
+                <span className="font-extrabold text-white">🎨 Store Niche Theme Customizer</span>
               </span>
-              <span className="text-indigo-600 font-bold">➔</span>
+              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                <Crown className="h-2.5 w-2.5" /> PRO
+              </span>
             </button>
           </div>
 
@@ -1000,13 +1007,33 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 setIsSettingsOpen(false)
                 setShowPosterModal(true)
               }}
-              className="w-full group flex items-center justify-between rounded-xl bg-purple-500/10 p-3 text-xs font-black text-purple-900 border border-purple-300/80 hover:bg-purple-500/20 hover:border-purple-400 transition-all shadow-2xs cursor-pointer text-left"
+              className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-purple-950 via-indigo-950 to-slate-950 p-3 text-xs font-black text-white border border-purple-400/40 hover:border-purple-300 transition-all shadow-md cursor-pointer text-left"
             >
               <span className="flex items-center gap-3">
-                <ImageIcon className="h-4.5 w-4.5 text-purple-600 shrink-0" />
+                <ImageIcon className="h-4.5 w-4.5 text-purple-400 shrink-0" />
                 <span>🎨 AI WhatsApp Poster Generator</span>
               </span>
-              <span className="text-purple-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
+              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xs flex items-center gap-0.5 shrink-0">
+                <Crown className="h-2.5 w-2.5" /> PRO
+              </span>
+            </button>
+
+            {/* AI Sales Copilot Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setIsAiModalOpen(true)
+              }}
+              className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-teal-950 via-emerald-950 to-slate-950 p-3 text-xs font-black text-white border border-emerald-400/40 hover:border-emerald-300 transition-all shadow-md cursor-pointer text-left"
+            >
+              <span className="flex items-center gap-3">
+                <Sparkles className="h-4.5 w-4.5 text-emerald-400 shrink-0" />
+                <span>🤖 AI Sales Copilot & Insights</span>
+              </span>
+              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                <Crown className="h-2.5 w-2.5" /> PRO
+              </span>
             </button>
 
             <Link
@@ -1242,20 +1269,22 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
           {/* Print Counter Standee & Custom Domain */}
           <div className="space-y-2">
+            {/* Custom Domain Manager Button */}
             <button
               type="button"
-              disabled
-              title="Custom Domain feature is locked for now."
-              className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-slate-100/90 py-2 px-3 text-xs font-bold text-slate-400 opacity-75 cursor-not-allowed shadow-2xs"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setShowCustomDomainModal(true)
+              }}
+              className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-amber-500/40 hover:border-amber-400 transition-all shadow-md cursor-pointer text-left"
             >
-              <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-slate-400" />
-                <span>Custom Domain</span>
+              <div className="flex items-center gap-2.5">
+                <Globe className="h-4 w-4 text-amber-400 shrink-0" />
+                <span>🌐 Custom Domain & Brand</span>
               </div>
-              <div className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-600 border border-amber-500/20">
-                <Lock className="h-3 w-3 text-amber-600" />
-                <span>Locked</span>
-              </div>
+              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                <Crown className="h-2.5 w-2.5" /> PRO
+              </span>
             </button>
 
             <button

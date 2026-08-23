@@ -242,54 +242,61 @@ export default function SellerThemeCustomizerModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-2 sm:p-4 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-6xl h-[94vh] max-h-[900px] flex flex-col rounded-2xl sm:rounded-3xl border border-slate-700/80 bg-slate-900 shadow-2xl overflow-hidden my-auto text-white">
 
-        {/* SHOPIFY STYLE STUDIO HEADER */}
-        <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-4 sm:px-6 py-3 shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-emerald-500 text-lg shadow-md border border-white/20">
-              🎨
+        {/* ULTRA-PREMIUM OBSIDIAN GOLD VIP STUDIO HEADER */}
+        <div className="flex items-center justify-between border-b border-amber-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 px-3 sm:px-6 py-2.5 sm:py-3.5 shrink-0 shadow-lg relative z-20">
+          {/* Left: Brand Icon + Title */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-600 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 shrink-0 border border-amber-300/40">
+              ✨
             </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-black text-white">Apani Dukan Store Theme Studio Pro</h2>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Live Customizer
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-xs sm:text-base font-black text-white truncate tracking-tight">
+                  <span className="hidden sm:inline">Apani Dukan </span>Theme Studio
+                </h2>
+                <span className="text-[8px] sm:text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                  <Crown className="h-2.5 w-2.5" /> PRO
                 </span>
               </div>
-              <p className="text-[10.5px] text-slate-400 font-medium">
-                Customize colors, typography, taglines & layout for {store?.name || 'your store'}
+              <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">
+                Customizing <strong className="text-amber-300 font-bold">{store?.name || 'Your Store'}</strong>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {/* Device Switcher (Mobile vs Desktop) */}
-            <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700">
+          {/* Right: View Switcher & Action Controls */}
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-2">
+            {/* Device View Switcher */}
+            <div className="flex items-center bg-slate-900/90 p-0.5 sm:p-1 rounded-xl border border-slate-800 shadow-inner">
               <button
                 type="button"
                 onClick={() => setPreviewDevice('MOBILE')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  previewDevice === 'MOBILE' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                title="Mobile Screen View"
+                className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                  previewDevice === 'MOBILE' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Smartphone className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Mobile View</span>
+                <span className="hidden md:inline">Mobile</span>
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewDevice('DESKTOP')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  previewDevice === 'DESKTOP' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                title="Desktop Screen View"
+                className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                  previewDevice === 'DESKTOP' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Monitor className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Desktop View</span>
+                <span className="hidden md:inline">Desktop</span>
               </button>
             </div>
 
+            {/* Close Modal Button */}
             <button
               type="button"
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-800/80 border border-slate-700/60 text-slate-300 hover:bg-rose-500/20 hover:border-rose-500/40 hover:text-rose-300 transition-all cursor-pointer shrink-0"
             >
               <X className="h-4 w-4" />
             </button>

@@ -5,9 +5,11 @@ import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
+import { useTranslation } from 'react-i18next'
 
 export default function SellerRequests() {
   const { storeId } = useParams()
+  const { t } = useTranslation()
   const [store, setStore] = useState<any>(() => getCachedStore(storeId))
   const [productRequests, setProductRequests] = useState<any[]>([])
   const [errorMsg, setErrorMsg] = useState('')
@@ -84,15 +86,15 @@ export default function SellerRequests() {
   return (
     <div className="mx-auto min-h-screen w-full max-w-md bg-slate-50 pb-28 lg:max-w-none lg:w-full">
       {/* Unified Seller Header */}
-      <SellerHeader store={store} activeTabTitle="Product Requests" onStoreUpdate={loadStore} />
+      <SellerHeader store={store} activeTabTitle={t('productRequestsTitle')} onStoreUpdate={loadStore} />
 
       <div className="space-y-4 p-4 sm:p-6">
         <div className="rounded-2xl bg-gradient-to-br from-amber-800 via-amber-700 to-slate-900 p-5 text-white shadow-lg border border-amber-600/30 flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-amber-200">Customer Product Requests</p>
-            <p className="mt-1 text-xl font-bold">Fulfillment Queue</p>
+            <p className="text-sm font-semibold text-amber-200">{t('productRequestsTitle')}</p>
+            <p className="mt-1 text-xl font-bold">{t('fulfillmentQueue')}</p>
             <p className="mt-2 text-xs text-amber-100 leading-relaxed">
-              Customers searched your store and could not find these products. Reply via WhatsApp or Chat to close the loop.
+              {t('productRequestsSubtitle')}
             </p>
           </div>
           <button
@@ -106,7 +108,7 @@ export default function SellerRequests() {
             title="Click to fetch live fresh product requests"
           >
             <span className={`text-sm ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
-            <span className="hidden sm:inline">Refresh Queue</span>
+            <span className="hidden sm:inline">{t('refreshQueue')}</span>
           </button>
         </div>
 
@@ -115,8 +117,8 @@ export default function SellerRequests() {
         <div className="space-y-3">
           {productRequests.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-              <p className="text-base font-bold text-slate-700">No product requests yet</p>
-              <p className="mt-1 text-xs text-slate-500">When customers search and don't find a product, they can request it. You'll see it here.</p>
+              <p className="text-base font-bold text-slate-700">{t('noProductRequests')}</p>
+              <p className="mt-1 text-xs text-slate-500">{t('noProductRequestsSubtext')}</p>
             </div>
           ) : (
             productRequests.map((request) => (
@@ -125,25 +127,25 @@ export default function SellerRequests() {
                   <div className="flex-1">
                     <h3 className="text-base font-bold text-slate-900">{request.productName}</h3>
                     <p className="mt-1.5 text-xs text-slate-600">
-                      <span className="font-semibold text-slate-800">Customer:</span> {request.customerName}
+                      <span className="font-semibold text-slate-800">{t('customerLabel')}:</span> {request.customerName}
                     </p>
                     <p className="mt-0.5 text-xs text-slate-600">
-                      <span className="font-semibold text-slate-800">Phone:</span> {request.customerPhone}
+                      <span className="font-semibold text-slate-800">{t('phoneLabel')}:</span> {request.customerPhone}
                     </p>
                     {request.message && (
                       <p className="mt-2.5 rounded-xl bg-slate-50 p-2.5 text-xs text-slate-700 border border-slate-100">
-                        <span className="font-semibold">Note:</span> {request.message}
+                        <span className="font-semibold">{t('noteLabel')}:</span> {request.message}
                       </p>
                     )}
                     <p className="mt-2 text-[10px] text-slate-400">
-                      Requested {new Date(request.createdAt).toLocaleDateString()}
+                      {t('requestedOn')} {new Date(request.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <button
                     onClick={() => handleReply(request)}
                     className="flex-shrink-0 rounded-xl bg-[#25D366] px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#1FAE56] cursor-pointer"
                   >
-                    Reply
+                    {t('replyBtn')}
                   </button>
                 </div>
               </div>

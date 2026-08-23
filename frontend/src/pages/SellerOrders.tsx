@@ -8,10 +8,12 @@ import SellerSplashLoader from '../components/SellerSplashLoader'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
 import { SlidersHorizontal, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const statuses = ['NEW', 'CONFIRMED', 'PAID', 'DELIVERED', 'CANCELLED']
 
 export default function SellerOrders() {
+  const { t } = useTranslation()
   const { storeId } = useParams()
   const [store, setStore] = useState<any>(() => getCachedStore(storeId))
   const [orders, setOrders] = useState<any[]>([])
@@ -245,7 +247,7 @@ export default function SellerOrders() {
             {/* Top Bar: Status Badge + Refresh + Connection Pill */}
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-teal-500/20 px-2 py-0.5 text-[8px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30 tracking-wider shadow-xs">
-                ⚡ ORDERS CONTROL
+                {t('ordersControl')}
               </span>
 
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -260,7 +262,7 @@ export default function SellerOrders() {
                   title="Refresh live orders"
                 >
                   <span className={`text-xs ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
-                  <span className="font-extrabold">Refresh</span>
+                  <span className="font-extrabold">{t('refresh')}</span>
                 </button>
 
                 <span
@@ -275,7 +277,7 @@ export default function SellerOrders() {
                       wsConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
                     }`}
                   />
-                  <span>{wsConnected ? 'LIVE' : 'SYNC'}</span>
+                  <span>{wsConnected ? t('liveSync') : t('syncing')}</span>
                 </span>
               </div>
             </div>
@@ -285,17 +287,17 @@ export default function SellerOrders() {
               <div className="flex items-baseline gap-3">
                 <div>
                   <p className="text-xl sm:text-3xl font-black text-white leading-none">{orders.length}</p>
-                  <p className="text-[9px] sm:text-xs text-indigo-200/90 font-bold mt-0.5">Total Orders</p>
+                  <p className="text-[9px] sm:text-xs text-indigo-200/90 font-bold mt-0.5">{t('totalOrdersCount')}</p>
                 </div>
                 <div className="h-6 w-[1px] bg-slate-800 mx-1 hidden xs:block" />
                 <div className="hidden xs:block">
                   <p className="text-base sm:text-2xl font-black text-emerald-300 leading-none">₹{totalSalesVolume.toFixed(0)}</p>
-                  <p className="text-[9px] sm:text-xs text-slate-300 font-bold mt-0.5">Revenue</p>
+                  <p className="text-[9px] sm:text-xs text-slate-300 font-bold mt-0.5">{t('totalRevenue')}</p>
                 </div>
               </div>
 
               <div className="flex flex-col items-end gap-0.5">
-                <span className="text-[8px] sm:text-[10px] uppercase font-bold tracking-wider text-indigo-200">Mode</span>
+                <span className="text-[8px] sm:text-[10px] uppercase font-bold tracking-wider text-indigo-200">{t('mode')}</span>
                 <span
                   className={`font-black px-2 py-0.5 rounded-lg sm:rounded-xl text-[9px] sm:text-[11px] border shadow-xs ${
                     isManageInAppOn
@@ -313,30 +315,30 @@ export default function SellerOrders() {
         {/* Top Executive KPI Metrics Summary Cards — Ultra Compact 1-Row for Android/Mobile */}
         <div className="grid grid-cols-4 gap-1 sm:gap-3">
           <div className="rounded-lg sm:rounded-2xl border border-slate-200/80 bg-white py-1 px-1.5 sm:p-4 shadow-2xs flex flex-col justify-between min-w-0">
-            <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-slate-400 tracking-tight truncate">Gross Sales</span>
+            <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-slate-400 tracking-tight truncate">{t('grossSales')}</span>
             <p className="my-0 text-[10px] xs:text-xs sm:text-2xl font-black text-slate-900 truncate leading-tight">₹{totalSalesVolume.toFixed(2)}</p>
-            <span className="text-[7.5px] sm:text-xs text-emerald-600 font-bold truncate">Valid Orders</span>
+            <span className="text-[7.5px] sm:text-xs text-emerald-600 font-bold truncate">{t('validOrders')}</span>
           </div>
 
           <div className="rounded-lg sm:rounded-2xl border border-amber-200/80 bg-amber-50/50 py-1 px-1.5 sm:p-4 shadow-2xs flex flex-col justify-between min-w-0">
             <div className="flex justify-between items-center min-w-0">
-              <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-amber-800 tracking-tight truncate">Pending</span>
+              <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-amber-800 tracking-tight truncate">{t('pending')}</span>
               {newOrdersCount > 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping shrink-0"></span>}
             </div>
             <p className="my-0 text-[10px] xs:text-xs sm:text-2xl font-black text-amber-950 leading-tight">{newOrdersCount}</p>
-            <span className="text-[7.5px] sm:text-xs text-amber-700 font-bold truncate">Action Needed</span>
+            <span className="text-[7.5px] sm:text-xs text-amber-700 font-bold truncate">{t('actionNeeded')}</span>
           </div>
 
           <div className="rounded-lg sm:rounded-2xl border border-emerald-200/80 bg-emerald-50/50 py-1 px-1.5 sm:p-4 shadow-2xs flex flex-col justify-between min-w-0">
-            <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-emerald-800 tracking-tight truncate">Completed</span>
+            <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-emerald-800 tracking-tight truncate">{t('completed')}</span>
             <p className="my-0 text-[10px] xs:text-xs sm:text-2xl font-black text-emerald-950 leading-tight">{completedCount}</p>
-            <span className="text-[7.5px] sm:text-xs text-emerald-700 font-bold truncate">Delivered</span>
+            <span className="text-[7.5px] sm:text-xs text-emerald-700 font-bold truncate">{t('delivered')}</span>
           </div>
 
           <div className="rounded-lg sm:rounded-2xl border border-slate-200/80 bg-white py-1 px-1.5 sm:p-4 shadow-2xs flex flex-col justify-between min-w-0">
-            <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-slate-400 tracking-tight truncate">Avg Order</span>
+            <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-slate-400 tracking-tight truncate">{t('avgOrder')}</span>
             <p className="my-0 text-[10px] xs:text-xs sm:text-2xl font-black text-slate-900 truncate leading-tight">₹{avgOrderValue.toFixed(0)}</p>
-            <span className="text-[7.5px] sm:text-xs text-slate-500 font-bold truncate">Per Order</span>
+            <span className="text-[7.5px] sm:text-xs text-slate-500 font-bold truncate">{t('perOrder')}</span>
           </div>
         </div>
 
@@ -349,7 +351,7 @@ export default function SellerOrders() {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by Order #, Customer or Phone..."
+              placeholder={t('searchOrdersPlaceholder')}
               className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs font-medium text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:outline-none shadow-2xs"
             />
             {searchQuery && (
@@ -388,9 +390,9 @@ export default function SellerOrders() {
             onChange={e => setSortBy(e.target.value as any)}
             className="hidden sm:block rounded-xl border border-slate-200 bg-white py-2 px-3 text-xs font-bold text-slate-800 focus:outline-none shadow-2xs cursor-pointer shrink-0"
           >
-            <option value="latest">Sort: Latest</option>
-            <option value="oldest">Sort: Oldest</option>
-            <option value="highest_price">Sort: Highest Price</option>
+            <option value="latest">{t('sortLatest')}</option>
+            <option value="oldest">{t('sortOldest')}</option>
+            <option value="highest_price">{t('sortHighestPrice')}</option>
           </select>
         </div>
 
@@ -399,6 +401,7 @@ export default function SellerOrders() {
           {['ALL', ...statuses].map(st => {
             const count = st === 'ALL' ? orders.length : orders.filter(o => o.status?.toUpperCase() === st).length
             const isActive = statusFilter === st
+            const statusTranslationKey = st === 'ALL' ? 'statusAll' : `status${st.charAt(0).toUpperCase() + st.slice(1).toLowerCase()}`
             return (
               <button
                 key={st}
@@ -409,7 +412,7 @@ export default function SellerOrders() {
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
-                <span>{st}</span>
+                <span>{t(statusTranslationKey) || st}</span>
                 <span className={`rounded-full px-1.5 py-0.2 text-[10px] ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'}`}>
                   {count}
                 </span>
@@ -534,10 +537,10 @@ export default function SellerOrders() {
                         ? 'bg-amber-50 text-amber-800 border-amber-200'
                         : 'bg-indigo-50 text-indigo-800 border-indigo-200'
                     }`}>
-                      {order.order_type === 'STORE_PICKUP' ? '🏪 Pickup' : '🚚 Delivery'}
+                      {order.order_type === 'STORE_PICKUP' ? t('pickup') : t('delivery')}
                     </span>
                     <span className="text-[8.5px] sm:text-[9px] font-bold text-slate-600 bg-slate-100 px-1 py-0.1 sm:px-1.5 sm:py-0.2 rounded border border-slate-200">
-                      {order.payment_type === 'COD' ? '💵 COD' : '💳 Online'}
+                      {order.payment_type === 'COD' ? t('cod') : t('online')}
                     </span>
                   </div>
                 </div>
@@ -545,7 +548,7 @@ export default function SellerOrders() {
                 {/* 3. Delivery Address or Pickup Notice */}
                 {order.order_type === 'STORE_PICKUP' ? (
                   <p className="text-[9px] sm:text-[11px] text-amber-900 font-medium bg-amber-50/70 px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-md border border-amber-200/60 truncate leading-tight">
-                    <span className="font-bold">🏪 Store Pickup: </span>Customer will collect from shop
+                    <span className="font-bold">{t('pickup')}: </span>Customer will collect from shop
                   </p>
                 ) : order.delivery_address ? (
                   <p className="text-[9px] sm:text-[11px] text-slate-600 font-medium bg-slate-50 px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-md border border-slate-100 truncate leading-tight">
@@ -559,8 +562,8 @@ export default function SellerOrders() {
                 {/* 4. Compact Purchased Items List */}
                 <div className="rounded-md sm:rounded-lg bg-slate-50/80 p-1 sm:p-2 text-xs border border-slate-100 space-y-0.2">
                   <div className="flex justify-between items-center text-[8px] sm:text-[9px] font-black uppercase text-slate-400 tracking-wider">
-                    <span>Items ({order.items?.length || 0})</span>
-                    <span>Qty × Price</span>
+                    <span>{t('itemsCount')} ({order.items?.length || 0})</span>
+                    <span>{t('qtyPrice')}</span>
                   </div>
                   {Array.isArray(order.items) &&
                     order.items.map((item: any, idx: number) => (
@@ -574,7 +577,7 @@ export default function SellerOrders() {
                 {/* 5. Progress Bar (Ultra Slim 4-Stage Tracker) */}
                 {currentStatusUpper !== 'CANCELLED' && (
                   <div className="flex items-center gap-1 text-[7.5px] sm:text-[9px] font-extrabold text-slate-500 pt-0.2">
-                    <span className={currentStatusUpper === 'NEW' ? 'text-amber-600 font-black' : 'text-slate-400'}>Placed</span>
+                    <span className={currentStatusUpper === 'NEW' ? 'text-amber-600 font-black' : 'text-slate-400'}>{t('placed')}</span>
                     <div className="flex-1 h-0.5 sm:h-1 rounded-full bg-slate-200 overflow-hidden">
                       <div
                         className={`h-full transition-all duration-300 ${
@@ -586,7 +589,7 @@ export default function SellerOrders() {
                       />
                     </div>
                     <span className={currentStatusUpper === 'DELIVERED' ? 'text-emerald-600 font-black' : currentStatusUpper === 'PAID' ? 'text-teal-600 font-black' : 'text-slate-400'}>
-                      {currentStatusUpper === 'PAID' ? 'Paid (75%)' : currentStatusUpper === 'DELIVERED' ? 'Delivered ✓' : 'Delivered'}
+                      {currentStatusUpper === 'PAID' ? 'Paid (75%)' : currentStatusUpper === 'DELIVERED' ? `${t('delivered')} ✓` : t('delivered')}
                     </span>
                   </div>
                 )}
@@ -598,7 +601,7 @@ export default function SellerOrders() {
                     onClick={() => startDirectChat(order)}
                     className="rounded-md sm:rounded-lg bg-indigo-600 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
                   >
-                    💬 Chat
+                    {t('chatBtn')}
                   </button>
 
                   {order.customer_phone ? (
@@ -610,13 +613,13 @@ export default function SellerOrders() {
                         rel="noreferrer"
                       >
                         <span className="sm:hidden">💬 WA</span>
-                        <span className="hidden sm:inline">WhatsApp ↗</span>
+                        <span className="hidden sm:inline">{t('waBtn')}</span>
                       </a>
                       <a
                         className="rounded-md sm:rounded-lg bg-slate-100 border border-slate-200 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
                         href={`tel:${order.customer_phone}`}
                       >
-                        📞 Call
+                        {t('callBtn')}
                       </a>
                     </>
                   ) : null}
@@ -627,7 +630,7 @@ export default function SellerOrders() {
                     className="rounded-md sm:rounded-lg bg-slate-900 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-slate-800 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
                   >
                     <span className="sm:hidden">📍 Track</span>
-                    <span className="hidden sm:inline">Track ↗</span>
+                    <span className="hidden sm:inline">{t('trackBtn')}</span>
                   </Link>
                 </div>
               </article>

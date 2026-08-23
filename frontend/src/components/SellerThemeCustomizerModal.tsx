@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { X, Check, Palette, Layers, Eye, Sparkles, Crown, Sprout, ShieldCheck, ShoppingCart, Search, Star, Smartphone, Monitor, Globe, RefreshCw, Type, CornerUpRight, ShoppingBag, Tag } from 'lucide-react'
 import api from '../services/api'
 import { STORE_THEME_PRESETS, StoreThemeConfig, getStoreTheme } from '../utils/storeTheme'
+import { useTranslation } from 'react-i18next'
 
 interface SellerThemeCustomizerModalProps {
   store: any
@@ -14,6 +15,7 @@ export default function SellerThemeCustomizerModal({
   onSaveSuccess,
   onClose,
 }: SellerThemeCustomizerModalProps) {
+  const { t } = useTranslation()
   const currentTheme = getStoreTheme(store)
 
   const [selectedCategory, setSelectedCategory] = useState<string>(currentTheme.category || 'KIRANA')
@@ -188,7 +190,7 @@ export default function SellerThemeCustomizerModal({
         theme: updatedThemeData,
       })
 
-      setSaveSuccessMsg('🎉 Store Theme Template Applied & Saved Successfully!')
+      setSaveSuccessMsg(t('presetAppliedSuccess'))
       setTimeout(() => {
         onSaveSuccess()
         onClose()
@@ -252,14 +254,14 @@ export default function SellerThemeCustomizerModal({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h2 className="text-xs sm:text-base font-black text-white truncate tracking-tight">
-                  <span className="hidden sm:inline">Apani Dukan </span>Theme Studio
+                  <span className="hidden sm:inline">Apani Dukan </span>{t('themeStudioTitle')}
                 </h2>
                 <span className="text-[8px] sm:text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
                   <Crown className="h-2.5 w-2.5" /> PRO
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">
-                Customizing <strong className="text-amber-300 font-bold">{store?.name || 'Your Store'}</strong>
+                {t('customizingStore')} <strong className="text-amber-300 font-bold">{store?.name || 'Your Store'}</strong>
               </p>
             </div>
           </div>
@@ -320,7 +322,7 @@ export default function SellerThemeCustomizerModal({
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Layers className="h-3.5 w-3.5 text-indigo-400" />
-                  <span>1. Choose Theme Template</span>
+                  <span>{t('chooseThemeTemplate')}</span>
                 </label>
 
                 {/* Basic vs Premium Filter */}
@@ -430,7 +432,7 @@ export default function SellerThemeCustomizerModal({
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                  <span>2. Hero Banner Gradient Style</span>
+                  <span>{t('heroBannerGradient')}</span>
                 </label>
                 <span className="text-[10px] font-bold text-slate-500">8 Presets</span>
               </div>
@@ -461,7 +463,7 @@ export default function SellerThemeCustomizerModal({
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Palette className="h-3.5 w-3.5 text-indigo-400" />
-                  <span>3. Primary Accent & Button Color</span>
+                  <span>{t('primaryAccentColor')}</span>
                 </label>
                 <span className="text-[10px] font-mono font-bold text-slate-400">{primaryColor}</span>
               </div>
@@ -499,14 +501,14 @@ export default function SellerThemeCustomizerModal({
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                  <span>4. Storefront Hero Headline & Description</span>
+                  <span>{t('storefrontHeroTitle')}</span>
                 </label>
                 <button
                   type="button"
                   onClick={handleAiTaglineGenerate}
                   className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-[10px] font-black text-white hover:brightness-110 cursor-pointer flex items-center gap-1"
                 >
-                  <RefreshCw className="h-3 w-3" /> AI Suggest
+                  <RefreshCw className="h-3 w-3" /> {t('aiSuggest')}
                 </button>
               </div>
 
@@ -541,7 +543,7 @@ export default function SellerThemeCustomizerModal({
                 <div className="space-y-0.5">
                   <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                     <Tag className="h-3.5 w-3.5 text-amber-400" />
-                    <span>5. Top Coupon Ticker & Selection</span>
+                    <span>{t('topCouponTicker')}</span>
                   </label>
                   <p className="text-[10px] text-slate-400">
                     Feature a specific coupon offer at the top of your customer storefront!
@@ -635,7 +637,7 @@ export default function SellerThemeCustomizerModal({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5 rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
                 <label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
-                  <Type className="h-3 w-3 text-indigo-400" /> Typography
+                  <Type className="h-3 w-3 text-indigo-400" /> {t('typographyLabel')}
                 </label>
                 <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
                   <button
@@ -670,7 +672,7 @@ export default function SellerThemeCustomizerModal({
 
               <div className="space-y-1.5 rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
                 <label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
-                  <CornerUpRight className="h-3 w-3 text-teal-400" /> Card Shape
+                  <CornerUpRight className="h-3 w-3 text-teal-400" /> {t('cardShapeLabel')}
                 </label>
                 <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
                   <button
@@ -711,7 +713,7 @@ export default function SellerThemeCustomizerModal({
                 onClick={onClose}
                 className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700 transition-colors cursor-pointer"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 type="button"
@@ -720,7 +722,7 @@ export default function SellerThemeCustomizerModal({
                 className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 px-5 py-2 text-xs font-black text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />
-                <span>{isSaving ? 'Applying Template...' : 'Apply & Save Theme'}</span>
+                <span>{isSaving ? t('applyingTemplate') : t('applyAndSaveTheme')}</span>
               </button>
             </div>
           </div>

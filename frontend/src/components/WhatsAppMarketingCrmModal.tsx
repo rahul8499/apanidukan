@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   X, MessageSquare, Send, Users, Sparkles, Copy, Check,
   Tag
@@ -28,6 +29,7 @@ export default function WhatsAppMarketingCrmModal({
   coupons,
   onClose,
 }: WhatsAppMarketingCrmModalProps) {
+  const { t } = useTranslation()
   const [selectedSegment, setSelectedSegment] = useState<SegmentType>('VIP')
   const [selectedCoupon, setSelectedCoupon] = useState<string>(coupons[0]?.code || 'WELCOME50')
   const [customDiscountText, setCustomDiscountText] = useState('15% OFF')
@@ -115,9 +117,9 @@ export default function WhatsAppMarketingCrmModal({
               📲
             </span>
             <div>
-              <h2 className="text-xs sm:text-base font-black text-white">WhatsApp Marketing & Offers</h2>
+              <h2 className="text-xs sm:text-base font-black text-white">{t('waMarketingOffers')}</h2>
               <p className="text-[10px] sm:text-xs text-teal-300 font-medium">
-                Send personalized offers & discount coupons directly to customer WhatsApp
+                {t('sendPersonalizedOffers')}
               </p>
             </div>
           </div>
@@ -138,7 +140,7 @@ export default function WhatsAppMarketingCrmModal({
             <div className="flex items-center justify-between">
               <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
                 <Users className="h-3.5 w-3.5 text-indigo-600" />
-                <span>1. Select Target Audience</span>
+                <span>{t('targetAudience')}</span>
               </label>
               <span className="text-[10px] font-bold text-slate-500">
                 {segmentedCustomers.length} Customers
@@ -147,10 +149,10 @@ export default function WhatsAppMarketingCrmModal({
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
               {[
-                { key: 'VIP', label: '🌟 VIP Customers', desc: '≥ 2 Orders / Top Spend', count: customers.filter(c => (c.ordersCount || 0) >= 2).length },
-                { key: 'LAPSED', label: '⏳ Inactive (>14 Days)', desc: 'Needs Re-engagement', count: customers.filter(c => c.lastOrderDate && new Date(c.lastOrderDate) < fourteenDaysAgo).length },
-                { key: 'NEW', label: '🆕 1st Time Buyers', desc: '1 Order (Welcome back)', count: customers.filter(c => (c.ordersCount || 0) === 1).length },
-                { key: 'ALL', label: '👥 All Customers', desc: 'Full Customer Base', count: customers.length },
+                { key: 'VIP', label: t('vipCustomers'), desc: '≥ 2 Orders / Top Spend', count: customers.filter(c => (c.ordersCount || 0) >= 2).length },
+                { key: 'LAPSED', label: t('inactiveCustomers'), desc: 'Needs Re-engagement', count: customers.filter(c => c.lastOrderDate && new Date(c.lastOrderDate) < fourteenDaysAgo).length },
+                { key: 'NEW', label: t('newBuyersSeg'), desc: '1 Order (Welcome back)', count: customers.filter(c => (c.ordersCount || 0) === 1).length },
+                { key: 'ALL', label: t('allCustomers'), desc: 'Full Customer Base', count: customers.length },
               ].map((seg) => (
                 <button
                   key={seg.key}
@@ -176,12 +178,12 @@ export default function WhatsAppMarketingCrmModal({
           <div className="space-y-2.5 rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
             <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
               <Tag className="h-3.5 w-3.5 text-emerald-600" />
-              <span>2. Offer Details & Coupon</span>
+              <span>{t('offerDetailsCoupon')}</span>
             </label>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <div>
-                <label className="text-[10px] font-bold text-slate-600">Discount Headline</label>
+                <label className="text-[10px] font-bold text-slate-600">{t('discountHeadline')}</label>
                 <input
                   type="text"
                   value={customDiscountText}
@@ -192,7 +194,7 @@ export default function WhatsAppMarketingCrmModal({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-600">Attach Coupon Code</label>
+                <label className="text-[10px] font-bold text-slate-600">{t('attachCouponCode')}</label>
                 <div className="mt-0.5 flex gap-1">
                   <select
                     value={selectedCoupon}
@@ -211,7 +213,7 @@ export default function WhatsAppMarketingCrmModal({
               </div>
 
               <div className="sm:col-span-2">
-                <label className="text-[10px] font-bold text-slate-600">Personal Note / Message</label>
+                <label className="text-[10px] font-bold text-slate-600">{t('personalNoteMessage')}</label>
                 <input
                   type="text"
                   value={customNote}
@@ -228,7 +230,7 @@ export default function WhatsAppMarketingCrmModal({
             <div className="flex items-center justify-between">
               <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
                 <Sparkles className="h-3.5 w-3.5 text-teal-600" />
-                <span>3. Live WhatsApp Message Preview</span>
+                <span>{t('messagePreview')}</span>
               </label>
               <button
                 type="button"
@@ -236,7 +238,7 @@ export default function WhatsAppMarketingCrmModal({
                 className="text-[9px] sm:text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-md hover:bg-emerald-100 flex items-center gap-1 cursor-pointer transition-all"
               >
                 {copiedMsg ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                <span>{copiedMsg ? 'Copied!' : 'Copy Text'}</span>
+                <span>{copiedMsg ? 'Copied!' : t('copyText')}</span>
               </button>
             </div>
 
@@ -264,7 +266,7 @@ export default function WhatsAppMarketingCrmModal({
             <div className="flex items-center justify-between">
               <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
                 <Send className="h-3.5 w-3.5 text-emerald-600" />
-                <span>4. Send Offers ({segmentedCustomers.length})</span>
+                <span>{t('sendOffers')} ({segmentedCustomers.length})</span>
               </label>
               <button
                 type="button"
@@ -272,7 +274,7 @@ export default function WhatsAppMarketingCrmModal({
                 className="text-[9px] sm:text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-300 px-2 py-0.5 rounded-md hover:bg-indigo-100 flex items-center gap-1 cursor-pointer transition-all"
               >
                 {copiedPhones ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                <span>{copiedPhones ? 'Copied!' : 'Copy Numbers'}</span>
+                <span>{copiedPhones ? 'Copied!' : t('copyNumbers')}</span>
               </button>
             </div>
 
@@ -319,7 +321,7 @@ export default function WhatsAppMarketingCrmModal({
                           className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 text-[10px] font-black text-white shadow-2xs transition-all shrink-0 cursor-pointer active:scale-95"
                         >
                           <MessageSquare className="h-3 w-3" />
-                          <span>Send WhatsApp ↗</span>
+                          <span>{t('sendWhatsapp')}</span>
                         </a>
                       ) : (
                         <span className="text-[9px] font-bold text-slate-400">No Phone</span>

@@ -2,6 +2,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './styles.css'
+import './i18n'
 import App from './App'
 
 if ('serviceWorker' in navigator) {

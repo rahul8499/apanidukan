@@ -5,6 +5,7 @@ import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
+import { useTranslation } from 'react-i18next'
 
 const errorMessage = (error: any) =>
   error?.response?.data?.detail || Object.values(error?.response?.data || {}).flat().join(' ') || 'Error processing request.'
@@ -12,6 +13,7 @@ const errorMessage = (error: any) =>
 export default function SellerCatalog() {
   const { storeId } = useParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const [store, setStore] = useState<any>(() => getCachedStore(storeId))
   const [categories, setCategories] = useState<any[]>([])
@@ -272,7 +274,7 @@ export default function SellerCatalog() {
   return (
     <div className="mx-auto min-h-screen w-full max-w-md bg-slate-50/90 pb-28 lg:max-w-none lg:w-full">
       {/* Header */}
-      <SellerHeader store={store} activeTabTitle="Category-Wise Product Catalog" onStoreUpdate={loadData} />
+      <SellerHeader store={store} activeTabTitle={t('storeProductCatalog')} onStoreUpdate={loadData} />
 
       <div className="space-y-6 p-4 sm:p-6">
         {/* Top Title & Stats Banner */}
@@ -280,13 +282,13 @@ export default function SellerCatalog() {
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-indigo-300 border border-indigo-400/30">
-                Catalog Management
+                {t('catalogManagement')}
               </span>
-              <span className="text-xs font-semibold text-indigo-200">{products.length} Total Items</span>
+              <span className="text-xs font-semibold text-indigo-200">{products.length} {t('totalItems')}</span>
             </div>
-            <h1 className="mt-2 text-xl font-extrabold text-white">Store Product Catalog</h1>
+            <h1 className="mt-2 text-xl font-extrabold text-white">{t('storeProductCatalog')}</h1>
             <p className="mt-0.5 text-xs text-indigo-200">
-              Products organized by category. Edit prices, manage inventory stock & upload photos.
+              {t('catalogSubtitle')}
             </p>
           </div>
 
@@ -302,25 +304,23 @@ export default function SellerCatalog() {
               title="Click to fetch live fresh catalog products"
             >
               <span className={`text-sm ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
-              <span>Refresh Catalog</span>
+              <span>{t('refreshCatalog')}</span>
             </button>
 
             <button
               onClick={() => setShowAddModal(true)}
               className="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700 transition-all cursor-pointer"
             >
-              + Add Product
+              {t('addProduct')}
             </button>
             <Link
               to={`/stores/${store.id}/manage`}
               className="rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-slate-200 hover:bg-slate-700 transition-all"
             >
-              ⚡ Bulk Import
+              {t('bulkImport')}
             </Link>
           </div>
         </div>
-
-
 
         {/* Search & Category Filter Controls */}
         <div className="flex flex-col sm:flex-row gap-3">
@@ -329,7 +329,7 @@ export default function SellerCatalog() {
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products by name or category..."
+              placeholder={t('searchCatalogPlaceholder')}
               className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs font-medium shadow-xs focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100"
             />
             {searchQuery && (
@@ -347,13 +347,13 @@ export default function SellerCatalog() {
             onChange={(e) => setSelectedCategoryFilter(e.target.value)}
             className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-xs focus:border-indigo-600 focus:outline-none"
           >
-            <option value="ALL">📁 All Categories ({categories.length})</option>
+            <option value="ALL">{t('allCategories')} ({categories.length})</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
-            <option value="UNCATEGORIZED">Uncategorized</option>
+            <option value="UNCATEGORIZED">{t('uncategorized')}</option>
           </select>
         </div>
 
@@ -361,7 +361,7 @@ export default function SellerCatalog() {
         {groupedProducts.length === 0 || filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-xs">
             <span className="text-4xl">🛍️</span>
-            <h3 className="mt-3 font-bold text-slate-800 text-sm">No products found</h3>
+            <h3 className="mt-3 font-bold text-slate-800 text-sm">{t('noProductsFound')}</h3>
             <p className="mt-1 text-xs text-slate-500">
               {searchQuery ? `No items matched "${searchQuery}"` : 'Add your first product to see it organized here.'}
             </p>
@@ -369,7 +369,7 @@ export default function SellerCatalog() {
               onClick={() => setShowAddModal(true)}
               className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700"
             >
-              + Add First Product
+              {t('addFirstProduct')}
             </button>
           </div>
         ) : (
@@ -385,7 +385,7 @@ export default function SellerCatalog() {
                       📁
                     </span>
                     <div>
-                      <h2 className="font-extrabold text-sm text-slate-900">{group.name}</h2>
+                      <h2 className="font-extrabold text-sm text-slate-900">{group.name === 'Uncategorized' ? t('uncategorized') : group.name}</h2>
                       <p className="text-[11px] text-slate-500 font-medium">{group.items.length} Product(s)</p>
                     </div>
                   </div>
@@ -453,7 +453,7 @@ export default function SellerCatalog() {
 
                               <div className="min-w-0 flex-1">
                                 <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 truncate max-w-full">
-                                  {group.name}
+                                  {group.name === 'Uncategorized' ? t('uncategorized') : group.name}
                                 </span>
                                 <h3 className="mt-0.5 text-sm font-extrabold text-slate-900 truncate leading-snug">{prod.name}</h3>
                                 <p className="mt-1 text-sm font-black text-indigo-600">₹{prod.price}</p>
@@ -464,8 +464,8 @@ export default function SellerCatalog() {
                             {allProdImages.length > 1 && (
                               <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-2 space-y-1">
                                 <p className="text-[10px] font-bold text-slate-500 flex items-center justify-between">
-                                  <span>🖼️ Product Gallery ({allProdImages.length} photos)</span>
-                                  <span className="text-indigo-600 font-extrabold">Click thumbnail to set as Card Main</span>
+                                  <span>🖼️ {t('productGallery')} ({allProdImages.length})</span>
+                                  <span className="text-indigo-600 font-extrabold">{t('clickThumbnailMain')}</span>
                                 </p>
                                 <div className="flex gap-1.5 overflow-x-auto py-1">
                                   {allProdImages.map((imgItem, idx) => (
@@ -505,12 +505,12 @@ export default function SellerCatalog() {
                                     : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 }`}
                               >
-                                {isOutOfStock ? '🔴 Out of Stock' : isLowStock ? `⚠️ Low Stock: ${prod.stock_quantity}` : `✓ Stock: ${prod.stock_quantity ?? 100}`}
+                                {isOutOfStock ? t('outOfStock') : isLowStock ? `${t('lowStock')}: ${prod.stock_quantity}` : `${t('stockCountLabel')}: ${prod.stock_quantity ?? 100}`}
                               </span>
 
                               {prod.digital_file && (
                                 <span className="rounded-full bg-purple-50 text-purple-700 px-2 py-0.5 border border-purple-200 text-[10px]">
-                                  📁 Digital File
+                                  {t('digitalFile')}
                                 </span>
                               )}
                             </div>
@@ -523,11 +523,11 @@ export default function SellerCatalog() {
                               onClick={() => openEditModal(prod)}
                               className="flex-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors"
                             >
-                              ✏️ Edit
+                              {t('editBtn')}
                             </button>
 
                             <label title="Add Multiple Photos to this Product" className="flex-1 text-center rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer">
-                              📷 Multi-Photos
+                              {t('multiPhotos')}
                               <input
                                 type="file"
                                 accept="image/*"
@@ -567,8 +567,8 @@ export default function SellerCatalog() {
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h3 className="font-bold text-base text-slate-900">Edit Product</h3>
-                <p className="text-xs text-slate-500">Update product details & choose main card photo</p>
+                <h3 className="font-bold text-base text-slate-900">{t('editProductTitle')}</h3>
+                <p className="text-xs text-slate-500">{t('editProductSubtitle')}</p>
               </div>
               <button
                 type="button"
@@ -581,7 +581,7 @@ export default function SellerCatalog() {
 
             <form onSubmit={handleSaveProductEdit} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700">Product Name</label>
+                <label className="text-xs font-bold text-slate-700">{t('productNameLabel')}</label>
                 <input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -592,7 +592,7 @@ export default function SellerCatalog() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700">Price (₹)</label>
+                  <label className="text-xs font-bold text-slate-700">{t('priceLabel')}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -603,7 +603,7 @@ export default function SellerCatalog() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700">Stock Quantity</label>
+                  <label className="text-xs font-bold text-slate-700">{t('stockQuantityLabel')}</label>
                   <input
                     type="number"
                     value={editStock}
@@ -615,13 +615,13 @@ export default function SellerCatalog() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700">Category</label>
+                <label className="text-xs font-bold text-slate-700">{t('categoryLabel')}</label>
                 <select
                   value={editCategory}
                   onChange={(e) => setEditCategory(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
                 >
-                  <option value="">No Category (Uncategorized)</option>
+                  <option value="">{t('noCategory')}</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -634,13 +634,13 @@ export default function SellerCatalog() {
               <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-extrabold text-slate-800">
-                    Product Image Gallery & Main Card Photo
+                    {t('productGallery')} & Main Card Photo
                   </label>
                   <span className="text-[10px] text-indigo-600 font-bold">
                     {(editingProduct?.images?.length || 0) + (editingProduct?.image ? 1 : 0)} Total
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500">Click ⭐ button on any photo to make it the Main Profile image shown on product card.</p>
+                <p className="text-[11px] text-slate-500">{t('clickThumbnailMain')}</p>
 
                 {/* Existing Gallery Images Grid with Primary Chooser */}
                 <div className="grid grid-cols-3 gap-2">
@@ -714,7 +714,7 @@ export default function SellerCatalog() {
                   disabled={isUpdatingProduct}
                   className="flex-1 rounded-xl border border-slate-200 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
@@ -730,7 +730,7 @@ export default function SellerCatalog() {
                       <span>Saving Changes...</span>
                     </>
                   ) : (
-                    <span>Save Changes</span>
+                    <span>{t('saveChanges')}</span>
                   )}
                 </button>
               </div>
@@ -745,8 +745,8 @@ export default function SellerCatalog() {
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h3 className="font-bold text-base text-slate-900">Add New Product</h3>
-                <p className="text-xs text-slate-500">Publish item with multi-photo gallery & choose card profile image</p>
+                <h3 className="font-bold text-base text-slate-900">{t('addNewProductTitle')}</h3>
+                <p className="text-xs text-slate-500">{t('addNewProductSubtitle')}</p>
               </div>
               <button
                 type="button"
@@ -759,7 +759,7 @@ export default function SellerCatalog() {
 
             <form onSubmit={handleAddSingleProduct} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700">Product Name</label>
+                <label className="text-xs font-bold text-slate-700">{t('productNameLabel')}</label>
                 <input
                   value={newProdName}
                   onChange={(e) => setNewProdName(e.target.value)}
@@ -771,7 +771,7 @@ export default function SellerCatalog() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700">Price (₹)</label>
+                  <label className="text-xs font-bold text-slate-700">{t('priceLabel')}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -782,7 +782,7 @@ export default function SellerCatalog() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700">Stock</label>
+                  <label className="text-xs font-bold text-slate-700">{t('stockQuantityLabel')}</label>
                   <input
                     type="number"
                     value={newProdStock}
@@ -794,13 +794,13 @@ export default function SellerCatalog() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700">Category</label>
+                <label className="text-xs font-bold text-slate-700">{t('categoryLabel')}</label>
                 <select
                   value={newProdCat}
                   onChange={(e) => setNewProdCat(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
                 >
-                  <option value="">No Category</option>
+                  <option value="">{t('noCategory')}</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -872,7 +872,7 @@ export default function SellerCatalog() {
                   disabled={isAddingProduct}
                   className="flex-1 rounded-xl border border-slate-200 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
@@ -888,7 +888,7 @@ export default function SellerCatalog() {
                       <span>Publishing Product...</span>
                     </>
                   ) : (
-                    <span>⚡ Publish Product</span>
+                    <span>{t('publishProduct')}</span>
                   )}
                 </button>
               </div>

@@ -6,8 +6,10 @@ import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
+import { useTranslation } from 'react-i18next'
 
 export default function SellerChat() {
+  const { t } = useTranslation()
   const { storeId } = useParams()
   const location = useLocation()
   const [store, setStore] = useState<any>(() => getCachedStore(storeId))
@@ -264,7 +266,7 @@ export default function SellerChat() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <h2 className="text-sm font-extrabold text-white">WhatsApp Inbox</h2>
+                  <h2 className="text-sm font-extrabold text-white">{t('waInbox')}</h2>
                   {totalUnreadCount > 0 && (
                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] px-1.5 shadow-md shadow-emerald-500/40 border border-emerald-400 animate-pulse">
                       {totalUnreadCount}
@@ -283,14 +285,14 @@ export default function SellerChat() {
                     title="Click to fetch live fresh chat conversations"
                   >
                     <span className={`text-xs ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
-                    <span className="hidden sm:inline">Refresh</span>
+                    <span className="hidden sm:inline">{t('refreshChat')}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowNewModal(true)}
                     className="rounded-xl bg-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition-all cursor-pointer"
                   >
-                    + New Chat
+                    {t('newChat')}
                   </button>
                 </div>
               </div>
@@ -302,7 +304,7 @@ export default function SellerChat() {
                   type="text"
                   value={searchConv}
                   onChange={(e) => setSearchConv(e.target.value)}
-                  placeholder="Search buyer name or phone..."
+                  placeholder={t('searchBuyerPlaceholder')}
                   className="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-1.5 pl-8 pr-3 text-xs font-medium text-white placeholder-slate-400 focus:outline-none focus:border-teal-400"
                 />
               </div>
@@ -314,10 +316,10 @@ export default function SellerChat() {
                 <div className="p-8 text-center text-slate-500 space-y-2">
                   <div className="text-3xl">💬</div>
                   <p className="text-xs font-bold text-slate-800">
-                    {searchConv ? 'No conversations match search' : 'No customer chats yet'}
+                    {searchConv ? t('noConvsFound') : t('noChatsYet')}
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    Messages from store customers will appear here in real-time.
+                    {t('realtimeMsgSubtext')}
                   </p>
                 </div>
               ) : (
@@ -516,7 +518,7 @@ export default function SellerChat() {
                     ref={chatInputRef}
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
-                    placeholder="Type your reply message..."
+                    placeholder={t('typeReplyPlaceholder')}
                     className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-medium text-slate-900 focus:border-slate-900 focus:outline-none shadow-2xs"
                   />
                   <button
@@ -531,9 +533,9 @@ export default function SellerChat() {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-8 bg-slate-50 text-center space-y-3">
                 <div className="text-4xl">💬</div>
-                <h3 className="text-sm font-extrabold text-slate-900">Select a Conversation</h3>
+                <h3 className="text-sm font-extrabold text-slate-900">{t('selectConvPrompt')}</h3>
                 <p className="text-xs text-slate-500 max-w-xs">
-                  Choose a customer conversation from the left vertical list to view and reply to messages.
+                  {t('selectConvSubtext')}
                 </p>
               </div>
             )}
@@ -547,7 +549,7 @@ export default function SellerChat() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h2 className="text-sm font-extrabold text-slate-900">Start New Customer Chat</h2>
+              <h2 className="text-sm font-extrabold text-slate-900">{t('startNewChatTitle')}</h2>
               <button
                 onClick={() => setShowNewModal(false)}
                 className="text-slate-400 text-sm font-bold hover:text-slate-700 cursor-pointer"
@@ -558,7 +560,7 @@ export default function SellerChat() {
 
             <form onSubmit={handleStartNewChat} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700">Customer Name</label>
+                <label className="text-xs font-bold text-slate-700">{t('customerName')}</label>
                 <input
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
@@ -568,7 +570,7 @@ export default function SellerChat() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700">Customer Phone Number</label>
+                <label className="text-xs font-bold text-slate-700">{t('customerPhone')}</label>
                 <input
                   value={newCustPhone}
                   onChange={(e) => setNewCustPhone(e.target.value)}
@@ -579,7 +581,7 @@ export default function SellerChat() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700">Initial Message (Optional)</label>
+                <label className="text-xs font-bold text-slate-700">{t('initialMessage')}</label>
                 <textarea
                   value={newCustMsg}
                   onChange={(e) => setNewCustMsg(e.target.value)}
@@ -594,13 +596,13 @@ export default function SellerChat() {
                   onClick={() => setShowNewModal(false)}
                   className="flex-1 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 rounded-xl bg-teal-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition-all cursor-pointer"
                 >
-                  Start Chat
+                  {t('startChatBtn')}
                 </button>
               </div>
             </form>

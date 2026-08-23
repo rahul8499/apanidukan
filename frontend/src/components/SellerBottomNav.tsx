@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { LayoutDashboard, ShoppingBag, MessageSquare, BarChart3 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface SellerBottomNavProps {
   storeId: string | number
@@ -8,6 +9,7 @@ interface SellerBottomNavProps {
 }
 
 export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavProps) {
+  const { t } = useTranslation()
   const [unreadCount, setUnreadCount] = React.useState<number>(0)
 
   React.useEffect(() => {
@@ -33,21 +35,21 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
     {
       key: 'dashboard',
       matchKeys: ['dashboard', 'products', 'inventory', 'manage', 'setup'],
-      label: 'Setup',
+      label: t('setup'),
       icon: LayoutDashboard,
       path: `/stores/${storeId}/manage`,
     },
     {
       key: 'orders',
       matchKeys: ['orders', 'requests'],
-      label: 'Orders',
+      label: t('orders'),
       icon: ShoppingBag,
       path: `/stores/${storeId}/orders`,
     },
     {
       key: 'chat',
       matchKeys: ['chat'],
-      label: 'Chat',
+      label: t('chat'),
       icon: MessageSquare,
       path: `/stores/${storeId}/chat`,
       badge: true,
@@ -55,7 +57,7 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
     {
       key: 'analytics',
       matchKeys: ['analytics', 'payments', 'coupons'],
-      label: 'Analytics',
+      label: t('analytics'),
       icon: BarChart3,
       path: `/stores/${storeId}/analytics`,
     },

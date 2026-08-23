@@ -9,6 +9,7 @@ import SellerBottomNav from '../components/SellerBottomNav'
 import api from '../services/api'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
+import { useTranslation } from 'react-i18next'
 
 const errorMessage = (error: any) =>
   error?.response?.data?.detail || Object.values(error?.response?.data || {}).flat().join(' ') || 'Please check the form and try again.'
@@ -33,6 +34,7 @@ function playNotificationChime() {
 }
 
 export default function StoreManager() {
+  const { t } = useTranslation()
   const { storeId } = useParams()
   const auth = useAuth()
   const navigate = useNavigate()
@@ -834,7 +836,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[8px] sm:text-[10px] font-black uppercase text-emerald-300 border border-emerald-400/40 tracking-wider shadow-xs">
-                ⚡ 1-SEC LAUNCHER
+                {t('expressLauncher')}
               </span>
               <span className="text-[9px] sm:text-xs font-extrabold text-amber-300">
                 1-Min Setup
@@ -843,14 +845,12 @@ Bluetooth Wireless Earbuds - 1299 - 15`
 
             {/* Mobile vs Desktop Title */}
             <h1 className="text-sm sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-200 tracking-tight leading-tight">
-              <span className="sm:hidden">1-Click Online Dukaan Ready! 🚀</span>
-              <span className="hidden sm:inline">Aapki Online Dukaan Express Setup Ready Hai! 🚀</span>
+              {t('expressSetupTitle')}
             </h1>
 
             {/* Mobile vs Desktop Sub-text */}
             <p className="text-[10px] sm:text-xs text-slate-300 font-medium max-w-xl leading-snug sm:leading-relaxed">
-              <span className="sm:hidden">1-Click mein products import karein aur instant orders lena shuru karein!</span>
-              <span className="hidden sm:inline">Bas 1-Click mein products & multi-images import karein, WhatsApp number connect karein aur instant customer link share karke order lena shuru karein!</span>
+              {t('expressSetupSubtext')}
             </p>
           </div>
 
@@ -865,10 +865,10 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                 }`}
             >
               <span className={`h-1.5 sm:h-2 w-1.5 sm:w-2 rounded-full ${store.is_published ? 'bg-emerald-400 animate-ping' : 'bg-white'}`} />
-              <span>{store.is_published ? '🟢 LIVE STORE' : '🚀 MAKE STORE LIVE'}</span>
+              <span>{store.is_published ? t('liveStore') : t('makeStoreLive')}</span>
             </button>
             <span className="text-[9px] sm:text-[11px] font-extrabold text-indigo-300">
-              ⚡ 1-Click Order Link Ready
+              {t('orderLinkReady')}
             </span>
           </div>
         </div>
@@ -882,8 +882,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
               01
             </span>
             <div>
-              <h2 className="text-xs sm:text-base font-black text-slate-900">WhatsApp & Storefront Link</h2>
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Order phone save karein aur store link share karein.</p>
+              <h2 className="text-xs sm:text-base font-black text-slate-900">{t('step1Title')}</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{t('step1Subtext')}</p>
             </div>
           </div>
           {store.is_published ? (
@@ -1010,17 +1010,17 @@ Bluetooth Wireless Earbuds - 1299 - 15`
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-slate-950 shadow-xs tracking-wider">
-                👑 KILLER FEATURE
+                {t('killerFeature')}
               </span>
               <span className="text-[10px] sm:text-xs font-extrabold text-amber-200/90 tracking-wide">
-                ⚡ 1-Sec Express Engine
+                {t('expressEngine')}
               </span>
             </div>
             <h2 className="mt-1 text-sm sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-200">
-              1-Click Multi-Product & CSV Super Import
+              {t('bulkImportTitle')}
             </h2>
             <p className="mt-0.5 text-[10px] sm:text-xs text-slate-300 font-medium leading-tight">
-              Bulk CSV upload, text list, ya direct grid se saare products & photos add karein!
+              {t('bulkImportSubtext')}
             </p>
           </div>
 
@@ -1035,7 +1035,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     : 'text-slate-300 hover:text-white'
                     }`}
                 >
-                  📝 Grid
+                  {t('gridMode')}
                 </button>
                 <button
                   type="button"
@@ -1045,7 +1045,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     : 'text-slate-300 hover:text-white'
                     }`}
                 >
-                  ✨ Text
+                  {t('textMode')}
                 </button>
                 <button
                   type="button"
@@ -1055,7 +1055,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                     : 'text-slate-300 hover:text-white'
                     }`}
                 >
-                  📁 CSV
+                  {t('csvMode')}
                 </button>
               </div>
             )}
@@ -1426,8 +1426,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
               02
             </span>
             <div>
-              <h2 className="text-xs sm:text-base font-black text-slate-900">Category Add Karein</h2>
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Customers ko products discover karne mein help karega.</p>
+              <h2 className="text-xs sm:text-base font-black text-slate-900">{t('step2Title')}</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{t('step2Subtext')}</p>
             </div>
           </div>
           <span className="rounded-full bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-xs font-bold text-slate-700 border border-slate-200">
@@ -1477,8 +1477,8 @@ Bluetooth Wireless Earbuds - 1299 - 15`
               03
             </span>
             <div>
-              <h2 className="text-xs sm:text-base font-black text-slate-900">Single Product Add Karein</h2>
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Price aur downloadable file set karke instantly publish karein.</p>
+              <h2 className="text-xs sm:text-base font-black text-slate-900">{t('step3Title')}</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{t('step3Subtext')}</p>
             </div>
           </div>
           <span className="rounded-full bg-emerald-50 px-2 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-xs font-bold text-emerald-700 border border-emerald-200">
@@ -1493,15 +1493,15 @@ Bluetooth Wireless Earbuds - 1299 - 15`
               <input value={productName} onChange={e => setProductName(e.target.value)} required placeholder="Product name" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Price (₹)</label>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('price')} (₹)</label>
               <input value={price} onChange={e => setPrice(e.target.value)} required min="0" type="number" step="0.01" placeholder="Price in INR" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Stock Quantity</label>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('stock')}</label>
               <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Stock Qty (default 100)" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Category</label>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('category')}</label>
               <select value={category} onChange={e => setCategory(e.target.value)} className="premium-input mt-0.5 p-2 text-xs"><option value="">No category</option>{categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
             </div>
           </div>
@@ -1586,13 +1586,13 @@ Bluetooth Wireless Earbuds - 1299 - 15`
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="rounded-full bg-teal-500/20 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30">
-                  Category Catalog
+                  {t('categoryCatalog')}
                 </span>
                 <span className="text-[10px] sm:text-xs font-bold text-indigo-200">{products.length} Products</span>
               </div>
-              <h3 className="mt-0.5 text-xs sm:text-base font-black text-white">Full Product Catalog</h3>
+              <h3 className="mt-0.5 text-xs sm:text-base font-black text-white">{t('categoryCatalog')}</h3>
               <p className="text-[10px] sm:text-xs text-indigo-200">
-                View all products organized by category. Edit prices & photos.
+                {t('viewAllProducts')}
               </p>
             </div>
 
@@ -1600,7 +1600,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
               to={`/stores/${store.id}/catalog`}
               className="inline-flex items-center justify-center gap-1.5 rounded-lg sm:rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition-all shrink-0 cursor-pointer"
             >
-              <span>📁 Open Category Catalog ({products.length})</span>
+              <span>{t('openCategoryCatalog')} ({products.length})</span>
               <span>➔</span>
             </Link>
           </div>

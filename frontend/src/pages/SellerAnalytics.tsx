@@ -11,8 +11,10 @@ import WhatsAppMarketingCrmModal from '../components/WhatsAppMarketingCrmModal'
 import SellerDeliveryConfigModal from '../components/SellerDeliveryConfigModal'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
+import { useTranslation } from 'react-i18next'
 
 export default function SellerAnalytics() {
+  const { t } = useTranslation()
   const { storeId } = useParams()
   const [store, setStore] = useState<any>(() => getCachedStore(storeId))
   const [analytics, setAnalytics] = useState<any>(null)
@@ -862,14 +864,14 @@ export default function SellerAnalytics() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-400"></span>
               </span>
               <h1 className="text-xs sm:text-lg font-black tracking-tight text-white truncate">
-                📊 Executive Sales Analytics
+                {t('executiveAnalytics')}
               </h1>
               <span className="hidden xs:inline-flex items-center rounded-full bg-teal-500/20 px-2 py-0.5 text-[9px] font-extrabold text-teal-300 border border-teal-500/40">
                 LIVE
               </span>
             </div>
             <p className="text-[10px] sm:text-xs text-teal-300/90 font-medium mt-0.5 truncate flex items-center gap-1">
-              <span>Real-time revenue & order insights for</span>
+              <span>{t('realtimeInsightsSubtext')}</span>
               <span className="font-bold text-white underline decoration-teal-400/50 underline-offset-2">{store.name}</span>
             </p>
           </div>
@@ -887,7 +889,7 @@ export default function SellerAnalytics() {
                       : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                   }`}
                 >
-                  {r === 'today' ? 'Today' : r === 'week' ? '7D' : r === 'month' ? '30D' : 'All'}
+                  {r === 'today' ? t('todayRange') : r === 'week' ? t('weekRange') : r === 'month' ? t('monthRange') : t('allRange')}
                 </button>
               ))}
             </div>
@@ -936,9 +938,9 @@ export default function SellerAnalytics() {
         <section className="space-y-1 sm:space-y-1.5">
           <div className="flex items-center justify-between px-0.5">
             <h2 className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1">
-              <span>📊 Sales & Orders Overview</span>
+              <span>📊 {t('salesOverview')}</span>
             </h2>
-            <span className="text-[8px] sm:text-[9px] font-bold text-slate-400">Range: {timeRange.toUpperCase()}</span>
+            <span className="text-[8px] sm:text-[9px] font-bold text-slate-400">{t('rangeLabel')}: {timeRange.toUpperCase()}</span>
           </div>
 
           <div className="grid grid-cols-5 sm:grid-cols-3 lg:grid-cols-5 gap-1 sm:gap-3">
@@ -949,7 +951,7 @@ export default function SellerAnalytics() {
               title="Click to view all orders"
             >
               <div className="flex items-center justify-between gap-0.5">
-                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-500 truncate">Gross Sales</span>
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-500 truncate">{t('grossSales')}</span>
                 <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-teal-50 text-teal-600 text-[7px] sm:text-xs font-bold">
                   💰
                 </span>
@@ -958,8 +960,8 @@ export default function SellerAnalytics() {
                 ₹{grossSales.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
               </p>
               <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-slate-100">
-                <span className="font-bold text-emerald-600 truncate">Valid ({validOrders.length})</span>
-                <span className="text-teal-600 font-extrabold group-hover:underline hidden sm:inline">Orders ➔</span>
+                <span className="font-bold text-emerald-600 truncate">{t('validOrders')} ({validOrders.length})</span>
+                <span className="text-teal-600 font-extrabold group-hover:underline hidden sm:inline">{t('ordersNav')}</span>
               </div>
             </div>
 
@@ -970,7 +972,7 @@ export default function SellerAnalytics() {
               title="Click to review new pending orders"
             >
               <div className="flex items-center justify-between gap-0.5">
-                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-amber-800 truncate">Pending</span>
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-amber-800 truncate">{t('pending')}</span>
                 <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-amber-100 text-amber-700 text-[7px] sm:text-xs font-bold animate-pulse">
                   ⏳
                 </span>
@@ -979,8 +981,8 @@ export default function SellerAnalytics() {
                 {pendingCount}
               </p>
               <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-amber-200/50">
-                <span className="font-extrabold text-amber-800 bg-amber-100 px-0.5 py-0.1 sm:px-1 sm:py-0.2 rounded text-[6.5px] sm:text-[10px] truncate">Action</span>
-                <span className="text-amber-700 font-extrabold group-hover:underline hidden sm:inline">Review ➔</span>
+                <span className="font-extrabold text-amber-800 bg-amber-100 px-0.5 py-0.1 sm:px-1 sm:py-0.2 rounded text-[6.5px] sm:text-[10px] truncate">{t('actionNeeded')}</span>
+                <span className="text-amber-700 font-extrabold group-hover:underline hidden sm:inline">{t('reviewNav')}</span>
               </div>
             </div>
 
@@ -991,7 +993,7 @@ export default function SellerAnalytics() {
               title="Click to open Product Request Queue"
             >
               <div className="flex items-center justify-between gap-0.5">
-                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-rose-800 truncate">Demand</span>
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-rose-800 truncate">{t('demand')}</span>
                 <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-rose-100 text-rose-600 text-[7px] sm:text-xs font-bold animate-pulse">
                   💡
                 </span>
@@ -1000,8 +1002,8 @@ export default function SellerAnalytics() {
                 {filteredProductRequests.length}
               </p>
               <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-rose-200/50">
-                <span className="font-extrabold text-rose-700 bg-rose-100 px-0.5 py-0.1 sm:px-1 sm:py-0.2 rounded text-[6.5px] sm:text-[10px] truncate">Unmet</span>
-                <span className="text-rose-600 font-extrabold group-hover:underline hidden sm:inline">Queue ➔</span>
+                <span className="font-extrabold text-rose-700 bg-rose-100 px-0.5 py-0.1 sm:px-1 sm:py-0.2 rounded text-[6.5px] sm:text-[10px] truncate">{t('unmet')}</span>
+                <span className="text-rose-600 font-extrabold group-hover:underline hidden sm:inline">{t('queueNav')}</span>
               </div>
             </div>
 
@@ -1012,7 +1014,7 @@ export default function SellerAnalytics() {
               title="Click to view delivered completed orders"
             >
               <div className="flex items-center justify-between gap-0.5">
-                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-indigo-800 truncate">Done</span>
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-indigo-800 truncate">{t('done')}</span>
                 <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-indigo-100 text-indigo-700 text-[7px] sm:text-xs font-bold">
                   ✅
                 </span>
@@ -1021,15 +1023,15 @@ export default function SellerAnalytics() {
                 {completedCount}
               </p>
               <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-indigo-200/50">
-                <span className="font-bold text-indigo-700 truncate">Delivered</span>
-                <span className="text-indigo-600 font-extrabold group-hover:underline hidden sm:inline">Orders ➔</span>
+                <span className="font-bold text-indigo-700 truncate">{t('delivered')}</span>
+                <span className="text-indigo-600 font-extrabold group-hover:underline hidden sm:inline">{t('ordersNav')}</span>
               </div>
             </div>
 
             {/* Average Order Value (AOV) */}
             <div className="rounded-md sm:rounded-2xl border border-slate-200/90 bg-white p-1 sm:p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between min-w-0">
               <div className="flex items-center justify-between gap-0.5">
-                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-500 truncate">Avg Order</span>
+                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-500 truncate">{t('avgOrder')}</span>
                 <span className="flex h-3 w-3 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xs sm:rounded-xl bg-purple-50 text-purple-600 text-[7px] sm:text-xs font-bold">
                   📊
                 </span>
@@ -1038,8 +1040,8 @@ export default function SellerAnalytics() {
                 ₹{avgOrderValue.toLocaleString('en-IN')}
               </p>
               <div className="mt-0.5 flex items-center justify-between text-[6.5px] sm:text-[11px] pt-0.5 border-t border-slate-100">
-                <span className="font-bold text-purple-700 truncate">Average</span>
-                <span className="text-slate-400 font-medium hidden sm:inline">Basket</span>
+                <span className="font-bold text-purple-700 truncate">{t('average')}</span>
+                <span className="text-slate-400 font-medium hidden sm:inline">{t('basket')}</span>
               </div>
             </div>
           </div>
@@ -1053,8 +1055,8 @@ export default function SellerAnalytics() {
                 📲
               </span>
               <div className="min-w-0">
-                <h2 className="text-[10px] sm:text-sm font-black text-white truncate">App Visitors & Store Conversion</h2>
-                <p className="text-[8px] sm:text-[10px] text-teal-300/90 font-medium truncate hidden sm:block">Live traffic & storefront views</p>
+                <h2 className="text-[10px] sm:text-sm font-black text-white truncate">{t('appVisitorsConversion')}</h2>
+                <p className="text-[8px] sm:text-[10px] text-teal-300/90 font-medium truncate hidden sm:block">{t('liveTrafficSubtext')}</p>
               </div>
             </div>
             <span className="rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 px-1 py-0.1 sm:px-1.5 sm:py-0.2 text-[7px] sm:text-[9px] font-black uppercase tracking-wider shrink-0">
@@ -1065,32 +1067,32 @@ export default function SellerAnalytics() {
           <div className="grid grid-cols-4 sm:grid-cols-4 gap-1 sm:gap-3">
             {/* Total Storefront Visitors */}
             <div className="rounded-md sm:rounded-xl bg-slate-900/90 p-1 sm:p-3 border border-slate-800/90 space-y-0.5 min-w-0">
-              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">👀 Visitors</p>
+              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">👀 {t('visitors')}</p>
               <p className="text-[10px] sm:text-2xl font-black text-white leading-none truncate">{visits.toLocaleString()}</p>
-              <p className="text-[6.5px] sm:text-[10px] text-teal-400 font-extrabold truncate">Visits</p>
+              <p className="text-[6.5px] sm:text-[10px] text-teal-400 font-extrabold truncate">{t('visits')}</p>
             </div>
 
             {/* Total Product Views */}
             <div className="rounded-md sm:rounded-xl bg-slate-900/90 p-1 sm:p-3 border border-slate-800/90 space-y-0.5 min-w-0">
-              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">🛍️ Views</p>
+              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">🛍️ {t('views')}</p>
               <p className="text-[10px] sm:text-2xl font-black text-indigo-300 leading-none truncate">{productViews.toLocaleString()}</p>
-              <p className="text-[6.5px] sm:text-[10px] text-indigo-400 font-extrabold truncate">Clicks</p>
+              <p className="text-[6.5px] sm:text-[10px] text-indigo-400 font-extrabold truncate">{t('clicks')}</p>
             </div>
 
             {/* Total Unique Buyers */}
             <div className="rounded-md sm:rounded-xl bg-slate-900/90 p-1 sm:p-3 border border-slate-800/90 space-y-0.5 min-w-0">
-              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">👥 Buyers</p>
+              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">👥 {t('buyers')}</p>
               <p className="text-[10px] sm:text-2xl font-black text-emerald-400 leading-none truncate">{customerStats.totalUnique.toLocaleString()}</p>
-              <p className="text-[6.5px] sm:text-[10px] text-emerald-400 font-extrabold truncate">Buyers</p>
+              <p className="text-[6.5px] sm:text-[10px] text-emerald-400 font-extrabold truncate">{t('buyers')}</p>
             </div>
 
             {/* Store Conversion Rate */}
             <div className="rounded-md sm:rounded-xl bg-slate-900/90 p-1 sm:p-3 border border-slate-800/90 space-y-0.5 min-w-0">
-              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">📈 Conversion</p>
+              <p className="text-[7px] sm:text-[10px] font-black uppercase tracking-tight text-slate-400 truncate">📈 {t('conversion')}</p>
               <p className="text-[10px] sm:text-2xl font-black text-amber-400 leading-none truncate">
                 {visits > 0 ? ((validOrders.length / visits) * 100).toFixed(1) : '0.0'}%
               </p>
-              <p className="text-[6.5px] sm:text-[10px] text-amber-400 font-extrabold truncate">Orders</p>
+              <p className="text-[6.5px] sm:text-[10px] text-amber-400 font-extrabold truncate">{t('orders')}</p>
             </div>
           </div>
         </section>
@@ -1100,14 +1102,14 @@ export default function SellerAnalytics() {
           {/* Payment Method Distribution */}
           <div className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
             <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-              <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700">💵 Payment Methods</h3>
-              <span className="text-[9px] font-bold text-slate-400">COD vs Prepaid</span>
+              <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700">💵 {t('paymentMethods')}</h3>
+              <span className="text-[9px] font-bold text-slate-400">{t('codVsPrepaid')}</span>
             </div>
 
             <div className="space-y-2">
               <div>
                 <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-800 mb-0.5">
-                  <span>Cash on Delivery (COD)</span>
+                  <span>{t('cashOnDelivery')}</span>
                   <span>{paymentBreakdown.codCount} ({paymentBreakdown.codPercent}%)</span>
                 </div>
                 <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -1117,7 +1119,7 @@ export default function SellerAnalytics() {
 
               <div>
                 <div className="flex justify-between text-[11px] sm:text-xs font-bold text-slate-800 mb-0.5">
-                  <span>Online / Prepaid</span>
+                  <span>{t('onlinePrepaid')}</span>
                   <span>{paymentBreakdown.onlineCount} ({paymentBreakdown.onlinePercent}%)</span>
                 </div>
                 <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -1131,9 +1133,9 @@ export default function SellerAnalytics() {
           <div className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
             <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
               <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1">
-                <span>📦 Inventory Status</span>
+                <span>📦 {t('inventoryStatus')}</span>
               </h3>
-              <span className="text-[9px] font-bold text-slate-400">Stock monitor</span>
+              <span className="text-[9px] font-bold text-slate-400">{t('stockMonitor')}</span>
             </div>
 
             {(outOfStockItems.length > 0 || lowStockItems.length > 0) ? (
@@ -1172,7 +1174,7 @@ export default function SellerAnalytics() {
               </div>
             ) : (
               <div className="py-3 text-center text-xs font-bold text-emerald-700 bg-emerald-50 rounded-lg border border-emerald-200">
-                ✅ All products are well-stocked!
+                ✅ {t('wellStocked')}
               </div>
             )}
           </div>
@@ -1187,10 +1189,10 @@ export default function SellerAnalytics() {
               </span>
               <div className="min-w-0">
                 <h2 className="text-[10px] sm:text-sm font-black text-slate-900 truncate">
-                  Customer Loyalty & Leaderboard
+                  {t('customerLoyalty')}
                 </h2>
                 <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium truncate hidden sm:block">
-                  Repeat purchase rates & top buyer spend
+                  {t('repeatRatesSubtext')}
                 </p>
               </div>
             </div>
@@ -1211,25 +1213,25 @@ export default function SellerAnalytics() {
           <div className="grid grid-cols-4 sm:grid-cols-4 gap-1 sm:gap-3">
             {/* Total Unique Customers */}
             <div className="rounded-md sm:rounded-xl bg-white p-1 sm:p-2.5 border border-slate-200/90 shadow-2xs space-y-0.5 min-w-0">
-              <span className="text-[7px] sm:text-[10px] font-black uppercase text-slate-400 truncate block">Total Buyers</span>
+              <span className="text-[7px] sm:text-[10px] font-black uppercase text-slate-400 truncate block">{t('totalBuyers')}</span>
               <p className="text-[10px] sm:text-xl font-black text-slate-900 leading-none truncate">
                 {customerStats.totalUnique.toLocaleString()}
               </p>
-              <p className="text-[6.5px] sm:text-[10px] font-bold text-blue-600 truncate">Contacts</p>
+              <p className="text-[6.5px] sm:text-[10px] font-bold text-blue-600 truncate">{t('contacts')}</p>
             </div>
 
             {/* New First-Time Customers */}
             <div className="rounded-md sm:rounded-xl bg-white p-1 sm:p-2.5 border border-slate-200/90 shadow-2xs space-y-0.5 min-w-0">
-              <span className="text-[7px] sm:text-[10px] font-black uppercase text-slate-400 truncate block">New Buyers</span>
+              <span className="text-[7px] sm:text-[10px] font-black uppercase text-slate-400 truncate block">{t('newBuyers')}</span>
               <p className="text-[10px] sm:text-xl font-black text-emerald-600 leading-none truncate">
                 {customerStats.newCustomers.toLocaleString()}
               </p>
-              <p className="text-[6.5px] sm:text-[10px] font-bold text-emerald-700 truncate">1st-time</p>
+              <p className="text-[6.5px] sm:text-[10px] font-bold text-emerald-700 truncate">{t('firstTime')}</p>
             </div>
 
             {/* Repeat Customers (>1 Order) */}
             <div className="rounded-md sm:rounded-xl bg-white p-1 sm:p-2.5 border border-indigo-200 shadow-2xs space-y-0.5 min-w-0">
-              <span className="text-[7px] sm:text-[10px] font-black uppercase text-indigo-700 truncate block">Repeat</span>
+              <span className="text-[7px] sm:text-[10px] font-black uppercase text-indigo-700 truncate block">{t('repeat')}</span>
               <p className="text-[10px] sm:text-xl font-black text-indigo-600 leading-none truncate">
                 {customerStats.repeatCustomers.toLocaleString()}
               </p>
@@ -1238,18 +1240,18 @@ export default function SellerAnalytics() {
 
             {/* Repeat Customer Retention Rate */}
             <div className="rounded-md sm:rounded-xl bg-white p-1 sm:p-2.5 border border-amber-200 shadow-2xs space-y-0.5 min-w-0">
-              <span className="text-[7px] sm:text-[10px] font-black uppercase text-amber-800 truncate block">Repeat Rate</span>
+              <span className="text-[7px] sm:text-[10px] font-black uppercase text-amber-800 truncate block">{t('repeatRate')}</span>
               <p className="text-[10px] sm:text-xl font-black text-amber-600 leading-none truncate">
                 {customerStats.repeatRate}%
               </p>
-              <p className="text-[6.5px] sm:text-[10px] font-bold text-amber-700 truncate">Retention</p>
+              <p className="text-[6.5px] sm:text-[10px] font-bold text-amber-700 truncate">{t('retention')}</p>
             </div>
           </div>
 
           {/* TOP LOYAL CUSTOMERS LEADERBOARD TABLE */}
           <div className="space-y-1.5 pt-1">
             <h3 className="text-[10px] sm:text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1">
-              <span>🏆 Top Buyers ({customerStats.topCustomersList.length})</span>
+              <span>🏆 {t('topBuyers')} ({customerStats.topCustomersList.length})</span>
             </h3>
 
             {customerStats.topCustomersList.length === 0 ? (
@@ -1303,7 +1305,7 @@ export default function SellerAnalytics() {
                             ₹{Number(c.totalSpent || 0).toFixed(0)}
                           </p>
                           <p className="text-[7.5px] sm:text-[8px] font-semibold text-slate-400 leading-tight">
-                            {c.ordersCount} orders
+                            {c.ordersCount} {t('ordersCountLabel')}
                           </p>
                         </div>
 
@@ -1333,7 +1335,7 @@ export default function SellerAnalytics() {
           <div className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
             <div className="flex items-center justify-between border-b border-indigo-100 pb-1.5">
               <h3 className="text-[11px] sm:text-xs font-black text-slate-900 flex items-center gap-1">
-                <span>🏷️ Coupon Performance</span>
+                <span>🏷️ {t('couponPerformance')}</span>
               </h3>
               <Link to={`/stores/${store.id}/coupons`} className="text-[10px] font-bold text-indigo-600 hover:underline">
                 Manage ➔
@@ -1342,15 +1344,15 @@ export default function SellerAnalytics() {
 
             <div className="grid grid-cols-3 gap-1.5">
               <div className="rounded-lg bg-slate-50 p-2 border border-slate-100 text-center">
-                <p className="text-[8px] font-black uppercase text-slate-400">Active</p>
+                <p className="text-[8px] font-black uppercase text-slate-400">{t('published')}</p>
                 <p className="text-xs sm:text-sm font-black text-slate-900">{coupons.filter(c => c.is_active).length}</p>
               </div>
               <div className="rounded-lg bg-slate-50 p-2 border border-slate-100 text-center">
-                <p className="text-[8px] font-black uppercase text-slate-400">Applied</p>
+                <p className="text-[8px] font-black uppercase text-slate-400">{t('applied')}</p>
                 <p className="text-xs sm:text-sm font-black text-indigo-600">{totalCouponRedemptions}</p>
               </div>
               <div className="rounded-lg bg-slate-50 p-2 border border-slate-100 text-center">
-                <p className="text-[8px] font-black uppercase text-slate-400">Savings</p>
+                <p className="text-[8px] font-black uppercase text-slate-400">{t('savings')}</p>
                 <p className="text-xs sm:text-sm font-black text-emerald-600">₹{totalCouponDiscountGiven.toFixed(0)}</p>
               </div>
             </div>
@@ -1359,19 +1361,19 @@ export default function SellerAnalytics() {
           {/* Top Searches */}
           <div className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
             <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-              <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700">🔍 Top Buyer Searches</h3>
-              <span className="text-[9px] font-bold text-slate-400">{searches.length} terms</span>
+              <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700">🔍 {t('topBuyerSearches')}</h3>
+              <span className="text-[9px] font-bold text-slate-400">{searches.length} {t('searchesCount')}</span>
             </div>
 
             <div className="space-y-1 max-h-28 overflow-y-auto">
               {searches.length === 0 ? (
-                <p className="text-center text-xs text-slate-400 py-2">No searches yet.</p>
+                <p className="text-center text-xs text-slate-400 py-2">{t('noSearchesYet')}</p>
               ) : (
                 searches.map((s: any, idx: number) => (
                   <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-50 p-1.5 text-xs">
                     <span className="font-bold text-slate-800 text-[11px]">"{s.query_term}"</span>
                     <span className="rounded bg-teal-50 px-1.5 py-0.2 text-[9px] font-extrabold text-teal-700">
-                      {s.search_count} searches
+                      {s.search_count} {t('searchesCount')}
                     </span>
                   </div>
                 ))
@@ -1388,22 +1390,22 @@ export default function SellerAnalytics() {
                 💡
               </span>
               <div className="min-w-0">
-                <h2 className="text-xs sm:text-sm font-black text-slate-900 truncate">Customer Product Requests (Unmet Demand)</h2>
-                <p className="text-[9px] sm:text-[10px] text-rose-700/90 font-medium truncate">Customers who requested products not found in store</p>
+                <h2 className="text-xs sm:text-sm font-black text-slate-900 truncate">{t('unmetDemandTitle')}</h2>
+                <p className="text-[9px] sm:text-[10px] text-rose-700/90 font-medium truncate">{t('unmetDemandSubtext')}</p>
               </div>
             </div>
             <Link
               to={`/stores/${store.id}/requests`}
               className="text-[10px] sm:text-xs font-black text-rose-700 hover:underline shrink-0"
             >
-              Manage Queue ➔
+              {t('manageQueue')}
             </Link>
           </div>
 
           <div className="space-y-1.5">
             {productRequests.length === 0 ? (
               <div className="rounded-lg border border-dashed border-rose-200 bg-rose-50/50 p-3 text-center text-xs text-rose-700/80 font-medium">
-                No active product requests right now. When customers request products on your store, they will appear here.
+                {t('noRequestsYet')}
               </div>
             ) : (
               productRequests.slice(0, 5).map((request: any) => (
@@ -1417,7 +1419,7 @@ export default function SellerAnalytics() {
                         {request.productName}
                       </span>
                       <span className="rounded bg-rose-50 border border-rose-200 text-rose-700 px-1 text-[8px] font-black uppercase">
-                        Demand
+                        {t('demand')}
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-500 font-medium mt-0.5">
@@ -1439,7 +1441,7 @@ export default function SellerAnalytics() {
                       rel="noreferrer"
                       className="inline-flex items-center justify-center gap-1 rounded-lg bg-[#25D366] px-2.5 py-1 text-[10px] font-bold text-white shadow-2xs hover:bg-emerald-600 transition-all shrink-0 cursor-pointer self-start sm:self-auto"
                     >
-                      <span>💬 Reply WhatsApp</span>
+                      <span>💬 {t('replyWhatsApp')}</span>
                     </a>
                   )}
                 </div>
@@ -1451,7 +1453,7 @@ export default function SellerAnalytics() {
         {/* SECTION 7: 🔥 TOP VIEWED PRODUCTS */}
         <section className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-2xs space-y-2">
           <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-            <h2 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700">🔥 Top Viewed Products</h2>
+            <h2 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700">🔥 {t('topViewedProducts')}</h2>
             <span className="text-[9px] font-bold text-slate-400">{topProducts.length} items</span>
           </div>
 

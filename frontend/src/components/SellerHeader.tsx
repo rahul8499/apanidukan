@@ -13,10 +13,13 @@ import SellerDeliveryConfigModal from './SellerDeliveryConfigModal'
 import SellerThemeCustomizerModal from './SellerThemeCustomizerModal'
 import SellerCustomDomainModal from './SellerCustomDomainModal'
 import SellerDeactivateModal from './SellerDeactivateModal'
+import LanguageSwitcherModal from './LanguageSwitcherModal'
 import { ScratchCardConfig } from './CustomerScratchCardModal'
 import InstallAppButton from '../pwa/InstallAppButton'
 import { setupSellerStorePwa } from '../pwa/pwaManager'
+import { useTranslation } from 'react-i18next'
 import {
+  Globe,
   Store,
   Settings,
   ExternalLink,
@@ -52,7 +55,6 @@ import {
   Gift,
   Truck,
   Palette,
-  Globe,
   Lock
 } from 'lucide-react'
 
@@ -63,6 +65,7 @@ interface SellerHeaderProps {
 }
 
 export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: SellerHeaderProps) {
+  const { t } = useTranslation()
   const auth = useAuth()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
@@ -99,6 +102,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
   const [showThemeModal, setShowThemeModal] = useState(false)
   const [showCustomDomainModal, setShowCustomDomainModal] = useState(false)
+  const [isLangModalOpen, setIsLangModalOpen] = useState(false)
   const [storeName, setStoreName] = useState(store?.name || '')
   const [storeDescription, setStoreDescription] = useState(store?.description || '')
   const [storeAddress, setStoreAddress] = useState(store?.address || '')
@@ -639,13 +643,11 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <Lock className="h-4 w-4 text-slate-400" />
           </button>
 
-
-
           {/* ⚡ SECTION 1: FAST NAVIGATION SUITE */}
           <div className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5 shadow-xs">
             <p className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 px-1 flex items-center gap-1.5">
               <FolderKanban className="h-3.5 w-3.5 text-indigo-600" />
-              <span>Workspace Modules</span>
+              <span>{t('workspaceModules')}</span>
             </p>
 
             <div className="grid grid-cols-2 gap-1.5">
@@ -657,7 +659,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100/70 text-indigo-700 font-bold text-xs shrink-0">
                   🛍️
                 </div>
-                <span className="truncate">Orders</span>
+                <span className="truncate">{t('orders')}</span>
               </Link>
 
               <Link
@@ -668,7 +670,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100/70 text-emerald-700 font-bold text-xs shrink-0">
                   📦
                 </div>
-                <span className="truncate">Catalog</span>
+                <span className="truncate">{t('products')}</span>
               </Link>
 
               <Link
@@ -679,7 +681,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100/70 text-amber-700 font-bold text-xs shrink-0">
                   💡
                 </div>
-                <span className="truncate">Requests</span>
+                <span className="truncate">{t('demand')}</span>
               </Link>
 
               <Link
@@ -690,7 +692,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100/70 text-rose-700 font-bold text-xs shrink-0">
                   🏷️
                 </div>
-                <span className="truncate">Coupons</span>
+                <span className="truncate">{t('couponPerformance')}</span>
               </Link>
             </div>
           </div>
@@ -702,10 +704,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <span className="flex h-6 w-6 items-center justify-center rounded-lg  text-slate-950 font-black text-xs shadow-xs">
                   👑
                 </span>
-                <span className="font-black text-xs text-amber-300 tracking-wide uppercase">PRO ENTERPRISE</span>
+                <span className="font-black text-xs text-amber-300 tracking-wide uppercase">{t('proEnterprise')}</span>
               </div>
               <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                VIP SUITE
+                {t('vipSuite')}
               </span>
             </div>
 
@@ -718,12 +720,12 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-black text-white truncate">Hindi Voice Soundbox 🔊</p>
+                      <p className="text-xs font-black text-white truncate">{t('hindiVoiceSoundbox')}</p>
                       <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
                         <Crown className="h-2 w-2" /> PRO
                       </span>
                     </div>
-                    <p className="text-[10px] text-amber-200/90 font-medium truncate">Speaks live orders & requests</p>
+                    <p className="text-[10px] text-amber-200/90 font-medium truncate">{t('speaksLiveOrders')}</p>
                   </div>
                 </div>
 
@@ -753,7 +755,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               >
                 <span className="flex items-center gap-2.5">
                   <Palette className="h-4 w-4 text-amber-400 shrink-0" />
-                  <span className="font-extrabold text-white">🎨 Store Niche Theme Customizer</span>
+                  <span className="font-extrabold text-white">{t('storeThemeCustomizer')}</span>
                 </span>
                 <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
                   <Crown className="h-2.5 w-2.5" /> PRO
@@ -771,7 +773,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               >
                 <span className="flex items-center gap-2.5">
                   <ImageIcon className="h-4 w-4 text-purple-400 shrink-0" />
-                  <span>🎨 AI WhatsApp Poster Generator</span>
+                  <span>{t('aiPosterGenerator')}</span>
                 </span>
                 <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xs flex items-center gap-0.5 shrink-0">
                   <Crown className="h-2.5 w-2.5" /> PRO
@@ -787,7 +789,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               >
                 <span className="flex items-center gap-2.5">
                   <Sparkles className="h-4 w-4 text-slate-500 shrink-0" />
-                  <span>🤖 AI Sales Copilot & Insights</span>
+                  <span>{t('aiSalesCopilot')}</span>
                 </span>
                 <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-slate-700 flex items-center gap-1 shrink-0">
                   <Lock className="h-2.5 w-2.5 text-amber-400" /> Locked
@@ -803,7 +805,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               >
                 <div className="flex items-center gap-2.5">
                   <Globe className="h-4 w-4 text-slate-500 shrink-0" />
-                  <span>🌐 Custom Domain & Brand Mapping</span>
+                  <span>{t('customDomainBrand')}</span>
                 </div>
                 <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-slate-700 flex items-center gap-1 shrink-0">
                   <Lock className="h-2.5 w-2.5 text-amber-400" /> Locked
@@ -817,7 +819,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Store Profile</span>
+                <span className="font-extrabold text-xs text-slate-900">{t('storeProfile')}</span>
               </div>
               <button
                 type="button"
@@ -825,7 +827,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 className="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
               >
                 <Edit3 className="h-3 w-3" />
-                <span>{isProfileEditing ? 'Cancel' : 'Edit'}</span>
+                <span>{isProfileEditing ? t('cancel') : t('edit')}</span>
               </button>
             </div>
 
@@ -844,13 +846,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     </label>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-800">Store Logo</p>
-                    <p className="text-[10px] text-slate-500">Tap icon to change</p>
+                    <p className="text-xs font-bold text-slate-800">{t('storeLogo')}</p>
+                    <p className="text-[10px] text-slate-500">{t('tapIconToChange')}</p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-700">Store Name:</label>
+                  <label className="text-[10px] font-bold text-slate-700">{t('storeNameLabel')}</label>
                   <input
                     type="text"
                     value={storeName}
@@ -861,7 +863,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-700">WhatsApp Phone Number:</label>
+                  <label className="text-[10px] font-bold text-slate-700">{t('orderPhoneLabel')}</label>
                   <input
                     type="text"
                     value={phoneNumber}
@@ -877,17 +879,17 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   className="w-full rounded-xl bg-indigo-600 py-2 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1"
                 >
                   <Check className="h-3.5 w-3.5" />
-                  <span>{isSavingProfile ? 'Saving...' : 'Save Profile'}</span>
+                  <span>{isSavingProfile ? t('saving') : t('save')}</span>
                 </button>
               </form>
             ) : (
               <div className="space-y-1.5 text-xs font-medium text-slate-700">
                 <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-500 font-bold">Store Name:</span>
+                  <span className="text-[10px] text-slate-500 font-bold">{t('storeNameLabel')}</span>
                   <span className="font-extrabold text-slate-900">{store.name}</span>
                 </div>
                 <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-500 font-bold">Order Phone:</span>
+                  <span className="text-[10px] text-slate-500 font-bold">{t('orderPhoneLabel')}</span>
                   <span className="font-mono font-bold text-slate-900">{store.whatsapp_phone || store.phone_number || 'Not set'}</span>
                 </div>
               </div>
@@ -895,19 +897,19 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           <div className="rounded-2xl border border-red-200 bg-red-50 p-3.5">
-            <p className="text-xs font-black text-red-800">Danger zone</p>
-            <p className="mt-1 text-[11px] text-red-700">Deactivate only after all customer orders are delivered, cancelled, or refunded.</p>
-            <button type="button" disabled={isDeactivating} onClick={() => { setDeactivateError(null); setShowDeactivateModal(true); }} className="mt-3 w-full rounded-xl border border-red-300 bg-white py-2 text-xs font-black text-red-700 hover:bg-red-100 disabled:opacity-50">{isDeactivating ? 'Deactivating...' : 'Deactivate account'}</button>
+            <p className="text-xs font-black text-red-800">{t('dangerZone')}</p>
+            <p className="mt-1 text-[11px] text-red-700">{t('deactivateSubtext')}</p>
+            <button type="button" disabled={isDeactivating} onClick={() => { setDeactivateError(null); setShowDeactivateModal(true); }} className="mt-3 w-full rounded-xl border border-red-300 bg-white py-2 text-xs font-black text-red-700 hover:bg-red-100 disabled:opacity-50">{isDeactivating ? 'Deactivating...' : t('deactivateAccount')}</button>
           </div>
 
           {/* SECTION 1.5: 🚚 Fulfillment & Delivery Modes Controls */}
           <div className="rounded-xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3 space-y-2.5 shadow-2xs">
             <div className="flex items-center justify-between border-b border-indigo-100/80 pb-1.5">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-wider text-indigo-600">Checkout Fulfillment</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-indigo-600">{t('checkoutFulfillment')}</p>
                 <h4 className="text-[11px] font-black text-slate-900 flex items-center gap-1 mt-0.5">
                   <Truck className="h-3 w-3 text-indigo-600" />
-                  <span>Order Fulfillment Modes</span>
+                  <span>{t('orderFulfillmentModes')}</span>
                 </h4>
               </div>
               <div className="flex items-center gap-1.5">
@@ -920,13 +922,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-600 text-white text-[9px] font-black hover:bg-indigo-700 transition-all cursor-pointer shadow-xs"
                 >
                   <SlidersHorizontal className="h-2.5 w-2.5" />
-                  <span>Configure Rules</span>
+                  <span>{t('configureRules')}</span>
                 </button>
               </div>
             </div>
 
             <p className="text-[9px] text-slate-600 font-medium leading-tight">
-              Control order options and delivery pricing shown to customers:
+              {t('controlOrderOptions')}
             </p>
 
             <div className="space-y-2">
@@ -943,13 +945,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-black text-slate-900">Home Delivery</span>
+                        <span className="text-[11px] font-black text-slate-900">{t('homeDelivery')}</span>
                         <span className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full ${allowHomeDelivery ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'
                           }`}>
                           {allowHomeDelivery ? 'ON' : 'OFF'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-slate-500 font-medium block">Deliver order to customer home</span>
+                      <span className="text-[9px] text-slate-500 font-medium block">{t('deliverToHome')}</span>
                     </div>
                   </div>
 
@@ -960,7 +962,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                       title="Edit Delivery Pricing & Radius"
                       className="text-[9px] font-black text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-lg transition-all"
                     >
-                      ⚙️ Edit Rates
+                      {t('editRates')}
                     </button>
                     <button
                       type="button"
@@ -1027,13 +1029,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-black text-slate-900">Walk-in / Store Pickup</span>
+                        <span className="text-[11px] font-black text-slate-900">{t('walkInStorePickup')}</span>
                         <span className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full ${allowStorePickup ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'
                           }`}>
                           {allowStorePickup ? 'ON' : 'OFF'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-slate-500 font-medium block">Customer collects at shop</span>
+                      <span className="text-[9px] text-slate-500 font-medium block">{t('customerCollects')}</span>
                     </div>
                   </div>
 
@@ -1063,10 +1065,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5 shadow-2xs">
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1">
               <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
-              <span>Seller Navigation & Marketing Tools</span>
+              <span>{t('sellerNavMarketing')}</span>
             </p>
-
-
 
             <Link
               to={`/stores/${store.id}/catalog`}
@@ -1075,7 +1075,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             >
               <span className="flex items-center gap-3">
                 <FolderKanban className="h-4.5 w-4.5 text-indigo-600" />
-                <span>Product Catalog & Inventory</span>
+                <span>{t('productCatalogInventory')}</span>
               </span>
               <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
@@ -1087,19 +1087,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             >
               <span className="flex items-center gap-3">
                 <Inbox className="h-4.5 w-4.5 text-indigo-600" />
-                <span>Product Requests Queue</span>
-              </span>
-              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </Link>
-
-            <Link
-              to={`/stores/${store.id}/payments`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
-            >
-              <span className="flex items-center gap-3">
-                <CreditCard className="h-4.5 w-4.5 text-indigo-600" />
-                <span>Payments Gateway Integration</span>
+                <span>{t('productRequestsQueue')}</span>
               </span>
               <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
@@ -1111,7 +1099,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             >
               <span className="flex items-center gap-3">
                 <Tag className="h-4.5 w-4.5 text-emerald-600" />
-                <span>Coupons & Offers Management</span>
+                <span>{t('couponsOffersManagement')}</span>
               </span>
               <span className="text-slate-400 group-hover:text-emerald-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
@@ -1124,9 +1112,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <div>
                   <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
                     <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-600" />
-                    <span>Manage in App Mode</span>
+                    <span>{t('manageAppMode')}</span>
                   </h3>
-                  <p className="text-[10px] text-slate-500 font-medium">Order processing system mode</p>
+                  <p className="text-[10px] text-slate-500 font-medium">{t('orderProcessingMode')}</p>
                 </div>
                 <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black ${store.manage_in_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'
                   }`}>
@@ -1144,7 +1132,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                     }`}
                 >
-                  <span>🟢 App System</span>
+                  <span>{t('appSystemOn')}</span>
                 </button>
 
                 <button
@@ -1155,19 +1143,19 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                     }`}
                 >
-                  <span>⚪ WhatsApp Direct</span>
+                  <span>{t('waDirect')}</span>
                 </button>
               </div>
 
               <p className="text-[10.5px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-snug font-medium">
                 {store.manage_in_app
-                  ? '🟢 Orders process inside store system with live status tracking & voice alerts.'
+                  ? t('appSystemDesc')
                   : '⚪ Customers order directly via WhatsApp messages.'}
               </p>
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
-              <span className="text-xs font-bold text-slate-900">Store Visibility:</span>
+              <span className="text-xs font-bold text-slate-900">{t('storeVisibility')}</span>
               <button
                 type="button"
                 onClick={handleLiveToggleClick}
@@ -1179,12 +1167,12 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 {store.is_published ? (
                   <>
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                    <span>● LIVE (Click to Draft)</span>
+                    <span>{t('liveClickToDraft')}</span>
                   </>
                 ) : (
                   <>
                     <Zap className="h-3.5 w-3.5 text-white" />
-                    <span>🚀 MAKE STORE LIVE</span>
+                    <span>{t('makeStoreLive')}</span>
                   </>
                 )}
               </button>
@@ -1196,7 +1184,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Real-Time Push Alerts</span>
+                <span className="font-extrabold text-xs text-slate-900">{t('realtimePushAlerts')}</span>
               </div>
               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
                 }`}>
@@ -1207,7 +1195,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-100 gap-2">
               <p className="text-[10.5px] text-slate-600 font-medium leading-snug">
                 {notificationPermission === 'granted'
-                  ? 'Instant alerts enabled for PWA App & Browser.'
+                  ? t('instantAlertsEnabled')
                   : 'Enable push alerts for order notifications.'}
               </p>
 
@@ -1221,10 +1209,37 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 </button>
               ) : (
                 <span className="shrink-0 text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
-                  Active ✓
+                  {t('activeCheck')}
                 </span>
               )}
             </div>
+          </div>
+
+          {/* SECTION: 🌐 VERNACULAR LANGUAGE SWITCHER */}
+          <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-950 p-3.5 space-y-2 shadow-md text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-amber-400" />
+                <span className="text-xs font-black text-amber-200">{t('language')} / भाषा / भाषा</span>
+              </div>
+              <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                i18n Vernacular
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setIsLangModalOpen(true)
+              }}
+              className="w-full flex items-center justify-between rounded-xl bg-amber-400/20 hover:bg-amber-400/30 border border-amber-400/40 p-2.5 text-xs font-black text-amber-300 transition-all cursor-pointer shadow-xs"
+            >
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-amber-400" />
+                <span>{t('switchLangTitle')}</span>
+              </div>
+              <span className="text-[10px] font-black text-amber-400">{t('change')}</span>
+            </button>
           </div>
 
           {/* SECTION 6: 💳 ACTIVE SUBSCRIPTION */}
@@ -1232,7 +1247,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Crown className="h-4 w-4 text-amber-400" />
-                <span className="text-xs font-black uppercase text-indigo-200">Active Subscription</span>
+                <span className="text-xs font-black uppercase text-indigo-200">{t('activeSubscription')}</span>
               </div>
               <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
                 {subStatus?.plan_name || 'PREMIUM'} PLAN
@@ -1245,7 +1260,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             >
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-teal-300" />
-                <span>Manage Plan & Receipts</span>
+                <span>{t('managePlan')}</span>
               </div>
               <span className="text-[10px] font-extrabold text-teal-300">Open ➔</span>
             </Link>
@@ -1256,7 +1271,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Technical Support</span>
+                <span className="font-extrabold text-xs text-slate-900">{t('technicalSupport')}</span>
               </div>
               <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-black text-white">24/7 LIVE</span>
             </div>
@@ -1268,9 +1283,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               >
                 <div className="flex items-center gap-2 truncate">
                   <Mail className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                  <span className="truncate">Email Support</span>
+                  <span className="truncate">{t('emailSupport')}</span>
                 </div>
-                <span className="text-[9.5px] text-indigo-600 font-extrabold shrink-0">Send Email ↗</span>
+                <span className="text-[9.5px] text-indigo-600 font-extrabold shrink-0">{t('sendEmail')}</span>
               </a>
 
               <a
@@ -1279,7 +1294,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               >
                 <div className="flex items-center gap-2">
                   <PhoneCall className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <span>Call Support (+91 7796216506)</span>
+                  <span>{t('callSupport')} (+91 7796216506)</span>
                 </div>
                 <span className="text-[9.5px] text-emerald-600 font-extrabold">Call 📞</span>
               </a>
@@ -1292,7 +1307,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               >
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-3.5 w-3.5 text-[#25D366] shrink-0" />
-                  <span>WhatsApp Live Chat</span>
+                  <span>{t('waLiveChat')}</span>
                 </div>
                 <span className="text-[9.5px] bg-[#25D366] text-white px-2 py-0.5 rounded-md font-black">Chat ➔</span>
               </a>
@@ -1312,7 +1327,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             >
               <div className="flex items-center gap-2.5">
                 <Globe className="h-4 w-4 text-amber-400 shrink-0" />
-                <span>🌐 Custom Domain & Brand</span>
+                <span>{t('customDomainBrand')}</span>
               </div>
               <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
                 <Crown className="h-2.5 w-2.5" /> PRO
@@ -1327,7 +1342,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               }}
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-2.5 text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 active:scale-98 transition-all shadow-md cursor-pointer"
             >
-              <span>🖨️ Print Counter QR Standee</span>
+              <span>{t('printQrStandee')}</span>
             </button>
           </div>
         </div>
@@ -1341,7 +1356,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 py-2.5 px-3 text-xs font-black text-indigo-700 hover:bg-indigo-100 active:scale-95 transition-all shadow-xs"
             >
               <ExternalLink className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-              <span className="truncate">Open Storefront</span>
+              <span className="truncate">{t('openStorefront')}</span>
             </Link>
           )}
 
@@ -1351,7 +1366,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 py-2.5 px-3 text-xs font-black text-rose-700 hover:bg-rose-100 active:scale-95 transition-all cursor-pointer shadow-xs"
           >
             <LogOut className="h-3.5 w-3.5 text-rose-600 shrink-0" />
-            <span className="truncate">Logout</span>
+            <span className="truncate">{t('logout')}</span>
           </button>
         </div>
       </aside>
@@ -1503,6 +1518,12 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           setIsSettingsOpen(false)
           if (store?.id) navigate(`/stores/${store.id}/orders`)
         }}
+      />
+
+      {/* Language Switcher Modal with full-screen translation loading spinner */}
+      <LanguageSwitcherModal
+        isOpen={isLangModalOpen}
+        onClose={() => setIsLangModalOpen(false)}
       />
 
       {/* Global Floating AI Copilot Chatbot Icon (Draggable) - DISABLED */}

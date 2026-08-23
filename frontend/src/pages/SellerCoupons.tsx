@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, Link } from 'react-router-dom'
 import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
@@ -16,6 +17,7 @@ import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
 type PromoTabType = 'coupons' | 'flash_sale' | 'loyalty' | 'scratch' | 'whatsapp'
 
 export default function SellerCoupons() {
+  const { t } = useTranslation()
   const { storeId } = useParams()
   const [store, setStore] = useState<any>(null)
   const [coupons, setCoupons] = useState<any[]>([])
@@ -411,10 +413,10 @@ export default function SellerCoupons() {
               </span>
               <div className="min-w-0">
                 <h1 className="text-xs sm:text-lg lg:text-2xl font-black text-white tracking-tight truncate">
-                  Promotions Hub
+                  {t('promotionsHub')}
                 </h1>
                 <p className="text-[9px] sm:text-xs text-indigo-300 font-bold truncate">
-                  Discounts, Flash Sale, Coins & Gifts
+                  {t('discountsFlashCoinsGifts')}
                 </p>
               </div>
             </div>
@@ -425,7 +427,7 @@ export default function SellerCoupons() {
               className="flex items-center justify-center gap-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 px-2.5 sm:px-5 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-black text-white shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
             >
               <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              <span>+ New Coupon</span>
+              <span>{t('newCouponBtn')}</span>
             </button>
           </div>
 
@@ -444,7 +446,7 @@ export default function SellerCoupons() {
               <div className="flex items-center justify-between gap-1">
                 <span className="text-[9px] sm:text-[10px] font-black uppercase text-indigo-300 flex items-center gap-1 truncate">
                   <Tag className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 shrink-0" />
-                  <span className="truncate">1. Coupons</span>
+                  <span className="truncate">{t('tabCoupons')}</span>
                 </span>
                 <span className="text-[8px] sm:text-[9px] font-black text-emerald-400 bg-emerald-950 px-1 py-0.2 rounded border border-emerald-500/30 shrink-0">
                   {publishedCoupons.length} LIVE
@@ -468,7 +470,7 @@ export default function SellerCoupons() {
               <div className="flex items-center justify-between gap-1">
                 <span className="text-[9px] sm:text-[10px] font-black uppercase text-rose-300 flex items-center gap-1 truncate">
                   <Zap className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 shrink-0" />
-                  <span className="truncate">2. Flash</span>
+                  <span className="truncate">{t('tabFlash')}</span>
                 </span>
                 <span className={`text-[8px] sm:text-[9px] font-black px-1 py-0.2 rounded border shrink-0 ${
                   flashSaleActive ? 'bg-rose-950 text-rose-300 border-rose-500/40 animate-pulse' : 'bg-slate-800 text-slate-400 border-slate-700'
@@ -494,7 +496,7 @@ export default function SellerCoupons() {
               <div className="flex items-center justify-between gap-1">
                 <span className="text-[9px] sm:text-[10px] font-black uppercase text-amber-300 flex items-center gap-1 truncate">
                   <Coins className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 shrink-0" />
-                  <span className="truncate">3. Coins</span>
+                  <span className="truncate">{t('tabCoins')}</span>
                 </span>
                 <span className={`text-[8px] sm:text-[9px] font-black px-1 py-0.2 rounded border shrink-0 ${
                   enableLoyaltyCashback ? 'bg-amber-950 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
@@ -520,7 +522,7 @@ export default function SellerCoupons() {
               <div className="flex items-center justify-between gap-1">
                 <span className="text-[9px] sm:text-[10px] font-black uppercase text-purple-300 flex items-center gap-1 truncate">
                   <Gift className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 shrink-0" />
-                  <span className="truncate">4. Gift</span>
+                  <span className="truncate">{t('tabGift')}</span>
                 </span>
                 <span className={`text-[8px] sm:text-[9px] font-black px-1 py-0.2 rounded border shrink-0 ${
                   scratchConfig.enabled ? 'bg-purple-950 text-purple-300 border-purple-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
@@ -546,7 +548,7 @@ export default function SellerCoupons() {
               <div className="flex items-center justify-between gap-1">
                 <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-300 flex items-center gap-1 truncate">
                   <MessageSquare className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 shrink-0" />
-                  <span className="truncate">5. WhatsApp</span>
+                  <span className="truncate">{t('tabWhatsapp')}</span>
                 </span>
                 <span className="text-[8px] sm:text-[9px] font-black text-emerald-300 bg-emerald-950 px-1 py-0.2 rounded border border-emerald-500/40 shrink-0">
                   {customersList.length} Buyers
@@ -568,14 +570,14 @@ export default function SellerCoupons() {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h2 className="text-xs sm:text-sm font-black text-white truncate">
-                  Instant WhatsApp Offer Broadcast
+                  {t('instantWaBroadcast')}
                 </h2>
                 <span className="rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black uppercase">
-                  🚀 3x Repeat Orders
+                  {t('repeatOrdersTag')}
                 </span>
               </div>
               <p className="text-[10px] sm:text-xs text-teal-300/90 font-medium truncate">
-                Send active store coupons ({publishedCoupons.length} live) directly to customer WhatsApp in 1-Click!
+                {t('sendActiveCouponsSubtext')}
               </p>
             </div>
           </div>
@@ -586,7 +588,7 @@ export default function SellerCoupons() {
               onClick={() => setActiveTab('whatsapp')}
               className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600/40 hover:bg-emerald-600/60 border border-emerald-400/50 px-3 py-2 text-xs font-black text-emerald-200 transition-all cursor-pointer"
             >
-              <span>View Offers Studio ↓</span>
+              <span>{t('viewOffersStudio')}</span>
             </button>
             <button
               type="button"
@@ -597,7 +599,7 @@ export default function SellerCoupons() {
               className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <MessageSquare className="h-4 w-4" />
-              <span>🚀 1-Click Broadcast</span>
+              <span>{t('oneClickBroadcast')}</span>
             </button>
           </div>
         </div>
@@ -625,7 +627,7 @@ export default function SellerCoupons() {
             }`}
           >
             <Tag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            <span>1. Coupons ({coupons.length})</span>
+            <span>{t('tabCoupons')} ({coupons.length})</span>
             {publishedCoupons.length > 0 && (
               <span className={`ml-1 rounded-full px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black border ${
                 activeTab === 'coupons' ? 'bg-white/20 text-white border-white/30' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
@@ -645,7 +647,7 @@ export default function SellerCoupons() {
             }`}
           >
             <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            <span>2. Flash Sale</span>
+            <span>{t('tabFlash')}</span>
             {flashSaleActive && (
               <span className={`ml-1 rounded-full px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black border ${
                 activeTab === 'flash_sale' ? 'bg-white/20 text-white border-white/30' : 'bg-rose-100 text-rose-800 border-rose-200 animate-pulse'
@@ -665,7 +667,7 @@ export default function SellerCoupons() {
             }`}
           >
             <Coins className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            <span>3. Cashback</span>
+            <span>{t('tabCoins')}</span>
             {enableLoyaltyCashback && (
               <span className={`ml-1 rounded-full px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black border ${
                 activeTab === 'loyalty' ? 'bg-white/20 text-white border-white/30' : 'bg-amber-100 text-amber-800 border-amber-200'
@@ -685,7 +687,7 @@ export default function SellerCoupons() {
             }`}
           >
             <Gift className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            <span>4. Welcome Gift</span>
+            <span>{t('tabGift')}</span>
             {scratchConfig.enabled && (
               <span className={`ml-1 rounded-full px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black border ${
                 activeTab === 'scratch' ? 'bg-white/20 text-white border-white/30' : 'bg-purple-100 text-purple-800 border-purple-200'
@@ -705,7 +707,7 @@ export default function SellerCoupons() {
             }`}
           >
             <MessageSquare className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            <span>5. WhatsApp Offers</span>
+            <span>{t('tabWhatsapp')}</span>
             <span className={`ml-1 rounded-full px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black border ${
               activeTab === 'whatsapp' ? 'bg-white/20 text-white border-white/30' : 'bg-emerald-100 text-emerald-800 border-emerald-200'
             }`}>
@@ -726,9 +728,9 @@ export default function SellerCoupons() {
                   💡
                 </span>
                 <div>
-                  <p className="font-extrabold text-indigo-950 text-[11px] sm:text-xs">How Coupons Work:</p>
+                  <p className="font-extrabold text-indigo-950 text-[11px] sm:text-xs">{t('howCouponsWorkTitle')}</p>
                   <p className="text-indigo-800 font-medium text-[10px] sm:text-[11px]">
-                    Customers enter your coupon code at checkout to get an instant discount (e.g. Flat ₹50 OFF or 10% OFF).
+                    {t('howCouponsWorkDesc')}
                   </p>
                 </div>
               </div>
@@ -738,26 +740,26 @@ export default function SellerCoupons() {
                 className="inline-flex items-center justify-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[11px] sm:text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 <Plus className="h-3 w-3" />
-                <span>+ Create Coupon</span>
+                <span>{t('createCoupon')}</span>
               </button>
             </div>
 
             {/* Stats Summary Grid (Compact on Mobile) */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4">
               <div className="rounded-lg sm:rounded-2xl bg-white border border-emerald-200 p-2.5 sm:p-4 space-y-0.5 shadow-xs text-center sm:text-left">
-                <p className="text-[9px] sm:text-[11px] font-bold text-emerald-700 uppercase tracking-tight truncate">🟢 Active</p>
+                <p className="text-[9px] sm:text-[11px] font-bold text-emerald-700 uppercase tracking-tight truncate">{t('activeCoupons')}</p>
                 <p className="text-base sm:text-2xl font-black text-emerald-600">{publishedCoupons.length}</p>
-                <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium hidden sm:block">Live for customers</p>
+                <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium hidden sm:block">{t('liveForCustomers')}</p>
               </div>
               <div className="rounded-lg sm:rounded-2xl bg-white border border-amber-200 p-2.5 sm:p-4 space-y-0.5 shadow-xs text-center sm:text-left">
-                <p className="text-[9px] sm:text-[11px] font-bold text-amber-700 uppercase tracking-tight truncate">🟡 Drafts</p>
+                <p className="text-[9px] sm:text-[11px] font-bold text-amber-700 uppercase tracking-tight truncate">{t('draftCoupons')}</p>
                 <p className="text-base sm:text-2xl font-black text-amber-600">{draftCoupons.length}</p>
-                <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium hidden sm:block">Hidden (Not live)</p>
+                <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium hidden sm:block">{t('hiddenNotLive')}</p>
               </div>
               <div className="rounded-lg sm:rounded-2xl bg-white border border-indigo-200 p-2.5 sm:p-4 space-y-0.5 shadow-xs text-center sm:text-left">
-                <p className="text-[9px] sm:text-[11px] font-bold text-indigo-700 uppercase tracking-tight truncate">Times Used</p>
+                <p className="text-[9px] sm:text-[11px] font-bold text-indigo-700 uppercase tracking-tight truncate">{t('timesUsed')}</p>
                 <p className="text-base sm:text-2xl font-black text-indigo-600">{totalUsage}</p>
-                <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium hidden sm:block">Orders placed</p>
+                <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium hidden sm:block">{t('ordersPlaced')}</p>
               </div>
             </div>
 
@@ -766,7 +768,7 @@ export default function SellerCoupons() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                 <h2 className="text-xs sm:text-base font-black text-slate-900 flex items-center gap-1.5">
                   <Tag className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-600" />
-                  <span>Store Coupons ({filteredCoupons.length})</span>
+                  <span>{t('storeCouponsTitle')} ({filteredCoupons.length})</span>
                 </h2>
 
                 {/* Filter Tabs */}
@@ -780,7 +782,7 @@ export default function SellerCoupons() {
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    All ({coupons.length})
+                    {t('statusAll')} ({coupons.length})
                   </button>
                   <button
                     type="button"
@@ -791,7 +793,7 @@ export default function SellerCoupons() {
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    🟢 Active ({publishedCoupons.length})
+                    {t('activeCoupons')} ({publishedCoupons.length})
                   </button>
                   <button
                     type="button"
@@ -802,7 +804,7 @@ export default function SellerCoupons() {
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    🟡 Drafts ({draftCoupons.length})
+                    {t('draftCoupons')} ({draftCoupons.length})
                   </button>
                   <button
                     onClick={fetchCoupons}
@@ -820,16 +822,16 @@ export default function SellerCoupons() {
                 <div className="py-8 text-center text-slate-500 space-y-2">
                   <span className="text-2xl sm:text-3xl">🏷️</span>
                   <p className="text-xs font-bold text-slate-700">
-                    {statusFilter === 'PUBLISHED' ? 'No active coupons' : statusFilter === 'DRAFT' ? 'No draft coupons' : 'No coupons created yet'}
+                    {statusFilter === 'PUBLISHED' ? 'No active coupons' : statusFilter === 'DRAFT' ? 'No draft coupons' : t('noCouponsYet')}
                   </p>
-                  <p className="text-[10px] text-slate-500">Create discount coupons to give customers a deal!</p>
+                  <p className="text-[10px] text-slate-500">{t('createDiscountSubtext')}</p>
                   <button
                     type="button"
                     onClick={openCreateModal}
                     className="mt-1 inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 cursor-pointer"
                   >
                     <Plus className="h-3 w-3" />
-                    <span>Create First Coupon</span>
+                    <span>{t('createFirstCoupon')}</span>
                   </button>
                 </div>
               ) : (
@@ -877,39 +879,39 @@ export default function SellerCoupons() {
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                             : 'bg-amber-100 text-amber-800 border border-amber-300'
                         }`}>
-                          {coupon.is_active ? <>🟢 ACTIVE</> : <>🟡 DRAFT</>}
+                          {coupon.is_active ? <>{t('activeCoupons')}</> : <>{t('draftCoupons')}</>}
                         </span>
                       </div>
 
                       {/* Applicable Scope */}
                       <div className="rounded-md bg-slate-50 p-1.5 border border-slate-200 text-[10px]">
-                        <p className="text-[8px] font-extrabold text-slate-500 uppercase">Applies To:</p>
+                        <p className="text-[8px] font-extrabold text-slate-500 uppercase">{t('appliesTo')}</p>
                         {coupon.product_name ? (
                           <p className="text-indigo-700 font-bold flex items-center gap-1 mt-0.5 truncate text-[10px]">
                             <ShoppingBag className="h-2.5 w-2.5 text-indigo-600 shrink-0" />
-                            <span className="truncate">Only: {coupon.product_name}</span>
+                            <span className="truncate">{t('onlyProduct')} {coupon.product_name}</span>
                           </p>
                         ) : (
                           <p className="text-emerald-700 font-bold flex items-center gap-1 mt-0.5 text-[10px]">
                             <span>🌐</span>
-                            <span>All Products in Store</span>
+                            <span>{t('allProductsInStore')}</span>
                           </p>
                         )}
                       </div>
 
                       <div className="space-y-0.5 text-[10px] text-slate-600 border-t border-slate-100 pt-1.5">
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Min Order:</span>
+                          <span className="text-slate-500">{t('minOrder')}</span>
                           <strong className="text-slate-900 font-black">₹{coupon.min_order_amount || 0}</strong>
                         </div>
                         {coupon.discount_type === 'PERCENTAGE' && coupon.max_discount_amount && (
                           <div className="flex justify-between">
-                            <span className="text-slate-500">Max Discount:</span>
+                            <span className="text-slate-500">{t('maxDiscount')}</span>
                             <strong className="text-slate-900 font-black">₹{coupon.max_discount_amount}</strong>
                           </div>
                         )}
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Times Used:</span>
+                          <span className="text-slate-500">{t('timesUsed')}</span>
                           <strong className="text-indigo-600 font-black">{coupon.usage_count || 0} orders</strong>
                         </div>
                       </div>
@@ -934,7 +936,7 @@ export default function SellerCoupons() {
                                 : 'bg-emerald-600 text-white'
                             }`}
                           >
-                            {coupon.is_active ? 'Pause' : '🚀 Make Active'}
+                            {coupon.is_active ? t('pause') : t('makeActive')}
                           </button>
 
                           <button
@@ -965,9 +967,9 @@ export default function SellerCoupons() {
                 ⚡
               </span>
               <div>
-                <p className="font-extrabold text-rose-950 text-[11px] sm:text-xs">How Flash Sale Works:</p>
+                <p className="font-extrabold text-rose-950 text-[11px] sm:text-xs">{t('howFlashWorksTitle')}</p>
                 <p className="text-rose-800 font-medium text-[10px] sm:text-[11px]">
-                  Turn this ON during evening stock clearance. A glowing red banner appears on your store, and all items get an automatic discount!
+                  {t('howFlashWorksDesc')}
                 </p>
               </div>
             </div>
@@ -982,7 +984,7 @@ export default function SellerCoupons() {
                   </span>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h2 className="text-xs sm:text-base font-black text-slate-900">Urgent Flash Sale</h2>
+                      <h2 className="text-xs sm:text-base font-black text-slate-900">{t('urgentFlashSale')}</h2>
                       <span className={`text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border ${
                         flashSaleActive 
                           ? 'bg-rose-100 text-rose-800 border-rose-300 animate-pulse' 
@@ -1029,7 +1031,7 @@ export default function SellerCoupons() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
                 <div className="space-y-2.5 bg-slate-50/80 p-3 rounded-lg border border-slate-200">
                   <h3 className="text-[10px] sm:text-xs font-black text-slate-800 uppercase tracking-wider">
-                    1. Set Discount Percentage
+                    {t('setDiscountPercent')}
                   </h3>
 
                   <div>
@@ -1056,7 +1058,7 @@ export default function SellerCoupons() {
 
                   <div className="pt-1">
                     <label className="text-[10px] sm:text-xs font-bold text-slate-700">
-                      Banner Heading (Customer view):
+                      {t('bannerHeading')}
                     </label>
                     <input
                       type="text"
@@ -1073,7 +1075,7 @@ export default function SellerCoupons() {
                   <div>
                     <h3 className="text-[10px] sm:text-xs font-black text-rose-700 uppercase tracking-wider flex items-center gap-1">
                       <Flame className="h-3 w-3 text-rose-600" />
-                      <span>Live Customer Banner Preview</span>
+                      <span>{t('liveBannerPreview')}</span>
                     </h3>
                     <p className="text-[9px] sm:text-[10px] text-slate-500 mt-0.5">
                       Customers opening your shop see this animated top banner:
@@ -1120,9 +1122,9 @@ export default function SellerCoupons() {
                 🪙
               </span>
               <div>
-                <p className="font-extrabold text-amber-950 text-[11px] sm:text-xs">How Cashback Coins Work:</p>
+                <p className="font-extrabold text-amber-950 text-[11px] sm:text-xs">{t('howCashbackWorksTitle')}</p>
                 <p className="text-amber-900 font-medium text-[10px] sm:text-[11px]">
-                  Customers earn coins on every purchase (1 Coin = ₹1 Rupee). Next time they order, they use coins for a discount!
+                  {t('howCashbackWorksDesc')}
                 </p>
               </div>
             </div>
@@ -1135,7 +1137,7 @@ export default function SellerCoupons() {
                   </span>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h2 className="text-xs sm:text-base font-black text-slate-900">Cashback Coins Program</h2>
+                      <h2 className="text-xs sm:text-base font-black text-slate-900">{t('cashbackProgram')}</h2>
                       <span className={`text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border ${
                         enableLoyaltyCashback 
                           ? 'bg-amber-100 text-amber-800 border-amber-300' 
@@ -1184,7 +1186,7 @@ export default function SellerCoupons() {
                   <div>
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] sm:text-xs font-bold text-slate-800">
-                        Cashback Rate (% of order):
+                        {t('cashbackRate')}
                       </label>
                       <span className="font-mono font-black text-[10px] sm:text-xs text-amber-900 bg-amber-100 border border-amber-300 px-1.5 py-0.2 rounded">
                         {loyaltyCashbackPercent}% Cashback
@@ -1236,7 +1238,7 @@ export default function SellerCoupons() {
 
                   <div>
                     <label className="text-[10px] sm:text-xs font-bold text-slate-800">
-                      Minimum Order for Cashback (₹):
+                      {t('minOrderCashback')}
                     </label>
                     <input
                       type="number"
@@ -1254,7 +1256,7 @@ export default function SellerCoupons() {
                 <div className="space-y-2.5 bg-slate-50/80 p-3 rounded-lg border border-slate-200 flex flex-col justify-between">
                   <div className="space-y-1.5">
                     <h3 className="text-[10px] sm:text-xs font-black text-amber-800 uppercase tracking-wider">
-                      💡 Example Calculation for Customer
+                      {t('exampleCalculation')}
                     </h3>
                     <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium">
                       If a customer buys items worth <strong className="text-slate-900 font-black">₹1,000</strong>:
@@ -1264,7 +1266,7 @@ export default function SellerCoupons() {
                         <span className="text-lg">🪙</span>
                         <div>
                           <p className="text-xs sm:text-sm font-black text-amber-950">
-                            Customer Earns: +₹{((1000 * (Number(loyaltyCashbackPercent) || 0)) / 100).toFixed(0)} Coins
+                            {t('customerEarns')} +₹{((1000 * (Number(loyaltyCashbackPercent) || 0)) / 100).toFixed(0)} Coins
                           </p>
                           <p className="text-[8px] sm:text-[9px] text-amber-800 font-medium">
                             Deducts ₹{((1000 * (Number(loyaltyCashbackPercent) || 0)) / 100).toFixed(0)} on next order
@@ -1282,7 +1284,7 @@ export default function SellerCoupons() {
                       className="w-full sm:w-auto flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 px-4 py-2 text-xs font-black text-slate-950 shadow-xs hover:brightness-110 cursor-pointer disabled:opacity-50"
                     >
                       <Check className="h-3.5 w-3.5" />
-                      <span>{savingCashback ? 'Saving...' : 'Save Cashback Settings'}</span>
+                      <span>{savingCashback ? 'Saving...' : t('saveCashbackSettings')}</span>
                     </button>
                   </div>
                 </div>
@@ -1301,9 +1303,9 @@ export default function SellerCoupons() {
                 🎁
               </span>
               <div>
-                <p className="font-extrabold text-purple-950 text-[11px] sm:text-xs">How Welcome Scratch Gift Works:</p>
+                <p className="font-extrabold text-purple-950 text-[11px] sm:text-xs">{t('howWelcomeScratchWorksTitle')}</p>
                 <p className="text-purple-900 font-medium text-[10px] sm:text-[11px]">
-                  When a new person opens your shop website for the first time, a scratch card pops up giving them a welcome coupon!
+                  {t('howWelcomeScratchWorksDesc')}
                 </p>
               </div>
             </div>
@@ -1318,7 +1320,7 @@ export default function SellerCoupons() {
                   </span>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h2 className="text-xs sm:text-base font-black text-slate-900">Welcome Scratch Gift</h2>
+                      <h2 className="text-xs sm:text-base font-black text-slate-900">{t('welcomeScratchGift')}</h2>
                       <span className={`text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border ${
                         scratchConfig.enabled 
                           ? 'bg-purple-100 text-purple-800 border-purple-300' 
@@ -1365,12 +1367,12 @@ export default function SellerCoupons() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
                 <div className="space-y-2.5 bg-slate-50/80 p-3 rounded-lg border border-slate-200">
                   <h3 className="text-[10px] sm:text-xs font-black text-purple-800 uppercase tracking-wider">
-                    ⚙️ Gift Details
+                    {t('giftDetails')}
                   </h3>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] sm:text-xs font-bold text-slate-800">Coupon Code:</label>
+                      <label className="text-[10px] sm:text-xs font-bold text-slate-800">{t('couponCodeLabel')}</label>
                       <input
                         type="text"
                         value={scratchConfig.couponCode}
@@ -1381,7 +1383,7 @@ export default function SellerCoupons() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] sm:text-xs font-bold text-slate-800">Min Order (₹):</label>
+                      <label className="text-[10px] sm:text-xs font-bold text-slate-800">{t('minOrder')} (₹):</label>
                       <input
                         type="number"
                         min="0"
@@ -1417,7 +1419,7 @@ export default function SellerCoupons() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] sm:text-xs font-bold text-slate-800">Card Heading:</label>
+                    <label className="text-[10px] sm:text-xs font-bold text-slate-800">{t('cardHeading')}</label>
                     <input
                       type="text"
                       value={scratchConfig.title}
@@ -1428,7 +1430,7 @@ export default function SellerCoupons() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] sm:text-xs font-bold text-slate-800">Offer Line:</label>
+                    <label className="text-[10px] sm:text-xs font-bold text-slate-800">{t('offerLine')}</label>
                     <input
                       type="text"
                       value={scratchConfig.rewardText}
@@ -1443,7 +1445,7 @@ export default function SellerCoupons() {
                 <div className="space-y-2 bg-slate-50/80 p-3 rounded-lg border border-slate-200 flex flex-col justify-between">
                   <div>
                     <h3 className="text-[10px] sm:text-xs font-black text-purple-800 uppercase tracking-wider">
-                      ✨ Customer Screen Preview
+                      {t('customerScreenPreview')}
                     </h3>
                     <p className="text-[9px] sm:text-[10px] text-slate-500 mt-0.5">
                       New shoppers receive this popup on opening your link:
@@ -1487,9 +1489,9 @@ export default function SellerCoupons() {
                   📲
                 </span>
                 <div>
-                  <h2 className="text-xs sm:text-base font-black text-white">WhatsApp Marketing & Customer Offers</h2>
+                  <h2 className="text-xs sm:text-base font-black text-white">{t('waMarketingOffers')}</h2>
                   <p className="text-[10px] sm:text-xs text-teal-300 font-medium">
-                    Send personalized offers & discount coupons directly to customer WhatsApp
+                    {t('sendPersonalizedOffers')}
                   </p>
                 </div>
               </div>
@@ -1501,7 +1503,7 @@ export default function SellerCoupons() {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3.5 py-1.5 text-xs font-black text-white shadow-xs transition-all cursor-pointer"
                 >
                   <MessageSquare className="h-3.5 w-3.5" />
-                  <span>Open Fullscreen Studio ↗</span>
+                  <span>{t('openFullscreenStudio')}</span>
                 </button>
               </div>
             </div>
@@ -1513,7 +1515,7 @@ export default function SellerCoupons() {
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
                     <Users className="h-3.5 w-3.5 text-indigo-600" />
-                    <span>1. Target Audience</span>
+                    <span>{t('targetAudience')}</span>
                   </label>
                   <span className="text-[10px] font-bold text-slate-500">
                     {customersList.filter((c) => {
@@ -1526,10 +1528,10 @@ export default function SellerCoupons() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
                   {[
-                    { key: 'VIP', label: '🌟 VIP Customers', desc: '≥ 2 Orders / Top Spend', count: customersList.filter(c => (c.ordersCount || 0) >= 2).length },
-                    { key: 'LAPSED', label: '⏳ Inactive (>14 Days)', desc: 'Needs Re-engagement', count: customersList.filter(c => c.lastOrderDate && new Date(c.lastOrderDate) < new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)).length },
-                    { key: 'NEW', label: '🆕 1st Time Buyers', desc: '1 Order (Welcome back)', count: customersList.filter(c => (c.ordersCount || 0) === 1).length },
-                    { key: 'ALL', label: '👥 All Customers', desc: 'Full Customer Base', count: customersList.length },
+                    { key: 'VIP', label: t('vipCustomers'), desc: '≥ 2 Orders / Top Spend', count: customersList.filter(c => (c.ordersCount || 0) >= 2).length },
+                    { key: 'LAPSED', label: t('inactiveCustomers'), desc: 'Needs Re-engagement', count: customersList.filter(c => c.lastOrderDate && new Date(c.lastOrderDate) < new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)).length },
+                    { key: 'NEW', label: t('newBuyersSeg'), desc: '1 Order (Welcome back)', count: customersList.filter(c => (c.ordersCount || 0) === 1).length },
+                    { key: 'ALL', label: t('allCustomers'), desc: 'Full Customer Base', count: customersList.length },
                   ].map((seg) => (
                     <button
                       key={seg.key}
@@ -1555,12 +1557,12 @@ export default function SellerCoupons() {
               <div className="space-y-2.5 rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
                 <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
                   <Tag className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>2. Offer Details & Coupon</span>
+                  <span>{t('offerDetailsCoupon')}</span>
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <label className="text-[10px] font-bold text-slate-600">Discount Headline</label>
+                    <label className="text-[10px] font-bold text-slate-600">{t('discountHeadline')}</label>
                     <input
                       type="text"
                       value={whatsappDiscountText}
@@ -1571,7 +1573,7 @@ export default function SellerCoupons() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold text-slate-600">Attach Coupon Code</label>
+                    <label className="text-[10px] font-bold text-slate-600">{t('attachCouponCode')}</label>
                     <select
                       value={whatsappCoupon}
                       onChange={(e) => setWhatsappCoupon(e.target.value)}
@@ -1588,7 +1590,7 @@ export default function SellerCoupons() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="text-[10px] font-bold text-slate-600">Personal Note / Message</label>
+                    <label className="text-[10px] font-bold text-slate-600">{t('personalNoteMessage')}</label>
                     <input
                       type="text"
                       value={whatsappNote}
@@ -1607,7 +1609,7 @@ export default function SellerCoupons() {
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
                       <Sparkles className="h-3.5 w-3.5 text-teal-600" />
-                      <span>3. Message Preview</span>
+                      <span>{t('messagePreview')}</span>
                     </label>
                     <button
                       type="button"
@@ -1619,7 +1621,7 @@ export default function SellerCoupons() {
                       className="text-[9px] sm:text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-md hover:bg-emerald-100 flex items-center gap-1 cursor-pointer transition-all"
                     >
                       {whatsappCopiedMsg ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                      <span>{whatsappCopiedMsg ? 'Copied!' : 'Copy Text'}</span>
+                      <span>{whatsappCopiedMsg ? 'Copied!' : t('copyText')}</span>
                     </button>
                   </div>
 
@@ -1647,7 +1649,7 @@ export default function SellerCoupons() {
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
                       <Send className="h-3.5 w-3.5 text-emerald-600" />
-                      <span>4. Send Offers</span>
+                      <span>{t('sendOffers')}</span>
                     </label>
                     <button
                       type="button"
@@ -1660,7 +1662,7 @@ export default function SellerCoupons() {
                       className="text-[9px] sm:text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-300 px-2 py-0.5 rounded-md hover:bg-indigo-100 flex items-center gap-1 cursor-pointer transition-all"
                     >
                       {whatsappCopiedPhones ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                      <span>{whatsappCopiedPhones ? 'Copied!' : 'Copy Numbers'}</span>
+                      <span>{whatsappCopiedPhones ? 'Copied!' : t('copyNumbers')}</span>
                     </button>
                   </div>
 
@@ -1723,7 +1725,7 @@ export default function SellerCoupons() {
                                 className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 text-[10px] font-black text-white shadow-2xs transition-all shrink-0 cursor-pointer active:scale-95"
                               >
                                 <MessageSquare className="h-3 w-3" />
-                                <span>Send WhatsApp ↗</span>
+                                <span>{t('sendWhatsapp')}</span>
                               </a>
                             ) : (
                               <span className="text-[9px] font-bold text-slate-400">No Phone</span>
@@ -1749,7 +1751,7 @@ export default function SellerCoupons() {
               <div className="flex items-center gap-1.5">
                 <Tag className="h-4 w-4 text-indigo-600" />
                 <h3 className="text-sm sm:text-base font-black text-slate-900">
-                  {editingCoupon ? `Edit Coupon: ${editingCoupon.code}` : 'Create New Discount Coupon'}
+                  {editingCoupon ? `Edit Coupon: ${editingCoupon.code}` : t('createCouponModalTitle')}
                 </h3>
               </div>
               <button onClick={() => setCreateModalOpen(false)} className="text-lg text-slate-400 hover:text-slate-700 cursor-pointer p-0.5">
@@ -1768,9 +1770,9 @@ export default function SellerCoupons() {
               <div className="rounded-lg bg-indigo-50/80 border border-indigo-200/80 p-2.5 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] sm:text-[10px] font-black uppercase text-indigo-950 tracking-wider">
-                    ⚡ 1-Click Templates:
+                    {t('quickTemplates')}
                   </span>
-                  <span className="text-[8px] sm:text-[9px] text-indigo-600 font-bold">Tap to auto-fill</span>
+                  <span className="text-[8px] sm:text-[9px] text-indigo-600 font-bold">{t('tapToAutoFill')}</span>
                 </div>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
@@ -1823,7 +1825,7 @@ export default function SellerCoupons() {
 
             <form className="space-y-2.5">
               <div>
-                <label className="text-[11px] font-bold text-slate-700">Coupon Code Name *</label>
+                <label className="text-[11px] font-bold text-slate-700">{t('couponCodeLabel')} *</label>
                 <input
                   type="text"
                   value={code}
@@ -1836,21 +1838,21 @@ export default function SellerCoupons() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-700">Discount Type *</label>
+                  <label className="text-[11px] font-bold text-slate-700">{t('discountType')} *</label>
                   <select
                     value={discountType}
                     onChange={(e) => setDiscountType(e.target.value as any)}
                     className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
                   >
-                    <option value="FLAT">Flat ₹ Discount</option>
-                    <option value="PERCENTAGE">Percentage (%) Off</option>
-                    <option value="BOGO">Buy 1 Get 1 Free (BOGO) 🎁</option>
-                    <option value="FREE_DELIVERY">Free Doorstep Delivery 🚚</option>
+                    <option value="FLAT">{t('flatDiscount')}</option>
+                    <option value="PERCENTAGE">{t('percentageOff')}</option>
+                    <option value="BOGO">{t('bogoOffer')}</option>
+                    <option value="FREE_DELIVERY">{t('freeDelivery')}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold text-slate-700">Discount Value *</label>
+                  <label className="text-[11px] font-bold text-slate-700">{t('discountValue')} *</label>
                   <input
                     type="number"
                     min="0"
@@ -1872,7 +1874,7 @@ export default function SellerCoupons() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-700">Min Order (₹)</label>
+                  <label className="text-[11px] font-bold text-slate-700">{t('minOrder')} (₹)</label>
                   <input
                     type="number"
                     min="0"
@@ -1884,7 +1886,7 @@ export default function SellerCoupons() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold text-slate-700">Max Discount Limit (₹)</label>
+                  <label className="text-[11px] font-bold text-slate-700">{t('maxDiscount')} (₹)</label>
                   <input
                     type="number"
                     min="0"
@@ -1900,7 +1902,7 @@ export default function SellerCoupons() {
               {/* Scope Selector with Live Product Search */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-slate-700">Which items does this apply to?</label>
+                  <label className="text-[11px] font-bold text-slate-700">{t('appliesTo')}</label>
                   {products.length > 0 && (
                     <span className="text-[9px] font-bold text-indigo-600">
                       {products.length} products
@@ -1933,7 +1935,7 @@ export default function SellerCoupons() {
                   onChange={(e) => setSelectedProductId(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
                 >
-                  <option value="">🌐 All Products in Store (Full Cart)</option>
+                  <option value="">🌐 {t('allProductsInStore')}</option>
                   {products
                     .filter((p) =>
                       productSearchQuery
@@ -1955,7 +1957,7 @@ export default function SellerCoupons() {
                   disabled={saving}
                   className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-black text-amber-800 hover:bg-slate-200 cursor-pointer border border-slate-200"
                 >
-                  {saving ? 'Saving...' : '🟡 Save Draft'}
+                  {saving ? 'Saving...' : t('saveDraft')}
                 </button>
                 <button
                   type="button"
@@ -1963,7 +1965,7 @@ export default function SellerCoupons() {
                   disabled={saving}
                   className="flex-1 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 py-2 text-xs font-black text-white hover:brightness-110 shadow-xs cursor-pointer"
                 >
-                  {saving ? 'Publishing...' : '🚀 Make Active'}
+                  {saving ? 'Publishing...' : t('makeActive')}
                 </button>
               </div>
             </form>

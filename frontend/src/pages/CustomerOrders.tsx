@@ -96,31 +96,31 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
 
     setIsSyncing(true)
     try {
-      const storeRes = await api.get(`/public/stores/${storeSlug}/`)
-      setStore(storeRes.data.data || storeRes.data)
-    } catch (error) {
-      if (isStoreOffline(error)) {
+      const [storeRes, prodRes, ordersRes] = await Promise.allSettled([
+        api.get(`/public/stores/${storeSlug}/`),
+        api.get(`/public/stores/${storeSlug}/products/`),
+        api.get(`/public/stores/${storeSlug}/customer-orders/`, { params: { phone: targetPhone } })
+      ])
+
+      if (storeRes.status === 'fulfilled') {
+        setStore(storeRes.value.data?.data || storeRes.value.data)
+      } else if (storeRes.status === 'rejected' && isStoreOffline(storeRes.reason)) {
         setStoreOffline(true)
       }
-    }
 
-    try {
-      const prodRes = await api.get(`/public/stores/${storeSlug}/products/`)
-      if (Array.isArray(prodRes.data)) {
+      if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value.data)) {
         const map: Record<string | number, any> = {}
-        prodRes.data.forEach((p: any) => {
+        prodRes.value.data.forEach((p: any) => {
           if (p.id) map[p.id] = p
         })
         setProductMap(map)
       }
-    } catch { }
 
-    try {
-      const res = await api.get(`/public/stores/${storeSlug}/customer-orders/`, {
-        params: { phone: targetPhone }
-      })
-      const liveOrders = Array.isArray(res.data) ? res.data : []
-      setOrders(liveOrders)
+      if (ordersRes.status === 'fulfilled' && Array.isArray(ordersRes.value.data)) {
+        setOrders(ordersRes.value.data)
+      } else {
+        setOrders([])
+      }
     } catch {
       setOrders([])
     } finally {
@@ -133,6 +133,20 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
       fetchDynamicOrders(customerPhone)
     }
   }, [storeSlug, customerPhone, isPhoneVerified])
+
+  const handlePhoneSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!phoneInput.trim()) return
+    const cleaned = phoneInput.trim().replace(/\D/g, '')
+    setCustomerPhone(cleaned)
+    setIsPhoneVerified(true)
+    if (storeSlug) {
+      localStorage.setItem(`qs_customer_phone_${storeSlug}`, cleaned)
+      localStorage.setItem(`qs_chat_phone`, cleaned)
+    }
+    setShowPhoneSync(false)
+    fetchDynamicOrders(cleaned)
+  }
 
   const handleSendOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()

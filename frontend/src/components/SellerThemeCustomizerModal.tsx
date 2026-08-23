@@ -250,7 +250,7 @@ export default function SellerThemeCustomizerModal({
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-black text-white">Shopify Theme & Vibe Studio Pro</h2>
+                <h2 className="text-sm sm:text-base font-black text-white">Apani Dukan Store Theme Studio Pro</h2>
                 <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   Live Customizer
                 </span>
@@ -794,7 +794,21 @@ export default function SellerThemeCustomizerModal({
                   </div>
                 )}
 
-                {/* SHOPIFY STORE NAVBAR */}
+                {/* APANI DUKAN STORE NAVBAR */}
+                {/* TOP ANNOUNCEMENT TICKER IN PREVIEW */}
+                {showAnnouncementBar && (
+                  <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 px-3 py-1 text-[9.5px] font-black text-center border-b border-amber-300 flex items-center justify-between gap-1">
+                    <span className="truncate mx-auto flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 shrink-0 animate-bounce" />
+                      {featuredCouponCode ? (
+                        <span>FEATURED OFFER: <strong className="underline font-black">{featuredCouponCode}</strong></span>
+                      ) : (
+                        <span>SPECIAL OFFER: Get <strong className="underline font-black">20% OFF</strong> Code: <span className="font-mono bg-slate-950 text-amber-300 px-1 py-0.2 rounded text-[8.5px]">WELCOME20</span></span>
+                      )}
+                    </span>
+                  </div>
+                )}
+
                 <div className="bg-slate-950 px-3.5 py-2.5 text-white flex items-center justify-between border-b border-white/10">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 text-base shrink-0">
@@ -802,7 +816,7 @@ export default function SellerThemeCustomizerModal({
                     </span>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-xs sm:text-sm font-black text-white truncate">{store?.name || 'Apani Store'}</p>
+                        <p className="text-xs sm:text-sm font-black text-white truncate">{store?.name || 'Apani Dukan Store'}</p>
                         <span className="text-[8px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1 py-0.2 rounded font-bold flex items-center gap-0.5">
                           <ShieldCheck className="h-2.5 w-2.5" /> Verified
                         </span>
@@ -827,26 +841,41 @@ export default function SellerThemeCustomizerModal({
                 {/* PREVIEW CONTENT SWITCHER (HOME / PRODUCT DETAIL / CART) */}
                 {previewTab === 'HOME' && (
                   <>
-                    {/* DYNAMIC HERO BANNER */}
-                    <div className={`bg-gradient-to-br ${activeGradient} p-4 text-white space-y-2 relative overflow-hidden`}>
+                    {/* DYNAMIC HERO BANNER MATCHING APANI DUKAN STOREFRONT */}
+                    <div className={`bg-gradient-to-br ${activeGradient} p-3.5 sm:p-4 text-white space-y-2 relative overflow-hidden`}>
                       <div
                         className="absolute -top-8 -right-8 h-32 w-32 rounded-full blur-xl opacity-40 pointer-events-none"
                         style={{ backgroundColor: primaryColor }}
                       />
                       <div className="relative z-10 space-y-1.5">
-                        <span className="text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-white/15 text-teal-300 border border-white/20 inline-block">
-                          {displayTagline}
-                        </span>
+                        {/* Trust Badges in Preview */}
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {trustBadges.map((badge, idx) => (
+                            <span key={idx} className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-white/15 text-teal-300 border border-white/20">
+                              {badge === '10MIN' ? '⚡ 10-Min Delivery' : badge === 'GENUINE' ? '🛡️ 100% Genuine' : '💬 Instant WhatsApp'}
+                            </span>
+                          ))}
+                        </div>
+
                         <h3 className="text-xs sm:text-base font-black leading-snug text-white">
-                          Welcome to {store?.name || 'Apani Dukan'}
+                          {displayTagline || `Welcome to ${store?.name || 'Apani Dukan'}`}
                         </h3>
-                        <p className="text-[9.5px] sm:text-xs text-slate-300 font-medium">
-                          Order online & get instant doorstep delivery!
+                        <p className="text-[10px] sm:text-xs text-slate-300 font-medium leading-tight">
+                          {customSubTagline || 'Order directly from our shop for fast doorstep delivery & verified quality.'}
                         </p>
+
+                        <div className="pt-1">
+                          <span
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-black text-white shadow-xs cursor-pointer"
+                            style={{ backgroundColor: primaryColor }}
+                          >
+                            <span>Explore Shop ➔</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* SHOPIFY PRODUCT GRID */}
+                    {/* APANI DUKAN PRODUCT GRID */}
                     <div className="p-3 bg-slate-950 space-y-2 min-h-[240px]">
                       <div className="flex items-center justify-between px-0.5">
                         <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">

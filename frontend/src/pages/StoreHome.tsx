@@ -141,6 +141,34 @@ function Storefront() {
         }
         if (data?.name) {
           document.title = `${data.name} - Online Store`
+          try {
+            let ogTitle = document.querySelector('meta[property="og:title"]')
+            if (!ogTitle) {
+              ogTitle = document.createElement('meta')
+              ogTitle.setAttribute('property', 'og:title')
+              document.head.appendChild(ogTitle)
+            }
+            ogTitle.setAttribute('content', `${data.name} - Official Online Store`)
+
+            let ogDesc = document.querySelector('meta[property="og:description"]')
+            if (!ogDesc) {
+              ogDesc = document.createElement('meta')
+              ogDesc.setAttribute('property', 'og:description')
+              document.head.appendChild(ogDesc)
+            }
+            ogDesc.setAttribute('content', `Order online directly from ${data.name}. Fast doorstep delivery & verified quality.`)
+
+            if (data.logo) {
+              const fullLogoUrl = data.logo.startsWith('http') ? data.logo : `${window.location.origin}${mediaUrl(data.logo)}`
+              let ogImage = document.querySelector('meta[property="og:image"]')
+              if (!ogImage) {
+                ogImage = document.createElement('meta')
+                ogImage.setAttribute('property', 'og:image')
+                document.head.appendChild(ogImage)
+              }
+              ogImage.setAttribute('content', fullLogoUrl)
+            }
+          } catch {}
         }
       })
       .catch((error) => {

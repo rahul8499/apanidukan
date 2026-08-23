@@ -25,8 +25,16 @@ export default function SellerThemeCustomizerModal({
   const [borderRadius, setBorderRadius] = useState<'rounded-lg' | 'rounded-2xl' | 'rounded-3xl'>('rounded-2xl')
   const [fontStyle, setFontStyle] = useState<'font-sans' | 'font-serif' | 'font-mono'>('font-sans')
   const [customTagline, setCustomTagline] = useState<string>(currentTheme.tagline || '')
+
+  // ULTRA-ADVANCED COMPETITOR-BEATING CONTROLS
+  const [showAnnouncementBar, setShowAnnouncementBar] = useState<boolean>(true)
+  const [announcementText, setAnnouncementText] = useState<string>('🔥 FREE Express Delivery on Orders Above ₹499!')
+  const [trustBadges, setTrustBadges] = useState<string[]>(['10MIN', 'GENUINE', 'WHATSAPP'])
+  const [soundFxPlaying, setSoundFxPlaying] = useState<boolean>(false)
+
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('')
+
 
   const handleSelectPreset = (catKey: string) => {
     setSelectedCategory(catKey)
@@ -72,6 +80,38 @@ export default function SellerThemeCustomizerModal({
     const randomIndex = Math.floor(Math.random() * list.length)
     setCustomTagline(list[randomIndex])
   }
+
+  const toggleTrustBadge = (badgeKey: string) => {
+    if (trustBadges.includes(badgeKey)) {
+      setTrustBadges(trustBadges.filter(b => b !== badgeKey))
+    } else {
+      if (trustBadges.length < 3) {
+        setTrustBadges([...trustBadges, badgeKey])
+      }
+    }
+  }
+
+  const playSoundFxTest = () => {
+    setSoundFxPlaying(true)
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const osc = audioCtx.createOscillator()
+      const gain = audioCtx.createGain()
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime) // D5 note
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15) // A5 note
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3)
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+      osc.start()
+      osc.stop(audioCtx.currentTime + 0.3)
+    } catch (e) {
+      console.log('Audio test error', e)
+    }
+    setTimeout(() => setSoundFxPlaying(false), 400)
+  }
+
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()

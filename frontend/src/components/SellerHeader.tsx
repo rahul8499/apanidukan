@@ -562,36 +562,36 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
         />
       )}
 
-      {/* Slide-over Clean Premium Mobile-Native App & Web Settings Sidebar Drawer */}
+      {/* Slide-over Enterprise-Grade Seller Settings & Navigation Drawer */}
       <aside
-        className={`fixed top-0 right-0 z-[110] h-full w-full sm:w-96 sm:max-w-[92vw] bg-slate-50 text-slate-900 border-l border-slate-200/90 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 z-[110] h-full w-full sm:w-[420px] sm:max-w-[95vw] bg-slate-950 text-white border-l border-slate-800/90 shadow-[0_0_50px_rgba(0,0,0,0.8)] transition-transform duration-300 ease-in-out flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
-        {/* Ultra-Premium Mobile App Header with Store Identity */}
-        <div className="relative shrink-0 overflow-hidden bg-slate-950 px-4 sm:px-5 py-4 text-white border-b border-slate-800 shadow-md">
+        {/* Ultra-Premium Enterprise Drawer Header */}
+        <div className="relative shrink-0 overflow-hidden bg-slate-900/90 px-4 sm:px-5 py-4 text-white border-b border-slate-800/90 backdrop-blur-xl">
           {/* Subtle Ambient Glow */}
-          <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none" />
+          <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex items-center justify-between">
+          <div className="relative z-10 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              {/* Mobile Close Button */}
+              {/* Close Button */}
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white active:scale-95 transition-all cursor-pointer border border-white/10 shrink-0"
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white active:scale-95 transition-all cursor-pointer border border-slate-700/60 shrink-0"
               >
                 <X className="h-5 w-5" />
               </button>
 
               <div className="relative shrink-0">
-                <img src="/apanidukan.png" alt="Apani Dukan" className="h-12 sm:h-14 w-auto scale-110 sm:scale-125 origin-left" />
-                <span className={`absolute bottom-0 -right-2 h-3 w-3 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                <img src="/apanidukan.png" alt="Apani Dukan" className="h-10 sm:h-12 w-auto origin-left" />
+                <span className={`absolute bottom-0 -right-1 h-3 w-3 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-amber-400'}`} />
               </div>
 
-              <div className="min-w-0 ml-3 sm:ml-4">
+              <div className="min-w-0 ml-1">
                 <h2 className="font-black text-sm text-white truncate tracking-tight">{store.name}</h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.2 rounded-full border ${store.is_published ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.2 rounded-full border ${store.is_published ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                     }`}>
                     {store.is_published ? '● Live Online' : '○ Draft Mode'}
                   </span>
@@ -604,57 +604,36 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <Link
                   to={`/s/${store.slug}`}
                   target="_blank"
-                  className="flex h-8 px-2.5 items-center justify-center gap-1 rounded-xl bg-indigo-600/80 text-white text-[11px] font-bold hover:bg-indigo-600 active:scale-95 transition-all cursor-pointer border border-indigo-500/30"
+                  className="flex h-8 px-2.5 items-center justify-center gap-1.5 rounded-xl bg-teal-500/15 text-teal-300 text-[11px] font-black hover:bg-teal-500/25 active:scale-95 transition-all cursor-pointer border border-teal-500/30"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Store</span>
+                  <ExternalLink className="h-3.5 w-3.5 text-teal-300" />
+                  <span className="hidden sm:inline">Storefront ↗</span>
                 </Link>
               )}
             </div>
           </div>
         </div>
 
-        {/* Drawer Content Body — Organized High-Density Layout */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50">
+        {/* Drawer Content Body — High-Density Enterprise Layout */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950 custom-scrollbar">
 
-          {/* PWA Install Button */}
+          {/* 📱 PWA App Install Banner */}
           <InstallAppButton storeSlug={store?.slug} variant="drawer_item" />
 
-          {/* AI Copilot Drawer Item (Disabled) */}
-          <button
-            type="button"
-            disabled
-            title="AI Copilot is currently locked."
-            className="w-full flex items-center justify-between rounded-xl bg-gradient-to-r from-slate-200 to-slate-100 border border-slate-300/40 p-2.5 text-left text-xs font-black text-slate-500 opacity-75 cursor-not-allowed shadow-xs"
-          >
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-300/50 text-slate-500 font-bold text-xs shadow-inner">
-                <Lock className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="text-[11px] font-black text-slate-500">AI Copilot Assistant</p>
-                <p className="text-[9px] font-medium text-slate-400">Feature locked</p>
-              </div>
-            </div>
-            <Lock className="h-4 w-4 text-slate-400" />
-          </button>
-
-
-
-          {/* ⚡ SECTION 1: FAST NAVIGATION SUITE */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5 shadow-xs">
-            <p className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 px-1 flex items-center gap-1.5">
-              <FolderKanban className="h-3.5 w-3.5 text-indigo-600" />
+          {/* ⚡ SECTION 1: WORKSPACE MODULES NAVIGATION */}
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-3.5 space-y-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+              <FolderKanban className="h-3.5 w-3.5 text-indigo-400" />
               <span>Workspace Modules</span>
             </p>
 
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-2">
               <Link
                 to={`/stores/${store.id}/orders`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/90 p-2.5 text-xs font-bold text-slate-200 hover:bg-indigo-600/20 hover:border-indigo-500/50 hover:text-white transition-all cursor-pointer group"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100/70 text-indigo-700 font-bold text-xs shrink-0">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300 font-bold text-xs shrink-0 group-hover:scale-110 transition-transform">
                   🛍️
                 </div>
                 <span className="truncate">Orders</span>
@@ -663,9 +642,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <Link
                 to={`/stores/${store.id}/catalog`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/90 p-2.5 text-xs font-bold text-slate-200 hover:bg-emerald-600/20 hover:border-emerald-500/50 hover:text-white transition-all cursor-pointer group"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100/70 text-emerald-700 font-bold text-xs shrink-0">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-xs shrink-0 group-hover:scale-110 transition-transform">
                   📦
                 </div>
                 <span className="truncate">Catalog</span>
@@ -674,9 +653,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <Link
                 to={`/stores/${store.id}/requests`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/90 p-2.5 text-xs font-bold text-slate-200 hover:bg-amber-600/20 hover:border-amber-500/50 hover:text-white transition-all cursor-pointer group"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100/70 text-amber-700 font-bold text-xs shrink-0">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300 font-bold text-xs shrink-0 group-hover:scale-110 transition-transform">
                   💡
                 </div>
                 <span className="truncate">Requests</span>
@@ -685,198 +664,84 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <Link
                 to={`/stores/${store.id}/coupons`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/90 p-2.5 text-xs font-bold text-slate-200 hover:bg-rose-600/20 hover:border-rose-500/50 hover:text-white transition-all cursor-pointer group"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100/70 text-rose-700 font-bold text-xs shrink-0">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500/20 text-rose-300 font-bold text-xs shrink-0 group-hover:scale-110 transition-transform">
                   🏷️
                 </div>
                 <span className="truncate">Coupons</span>
               </Link>
-            </div>
-          </div>
 
-          {/* 🔊 SECTION 2: SMART DUKAN CONTROLS */}
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-purple-50/40 to-slate-50 p-3.5 space-y-2.5 shadow-xs">
-            <div className="flex items-center gap-2 border-b border-indigo-100/80 pb-2">
-              <Zap className="h-4 w-4 text-indigo-600" />
-              <span className="font-black text-xs text-slate-900 tracking-wide uppercase">Smart Operations</span>
-            </div>
-
-            {/* Hindi Voice Soundbox Toggle */}
-            <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${soundboxOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
-                  {soundboxOn ? <Volume2 className="h-4 w-4 text-emerald-600" /> : <VolumeX className="h-4 w-4 text-slate-400" />}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-black text-slate-900 truncate">Hindi Voice Soundbox 🔊</p>
-                  <p className="text-[10px] text-slate-500 font-medium truncate">Speaks live orders & requests</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={toggleSoundbox}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-600' : 'bg-slate-300'}`}
+              <Link
+                to={`/stores/${store.id}/payments`}
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/90 p-2.5 text-xs font-bold text-slate-200 hover:bg-cyan-600/20 hover:border-cyan-500/50 hover:text-white transition-all cursor-pointer group"
               >
-                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-4' : 'translate-x-0'}`} />
-              </button>
-            </div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-300 font-bold text-xs shrink-0 group-hover:scale-110 transition-transform">
+                  💳
+                </div>
+                <span className="truncate">Payments</span>
+              </Link>
 
-            {/* Theme & Niche Customizer */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSettingsOpen(false)
-                setShowThemeModal(true)
-              }}
-              className="w-full flex items-center justify-between rounded-xl bg-white p-2.5 text-xs font-bold text-indigo-950 border border-indigo-200 hover:bg-indigo-50/60 transition-all cursor-pointer"
-            >
-              <span className="flex items-center gap-2.5">
-                <Palette className="h-4 w-4 text-indigo-600 shrink-0" />
-                <span className="font-extrabold">🎨 Store Niche Theme Customizer</span>
-              </span>
-              <span className="text-indigo-600 font-bold">➔</span>
-            </button>
-          </div>
-
-          {/* 🏪 SECTION 3: STORE PROFILE & IDENTITY */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Store Profile</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsProfileEditing(!isProfileEditing)}
-                className="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+              <Link
+                to={`/stores/${store.id}/subscription`}
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex items-center gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs font-bold text-amber-200 hover:bg-amber-500/20 hover:border-amber-400 transition-all cursor-pointer group"
               >
-                <Edit3 className="h-3 w-3" />
-                <span>{isProfileEditing ? 'Cancel' : 'Edit'}</span>
-              </button>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/20 text-amber-300 font-bold text-xs shrink-0 group-hover:scale-110 transition-transform">
+                  👑
+                </div>
+                <span className="truncate">{subStatus?.plan_name || 'Plan'}</span>
+              </Link>
             </div>
-
-            {isProfileEditing ? (
-              <form onSubmit={handleSaveProfile} className="space-y-2.5">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 shrink-0 rounded-xl bg-slate-200 border border-slate-300 flex items-center justify-center overflow-hidden">
-                    {logoPreview ? (
-                      <img src={logoPreview} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <Store className="h-6 w-6 text-slate-400" />
-                    )}
-                    <label className="absolute inset-0 bg-slate-900/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-white">
-                      <Camera className="h-4 w-4" />
-                      <input type="file" accept="image/*" onChange={handleLogoSelect} className="hidden" />
-                    </label>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-800">Store Logo</p>
-                    <p className="text-[10px] text-slate-500">Tap icon to change</p>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-slate-700">Store Name:</label>
-                  <input
-                    type="text"
-                    value={storeName}
-                    onChange={e => setStoreName(e.target.value)}
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-slate-700">WhatsApp Phone Number:</label>
-                  <input
-                    type="text"
-                    value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value)}
-                    placeholder="919876543210"
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:border-indigo-500 focus:outline-none"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSavingProfile}
-                  className="w-full rounded-xl bg-indigo-600 py-2 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1"
-                >
-                  <Check className="h-3.5 w-3.5" />
-                  <span>{isSavingProfile ? 'Saving...' : 'Save Profile'}</span>
-                </button>
-              </form>
-            ) : (
-              <div className="space-y-1.5 text-xs font-medium text-slate-700">
-                <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-500 font-bold">Store Name:</span>
-                  <span className="font-extrabold text-slate-900">{store.name}</span>
-                </div>
-                <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-500 font-bold">Order Phone:</span>
-                  <span className="font-mono font-bold text-slate-900">{store.whatsapp_phone || store.phone_number || 'Not set'}</span>
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-3.5">
-            <p className="text-xs font-black text-red-800">Danger zone</p>
-            <p className="mt-1 text-[11px] text-red-700">Deactivate only after all customer orders are delivered, cancelled, or refunded.</p>
-            <button type="button" disabled={isDeactivating} onClick={() => { setDeactivateError(null); setShowDeactivateModal(true); }} className="mt-3 w-full rounded-xl border border-red-300 bg-white py-2 text-xs font-black text-red-700 hover:bg-red-100 disabled:opacity-50">{isDeactivating ? 'Deactivating...' : 'Deactivate account'}</button>
-          </div>
-
-          {/* SECTION 1.5: 🚚 Fulfillment & Delivery Modes Controls */}
-          <div className="rounded-xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3 space-y-2.5 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-indigo-100/80 pb-1.5">
+          {/* 🚚 SECTION 2: FULFILLMENT & DELIVERY OPTIONS */}
+          <div className="rounded-2xl border border-indigo-500/30 bg-slate-900/80 p-3.5 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-wider text-indigo-600">Checkout Fulfillment</p>
-                <h4 className="text-[11px] font-black text-slate-900 flex items-center gap-1 mt-0.5">
-                  <Truck className="h-3 w-3 text-indigo-600" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Checkout Fulfillment</p>
+                <h4 className="text-xs font-black text-white flex items-center gap-1.5 mt-0.5">
+                  <Truck className="h-3.5 w-3.5 text-indigo-400" />
                   <span>Order Fulfillment Modes</span>
                 </h4>
               </div>
               <div className="flex items-center gap-1.5">
                 {isUpdatingDeliverySettings && (
-                  <span className="text-[9px] font-extrabold text-indigo-600 animate-pulse">Saving...</span>
+                  <span className="text-[9px] font-extrabold text-indigo-400 animate-pulse">Saving...</span>
                 )}
                 <button
                   type="button"
                   onClick={() => setShowDeliveryModal(true)}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-600 text-white text-[9px] font-black hover:bg-indigo-700 transition-all cursor-pointer shadow-xs"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-indigo-600 text-white text-[10px] font-black hover:bg-indigo-500 transition-all cursor-pointer shadow-xs"
                 >
-                  <SlidersHorizontal className="h-2.5 w-2.5" />
-                  <span>Configure Rules</span>
+                  <SlidersHorizontal className="h-3 w-3" />
+                  <span>Configure Rates</span>
                 </button>
               </div>
             </div>
 
-            <p className="text-[9px] text-slate-600 font-medium leading-tight">
-              Control order options and delivery pricing shown to customers:
-            </p>
-
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {/* Home Delivery Card */}
-              <div className={`rounded-xl p-2.5 border transition-all shadow-2xs ${allowHomeDelivery
-                ? 'bg-white border-emerald-300 ring-1 ring-emerald-400/20'
-                : 'bg-slate-100/70 border-slate-200 opacity-75'
+              <div className={`rounded-xl p-3 border transition-all ${allowHomeDelivery
+                ? 'bg-slate-900 border-emerald-500/40 ring-1 ring-emerald-500/20'
+                : 'bg-slate-900/40 border-slate-800 opacity-60'
                 }`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm shadow-inner ${allowHomeDelivery ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-200 border border-slate-300'
+                  <div className="flex items-center gap-2.5">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-base ${allowHomeDelivery ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-slate-800 border border-slate-700'
                       }`}>
                       🚚
                     </div>
                     <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-black text-slate-900">Home Delivery</span>
-                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full ${allowHomeDelivery ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-white">Home Delivery</span>
+                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border ${allowHomeDelivery ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
                           }`}>
                           {allowHomeDelivery ? 'ON' : 'OFF'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-slate-500 font-medium block">Deliver order to customer home</span>
+                      <span className="text-[10px] text-slate-400 font-medium block">Deliver order to customer doorstep</span>
                     </div>
                   </div>
 
@@ -885,7 +750,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                       type="button"
                       onClick={() => setShowDeliveryModal(true)}
                       title="Edit Delivery Pricing & Radius"
-                      className="text-[9px] font-black text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-lg transition-all"
+                      className="text-[9.5px] font-black text-indigo-300 hover:text-white bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 px-2 py-0.5 rounded-lg transition-all"
                     >
                       ⚙️ Edit Rates
                     </button>
@@ -893,13 +758,12 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                       type="button"
                       onClick={() => {
                         if (!allowHomeDelivery) {
-                          // Opening settings allows confirming config before enabling
                           setShowDeliveryModal(true)
                         } else {
                           handleToggleDeliverySetting('allow_home_delivery', false)
                         }
                       }}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowHomeDelivery ? 'bg-emerald-600' : 'bg-slate-300'
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowHomeDelivery ? 'bg-emerald-500' : 'bg-slate-700'
                         }`}
                     >
                       <span
@@ -912,14 +776,14 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
                 {/* Delivery Rule Badges */}
                 {allowHomeDelivery && (
-                  <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-[9px] text-slate-600 font-bold">
-                    <span className="bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-700">
+                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center gap-1.5 text-[9.5px] text-slate-300 font-bold">
+                    <span className="bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700 text-slate-300">
                       💰 Min: ₹{Number(store?.min_delivery_order) || 0}
                     </span>
-                    <span className="bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-700">
-                      📍 Max: {store?.delivery_radius_km || 10} km
+                    <span className="bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700 text-slate-300">
+                      📍 Radius: {store?.delivery_radius_km || 10} km
                     </span>
-                    <span className="bg-indigo-50 px-1.5 py-0.5 rounded-md border border-indigo-200 text-indigo-700">
+                    <span className="bg-indigo-500/20 px-2 py-0.5 rounded-md border border-indigo-500/40 text-indigo-300">
                       {store?.delivery_charge_type === 'FREE'
                         ? '🟢 Free Delivery'
                         : store?.delivery_charge_type === 'PER_KM'
@@ -929,45 +793,37 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                             : `📦 ₹${store?.delivery_flat_fee || 0} Flat Fee`
                       }
                     </span>
-                    {Number(store?.free_delivery_above) > 0 && (
-                      <span className="bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 text-emerald-700">
-                        🎉 Free &gt; ₹{store?.free_delivery_above}
-                      </span>
-                    )}
-                    <span className="bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-600">
-                      ⏱️ {store?.delivery_estimated_time || '30-45 mins'}
-                    </span>
                   </div>
                 )}
               </div>
 
               {/* Walk-in Store Pickup Card */}
-              <div className={`rounded-xl p-2.5 border transition-all shadow-2xs ${allowStorePickup
-                ? 'bg-white border-emerald-300 ring-1 ring-emerald-400/20'
-                : 'bg-slate-100/70 border-slate-200 opacity-75'
+              <div className={`rounded-xl p-3 border transition-all ${allowStorePickup
+                ? 'bg-slate-900 border-emerald-500/40 ring-1 ring-emerald-500/20'
+                : 'bg-slate-900/40 border-slate-800 opacity-60'
                 }`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm shadow-inner ${allowStorePickup ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-200 border border-slate-300'
+                  <div className="flex items-center gap-2.5">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-base ${allowStorePickup ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-slate-800 border border-slate-700'
                       }`}>
                       🏪
                     </div>
                     <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-black text-slate-900">Walk-in / Store Pickup</span>
-                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full ${allowStorePickup ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-white">Walk-in / Store Pickup</span>
+                        <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border ${allowStorePickup ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
                           }`}>
                           {allowStorePickup ? 'ON' : 'OFF'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-slate-500 font-medium block">Customer collects at shop</span>
+                      <span className="text-[10px] text-slate-400 font-medium block">Customer collects directly at store</span>
                     </div>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handleToggleDeliverySetting('allow_store_pickup', !allowStorePickup)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowStorePickup ? 'bg-emerald-600' : 'bg-slate-300'
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowStorePickup ? 'bg-emerald-500' : 'bg-slate-700'
                       }`}
                   >
                     <span
@@ -976,286 +832,111 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     />
                   </button>
                 </div>
-
-                {allowStorePickup && store?.pickup_instructions && (
-                  <div className="mt-2 pt-2 border-t border-slate-100 text-[9px] text-slate-500 font-medium flex items-center gap-1">
-                    <span>📍 {store.pickup_instructions}</span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
-          {/* SECTION 2: 🚀 Seller Suite Modules & Marketing Tools */}
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5 shadow-2xs">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1">
-              <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
-              <span>Seller Navigation & Marketing Tools</span>
+          {/* 🔊 SECTION 3: SMART OPERATIONS SUITE */}
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-3.5 space-y-3">
+            <div className="flex items-center gap-2 border-b border-slate-800/80 pb-2">
+              <Zap className="h-4 w-4 text-indigo-400" />
+              <span className="font-black text-xs text-white tracking-wider uppercase">Smart Operations</span>
+            </div>
+
+            {/* Hindi Voice Soundbox Toggle */}
+            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${soundboxOn ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-500'}`}>
+                  {soundboxOn ? <Volume2 className="h-4 w-4 text-emerald-400" /> : <VolumeX className="h-4 w-4 text-slate-500" />}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-white truncate">Hindi Voice Soundbox 🔊</p>
+                  <p className="text-[10px] text-slate-400 font-medium truncate">Speaks live orders & requests</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={toggleSoundbox}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-500' : 'bg-slate-700'}`}
+              >
+                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
+            {/* Store Niche Theme Customizer */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setShowThemeModal(true)
+              }}
+              className="w-full flex items-center justify-between rounded-xl bg-slate-900 p-3 text-xs font-bold text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/20 transition-all cursor-pointer"
+            >
+              <span className="flex items-center gap-2.5">
+                <Palette className="h-4 w-4 text-indigo-400 shrink-0" />
+                <span className="font-extrabold text-white">🎨 Store Niche Theme Customizer</span>
+              </span>
+              <span className="text-indigo-400 font-bold">➔</span>
+            </button>
+
+            {/* Manage in App Mode */}
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-xs text-white">Manage in App System</h4>
+                  <p className="text-[10px] text-slate-400">Order processing system mode</p>
+                </div>
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black border ${store.manage_in_app ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
+                  }`}>
+                  {store.manage_in_app ? 'APP MODE' : 'WHATSAPP MODE'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => toggleManageInApp(true)}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${store.manage_in_app
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                    }`}
+                >
+                  <span>🟢 App System</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleManageInApp(false)}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${!store.manage_in_app
+                    ? 'bg-slate-800 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                    }`}
+                >
+                  <span>⚪ Direct WhatsApp</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 🎨 SECTION 4: MARKETING & PRINT TOOLS */}
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-3.5 space-y-2.5">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-purple-400" />
+              <span>Marketing & Counter Print Tools</span>
             </p>
 
-            {/* AI WhatsApp Status Poster Button */}
             <button
               type="button"
               onClick={() => {
                 setIsSettingsOpen(false)
                 setShowPosterModal(true)
               }}
-              className="w-full group flex items-center justify-between rounded-xl bg-purple-500/10 p-3 text-xs font-black text-purple-900 border border-purple-300/80 hover:bg-purple-500/20 hover:border-purple-400 transition-all shadow-2xs cursor-pointer text-left"
+              className="w-full group flex items-center justify-between rounded-xl bg-purple-500/10 p-3 text-xs font-black text-purple-200 border border-purple-500/30 hover:bg-purple-500/20 transition-all shadow-2xs cursor-pointer text-left"
             >
-              <span className="flex items-center gap-3">
-                <ImageIcon className="h-4.5 w-4.5 text-purple-600 shrink-0" />
+              <span className="flex items-center gap-2.5">
+                <ImageIcon className="h-4.5 w-4.5 text-purple-400 shrink-0" />
                 <span>🎨 AI WhatsApp Poster Generator</span>
               </span>
-              <span className="text-purple-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </button>
-
-            <Link
-              to={`/stores/${store.id}/catalog`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
-            >
-              <span className="flex items-center gap-3">
-                <FolderKanban className="h-4.5 w-4.5 text-indigo-600" />
-                <span>Product Catalog & Inventory</span>
-              </span>
-              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </Link>
-
-            <Link
-              to={`/stores/${store.id}/requests`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
-            >
-              <span className="flex items-center gap-3">
-                <Inbox className="h-4.5 w-4.5 text-indigo-600" />
-                <span>Product Requests Queue</span>
-              </span>
-              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </Link>
-
-            <Link
-              to={`/stores/${store.id}/payments`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
-            >
-              <span className="flex items-center gap-3">
-                <CreditCard className="h-4.5 w-4.5 text-indigo-600" />
-                <span>Payments Gateway Integration</span>
-              </span>
-              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </Link>
-
-            <Link
-              to={`/stores/${store.id}/coupons`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
-            >
-              <span className="flex items-center gap-3">
-                <Tag className="h-4.5 w-4.5 text-emerald-600" />
-                <span>Coupons & Offers Management</span>
-              </span>
-              <span className="text-slate-400 group-hover:text-emerald-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </Link>
-          </div>
-
-          {/* SECTION 4: ⚙️ STORE PREFERENCES & VISIBILITY */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
-                    <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-600" />
-                    <span>Manage in App Mode</span>
-                  </h3>
-                  <p className="text-[10px] text-slate-500 font-medium">Order processing system mode</p>
-                </div>
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black ${store.manage_in_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'
-                  }`}>
-                  {store.manage_in_app ? 'APP SYSTEM (ON)' : 'WHATSAPP (OFF)'}
-                </span>
-              </div>
-
-              {/* Segmented Control Pill */}
-              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
-                <button
-                  type="button"
-                  onClick={() => toggleManageInApp(true)}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${store.manage_in_app
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                    }`}
-                >
-                  <span>🟢 App System</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => toggleManageInApp(false)}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${!store.manage_in_app
-                    ? 'bg-slate-800 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                    }`}
-                >
-                  <span>⚪ WhatsApp Direct</span>
-                </button>
-              </div>
-
-              <p className="text-[10.5px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-snug font-medium">
-                {store.manage_in_app
-                  ? '🟢 Orders process inside store system with live status tracking & voice alerts.'
-                  : '⚪ Customers order directly via WhatsApp messages.'}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
-              <span className="text-xs font-bold text-slate-900">Store Visibility:</span>
-              <button
-                type="button"
-                onClick={handleLiveToggleClick}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black cursor-pointer transition-all shadow-2xs ${store.is_published
-                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200'
-                  : 'bg-emerald-600 text-white border border-emerald-500 hover:bg-emerald-700 shadow-xs'
-                  }`}
-              >
-                {store.is_published ? (
-                  <>
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                    <span>● LIVE (Click to Draft)</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap className="h-3.5 w-3.5 text-white" />
-                    <span>🚀 MAKE STORE LIVE</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* SECTION 5: 🔔 REAL-TIME PUSH ALERTS */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-2.5 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Real-Time Push Alerts</span>
-              </div>
-              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
-                }`}>
-                {notificationPermission === 'granted' ? 'ACTIVE' : 'DISABLED'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-100 gap-2">
-              <p className="text-[10.5px] text-slate-600 font-medium leading-snug">
-                {notificationPermission === 'granted'
-                  ? 'Instant alerts enabled for PWA App & Browser.'
-                  : 'Enable push alerts for order notifications.'}
-              </p>
-
-              {notificationPermission !== 'granted' ? (
-                <button
-                  type="button"
-                  onClick={requestNotificationPermission}
-                  className="shrink-0 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-2xs"
-                >
-                  Enable 🔔
-                </button>
-              ) : (
-                <span className="shrink-0 text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
-                  Active ✓
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* SECTION 6: 💳 ACTIVE SUBSCRIPTION */}
-          <div className="rounded-2xl border border-indigo-500/30 bg-slate-950 p-3.5 space-y-2.5 shadow-md text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Crown className="h-4 w-4 text-amber-400" />
-                <span className="text-xs font-black uppercase text-indigo-200">Active Subscription</span>
-              </div>
-              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                {subStatus?.plan_name || 'BASIC'} PLAN
-              </span>
-            </div>
-            <Link
-              to={`/stores/${store.id}/subscription`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="w-full flex items-center justify-between rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 p-2.5 text-xs font-bold text-white transition-all shadow-2xs"
-            >
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-teal-300" />
-                <span>Manage Plan & Receipts</span>
-              </div>
-              <span className="text-[10px] font-extrabold text-teal-300">Open ➔</span>
-            </Link>
-          </div>
-
-          {/* SECTION 7: 🎧 PLATFORM TECHNICAL SUPPORT */}
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3.5 space-y-2.5 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Technical Support</span>
-              </div>
-              <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-black text-white">24/7 LIVE</span>
-            </div>
-
-            <div className="space-y-1.5 pt-0.5">
-              <a
-                href="mailto:rahulkolhe90.rk.kr@gmail.com"
-                className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-indigo-50/80 border border-slate-100 transition-all text-xs font-bold text-slate-800"
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <Mail className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                  <span className="truncate">Email Support</span>
-                </div>
-                <span className="text-[9.5px] text-indigo-600 font-extrabold shrink-0">Send Email ↗</span>
-              </a>
-
-              <a
-                href="tel:7796216506"
-                className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-emerald-50/80 border border-slate-100 transition-all text-xs font-bold text-slate-800"
-              >
-                <div className="flex items-center gap-2">
-                  <PhoneCall className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <span>Call Support (+91 7796216506)</span>
-                </div>
-                <span className="text-[9.5px] text-emerald-600 font-extrabold">Call 📞</span>
-              </a>
-
-              <a
-                href="https://wa.me/917796216506?text=Hi%20QuickStore%20Support,%20I%20need%20technical%20help%20with%20my%20store."
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-between p-2 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 transition-all text-xs font-extrabold text-[#075E54]"
-              >
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-3.5 w-3.5 text-[#25D366] shrink-0" />
-                  <span>WhatsApp Live Chat</span>
-                </div>
-                <span className="text-[9.5px] bg-[#25D366] text-white px-2 py-0.5 rounded-md font-black">Chat ➔</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Print Counter Standee & Custom Domain */}
-          <div className="space-y-2">
-            <button
-              type="button"
-              disabled
-              title="Custom Domain feature is locked for now."
-              className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-slate-100/90 py-2 px-3 text-xs font-bold text-slate-400 opacity-75 cursor-not-allowed shadow-2xs"
-            >
-              <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-slate-400" />
-                <span>Custom Domain</span>
-              </div>
-              <div className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-600 border border-amber-500/20">
-                <Lock className="h-3 w-3 text-amber-600" />
-                <span>Locked</span>
-              </div>
+              <span className="text-purple-400 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </button>
 
             <button
@@ -1269,17 +950,176 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <span>🖨️ Print Counter QR Standee</span>
             </button>
           </div>
+
+          {/* 🏪 SECTION 5: STORE PROFILE & IDENTITY */}
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-3.5 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-indigo-400" />
+                <span className="font-extrabold text-xs text-white">Store Identity Profile</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsProfileEditing(!isProfileEditing)}
+                className="text-[11px] font-extrabold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer"
+              >
+                <Edit3 className="h-3 w-3" />
+                <span>{isProfileEditing ? 'Cancel' : 'Edit'}</span>
+              </button>
+            </div>
+
+            {isProfileEditing ? (
+              <form onSubmit={handleSaveProfile} className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative h-12 w-12 shrink-0 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <Store className="h-6 w-6 text-slate-500" />
+                    )}
+                    <label className="absolute inset-0 bg-slate-950/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-white">
+                      <Camera className="h-4 w-4" />
+                      <input type="file" accept="image/*" onChange={handleLogoSelect} className="hidden" />
+                    </label>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Store Logo</p>
+                    <p className="text-[10px] text-slate-400">Tap icon to upload new</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400">Store Name:</label>
+                  <input
+                    type="text"
+                    value={storeName}
+                    onChange={e => setStoreName(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-semibold text-white focus:border-indigo-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400">WhatsApp Order Phone:</label>
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    placeholder="919876543210"
+                    className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-mono text-white focus:border-indigo-500 focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-black text-white hover:bg-indigo-500 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                >
+                  <Check className="h-4 w-4" />
+                  <span>{isSavingProfile ? 'Saving...' : 'Save Store Profile'}</span>
+                </button>
+              </form>
+            ) : (
+              <div className="space-y-2 text-xs font-medium text-slate-300">
+                <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 font-bold">Store Name:</span>
+                  <span className="font-extrabold text-white">{store.name}</span>
+                </div>
+                <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 font-bold">Order Phone:</span>
+                  <span className="font-mono font-bold text-teal-300">{store.whatsapp_phone || store.phone_number || 'Not set'}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 🔔 SECTION 6: PUSH NOTIFICATIONS & SUPPORT */}
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-indigo-400" />
+                <span className="font-extrabold text-xs text-white">Real-Time Push Alerts</span>
+              </div>
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black border ${notificationPermission === 'granted' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                }`}>
+                {notificationPermission === 'granted' ? 'ACTIVE' : 'DISABLED'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between bg-slate-900 p-2.5 rounded-xl border border-slate-800 gap-2">
+              <p className="text-[10.5px] text-slate-400 font-medium leading-snug">
+                {notificationPermission === 'granted'
+                  ? 'Instant push alerts enabled for Web & PWA.'
+                  : 'Enable browser push alerts for live order updates.'}
+              </p>
+
+              {notificationPermission !== 'granted' ? (
+                <button
+                  type="button"
+                  onClick={requestNotificationPermission}
+                  className="shrink-0 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-black text-white hover:bg-indigo-500 transition-all cursor-pointer shadow-2xs"
+                >
+                  Enable 🔔
+                </button>
+              ) : (
+                <span className="shrink-0 text-xs font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/30">
+                  Active ✓
+                </span>
+              )}
+            </div>
+
+            {/* Support Buttons */}
+            <div className="space-y-1.5 pt-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                <HelpCircle className="h-3.5 w-3.5 text-indigo-400" />
+                <span>24/7 Platform Support</span>
+              </p>
+
+              <a
+                href="https://wa.me/917796216506?text=Hi%20QuickStore%20Support,%20I%20need%20technical%20help%20with%20my%20store."
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 transition-all text-xs font-extrabold text-[#25D366]"
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-[#25D366] shrink-0" />
+                  <span>WhatsApp Live Support</span>
+                </div>
+                <span className="text-[9.5px] bg-[#25D366] text-slate-950 px-2 py-0.5 rounded-md font-black">Chat ➔</span>
+              </a>
+            </div>
+          </div>
+
+          {/* ⚠️ SECTION 7: ACCOUNT DANGER ZONE (Neatly docked at the bottom of drawer) */}
+          <div className="rounded-2xl border border-rose-900/40 bg-rose-950/20 p-3.5 space-y-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-rose-400" />
+              <span className="text-xs font-black text-rose-300">Account Safety & Deactivation</span>
+            </div>
+            <p className="text-[10.5px] text-rose-300/80 font-medium leading-tight">
+              Deactivate store only after all pending orders are delivered or refunded.
+            </p>
+            <button
+              type="button"
+              disabled={isDeactivating}
+              onClick={() => { setDeactivateError(null); setShowDeactivateModal(true); }}
+              className="w-full rounded-xl border border-rose-800/80 bg-rose-950/60 py-2 text-xs font-black text-rose-300 hover:bg-rose-900/60 disabled:opacity-50 transition-all cursor-pointer"
+            >
+              {isDeactivating ? 'Deactivating...' : 'Deactivate Account'}
+            </button>
+          </div>
+
         </div>
 
-        {/* Sticky Responsive Mobile Bottom Action Footer */}
-        <div className="sticky bottom-0 shrink-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 shadow-lg flex items-center gap-2 z-20">
+        {/* Sticky Enterprise Bottom Action Footer */}
+        <div className="sticky bottom-0 shrink-0 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/90 p-3.5 shadow-2xl flex items-center gap-2.5 z-20">
           {store.slug && (
             <Link
               to={`/s/${store.slug}`}
               target="_blank"
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 py-2.5 px-3 text-xs font-black text-indigo-700 hover:bg-indigo-100 active:scale-95 transition-all shadow-xs"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-teal-500/40 bg-teal-500/10 py-2.5 px-3 text-xs font-black text-teal-300 hover:bg-teal-500/20 active:scale-95 transition-all shadow-xs"
             >
-              <ExternalLink className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+              <ExternalLink className="h-4 w-4 text-teal-300 shrink-0" />
               <span className="truncate">Open Storefront</span>
             </Link>
           )}
@@ -1287,10 +1127,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           <button
             type="button"
             onClick={() => { auth.logout(); navigate('/login') }}
-            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 py-2.5 px-3 text-xs font-black text-rose-700 hover:bg-rose-100 active:scale-95 transition-all cursor-pointer shadow-xs"
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/10 py-2.5 px-3 text-xs font-black text-rose-300 hover:bg-rose-500/20 active:scale-95 transition-all cursor-pointer shadow-xs"
           >
-            <LogOut className="h-3.5 w-3.5 text-rose-600 shrink-0" />
-            <span className="truncate">Logout</span>
+            <LogOut className="h-4 w-4 text-rose-400 shrink-0" />
+            <span className="truncate">Logout Account</span>
           </button>
         </div>
       </aside>

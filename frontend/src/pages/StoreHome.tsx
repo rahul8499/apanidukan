@@ -452,13 +452,15 @@ function Storefront() {
             </div>
           )}
 
-          {/* Seller Custom Announcement Bar */}
-          {storeTheme.show_announcement_bar && storeTheme.announcement_text && !storeWideCoupon && (
+          {/* Seller Custom Announcement Bar (Always visible at top of Header Navbar) */}
+          {storeTheme.show_announcement_bar && storeTheme.announcement_text && (
             <div
-              className="relative z-50 px-3 py-1.5 text-center text-white text-[10px] sm:text-xs font-black shadow-xs overflow-hidden truncate transition-all border-b border-black/10"
+              className="relative z-50 px-3 py-1.5 text-center text-white text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-black/10 flex items-center justify-center gap-2"
               style={{ backgroundColor: storeTheme.primary_color }}
             >
-              <span>{storeTheme.announcement_text}</span>
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-300 animate-bounce" />
+              <span className="truncate tracking-wide drop-shadow-xs">{storeTheme.announcement_text}</span>
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-300 animate-bounce" />
             </div>
           )}
 

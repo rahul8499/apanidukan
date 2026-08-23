@@ -695,55 +695,121 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             </div>
           </div>
 
-          {/* 🔊 SECTION 2: SMART DUKAN CONTROLS */}
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-purple-50/40 to-slate-50 p-3.5 space-y-2.5 shadow-xs">
-            <div className="flex items-center gap-2 border-b border-indigo-100/80 pb-2">
-              <Zap className="h-4 w-4 text-indigo-600" />
-              <span className="font-black text-xs text-slate-900 tracking-wide uppercase">Smart Operations</span>
+          {/* 👑 SECTION 2: PRO ENTERPRISE SUITE (GOLD VIP) */}
+          <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/50 p-3.5 space-y-3 shadow-lg relative overflow-hidden text-white">
+            <div className="flex items-center justify-between border-b border-amber-500/30 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg  text-slate-950 font-black text-xs shadow-xs">
+                  👑
+                </span>
+                <span className="font-black text-xs text-amber-300 tracking-wide uppercase">PRO ENTERPRISE</span>
+              </div>
+              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                VIP SUITE
+              </span>
             </div>
 
-            {/* Hindi Voice Soundbox Toggle */}
-            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-950 border border-amber-400/40 text-white shadow-md">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-sm shadow-sm ${soundboxOn ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 shadow-amber-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
-                  {soundboxOn ? <Volume2 className="h-4.5 w-4.5 text-slate-950 font-black" /> : <VolumeX className="h-4.5 w-4.5 text-slate-400" />}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-black text-white truncate">Hindi Voice Soundbox 🔊</p>
-                    <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
-                      <Crown className="h-2 w-2" /> PRO
-                    </span>
+            <div className="space-y-2">
+              {/* 1. Hindi Voice Soundbox Toggle */}
+              <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-950 border border-amber-400/50 text-white shadow-md">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-sm shadow-sm ${soundboxOn ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 shadow-amber-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
+                    {soundboxOn ? <Volume2 className="h-4.5 w-4.5 text-slate-950 font-black" /> : <VolumeX className="h-4.5 w-4.5 text-slate-400" />}
                   </div>
-                  <p className="text-[10px] text-amber-200/80 font-medium truncate">Speaks live orders & requests</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-black text-white truncate">Hindi Voice Soundbox 🔊</p>
+                      <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                        <Crown className="h-2 w-2" /> PRO
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-amber-200/90 font-medium truncate">Speaks live orders & requests</p>
+                  </div>
+                </div>
+
+                {/* Switch Toggle Button + Status Label */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${soundboxOn ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
+                    {soundboxOn ? 'ON' : 'OFF'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={toggleSoundbox}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-500 shadow-emerald-500/30 shadow-md' : 'bg-slate-700'}`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
                 </div>
               </div>
+
+              {/* 2. Store Niche Theme Customizer (ACTIVE) */}
               <button
                 type="button"
-                onClick={toggleSoundbox}
-                className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                onClick={() => {
+                  setIsSettingsOpen(false)
+                  setShowThemeModal(true)
+                }}
+                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-amber-500/40 hover:border-amber-300 transition-all cursor-pointer shadow-md"
               >
-                <span className={`pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-4.5' : 'translate-x-0'}`} />
+                <span className="flex items-center gap-2.5">
+                  <Palette className="h-4 w-4 text-amber-400 shrink-0" />
+                  <span className="font-extrabold text-white">🎨 Store Niche Theme Customizer</span>
+                </span>
+                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                  <Crown className="h-2.5 w-2.5" /> PRO
+                </span>
+              </button>
+
+              {/* 3. AI WhatsApp Status Poster Button (ACTIVE) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSettingsOpen(false)
+                  setShowPosterModal(true)
+                }}
+                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-purple-900/40 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-purple-400/40 hover:border-purple-300 transition-all shadow-md cursor-pointer text-left"
+              >
+                <span className="flex items-center gap-2.5">
+                  <ImageIcon className="h-4 w-4 text-purple-400 shrink-0" />
+                  <span>🎨 AI WhatsApp Poster Generator</span>
+                </span>
+                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xs flex items-center gap-0.5 shrink-0">
+                  <Crown className="h-2.5 w-2.5" /> PRO
+                </span>
+              </button>
+
+              {/* 4. AI Sales Copilot Button (LOCKED / DISABLED) */}
+              <button
+                type="button"
+                disabled
+                title="AI Copilot is currently locked."
+                className="w-full flex items-center justify-between rounded-xl bg-slate-900/40 p-2.5 sm:p-3 text-xs font-bold text-slate-500 border border-slate-800 opacity-60 cursor-not-allowed text-left"
+              >
+                <span className="flex items-center gap-2.5">
+                  <Sparkles className="h-4 w-4 text-slate-500 shrink-0" />
+                  <span>🤖 AI Sales Copilot & Insights</span>
+                </span>
+                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-slate-700 flex items-center gap-1 shrink-0">
+                  <Lock className="h-2.5 w-2.5 text-amber-400" /> Locked
+                </span>
+              </button>
+
+              {/* 5. Custom Domain & Brand (LOCKED / DISABLED) */}
+              <button
+                type="button"
+                disabled
+                title="Custom Domain mapping is currently locked."
+                className="w-full flex items-center justify-between rounded-xl bg-slate-900/40 p-2.5 sm:p-3 text-xs font-bold text-slate-500 border border-slate-800 opacity-60 cursor-not-allowed text-left"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Globe className="h-4 w-4 text-slate-500 shrink-0" />
+                  <span>🌐 Custom Domain & Brand Mapping</span>
+                </div>
+                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-slate-700 flex items-center gap-1 shrink-0">
+                  <Lock className="h-2.5 w-2.5 text-amber-400" /> Locked
+                </span>
               </button>
             </div>
-
-            {/* Theme & Niche Customizer */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSettingsOpen(false)
-                setShowThemeModal(true)
-              }}
-              className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-3 text-xs font-black text-white border border-amber-500/40 hover:border-amber-400 transition-all cursor-pointer shadow-md"
-            >
-              <span className="flex items-center gap-2.5">
-                <Palette className="h-4 w-4 text-amber-400 shrink-0" />
-                <span className="font-extrabold text-white">🎨 Store Niche Theme Customizer</span>
-              </span>
-              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
-                <Crown className="h-2.5 w-2.5" /> PRO
-              </span>
-            </button>
           </div>
 
           {/* 🏪 SECTION 3: STORE PROFILE & IDENTITY */}
@@ -1000,41 +1066,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <span>Seller Navigation & Marketing Tools</span>
             </p>
 
-            {/* AI WhatsApp Status Poster Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSettingsOpen(false)
-                setShowPosterModal(true)
-              }}
-              className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-purple-950 via-indigo-950 to-slate-950 p-3 text-xs font-black text-white border border-purple-400/40 hover:border-purple-300 transition-all shadow-md cursor-pointer text-left"
-            >
-              <span className="flex items-center gap-3">
-                <ImageIcon className="h-4.5 w-4.5 text-purple-400 shrink-0" />
-                <span>🎨 AI WhatsApp Poster Generator</span>
-              </span>
-              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xs flex items-center gap-0.5 shrink-0">
-                <Crown className="h-2.5 w-2.5" /> PRO
-              </span>
-            </button>
 
-            {/* AI Sales Copilot Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSettingsOpen(false)
-                setIsAiModalOpen(true)
-              }}
-              className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-teal-950 via-emerald-950 to-slate-950 p-3 text-xs font-black text-white border border-emerald-400/40 hover:border-emerald-300 transition-all shadow-md cursor-pointer text-left"
-            >
-              <span className="flex items-center gap-3">
-                <Sparkles className="h-4.5 w-4.5 text-emerald-400 shrink-0" />
-                <span>🤖 AI Sales Copilot & Insights</span>
-              </span>
-              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
-                <Crown className="h-2.5 w-2.5" /> PRO
-              </span>
-            </button>
 
             <Link
               to={`/stores/${store.id}/catalog`}

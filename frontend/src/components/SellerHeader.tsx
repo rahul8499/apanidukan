@@ -614,103 +614,145 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
         </div>
 
-        {/* Drawer Content Body — Organized High-Density Layout */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50">
+        {/* Drawer Content Body — Clean Enterprise Layout */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
 
-          {/* PWA Install Button */}
-          <InstallAppButton storeSlug={store?.slug} variant="drawer_item" />
-
-          {/* AI Copilot Drawer Item (Disabled) */}
-          <button
-            type="button"
-            disabled
-            title="AI Copilot is currently locked."
-            className="w-full flex items-center justify-between rounded-xl bg-gradient-to-r from-slate-200 to-slate-100 border border-slate-300/40 p-2.5 text-left text-xs font-black text-slate-500 opacity-75 cursor-not-allowed shadow-xs"
-          >
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-300/50 text-slate-500 font-bold text-xs shadow-inner">
-                <Lock className="h-4 w-4" />
+          {/* ⚡ SECTION 1: WORKSPACE MODULES (QUICK 2x2 GRID) */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 space-y-2.5 shadow-xs">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <FolderKanban className="h-3.5 w-3.5 text-indigo-600" />
+                <span>Workspace Modules</span>
               </span>
-              <div>
-                <p className="text-[11px] font-black text-slate-500">AI Copilot Assistant</p>
-                <p className="text-[9px] font-medium text-slate-400">Feature locked</p>
-              </div>
-            </div>
-            <Lock className="h-4 w-4 text-slate-400" />
-          </button>
-
-
-
-          {/* ⚡ SECTION 1: FAST NAVIGATION SUITE */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5 shadow-xs">
-            <p className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 px-1 flex items-center gap-1.5">
-              <FolderKanban className="h-3.5 w-3.5 text-indigo-600" />
-              <span>Workspace Modules</span>
+              <span className="text-[9px] font-bold text-slate-400">Core Tools</span>
             </p>
 
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-2">
               <Link
                 to={`/stores/${store.id}/orders`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/90 p-2.5 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer shadow-2xs"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100/70 text-indigo-700 font-bold text-xs shrink-0">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 font-bold text-sm shrink-0 shadow-inner">
                   🛍️
                 </div>
-                <span className="truncate">Orders</span>
+                <div className="min-w-0">
+                  <p className="truncate font-black text-slate-900 text-xs">Orders</p>
+                  <p className="text-[9.5px] text-slate-500 font-medium truncate">Manage sales</p>
+                </div>
               </Link>
 
               <Link
                 to={`/stores/${store.id}/catalog`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/90 p-2.5 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer shadow-2xs"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100/70 text-emerald-700 font-bold text-xs shrink-0">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 font-bold text-sm shrink-0 shadow-inner">
                   📦
                 </div>
-                <span className="truncate">Catalog</span>
+                <div className="min-w-0">
+                  <p className="truncate font-black text-slate-900 text-xs">Catalog</p>
+                  <p className="text-[9.5px] text-slate-500 font-medium truncate">Products & stock</p>
+                </div>
               </Link>
 
               <Link
                 to={`/stores/${store.id}/requests`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/90 p-2.5 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer shadow-2xs"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100/70 text-amber-700 font-bold text-xs shrink-0">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700 font-bold text-sm shrink-0 shadow-inner">
                   💡
                 </div>
-                <span className="truncate">Requests</span>
+                <div className="min-w-0">
+                  <p className="truncate font-black text-slate-900 text-xs">Requests</p>
+                  <p className="text-[9.5px] text-slate-500 font-medium truncate">Customer wishes</p>
+                </div>
               </Link>
 
               <Link
                 to={`/stores/${store.id}/coupons`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/90 p-2.5 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer shadow-2xs"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100/70 text-rose-700 font-bold text-xs shrink-0">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100 text-rose-700 font-bold text-sm shrink-0 shadow-inner">
                   🏷️
                 </div>
-                <span className="truncate">Coupons</span>
+                <div className="min-w-0">
+                  <p className="truncate font-black text-slate-900 text-xs">Coupons</p>
+                  <p className="text-[9.5px] text-slate-500 font-medium truncate">Offers & discounts</p>
+                </div>
               </Link>
             </div>
           </div>
 
-          {/* 🔊 SECTION 2: SMART DUKAN CONTROLS */}
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-purple-50/40 to-slate-50 p-3.5 space-y-2.5 shadow-xs">
-            <div className="flex items-center gap-2 border-b border-indigo-100/80 pb-2">
-              <Zap className="h-4 w-4 text-indigo-600" />
-              <span className="font-black text-xs text-slate-900 tracking-wide uppercase">Smart Operations</span>
-            </div>
+          {/* 🚀 SECTION 2: MARKETING & STORE CUSTOMIZATION */}
+          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 via-purple-50/30 to-slate-50 p-3.5 space-y-2.5 shadow-xs">
+            <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+                <span>Marketing & Branding</span>
+              </span>
+              <span className="text-[9px] font-bold text-indigo-500">Growth Suite</span>
+            </p>
+
+            {/* AI WhatsApp Status Poster Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setShowPosterModal(true)
+              }}
+              className="w-full group flex items-center justify-between rounded-xl bg-white p-2.5 text-xs font-bold text-purple-900 border border-purple-200 hover:bg-purple-50 transition-all shadow-2xs cursor-pointer text-left"
+            >
+              <span className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-700 font-bold text-xs">🎨</span>
+                <span className="font-extrabold text-slate-900">AI WhatsApp Poster Generator</span>
+              </span>
+              <span className="text-purple-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
+            </button>
+
+            {/* Theme Customizer */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setShowThemeModal(true)
+              }}
+              className="w-full group flex items-center justify-between rounded-xl bg-white p-2.5 text-xs font-bold text-slate-900 border border-indigo-200 hover:bg-indigo-50/60 transition-all cursor-pointer text-left shadow-2xs"
+            >
+              <span className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs">🎨</span>
+                <span className="font-extrabold text-slate-900">Store Theme Customizer</span>
+              </span>
+              <span className="text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
+            </button>
+
+            {/* Print Counter Standee */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false)
+                setShowQrModal(true)
+              }}
+              className="w-full group flex items-center justify-between rounded-xl bg-white p-2.5 text-xs font-bold text-slate-900 border border-slate-200 hover:bg-slate-100 transition-all cursor-pointer text-left shadow-2xs"
+            >
+              <span className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 font-bold text-xs">🖨️</span>
+                <span className="font-extrabold text-slate-900">Print Counter QR Standee</span>
+              </span>
+              <span className="text-slate-400 group-hover:text-slate-800 font-bold transition-transform group-hover:translate-x-1">➔</span>
+            </button>
 
             {/* Hindi Voice Soundbox Toggle */}
             <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${soundboxOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
-                  {soundboxOn ? <Volume2 className="h-4 w-4 text-emerald-600" /> : <VolumeX className="h-4 w-4 text-slate-400" />}
+                <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-bold text-xs ${soundboxOn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
+                  {soundboxOn ? <Volume2 className="h-3.5 w-3.5 text-emerald-600" /> : <VolumeX className="h-3.5 w-3.5 text-slate-400" />}
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-black text-slate-900 truncate">Hindi Voice Soundbox 🔊</p>
-                  <p className="text-[10px] text-slate-500 font-medium truncate">Speaks live orders & requests</p>
+                  <p className="text-[9.5px] text-slate-500 font-medium truncate">Speaks live orders out loud</p>
                 </div>
               </div>
               <button
@@ -722,29 +764,105 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               </button>
             </div>
 
-            {/* Theme & Niche Customizer */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSettingsOpen(false)
-                setShowThemeModal(true)
-              }}
-              className="w-full flex items-center justify-between rounded-xl bg-white p-2.5 text-xs font-bold text-indigo-950 border border-indigo-200 hover:bg-indigo-50/60 transition-all cursor-pointer"
-            >
-              <span className="flex items-center gap-2.5">
-                <Palette className="h-4 w-4 text-indigo-600 shrink-0" />
-                <span className="font-extrabold">🎨 Store Niche Theme Customizer</span>
-              </span>
-              <span className="text-indigo-600 font-bold">➔</span>
-            </button>
+            {/* PWA Install Button */}
+            <InstallAppButton storeSlug={store?.slug} variant="drawer_item" />
           </div>
 
-          {/* 🏪 SECTION 3: STORE PROFILE & IDENTITY */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
+          {/* 🚚 SECTION 3: FULFILLMENT & ORDER CONTROLS */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 space-y-3 shadow-xs">
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Truck className="h-3.5 w-3.5 text-indigo-600" />
+                <span>Fulfillment & Delivery Settings</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowDeliveryModal(true)}
+                className="text-[9.5px] font-black text-indigo-600 hover:text-indigo-800 underline"
+              >
+                Rules ⚙️
+              </button>
+            </p>
+
+            {/* Order Processing Mode Segmented Pill */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-slate-900">Order System Mode:</span>
+                <span className={`text-[9px] font-black uppercase px-2 py-0.2 rounded-full ${store.manage_in_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'}`}>
+                  {store.manage_in_app ? 'APP SYSTEM' : 'WHATSAPP DIRECT'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => toggleManageInApp(true)}
+                  className={`flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${store.manage_in_app ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  <span>🟢 App System</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleManageInApp(false)}
+                  className={`flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${!store.manage_in_app ? 'bg-slate-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  <span>⚪ WhatsApp Direct</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Delivery Toggles */}
+            <div className="space-y-2 pt-1 border-t border-slate-100">
+              {/* Home Delivery Card */}
+              <div className={`rounded-xl p-2.5 border transition-all ${allowHomeDelivery ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-200 opacity-75'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🚚</span>
+                    <div>
+                      <span className="text-xs font-black text-slate-900 block">Home Delivery</span>
+                      <span className="text-[9.5px] text-slate-500 font-medium">Deliver order to customer home</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!allowHomeDelivery) setShowDeliveryModal(true)
+                      else handleToggleDeliverySetting('allow_home_delivery', false)
+                    }}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowHomeDelivery ? 'bg-emerald-600' : 'bg-slate-300'}`}
+                  >
+                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition-transform duration-200 ease-in-out ${allowHomeDelivery ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Walk-in Store Pickup Card */}
+              <div className={`rounded-xl p-2.5 border transition-all ${allowStorePickup ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-200 opacity-75'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🏪</span>
+                    <div>
+                      <span className="text-xs font-black text-slate-900 block">Walk-in / Store Pickup</span>
+                      <span className="text-[9.5px] text-slate-500 font-medium">Customer collects at shop</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleDeliverySetting('allow_store_pickup', !allowStorePickup)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowStorePickup ? 'bg-emerald-600' : 'bg-slate-300'}`}
+                  >
+                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition-transform duration-200 ease-in-out ${allowStorePickup ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 🏪 SECTION 4: STORE PROFILE & SYSTEM PREFERENCES */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 space-y-3 shadow-xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Store Profile</span>
+                <span className="font-extrabold text-xs text-slate-900">Store Profile & Settings</span>
               </div>
               <button
                 type="button"
@@ -788,7 +906,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-700">WhatsApp Phone Number:</label>
+                  <label className="text-[10px] font-bold text-slate-700">WhatsApp Order Phone:</label>
                   <input
                     type="text"
                     value={phoneNumber}
@@ -814,313 +932,27 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   <span className="font-extrabold text-slate-900">{store.name}</span>
                 </div>
                 <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-500 font-bold">Order Phone:</span>
+                  <span className="text-[10px] text-slate-500 font-bold">WhatsApp Phone:</span>
                   <span className="font-mono font-bold text-slate-900">{store.whatsapp_phone || store.phone_number || 'Not set'}</span>
                 </div>
               </div>
             )}
-          </div>
 
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-3.5">
-            <p className="text-xs font-black text-red-800">Danger zone</p>
-            <p className="mt-1 text-[11px] text-red-700">Deactivate only after all customer orders are delivered, cancelled, or refunded.</p>
-            <button type="button" disabled={isDeactivating} onClick={() => { setDeactivateError(null); setShowDeactivateModal(true); }} className="mt-3 w-full rounded-xl border border-red-300 bg-white py-2 text-xs font-black text-red-700 hover:bg-red-100 disabled:opacity-50">{isDeactivating ? 'Deactivating...' : 'Deactivate account'}</button>
-          </div>
-
-          {/* SECTION 1.5: 🚚 Fulfillment & Delivery Modes Controls */}
-          <div className="rounded-xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3 space-y-2.5 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-indigo-100/80 pb-1.5">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-wider text-indigo-600">Checkout Fulfillment</p>
-                <h4 className="text-[11px] font-black text-slate-900 flex items-center gap-1 mt-0.5">
-                  <Truck className="h-3 w-3 text-indigo-600" />
-                  <span>Order Fulfillment Modes</span>
-                </h4>
-              </div>
-              <div className="flex items-center gap-1.5">
-                {isUpdatingDeliverySettings && (
-                  <span className="text-[9px] font-extrabold text-indigo-600 animate-pulse">Saving...</span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowDeliveryModal(true)}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-600 text-white text-[9px] font-black hover:bg-indigo-700 transition-all cursor-pointer shadow-xs"
-                >
-                  <SlidersHorizontal className="h-2.5 w-2.5" />
-                  <span>Configure Rules</span>
-                </button>
-              </div>
-            </div>
-
-            <p className="text-[9px] text-slate-600 font-medium leading-tight">
-              Control order options and delivery pricing shown to customers:
-            </p>
-
-            <div className="space-y-2">
-              {/* Home Delivery Card */}
-              <div className={`rounded-xl p-2.5 border transition-all shadow-2xs ${allowHomeDelivery
-                ? 'bg-white border-emerald-300 ring-1 ring-emerald-400/20'
-                : 'bg-slate-100/70 border-slate-200 opacity-75'
-                }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm shadow-inner ${allowHomeDelivery ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-200 border border-slate-300'
-                      }`}>
-                      🚚
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-black text-slate-900">Home Delivery</span>
-                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full ${allowHomeDelivery ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'
-                          }`}>
-                          {allowHomeDelivery ? 'ON' : 'OFF'}
-                        </span>
-                      </div>
-                      <span className="text-[9px] text-slate-500 font-medium block">Deliver order to customer home</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowDeliveryModal(true)}
-                      title="Edit Delivery Pricing & Radius"
-                      className="text-[9px] font-black text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-lg transition-all"
-                    >
-                      ⚙️ Edit Rates
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!allowHomeDelivery) {
-                          // Opening settings allows confirming config before enabling
-                          setShowDeliveryModal(true)
-                        } else {
-                          handleToggleDeliverySetting('allow_home_delivery', false)
-                        }
-                      }}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowHomeDelivery ? 'bg-emerald-600' : 'bg-slate-300'
-                        }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition-transform duration-200 ease-in-out ${allowHomeDelivery ? 'translate-x-4' : 'translate-x-0'
-                          }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Delivery Rule Badges */}
-                {allowHomeDelivery && (
-                  <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-[9px] text-slate-600 font-bold">
-                    <span className="bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-700">
-                      💰 Min: ₹{Number(store?.min_delivery_order) || 0}
-                    </span>
-                    <span className="bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-700">
-                      📍 Max: {store?.delivery_radius_km || 10} km
-                    </span>
-                    <span className="bg-indigo-50 px-1.5 py-0.5 rounded-md border border-indigo-200 text-indigo-700">
-                      {store?.delivery_charge_type === 'FREE'
-                        ? '🟢 Free Delivery'
-                        : store?.delivery_charge_type === 'PER_KM'
-                          ? `📍 ₹${store?.delivery_per_km_fee || 0}/km`
-                          : store?.delivery_charge_type === 'HYBRID'
-                            ? `⚡ ₹${store?.delivery_flat_fee || 0} + ₹${store?.delivery_per_km_fee || 0}/km`
-                            : `📦 ₹${store?.delivery_flat_fee || 0} Flat Fee`
-                      }
-                    </span>
-                    {Number(store?.free_delivery_above) > 0 && (
-                      <span className="bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 text-emerald-700">
-                        🎉 Free &gt; ₹{store?.free_delivery_above}
-                      </span>
-                    )}
-                    <span className="bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-600">
-                      ⏱️ {store?.delivery_estimated_time || '30-45 mins'}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Walk-in Store Pickup Card */}
-              <div className={`rounded-xl p-2.5 border transition-all shadow-2xs ${allowStorePickup
-                ? 'bg-white border-emerald-300 ring-1 ring-emerald-400/20'
-                : 'bg-slate-100/70 border-slate-200 opacity-75'
-                }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm shadow-inner ${allowStorePickup ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-200 border border-slate-300'
-                      }`}>
-                      🏪
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-black text-slate-900">Walk-in / Store Pickup</span>
-                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full ${allowStorePickup ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600'
-                          }`}>
-                          {allowStorePickup ? 'ON' : 'OFF'}
-                        </span>
-                      </div>
-                      <span className="text-[9px] text-slate-500 font-medium block">Customer collects at shop</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToggleDeliverySetting('allow_store_pickup', !allowStorePickup)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowStorePickup ? 'bg-emerald-600' : 'bg-slate-300'
-                      }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition-transform duration-200 ease-in-out ${allowStorePickup ? 'translate-x-4' : 'translate-x-0'
-                        }`}
-                    />
-                  </button>
-                </div>
-
-                {allowStorePickup && store?.pickup_instructions && (
-                  <div className="mt-2 pt-2 border-t border-slate-100 text-[9px] text-slate-500 font-medium flex items-center gap-1">
-                    <span>📍 {store.pickup_instructions}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 2: 🚀 Seller Suite Modules & Marketing Tools */}
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5 shadow-2xs">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1">
-              <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
-              <span>Seller Navigation & Marketing Tools</span>
-            </p>
-
-            {/* AI WhatsApp Status Poster Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSettingsOpen(false)
-                setShowPosterModal(true)
-              }}
-              className="w-full group flex items-center justify-between rounded-xl bg-purple-500/10 p-3 text-xs font-black text-purple-900 border border-purple-300/80 hover:bg-purple-500/20 hover:border-purple-400 transition-all shadow-2xs cursor-pointer text-left"
-            >
-              <span className="flex items-center gap-3">
-                <ImageIcon className="h-4.5 w-4.5 text-purple-600 shrink-0" />
-                <span>🎨 AI WhatsApp Poster Generator</span>
-              </span>
-              <span className="text-purple-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </button>
-
-            <Link
-              to={`/stores/${store.id}/catalog`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
-            >
-              <span className="flex items-center gap-3">
-                <FolderKanban className="h-4.5 w-4.5 text-indigo-600" />
-                <span>Product Catalog & Inventory</span>
-              </span>
-              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </Link>
-
-            <Link
-              to={`/stores/${store.id}/requests`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
-            >
-              <span className="flex items-center gap-3">
-                <Inbox className="h-4.5 w-4.5 text-indigo-600" />
-                <span>Product Requests Queue</span>
-              </span>
-              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </Link>
-
-            <Link
-              to={`/stores/${store.id}/payments`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
-            >
-              <span className="flex items-center gap-3">
-                <CreditCard className="h-4.5 w-4.5 text-indigo-600" />
-                <span>Payments Gateway Integration</span>
-              </span>
-              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </Link>
-
-            <Link
-              to={`/stores/${store.id}/coupons`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
-            >
-              <span className="flex items-center gap-3">
-                <Tag className="h-4.5 w-4.5 text-emerald-600" />
-                <span>Coupons & Offers Management</span>
-              </span>
-              <span className="text-slate-400 group-hover:text-emerald-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
-            </Link>
-          </div>
-
-          {/* SECTION 4: ⚙️ STORE PREFERENCES & VISIBILITY */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
-                    <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-600" />
-                    <span>Manage in App Mode</span>
-                  </h3>
-                  <p className="text-[10px] text-slate-500 font-medium">Order processing system mode</p>
-                </div>
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black ${store.manage_in_app ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'
-                  }`}>
-                  {store.manage_in_app ? 'APP SYSTEM (ON)' : 'WHATSAPP (OFF)'}
-                </span>
-              </div>
-
-              {/* Segmented Control Pill */}
-              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
-                <button
-                  type="button"
-                  onClick={() => toggleManageInApp(true)}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${store.manage_in_app
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                    }`}
-                >
-                  <span>🟢 App System</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => toggleManageInApp(false)}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${!store.manage_in_app
-                    ? 'bg-slate-800 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                    }`}
-                >
-                  <span>⚪ WhatsApp Direct</span>
-                </button>
-              </div>
-
-              <p className="text-[10.5px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-snug font-medium">
-                {store.manage_in_app
-                  ? '🟢 Orders process inside store system with live status tracking & voice alerts.'
-                  : '⚪ Customers order directly via WhatsApp messages.'}
-              </p>
-            </div>
-
+            {/* Store Online / Offline Toggle */}
             <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
-              <span className="text-xs font-bold text-slate-900">Store Visibility:</span>
+              <span className="text-xs font-bold text-slate-900">Store Status:</span>
               <button
                 type="button"
                 onClick={handleLiveToggleClick}
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black cursor-pointer transition-all shadow-2xs ${store.is_published
                   ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200'
                   : 'bg-emerald-600 text-white border border-emerald-500 hover:bg-emerald-700 shadow-xs'
-                  }`}
+                }`}
               >
                 {store.is_published ? (
                   <>
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                    <span>● LIVE (Click to Draft)</span>
+                    <span>● LIVE (Make Draft)</span>
                   </>
                 ) : (
                   <>
@@ -1130,28 +962,16 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 )}
               </button>
             </div>
-          </div>
 
-          {/* SECTION 5: 🔔 REAL-TIME PUSH ALERTS */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-2.5 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Real-Time Push Alerts</span>
-              </div>
-              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
-                }`}>
-                {notificationPermission === 'granted' ? 'ACTIVE' : 'DISABLED'}
-              </span>
-            </div>
-
+            {/* Push Notifications Toggle */}
             <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-100 gap-2">
-              <p className="text-[10.5px] text-slate-600 font-medium leading-snug">
-                {notificationPermission === 'granted'
-                  ? 'Instant alerts enabled for PWA App & Browser.'
-                  : 'Enable push alerts for order notifications.'}
-              </p>
-
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-indigo-600 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-slate-900">Push Notifications</p>
+                  <p className="text-[9.5px] text-slate-500 font-medium">Alerts for new orders</p>
+                </div>
+              </div>
               {notificationPermission !== 'granted' ? (
                 <button
                   type="button"
@@ -1166,109 +986,72 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 </span>
               )}
             </div>
-          </div>
 
-          {/* SECTION 6: 💳 ACTIVE SUBSCRIPTION */}
-          <div className="rounded-2xl border border-indigo-500/30 bg-slate-950 p-3.5 space-y-2.5 shadow-md text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Crown className="h-4 w-4 text-amber-400" />
-                <span className="text-xs font-black uppercase text-indigo-200">Active Subscription</span>
+            {/* Active Subscription Badge */}
+            <div className="rounded-xl border border-indigo-500/30 bg-slate-950 p-3 space-y-2 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Crown className="h-4 w-4 text-amber-400" />
+                  <span className="text-xs font-black uppercase text-indigo-200">Subscription Plan</span>
+                </div>
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  {subStatus?.plan_name || 'BASIC'}
+                </span>
               </div>
-              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                {subStatus?.plan_name || 'BASIC'} PLAN
-              </span>
-            </div>
-            <Link
-              to={`/stores/${store.id}/subscription`}
-              onClick={() => setIsSettingsOpen(false)}
-              className="w-full flex items-center justify-between rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 p-2.5 text-xs font-bold text-white transition-all shadow-2xs"
-            >
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-teal-300" />
-                <span>Manage Plan & Receipts</span>
-              </div>
-              <span className="text-[10px] font-extrabold text-teal-300">Open ➔</span>
-            </Link>
-          </div>
-
-          {/* SECTION 7: 🎧 PLATFORM TECHNICAL SUPPORT */}
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3.5 space-y-2.5 shadow-xs">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4 text-indigo-600" />
-                <span className="font-extrabold text-xs text-slate-900">Technical Support</span>
-              </div>
-              <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-black text-white">24/7 LIVE</span>
+              <Link
+                to={`/stores/${store.id}/subscription`}
+                onClick={() => setIsSettingsOpen(false)}
+                className="w-full flex items-center justify-between rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 p-2 text-xs font-bold text-white transition-all shadow-2xs"
+              >
+                <span>Manage Plan & Billing</span>
+                <span className="text-[10px] font-extrabold text-teal-300">Open ➔</span>
+              </Link>
             </div>
 
-            <div className="space-y-1.5 pt-0.5">
-              <a
-                href="mailto:rahulkolhe90.rk.kr@gmail.com"
-                className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-indigo-50/80 border border-slate-100 transition-all text-xs font-bold text-slate-800"
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <Mail className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                  <span className="truncate">Email Support</span>
-                </div>
-                <span className="text-[9.5px] text-indigo-600 font-extrabold shrink-0">Send Email ↗</span>
-              </a>
+            {/* Technical Support */}
+            <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
+                  <HelpCircle className="h-3.5 w-3.5 text-indigo-600" />
+                  <span>24/7 Technical Support</span>
+                </span>
+                <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[8px] font-black text-white">LIVE</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <a
+                  href="tel:7796216506"
+                  className="flex items-center justify-center gap-1 p-2 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 text-[11px] font-extrabold text-emerald-800"
+                >
+                  <PhoneCall className="h-3 w-3 text-emerald-600" />
+                  <span>Call Us</span>
+                </a>
+                <a
+                  href="https://wa.me/917796216506?text=Hi%20QuickStore%20Support,%20I%20need%20help."
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-1 p-2 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[11px] font-extrabold text-[#075E54]"
+                >
+                  <MessageSquare className="h-3 w-3 text-[#25D366]" />
+                  <span>WhatsApp</span>
+                </a>
+              </div>
+            </div>
 
-              <a
-                href="tel:7796216506"
-                className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-emerald-50/80 border border-slate-100 transition-all text-xs font-bold text-slate-800"
+            {/* Danger Zone */}
+            <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-3 space-y-2">
+              <p className="text-xs font-black text-rose-900">Danger Zone</p>
+              <p className="text-[10px] text-rose-700 font-medium">Deactivate store account permanently or temporarily.</p>
+              <button
+                type="button"
+                disabled={isDeactivating}
+                onClick={() => { setDeactivateError(null); setShowDeactivateModal(true); }}
+                className="w-full rounded-xl border border-rose-300 bg-white py-1.5 text-xs font-black text-rose-700 hover:bg-rose-100 disabled:opacity-50 cursor-pointer shadow-2xs"
               >
-                <div className="flex items-center gap-2">
-                  <PhoneCall className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <span>Call Support (+91 7796216506)</span>
-                </div>
-                <span className="text-[9.5px] text-emerald-600 font-extrabold">Call 📞</span>
-              </a>
-
-              <a
-                href="https://wa.me/917796216506?text=Hi%20QuickStore%20Support,%20I%20need%20technical%20help%20with%20my%20store."
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-between p-2 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 transition-all text-xs font-extrabold text-[#075E54]"
-              >
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-3.5 w-3.5 text-[#25D366] shrink-0" />
-                  <span>WhatsApp Live Chat</span>
-                </div>
-                <span className="text-[9.5px] bg-[#25D366] text-white px-2 py-0.5 rounded-md font-black">Chat ➔</span>
-              </a>
+                {isDeactivating ? 'Deactivating...' : 'Deactivate Account'}
+              </button>
             </div>
           </div>
 
-          {/* Print Counter Standee & Custom Domain */}
-          <div className="space-y-2">
-            <button
-              type="button"
-              disabled
-              title="Custom Domain feature is locked for now."
-              className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-slate-100/90 py-2 px-3 text-xs font-bold text-slate-400 opacity-75 cursor-not-allowed shadow-2xs"
-            >
-              <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-slate-400" />
-                <span>Custom Domain</span>
-              </div>
-              <div className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-600 border border-amber-500/20">
-                <Lock className="h-3 w-3 text-amber-600" />
-                <span>Locked</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setIsSettingsOpen(false)
-                setShowQrModal(true)
-              }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-2.5 text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 active:scale-98 transition-all shadow-md cursor-pointer"
-            >
-              <span>🖨️ Print Counter QR Standee</span>
-            </button>
-          </div>
         </div>
 
         {/* Sticky Responsive Mobile Bottom Action Footer */}

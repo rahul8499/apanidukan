@@ -292,7 +292,7 @@ class WhatsAppOrderSerializer(serializers.ModelSerializer):
             'payment_type', 'delivery_address', 'delivery_fee', 'delivery_distance_km',
             'location_url', 'coupon_code', 'discount_amount', 'wallet_points_redeemed',
             'wallet_cashback_earned', 'items', 'total',
-            'currency', 'status', 'created_at', 'updated_at'
+            'currency', 'status', 'cancellation_reason', 'cancelled_by', 'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'reference', 'tracking_token', 'items', 'total', 'currency', 'created_at', 'updated_at')
 

@@ -115,6 +115,8 @@ class WhatsAppOrder(models.Model):
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     currency = models.CharField(max_length=10, default='INR')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
+    cancellation_reason = models.CharField(max_length=255, blank=True, default='')
+    cancelled_by = models.CharField(max_length=50, blank=True, default='')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -574,8 +574,24 @@ export default function SellerOrders() {
                     ))}
                 </div>
 
-                {/* 5. Progress Bar (Ultra Slim 4-Stage Tracker) */}
-                {currentStatusUpper !== 'CANCELLED' && (
+                {/* 5. Progress Bar or Cancellation Notice */}
+                {currentStatusUpper === 'CANCELLED' ? (
+                  <div className="rounded-md sm:rounded-lg bg-rose-50 border border-rose-200 p-1.5 sm:p-2 text-[9px] sm:text-[11px] text-rose-900 space-y-0.5">
+                    <div className="flex items-center justify-between font-extrabold text-rose-700">
+                      <span>❌ Order Cancelled</span>
+                      {order.cancelled_by && (
+                        <span className="text-[8.5px] uppercase px-1.5 py-0.2 rounded bg-rose-200/80 text-rose-950 font-black">
+                          By {order.cancelled_by === 'CUSTOMER' ? 'Customer' : 'Seller'}
+                        </span>
+                      )}
+                    </div>
+                    {order.cancellation_reason && (
+                      <p className="font-bold text-rose-800">
+                        Reason: <span className="font-medium text-rose-900">{order.cancellation_reason}</span>
+                      </p>
+                    )}
+                  </div>
+                ) : (
                   <div className="flex items-center gap-1 text-[7.5px] sm:text-[9px] font-extrabold text-slate-500 pt-0.2">
                     <span className={currentStatusUpper === 'NEW' ? 'text-amber-600 font-black' : 'text-slate-400'}>{t('placed')}</span>
                     <div className="flex-1 h-0.5 sm:h-1 rounded-full bg-slate-200 overflow-hidden">

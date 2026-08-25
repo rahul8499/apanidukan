@@ -5,9 +5,10 @@ import { StoreCartProvider } from '../context/StoreCartContext'
 import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
 import NotificationBellHeader from '../components/NotificationBellHeader'
+import CustomerOrderCancelModal from '../components/CustomerOrderCancelModal'
 import {
   ArrowLeft, CheckCircle2, Clock, Truck, ShieldCheck, MapPin, Phone,
-  Share2, RefreshCw, MessageSquare, ShoppingBag, AlertCircle, Copy, ExternalLink, Zap
+  Share2, RefreshCw, MessageSquare, ShoppingBag, AlertCircle, Copy, ExternalLink, Zap, XCircle
 } from 'lucide-react'
 import { getStoreTheme } from '../utils/storeTheme'
 import StoreOfflinePage from './StoreOfflinePage'
@@ -74,6 +75,7 @@ function CustomerOrderTrackingContent() {
   const [wsConnected, setWsConnected] = useState(false)
   const [reordering, setReordering] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
   const trackingToken = new URLSearchParams(window.location.search).get('token') || ''
 
   const fetchOrder = async () => {
@@ -385,13 +387,25 @@ function CustomerOrderTrackingContent() {
               </div>
 
               {isCancelled ? (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-900 space-y-1">
-                  <div className="flex items-center gap-1.5 font-black text-sm text-rose-700">
-                    <AlertCircle className="h-4 w-4 text-rose-600" />
-                    <span>Order Cancelled</span>
+                <div className="rounded-2xl border border-rose-300 dark:border-rose-900 bg-rose-50/90 dark:bg-rose-950/40 p-4 text-rose-900 dark:text-rose-200 space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5 font-black text-sm text-rose-700 dark:text-rose-400">
+                      <XCircle className="h-5 w-5 text-rose-600" />
+                      <span>Order Cancelled</span>
+                    </div>
+                    {order.cancelled_by && (
+                      <span className="text-[10px] font-black uppercase bg-rose-200/80 dark:bg-rose-900/60 text-rose-950 dark:text-rose-200 px-2 py-0.5 rounded-full">
+                        Cancelled by {order.cancelled_by === 'CUSTOMER' ? 'You (Customer)' : 'Store Owner'}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-rose-700 font-medium">
-                    This order was cancelled by the store seller. Please contact the store directly via WhatsApp if you need further help.
+                  {order.cancellation_reason && (
+                    <p className="text-xs font-bold text-rose-800 dark:text-rose-300 bg-rose-100/70 dark:bg-rose-900/30 p-2.5 rounded-xl border border-rose-200 dark:border-rose-800">
+                      Reason: <span className="font-semibold">{order.cancellation_reason}</span>
+                    </p>
+                  )}
+                  <p className="text-[11px] text-rose-700 dark:text-rose-300 font-medium">
+                    If you placed this by mistake or want to re-order, click Quick Reorder below or contact the store on WhatsApp.
                   </p>
                 </div>
               ) : (
@@ -580,6 +594,17 @@ function CustomerOrderTrackingContent() {
                   <RefreshCw className={`h-4 w-4 ${reordering ? 'animate-spin' : ''}`} />
                   <span>{reordering ? 'Creating Quick Reorder…' : 'Quick Reorder Same Items'}</span>
                 </button>
+
+                {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCancelModal(true)}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-rose-500/10 border border-rose-500/20 py-2.5 px-4 font-black text-xs text-rose-600 hover:bg-rose-500/20 transition-all cursor-pointer mt-1"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    <span>Cancel Order</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -717,6 +742,17 @@ function CustomerOrderTrackingContent() {
 
       <CustomerBottomNav storeSlug={storeSlug!} active="orders" />
       <CustomerChatWidget storeSlug={storeSlug!} orderReference={reference} />
+
+      <CustomerOrderCancelModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        storeSlug={storeSlug!}
+        order={order}
+        trackingToken={trackingToken}
+        onSuccess={(updated) => {
+          setOrder(updated)
+        }}
+      />
     </div>
   )
 }

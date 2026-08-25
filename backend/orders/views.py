@@ -235,6 +235,110 @@ class PublicQuickReorderView(APIView):
         return Response(order_data, status=status.HTTP_201_CREATED)
 
 
+from decimal import Decimal
+from django.db import transaction
+from products.models import Product
+from .models import CustomerWallet
+
+
+def cancel_whatsapp_order(order, cancelled_by='CUSTOMER', reason=''):
+    """Atomic helper to cancel order, restore product stock & revert customer loyalty points."""
+    if order.status == WhatsAppOrder.STATUS_CANCELLED:
+        return order
+
+    with transaction.atomic():
+        order.status = WhatsAppOrder.STATUS_CANCELLED
+        order.cancellation_reason = reason or ('Cancelled by customer' if cancelled_by == 'CUSTOMER' else 'Cancelled by seller')
+        order.cancelled_by = cancelled_by
+        order.save(update_fields=['status', 'cancellation_reason', 'cancelled_by', 'updated_at'])
+
+        # 1. Restore product stock
+        if isinstance(order.items, list):
+            for item in order.items:
+                product_id = item.get('product_id') or item.get('id')
+                qty = item.get('quantity', 1)
+                if product_id:
+                    Product.objects.filter(id=product_id).update(stock_quantity=models.F('stock_quantity') + qty)
+
+        # 2. Revert Customer Wallet points & cashback
+        if order.customer_phone:
+            wallet = CustomerWallet.objects.filter(store=order.store, customer_phone=order.customer_phone).first()
+            if wallet:
+                wallet_updated = False
+                # Refund spent coins back to wallet
+                if order.wallet_points_redeemed and Decimal(str(order.wallet_points_redeemed)) > Decimal('0.00'):
+                    wallet.balance = wallet.balance + Decimal(str(order.wallet_points_redeemed))
+                    wallet.total_redeemed = max(Decimal('0.00'), wallet.total_redeemed - Decimal(str(order.wallet_points_redeemed)))
+                    wallet_updated = True
+                # Revoke unearned cashback
+                if order.wallet_cashback_earned and Decimal(str(order.wallet_cashback_earned)) > Decimal('0.00'):
+                    wallet.balance = max(Decimal('0.00'), wallet.balance - Decimal(str(order.wallet_cashback_earned)))
+                    wallet.total_earned = max(Decimal('0.00'), wallet.total_earned - Decimal(str(order.wallet_cashback_earned)))
+                    wallet_updated = True
+                if wallet_updated:
+                    wallet.save()
+
+    return order
+
+
+class PublicCustomerCancelOrderView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_order'
+
+    def post(self, request, slug, reference):
+        store = get_object_or_404(Store, slug=slug)
+        token = request.data.get('tracking_token', '').strip() or request.query_params.get('tracking_token', '').strip()
+        phone = normalize_phone(request.data.get('phone', '').strip())
+
+        order = WhatsAppOrder.objects.filter(store=store, reference=reference).first()
+        if not order:
+            return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Security check: matching tracking_token or customer_phone
+        token_valid = bool(token and str(order.tracking_token) == token)
+        phone_valid = bool(phone and normalize_phone(order.customer_phone) == phone)
+
+        if not (token_valid or phone_valid):
+            return Response({'detail': 'Unauthorized to cancel this order.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if order.status == WhatsAppOrder.STATUS_CANCELLED:
+            return Response({'detail': 'This order is already cancelled.', 'order': WhatsAppOrderSerializer(order).data})
+
+        if order.status == WhatsAppOrder.STATUS_DELIVERED:
+            return Response({'detail': 'Delivered orders cannot be cancelled.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        reason = str(request.data.get('cancellation_reason', '')).strip() or 'Cancelled by customer'
+        
+        updated_order = cancel_whatsapp_order(order, cancelled_by='CUSTOMER', reason=reason)
+        order_data = WhatsAppOrderSerializer(updated_order).data
+
+        # Notify Seller
+        from stores.models import SellerNotification
+        SellerNotification.objects.create(
+            store=store,
+            notification_type='order',
+            title=f"❌ Order #{order.reference} Cancelled by Customer",
+            body=f"Customer {order.customer_name or order.customer_phone or 'Buyer'} cancelled order #{order.reference}. Reason: {reason}",
+            link=f"/stores/{store.id}/orders"
+        )
+
+        # Broadcast WS updates to tracking & seller dashboard
+        broadcast_order_event_sync(f"order_{updated_order.reference}", {
+            "type": "order_status_updated",
+            "order": order_data
+        })
+        broadcast_order_event_sync(f"store_{store.id}", {
+            "type": "order_status_updated",
+            "order": order_data
+        })
+
+        return Response({
+            'success': True,
+            'message': 'Order cancelled successfully.',
+            'order': order_data
+        })
+
+
 class SellerWhatsAppOrdersView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -253,11 +357,19 @@ class SellerWhatsAppOrdersView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         order = get_object_or_404(WhatsAppOrder, id=order_id, store=store)
-        if set(request.data.keys()) != {'status'}:
-            return Response({'detail': 'Only order status can be updated.'}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = WhatsAppOrderStatusUpdateSerializer(order, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        updated_order = serializer.save()
+        new_status = request.data.get('status')
+        reason = request.data.get('cancellation_reason', '')
+
+        if new_status == WhatsAppOrder.STATUS_CANCELLED and order.status != WhatsAppOrder.STATUS_CANCELLED:
+            updated_order = cancel_whatsapp_order(order, cancelled_by='SELLER', reason=reason or 'Cancelled by seller')
+        else:
+            payload_keys = set(request.data.keys()) - {'cancellation_reason'}
+            if payload_keys != {'status'}:
+                return Response({'detail': 'Only order status can be updated.'}, status=status.HTTP_400_BAD_REQUEST)
+            serializer = WhatsAppOrderStatusUpdateSerializer(order, data={'status': new_status})
+            serializer.is_valid(raise_exception=True)
+            updated_order = serializer.save()
+
         order_data = WhatsAppOrderSerializer(updated_order).data
 
         # Broadcast real-time status update to customer tracking screen & seller dashboard

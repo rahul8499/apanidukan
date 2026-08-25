@@ -6,6 +6,7 @@ import { sendMsg91WidgetOtp, verifyMsg91WidgetOtp } from '../context/AuthContext
 import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
 import NotificationBellHeader from '../components/NotificationBellHeader'
+import CustomerOrderCancelModal from '../components/CustomerOrderCancelModal'
 import {
   ArrowLeft, Search, Clock, CheckCircle2,
   ChevronRight, MessageSquare, ShoppingBag, Truck, XCircle, Package,
@@ -80,6 +81,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
   const [isSyncing, setIsSyncing] = useState(false)
   const [displayCount, setDisplayCount] = useState(10)
   const [storeOffline, setStoreOffline] = useState(false)
+  const [cancelOrderTarget, setCancelOrderTarget] = useState<any>(null)
 
   const isStandalone = typeof window !== 'undefined' && (
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -646,8 +648,12 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                       </div>
                     </div>
 
-                    {/* Store Pickup / Delivery Note */}
-                    {order.order_type === 'STORE_PICKUP' ? (
+                    {/* Store Pickup / Delivery / Cancelled Note */}
+                    {order.status === 'CANCELLED' ? (
+                      <p className="text-[10.5px] font-medium bg-rose-500/10 border border-rose-500/20 p-2 rounded-xl text-rose-700 dark:text-rose-300">
+                        ❌ <strong>Cancelled{order.cancelled_by ? ` by ${order.cancelled_by === 'CUSTOMER' ? 'You' : 'Store'}` : ''}:</strong> {order.cancellation_reason || 'Order was cancelled.'}
+                      </p>
+                    ) : order.order_type === 'STORE_PICKUP' ? (
                       <p className="text-[10.5px] font-medium bg-amber-500/10 border border-amber-500/20 p-2 rounded-xl text-amber-700 dark:text-amber-300">
                         📍 Collect at shop: <span className="font-bold">{store?.address || store?.name || 'Store Location'}</span>
                       </p>
@@ -662,14 +668,27 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
 
                     {/* Actions Row */}
                     <div className="border-t border-current/10 pt-2.5 flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => window.dispatchEvent(new CustomEvent('qs-open-chat'))}
-                        className={`text-[11px] font-extrabold ${storeTheme.text_secondary_class} hover:${storeTheme.text_primary_class} flex items-center gap-1 cursor-pointer`}
-                      >
-                        <MessageSquare className="h-3.5 w-3.5 opacity-70" />
-                        <span>Need Help?</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => window.dispatchEvent(new CustomEvent('qs-open-chat'))}
+                          className={`text-[11px] font-extrabold ${storeTheme.text_secondary_class} hover:${storeTheme.text_primary_class} flex items-center gap-1 cursor-pointer`}
+                        >
+                          <MessageSquare className="h-3.5 w-3.5 opacity-70" />
+                          <span>Need Help?</span>
+                        </button>
+
+                        {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
+                          <button
+                            type="button"
+                            onClick={() => setCancelOrderTarget(order)}
+                            className="inline-flex items-center gap-1 rounded-xl bg-rose-500/10 border border-rose-500/20 px-2 py-1 text-[11px] font-extrabold text-rose-600 hover:bg-rose-500/20 transition-all cursor-pointer"
+                          >
+                            <XCircle className="h-3 w-3" />
+                            <span>Cancel</span>
+                          </button>
+                        )}
+                      </div>
 
                       <Link
                         to={`/store/${storeSlug}/order/${order.reference}?token=${order.tracking_token}`}
@@ -708,6 +727,17 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
 
       <CustomerBottomNav storeSlug={storeSlug!} active="orders" />
       <CustomerChatWidget storeSlug={storeSlug!} />
+
+      <CustomerOrderCancelModal
+        isOpen={Boolean(cancelOrderTarget)}
+        onClose={() => setCancelOrderTarget(null)}
+        storeSlug={storeSlug!}
+        order={cancelOrderTarget}
+        customerPhone={customerPhone}
+        onSuccess={(updatedOrder) => {
+          setOrders(prev => prev.map(o => o.reference === updatedOrder.reference ? updatedOrder : o))
+        }}
+      />
     </div>
   )
 }

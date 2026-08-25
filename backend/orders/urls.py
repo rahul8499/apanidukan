@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     CreateOrderView, ListOrdersView, OrderDetailView, ListAccessesView,
     PublicCheckoutPhoneOTPSendView, PublicCheckoutPhoneOTPVerifyView, PublicWhatsAppOrderView, PublicCustomerOrdersListView, PublicWhatsAppOrderDetailView, PublicQuickReorderView,
-    SellerWhatsAppOrdersView, PublicCustomerWalletView
+    SellerWhatsAppOrdersView, PublicCustomerWalletView, PublicCustomerCancelOrderView
 )
 
 urlpatterns = [
@@ -15,6 +15,7 @@ urlpatterns = [
     path('public/stores/<slug:slug>/whatsapp-orders/', PublicWhatsAppOrderView.as_view(), name='public-whatsapp-order'),
     path('public/stores/<slug:slug>/customer-orders/', PublicCustomerOrdersListView.as_view(), name='public-customer-orders-list'),
     path('public/stores/<slug:slug>/orders/<str:reference>/', PublicWhatsAppOrderDetailView.as_view(), name='public-whatsapp-order-detail'),
+    path('public/stores/<slug:slug>/orders/<str:reference>/cancel/', PublicCustomerCancelOrderView.as_view(), name='public-customer-cancel-order'),
     path('public/stores/<slug:slug>/orders/<str:reference>/quick-reorder/', PublicQuickReorderView.as_view(), name='public-quick-reorder'),
     path('public/stores/<slug:slug>/wallet/', PublicCustomerWalletView.as_view(), name='public-customer-wallet'),
     path('seller/stores/<int:store_id>/whatsapp-orders/', SellerWhatsAppOrdersView.as_view(), name='seller-whatsapp-orders'),

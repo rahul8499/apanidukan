@@ -5,8 +5,25 @@ import './styles.css'
 import './i18n'
 import App from './App'
 
+// Handle dynamic import/chunk loading failures automatically after deployment updates
+window.addEventListener('error', (e) => {
+  if (
+    e.message &&
+    (e.message.includes('Failed to fetch dynamically imported module') ||
+     e.message.includes('Loading chunk') ||
+     e.message.includes('Importing a module script failed'))
+  ) {
+    console.warn('New PWA build detected, auto-refreshing assets...')
+    window.location.reload()
+  }
+})
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js'))
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').then((reg) => {
+      reg.update()
+    }).catch(() => {})
+  })
 }
 
 createRoot(document.getElementById('root')!).render(

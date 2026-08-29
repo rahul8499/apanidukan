@@ -10,6 +10,7 @@ import api from '../services/api'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
 import SellerOnboardingGuideModal from '../components/SellerOnboardingGuideModal'
+import StoreSetupProgressWidget from '../components/StoreSetupProgressWidget'
 import { useTranslation } from 'react-i18next'
 import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeCategories, getBusinessTypeProducts, getBusinessTypeCheckoutHint, getUnitDisplayLabel, getUnitHint, formatUnitDisplay, UNIT_LABEL_MAP } from '../utils/businessTypes'
 import { X, Trash2 } from 'lucide-react'
@@ -1099,6 +1100,15 @@ export default function StoreManager() {
           </div>
         </div>
       </div>
+
+      {/* Store Setup Checklist & Progress Tracker */}
+      <StoreSetupProgressWidget
+        store={store}
+        categoriesCount={categories.length}
+        productsCount={products.length}
+        onRequestPublish={requestPublish}
+        onOpenOnboardingTour={() => setShowOnboardingModal(true)}
+      />
 
       {/* Step 01: Storefront & WhatsApp Order Channel Setup - Sleek Compact Card */}
       <section id="share" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-3.5 shadow-xs space-y-2.5 transition-all">

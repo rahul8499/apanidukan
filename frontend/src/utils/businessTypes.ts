@@ -203,8 +203,8 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     checkoutHintEn: 'Mobile Model, Preferred Color & Delivery Address',
     checkoutHintHi: 'मोबाइल मॉडल, मनपसंद कलर एवं डिलीवरी पता',
     checkoutHintMr: 'मोबाईल मॉडेल, आवडता रंग व डिलिव्हरी पत्ता',
-    customFieldLabel: 'Mobile Model / Device Specification',
-    customFieldPlaceholder: 'e.g. Mobile Model: Redmi Note 12 Pro / Color: Black',
+    customFieldLabel: 'Product Specification',
+    customFieldPlaceholder: 'e.g. Mobile Model: Redmi Note 12 Pro / Color: Black / Specification details',
   },
   {
     id: 'AUTOMOBILE',

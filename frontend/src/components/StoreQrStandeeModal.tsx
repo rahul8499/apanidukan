@@ -24,9 +24,6 @@ export default function StoreQrStandeeModal({ store, publicUrl: initialPublicUrl
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(targetUrl)}`
 
   const handlePrint = () => {
-    const printContent = standeeRef.current
-    if (!printContent) return
-
     const windowPrint = window.open('', '', 'left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0')
     if (!windowPrint) return
 
@@ -35,21 +32,117 @@ export default function StoreQrStandeeModal({ store, publicUrl: initialPublicUrl
       <html>
         <head>
           <title>Print Shop QR Standee - ${store.name}</title>
-          <script src="https://cdn.tailwindcss.com"></script>
           <style>
-            @media print {
-              body { margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; }
-              .no-print { display: none; }
+            @page {
+              size: A4 portrait;
+              margin: 10mm;
             }
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              background: #0f172a;
+              color: #ffffff;
+              margin: 0;
+              padding: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 95vh;
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .standee-card {
+              width: 100%;
+              max-width: 400px;
+              background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 50%, #1e1b4b 100%);
+              border: 4px solid #4338ca;
+              border-radius: 28px;
+              padding: 32px 24px;
+              text-align: center;
+              box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            }
+            .badge {
+              display: inline-block;
+              background: rgba(99, 102, 241, 0.2);
+              color: #a5b4fc;
+              border: 1px solid rgba(129, 140, 248, 0.4);
+              border-radius: 9999px;
+              padding: 6px 14px;
+              font-size: 11px;
+              font-weight: 900;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              margin-bottom: 16px;
+            }
+            .title { font-size: 28px; font-weight: 900; margin: 0; color: #ffffff; }
+            .tagline { font-size: 14px; font-weight: 700; color: #fcd34d; margin-top: 6px; }
+            .qr-box {
+              background: #ffffff;
+              border-radius: 20px;
+              padding: 16px;
+              width: 220px;
+              height: 220px;
+              margin: 24px auto;
+              box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+              box-sizing: border-box;
+            }
+            .qr-box img { width: 100%; height: 100%; object-fit: contain; }
+            .cta-banner {
+              background: rgba(255, 255, 255, 0.1);
+              border: 1px solid rgba(255, 255, 255, 0.15);
+              border-radius: 16px;
+              padding: 12px;
+              margin-bottom: 20px;
+            }
+            .cta-title { font-size: 13px; font-weight: 900; color: #ffffff; }
+            .cta-sub { font-size: 11px; color: #cbd5e1; margin-top: 4px; }
+            .badges-row {
+              display: flex;
+              justify-content: center;
+              gap: 12px;
+              font-size: 10px;
+              font-weight: 800;
+              color: #c7d2fe;
+              border-top: 1px solid rgba(99, 102, 241, 0.3);
+              padding-top: 16px;
+              text-transform: uppercase;
+            }
+            .url-footer { font-size: 11px; font-family: monospace; color: #94a3b8; margin-top: 12px; }
           </style>
         </head>
-        <body class="bg-white flex items-center justify-center p-8">
-          ${printContent.innerHTML}
+        <body>
+          <div class="standee-card">
+            <div class="badge">✨ OFFICIAL DIGITAL STOREFRONT</div>
+            <h1 class="title">${store.name}</h1>
+            <div class="tagline">${store.tagline || 'Scan Karo, Ghar Baithe Online Order Karo'}</div>
+            
+            <div class="qr-box">
+              <img src="${qrImageUrl}" alt="Store QR Code" />
+            </div>
+
+            <div class="cta-banner">
+              <div class="cta-title">📲 SCAN QR CODE TO SHOP ONLINE</div>
+              <div class="cta-sub">Scan with any Phone Camera or WhatsApp to browse products & order instantly!</div>
+            </div>
+
+            <div class="badges-row">
+              <span>✓ Instant Order</span>
+              <span>•</span>
+              <span>🛍️ Live Catalog</span>
+              <span>•</span>
+              <span>COD / UPI</span>
+            </div>
+
+            <div class="url-footer">${displayUrl}</div>
+          </div>
+
           <script>
-            setTimeout(() => {
-              window.print();
-              window.close();
-            }, 600);
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 400);
+            };
           </script>
         </body>
       </html>

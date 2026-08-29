@@ -5,9 +5,11 @@ import { useAuth } from '../context/AuthContext'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import SellerSplashLoader from '../components/SellerSplashLoader'
+import ThermalReceiptModal from '../components/ThermalReceiptModal'
+import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
-import { SlidersHorizontal, X } from 'lucide-react'
+import { SlidersHorizontal, X, Printer, QrCode } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const statuses = ['NEW', 'CONFIRMED', 'PAID', 'DELIVERED', 'CANCELLED']
@@ -25,6 +27,8 @@ export default function SellerOrders() {
   const [copiedRef, setCopiedRef] = useState<string | null>(null)
   const [isRefreshingData, setIsRefreshingData] = useState(false)
   const [showFilterModal, setShowFilterModal] = useState(false)
+  const [selectedOrderForReceipt, setSelectedOrderForReceipt] = useState<any | null>(null)
+  const [showStandeeModal, setShowStandeeModal] = useState(false)
   const auth = useAuth()
   const navigate = useNavigate()
 
@@ -251,6 +255,16 @@ export default function SellerOrders() {
               </span>
 
               <div className="flex items-center gap-1.5 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowStandeeModal(true)}
+                  className="flex items-center gap-1 rounded-lg sm:rounded-xl border border-indigo-400/40 bg-indigo-950/80 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs font-extrabold text-indigo-200 hover:bg-indigo-900 transition-all cursor-pointer shadow-xs active:scale-95"
+                  title="Print Shop QR Standee & Posters"
+                >
+                  <QrCode className="h-3 w-3 text-amber-400" />
+                  <span className="font-extrabold">🪧 Standee QR</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={async () => {
@@ -611,7 +625,17 @@ export default function SellerOrders() {
                 )}
 
                 {/* 6. Clean Action Toolbar — Ultra Compact Single Row for Mobile */}
-                <div className="grid grid-cols-4 sm:flex items-center gap-1 pt-0.5">
+                <div className="grid grid-cols-5 sm:flex items-center gap-1 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOrderForReceipt(order)}
+                    className="rounded-md sm:rounded-lg bg-teal-700 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-teal-800 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
+                    title="Print POS Thermal Receipt / Invoice"
+                  >
+                    <Printer className="h-3 w-3 text-teal-300 hidden sm:inline" />
+                    <span>🖨️ Bill</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => startDirectChat(order)}
@@ -752,6 +776,24 @@ export default function SellerOrders() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* POS Thermal Receipt Modal */}
+      {selectedOrderForReceipt && (
+        <ThermalReceiptModal
+          order={selectedOrderForReceipt}
+          store={store}
+          onClose={() => setSelectedOrderForReceipt(null)}
+        />
+      )}
+
+      {/* Store QR Standee & Printable Poster Modal */}
+      {showStandeeModal && (
+        <StoreQrStandeeModal
+          store={store}
+          publicUrl={`${window.location.origin}/s/${store.slug}`}
+          onClose={() => setShowStandeeModal(false)}
+        />
       )}
     </main>
   )

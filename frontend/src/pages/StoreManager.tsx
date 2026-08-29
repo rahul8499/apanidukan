@@ -2508,6 +2508,15 @@ export default function StoreManager() {
         }}
       />
 
+      {/* Printable Shop QR Standee & Poster Modal */}
+      {showQrModal && store && (
+        <StoreQrStandeeModal
+          store={store}
+          publicUrl={publicUrl}
+          onClose={() => setShowQrModal(false)}
+        />
+      )}
+
     </div>
     {/* Unified Seller Bottom Navigation Bar */}
     <SellerBottomNav storeId={store.id} activeTab="setup" />

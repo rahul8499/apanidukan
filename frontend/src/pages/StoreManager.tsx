@@ -1644,42 +1644,38 @@ export default function StoreManager() {
 
       {/* Business Category & Ordering Logic Customizer Section */}
       {store && (
-        <section id="business-category" className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-r from-indigo-900 via-slate-900 to-slate-950 p-3.5 sm:p-5 text-white shadow-md space-y-3 transition-all">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-800/60 pb-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-2xl shadow-inner border border-white/20">
+        <section id="business-category" className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-r from-indigo-900 via-slate-900 to-slate-950 p-2.5 sm:p-4 text-white shadow-xs space-y-2 transition-all">
+          <div className="flex items-center justify-between gap-2 border-b border-indigo-800/60 pb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-base sm:text-xl shadow-inner border border-white/20">
                 {getBusinessType(store.business_type).icon}
               </span>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="rounded-full bg-amber-400/20 text-amber-300 text-[9px] font-black px-2 py-0.5 border border-amber-400/40 uppercase">
-                    Category & Logic Setup
-                  </span>
-                </div>
-                <h3 className="text-xs sm:text-base font-black text-white mt-0.5">
+              <div className="min-w-0">
+                <span className="rounded-full bg-amber-400/20 text-amber-300 text-[8.5px] sm:text-[9px] font-black px-1.5 py-0.2 border border-amber-400/40 uppercase">
+                  Category & Logic Setup
+                </span>
+                <h3 className="text-xs sm:text-sm font-black text-white truncate">
                   {getBusinessTypeTitle(getBusinessType(store.business_type), i18n.language)}
                 </h3>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={requestAutoCreateSampleCategories}
-                className="rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 px-3 py-1.5 text-[10px] sm:text-xs font-black text-slate-950 hover:brightness-110 shadow-xs transition-all cursor-pointer flex items-center gap-1"
-              >
-                <span>{t('autoAddSampleCategories', '⚡ 1-Click रेडी कॅटेगरीज जोडा')}</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={requestAutoCreateSampleCategories}
+              className="rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-black text-slate-950 hover:brightness-110 shadow-2xs transition-all cursor-pointer shrink-0 active:scale-95 whitespace-nowrap"
+            >
+              <span>⚡ 1-Click Auto Categories</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
-              <label className="text-[10px] font-extrabold text-indigo-300 uppercase tracking-wider block">Change Business Category:</label>
+              <label className="text-[9.5px] font-extrabold text-indigo-300 uppercase tracking-wider block">Change Category:</label>
               <select
                 value={store.business_type || 'GENERAL'}
                 onChange={e => requestUpdateBusinessType(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-indigo-700 bg-slate-900 p-2 text-xs font-bold text-white focus:border-amber-400 focus:outline-none"
+                className="mt-0.5 w-full rounded-lg border border-indigo-700 bg-slate-900 px-2 py-1 text-xs font-bold text-white focus:border-amber-400 focus:outline-none"
               >
                 {BUSINESS_TYPES.map(b => (
                   <option key={b.id} value={b.id}>
@@ -1689,15 +1685,15 @@ export default function StoreManager() {
               </select>
             </div>
 
-            <div className="rounded-xl bg-white/5 p-2.5 border border-white/10 space-y-1">
-              <p className="text-[10px] font-extrabold text-amber-300 uppercase tracking-wider">🎯 Checkout UX & Unit Rules:</p>
-              <p className="text-[11px] text-slate-200 font-medium">
+            <div className="rounded-lg bg-white/5 p-2 border border-white/10 space-y-0.5">
+              <p className="text-[9.5px] font-extrabold text-amber-300 uppercase tracking-wider">🎯 Checkout UX & Units:</p>
+              <p className="text-[10px] text-slate-200 font-medium leading-tight">
                 {getBusinessTypeCheckoutHint(getBusinessType(store.business_type), i18n.language)}
               </p>
               <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                <span className="text-[9.5px] text-slate-400 font-bold">Units:</span>
+                <span className="text-[9px] text-slate-400 font-bold">Units:</span>
                 {getBusinessType(store.business_type).units.map(u => (
-                  <span key={u} className="bg-indigo-950 text-indigo-300 border border-indigo-700/50 px-1.5 py-0.2 rounded text-[9px] font-bold">
+                  <span key={u} className="bg-indigo-950 text-indigo-300 border border-indigo-700/50 px-1 py-0.1 rounded text-[8.5px] font-bold">
                     {u}
                   </span>
                 ))}

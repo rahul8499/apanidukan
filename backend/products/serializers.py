@@ -46,15 +46,24 @@ class ProductSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def validate_price(self, value):
-        if value < 0:
-            raise serializers.ValidationError('Price must be >= 0')
+        if value is None or value <= 0:
+            raise serializers.ValidationError('Price must be greater than ₹0.')
         return value
 
     def validate(self, attrs):
         store = attrs.get('store') or getattr(self.instance, 'store', None)
         category = attrs.get('category')
+        name = attrs.get('name')
+
+        # Mandatory checks for creating new products
+        if not self.instance:
+            if not name or not name.strip():
+                raise serializers.ValidationError({'name': 'Product name is required.'})
+            if not category:
+                raise serializers.ValidationError({'category': 'Category is required. Please select a valid category.'})
+
         if category and store and category.store != store:
-            raise serializers.ValidationError('Category must belong to the same store as the product')
+            raise serializers.ValidationError({'category': 'Category must belong to the same store as the product.'})
         return attrs
 
 

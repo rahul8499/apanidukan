@@ -6,7 +6,7 @@ import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { useTranslation } from 'react-i18next'
-import { X, Trash2 } from 'lucide-react'
+import { X, Trash2, Copy, Share2 } from 'lucide-react'
 import { getBusinessType, UNIT_LABEL_MAP, formatUnitDisplay, getUnitDisplayLabel, getUnitHint } from '../utils/businessTypes'
 
 const errorMessage = (error: any) =>
@@ -296,8 +296,37 @@ export default function SellerCatalog() {
     }
   }
 
-  async function handleAddSingleProduct(e: React.FormEvent) {
+  function requestAddSingleProduct(e: React.FormEvent) {
     e.preventDefault()
+    if (!store) return
+
+    if (!newProdName.trim()) {
+      toast.error('⚠️ Product Name is required!')
+      return
+    }
+
+    if (!newProdPrice || Number(newProdPrice) <= 0) {
+      toast.error('⚠️ Product Price is required and must be greater than ₹0!')
+      return
+    }
+
+    if (!newProdCat) {
+      toast.error('⚠️ Category is required! Please select a category.')
+      return
+    }
+
+    setConfirmModal({
+      isOpen: true,
+      title: `🛍️ Publish "${newProdName}" to Store?`,
+      message: `तुम्हाला "${newProdName}" (₹${newProdPrice}) हा प्रॉडक्ट ग्राहकांसाठी दुकानात पब्लिश करायचा आहे का?`,
+      confirmText: '🚀 Yes, Publish Product',
+      cancelText: 'Cancel',
+      variant: 'success',
+      onConfirm: () => executeAddSingleProduct()
+    })
+  }
+
+  async function executeAddSingleProduct() {
     if (!store || !newProdName.trim()) return
     setIsAddingProduct(true)
     setMessage('⏳ Uploading images & publishing product to store...')
@@ -658,17 +687,17 @@ export default function SellerCatalog() {
                             </div>
                           </div>
 
-                          {/* Action Buttons */}
-                          <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                          {/* Action Buttons Row */}
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-1.5 border-t border-slate-100 pt-2.5">
                             <button
                               type="button"
                               onClick={() => openEditModal(prod)}
-                              className="flex-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors"
+                              className="flex-1 rounded-lg bg-slate-100 px-2 py-1.5 text-[11px] font-extrabold text-slate-700 hover:bg-slate-200 transition-colors"
                             >
                               {t('editBtn')}
                             </button>
 
-                            <label title="Add Multiple Photos to this Product" className="flex-1 text-center rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer">
+                            <label title="Add Multiple Photos to this Product" className="flex-1 text-center rounded-lg bg-slate-100 px-2 py-1.5 text-[11px] font-extrabold text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer whitespace-nowrap">
                               {t('multiPhotos')}
                               <input
                                 type="file"
@@ -683,10 +712,37 @@ export default function SellerCatalog() {
                               />
                             </label>
 
+                            {/* Share Product WhatsApp */}
+                            <a
+                              href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                                `🛍️ *${prod.name}*\n💰 Price: ₹${prod.price}\n\n👉 Buy Online: ${window.location.origin}/store/${store?.slug}/product/${prod.slug || prod.id}`
+                              )}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg bg-[#25D366] px-2 py-1.5 text-[11px] font-extrabold text-white hover:bg-[#20ba5a] transition-all cursor-pointer flex items-center justify-center gap-1 shadow-2xs"
+                              title="Share Product on WhatsApp"
+                            >
+                              <span>📲 Share</span>
+                            </a>
+
+                            {/* Copy Product Link */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const prodLink = `${window.location.origin}/store/${store?.slug}/product/${prod.slug || prod.id}`
+                                navigator.clipboard.writeText(prodLink)
+                                toast.success('Product link copied!')
+                              }}
+                              className="rounded-lg bg-indigo-50 border border-indigo-200 px-2 py-1.5 text-[11px] font-extrabold text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                              title="Copy Direct Product Link"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => promptDeleteProduct(prod)}
-                              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                              className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-[11px] font-extrabold text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer flex items-center justify-center gap-1"
                               title="Delete Product"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -918,9 +974,9 @@ export default function SellerCatalog() {
               </button>
             </div>
 
-            <form onSubmit={handleAddSingleProduct} className="space-y-3">
+            <form onSubmit={requestAddSingleProduct} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700">{t('productNameLabel')}</label>
+                <label className="text-xs font-bold text-slate-700">{t('productNameLabel')} <span className="text-rose-500 font-extrabold">*</span></label>
                 <input
                   value={newProdName}
                   onChange={(e) => setNewProdName(e.target.value)}
@@ -932,10 +988,11 @@ export default function SellerCatalog() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-700">{t('priceLabel')}</label>
+                  <label className="text-xs font-bold text-slate-700">{t('priceLabel')} (₹) <span className="text-rose-500 font-extrabold">*</span></label>
                   <input
                     type="number"
                     step="0.01"
+                    min="0.01"
                     value={newProdPrice}
                     onChange={(e) => setNewProdPrice(e.target.value)}
                     className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-indigo-600 focus:outline-none"
@@ -955,13 +1012,14 @@ export default function SellerCatalog() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700">{t('categoryLabel')}</label>
+                <label className="text-xs font-bold text-slate-700">{t('categoryLabel')} <span className="text-rose-500 font-extrabold">*</span></label>
                 <select
                   value={newProdCat}
                   onChange={(e) => setNewProdCat(e.target.value)}
+                  required
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
                 >
-                  <option value="">{t('noCategory')}</option>
+                  <option value="">-- Select Category (Required) --</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -990,12 +1048,14 @@ export default function SellerCatalog() {
               </div>
 
               {/* Multiple Images Selector with Primary Card Photo Chooser */}
-              <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 transition-all">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-800">
-                    Product Photos (Select Multiple at Once)
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                    <span>Product Photos (Optional)</span>
                   </label>
-                  <span className="text-[10px] text-teal-600 font-bold">Multi-Select Active</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                    {newProdImages.length > 0 || newProdImage || newProdFile ? `${newProdImages.length || 1} Selected` : 'Optional'}
+                  </span>
                 </div>
                 <input
                   type="file"

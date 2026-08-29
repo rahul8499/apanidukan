@@ -64,10 +64,12 @@ class ProductViewSet(viewsets.ModelViewSet):
         store = serializer.validated_data.get('store')
         if not store or store.owner != self.request.user:
             raise PermissionDenied('You can only add products to your own store.')
+
+        # Save product (photos are optional)
+        uploaded_files = self.request.FILES.getlist('images') or self.request.FILES.getlist('extra_images')
         product = serializer.save()
 
         # Handle multiple uploaded image files
-        uploaded_files = self.request.FILES.getlist('images') or self.request.FILES.getlist('extra_images')
         for idx, img_file in enumerate(uploaded_files):
             ProductImage.objects.create(product=product, image=img_file)
             if idx == 0 and not product.image:

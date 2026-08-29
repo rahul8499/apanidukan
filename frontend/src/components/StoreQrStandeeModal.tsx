@@ -17,15 +17,8 @@ interface StoreQrStandeeModalProps {
 export default function StoreQrStandeeModal({ store, publicUrl: initialPublicUrl, onClose }: StoreQrStandeeModalProps) {
   // Seamless resolution: If testing locally on localhost, map to local network IP for mobile cameras.
   // When deployed to production, it uses the exact live domain URL automatically!
-  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  
-  const targetUrl = isLocalhost
-    ? initialPublicUrl.replace(/localhost|127\.0\.0\.1/g, '10.185.115.72')
-    : initialPublicUrl
-
-  const displayUrl = isLocalhost
-    ? initialPublicUrl
-    : initialPublicUrl.replace(/^https?:\/\//, '')
+  const targetUrl = initialPublicUrl
+  const displayUrl = initialPublicUrl.replace(/^https?:\/\//, '')
 
   const standeeRef = useRef<HTMLDivElement>(null)
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(targetUrl)}`

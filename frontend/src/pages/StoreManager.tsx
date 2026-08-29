@@ -501,8 +501,37 @@ export default function StoreManager() {
     }
   }
 
-  async function addProduct(e: React.FormEvent) {
+  function requestAddProduct(e: React.FormEvent) {
     e.preventDefault()
+    if (!store) return
+
+    if (!productName.trim()) {
+      toast.error('⚠️ Product Name is required!')
+      return
+    }
+
+    if (!price || Number(price) <= 0) {
+      toast.error('⚠️ Product Price is required and must be greater than ₹0!')
+      return
+    }
+
+    if (!category) {
+      toast.error('⚠️ Category is required! Please select a category (or add one in Step 02 first).')
+      return
+    }
+
+    setConfirmModal({
+      isOpen: true,
+      title: `⚡ Publish "${productName}" to Store?`,
+      message: `तुम्हाला "${productName}" (₹${price}) हा प्रॉडक्ट दुकानात पब्लिश करायचा आहे का?`,
+      confirmText: '🚀 Yes, Publish Product',
+      cancelText: 'Cancel',
+      variant: 'success',
+      onConfirm: () => executeAddProduct()
+    })
+  }
+
+  async function executeAddProduct() {
     if (!store || !productName.trim()) return
     setIsAddingProduct(true)
     const toastId = toast.loading('⏳ Uploading images & publishing product to S3 Cloud...')
@@ -1062,73 +1091,78 @@ export default function StoreManager() {
         </div>
       </div>
 
-      {/* Step 01: Storefront & WhatsApp Order Channel Setup */}
-      <section id="share" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs space-y-3 sm:space-y-4 transition-all">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-slate-900 text-white text-[10px] sm:text-xs font-black shadow-xs">
+      {/* Step 01: Storefront & WhatsApp Order Channel Setup - Sleek Compact Card */}
+      <section id="share" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3 sm:p-3.5 shadow-xs space-y-2.5 transition-all">
+        {/* Header Bar */}
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-900 text-white text-[10px] font-black shadow-xs">
               01
             </span>
             <div>
-              <h2 className="text-xs sm:text-base font-black text-slate-900">{t('step1Title')}</h2>
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{t('step1Subtext')}</p>
+              <h2 className="text-xs sm:text-sm font-black text-slate-900">{t('step1Title')}</h2>
+              <p className="text-[10px] text-slate-500 font-medium">{t('step1Subtext')}</p>
             </div>
           </div>
           {store.is_published ? (
-            <span className="rounded-full bg-emerald-50 px-2 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-xs font-bold text-emerald-700 border border-emerald-200 flex items-center gap-1">
+            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200 flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Live
             </span>
           ) : (
-            <button onClick={publish} className="rounded-lg sm:rounded-xl bg-emerald-600 px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[10px] sm:text-xs font-black text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer">
+            <button onClick={publish} className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[10px] font-black text-white shadow-2xs hover:bg-emerald-700 cursor-pointer">
               🚀 Make Live
             </button>
           )}
         </div>
 
-        <form onSubmit={savePhone} className="rounded-lg sm:rounded-xl border border-slate-200/80 bg-slate-50/50 p-2.5 sm:p-4 space-y-1.5">
-          <div className="flex justify-between items-center">
-            <label className="text-[11px] sm:text-xs font-bold text-slate-900">WhatsApp Order Phone Number</label>
-            <span className="text-[9px] font-mono text-slate-400">Direct Checkout</span>
-          </div>
-          <p className="text-[10px] sm:text-[11px] text-slate-500">
-            Customer checkout par isi number par direct WhatsApp order bhejega.
-          </p>
-          <div className="pt-0.5 flex gap-1.5">
-            <input
-              value={phoneNumber}
-              onChange={e => setPhoneNumber(e.target.value)}
-              placeholder="919876543210"
-              className="flex-1 rounded-lg sm:rounded-xl border border-slate-200 bg-white p-2 text-xs font-medium text-slate-900 focus:border-slate-900 focus:outline-none transition-all shadow-2xs"
-              inputMode="tel"
-            />
-            <button className="rounded-lg sm:rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-all cursor-pointer shadow-xs">
-              Save
-            </button>
-          </div>
-        </form>
+        {/* 2-Column Responsive Row: Left WhatsApp Phone, Right Link & Share Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-stretch">
+          {/* WhatsApp Phone Form */}
+          <form onSubmit={savePhone} className="md:col-span-5 flex flex-col justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200/90 space-y-1.5">
+            <div className="flex justify-between items-center">
+              <label className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
+                <span>📲 WhatsApp Order Phone</span>
+              </label>
+              <span className="text-[9px] font-mono text-slate-400">Direct Orders</span>
+            </div>
+            <div className="flex gap-1.5">
+              <input
+                value={phoneNumber}
+                onChange={e => setPhoneNumber(e.target.value)}
+                placeholder="919876543210"
+                className="flex-1 min-w-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-900 focus:border-slate-900 focus:outline-none shadow-2xs"
+                inputMode="tel"
+              />
+              <button className="rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 shrink-0 cursor-pointer shadow-2xs">
+                Save
+              </button>
+            </div>
+          </form>
 
-        {/* Ultra-Premium Official Store Web Link & Printable QR Standee Card */}
-        <div className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 p-3 sm:p-5 space-y-3 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-100/80 pb-2.5">
-            <div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[11px] sm:text-xs font-black text-slate-900 tracking-tight">🌐 Official Storefront Link</span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.2 text-[8px] sm:text-[9px] font-black text-emerald-800 border border-emerald-300">
-                  🛡️ PWA APP
-                </span>
+          {/* Storefront Link & Action Buttons */}
+          <div className="md:col-span-7 flex flex-col justify-between bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-100 space-y-1.5">
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <div className="min-w-0 flex items-center gap-1.5">
+                <span className="text-xs">🌐</span>
+                <span className="text-[11px] sm:text-xs font-black text-indigo-900 truncate font-mono">{publicUrl}</span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium mt-0.5">
-                Share this link or print your shop counter QR Standee poster for customers.
-              </p>
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg bg-white px-2 py-0.5 text-[10px] font-black text-indigo-700 hover:bg-indigo-100 border border-indigo-200 shrink-0 shadow-2xs"
+              >
+                Open ↗
+              </a>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+            {/* Quick Action Pills */}
+            <div className="flex items-center gap-1.5 flex-wrap">
               <button
                 type="button"
                 onClick={() => setShowQrModal(true)}
-                className="inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 transition-all shadow-xs cursor-pointer active:scale-95"
+                className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-2 py-1 text-[10px] font-black text-white hover:brightness-110 shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap"
               >
                 <span>🖨️ QR Standee</span>
               </button>
@@ -1137,7 +1171,7 @@ export default function StoreManager() {
                 href={whatsappShareUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-[#25D366] px-2.5 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black text-white hover:bg-[#20ba5a] transition-all shadow-xs cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-[#25D366] px-2 py-1 text-[10px] font-black text-white hover:bg-[#20ba5a] shadow-2xs cursor-pointer whitespace-nowrap"
                 title="Share on WhatsApp"
               >
                 <span>📲 WhatsApp</span>
@@ -1146,36 +1180,10 @@ export default function StoreManager() {
               <button
                 type="button"
                 onClick={copyLink}
-                className="inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-slate-900 px-2.5 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black text-white hover:bg-slate-800 transition-all shadow-xs cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-slate-900 px-2 py-1 text-[10px] font-black text-white hover:bg-slate-800 shadow-2xs cursor-pointer whitespace-nowrap"
               >
-                <span>📋 Copy</span>
+                <span>📋 Copy Link</span>
               </button>
-            </div>
-          </div>
-
-          {/* Display Box for Link */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2 bg-white p-2 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 shadow-2xs">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 text-[10px] sm:text-xs font-bold">
-                  🔒
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[8px] uppercase tracking-wider font-extrabold text-slate-400">Store Link</p>
-                  <p className="text-[11px] sm:text-sm font-black text-indigo-700 truncate font-mono">{publicUrl}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1 shrink-0">
-                <a
-                  href={publicUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-lg bg-indigo-50 px-2.5 py-1 text-[10px] sm:text-xs font-extrabold text-indigo-700 hover:bg-indigo-100 transition-all border border-indigo-200"
-                >
-                  Open ↗
-                </a>
-              </div>
             </div>
           </div>
         </div>
@@ -1815,15 +1823,15 @@ export default function StoreManager() {
           </span>
         </div>
 
-        <form onSubmit={addProduct} className="space-y-2.5">
+        <form onSubmit={requestAddProduct} className="space-y-2.5">
           <div className="grid gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Product Name</label>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Product Name <span className="text-rose-500 font-extrabold">*</span></label>
               <input value={productName} onChange={e => setProductName(e.target.value)} required placeholder="Product name" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('price')} (₹)</label>
-              <input value={price} onChange={e => setPrice(e.target.value)} required min="0" type="number" step="0.01" placeholder="Price in INR" className="premium-input mt-0.5 p-2 text-xs" />
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('price')} (₹) <span className="text-rose-500 font-extrabold">*</span></label>
+              <input value={price} onChange={e => setPrice(e.target.value)} required min="0.01" type="number" step="0.01" placeholder="Price in INR (> 0)" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
               <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('stock')}</label>
@@ -1846,20 +1854,22 @@ export default function StoreManager() {
               </p>
             </div>
             <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('category')}</label>
-              <select value={category} onChange={e => setCategory(e.target.value)} className="premium-input mt-0.5 p-2 text-xs"><option value="">No category</option>{categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('category')} <span className="text-rose-500 font-extrabold">*</span></label>
+              <select value={category} onChange={e => setCategory(e.target.value)} required className="premium-input mt-0.5 p-2 text-xs font-bold border-indigo-200">
+                <option value="">-- Select Category (Required) --</option>
+                {categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
             </div>
           </div>
 
           {/* Multiple Product Photos Picker with Main Card Photo Selection */}
-          <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3">
+          <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3 transition-all">
             <div className="flex items-center justify-between">
               <label className="text-[11px] sm:text-xs font-bold text-slate-800 flex items-center gap-1">
-                <span>🖼️ Photos</span>
-                <span className="text-[9px] text-teal-600 font-extrabold">(Multi-select)</span>
+                <span>🖼️ Photos (Optional)</span>
               </label>
-              <span className="text-[9px] bg-teal-100 text-teal-800 font-bold px-1.5 py-0.2 rounded-full">
-                {productImages.length} Selected
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
+                {productImages.length > 0 ? `${productImages.length} Selected` : 'Optional'}
               </span>
             </div>
 

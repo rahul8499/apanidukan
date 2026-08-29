@@ -218,26 +218,19 @@ function Storefront() {
       const lastScratched = localStorage.getItem(scratchedKey)
       const alreadyShownInSession = sessionStorage.getItem(shownKey)
 
-      if (lastScratched !== today && !alreadyShownInSession) {
-        const configKey = `qs_scratch_config_${store.id}`
-        const configSaved = localStorage.getItem(configKey)
-        const config: ScratchCardConfig = configSaved ? JSON.parse(configSaved) : {
-          enabled: true,
-          title: '🎉 Scratch & Win Welcome Gift!',
-          rewardText: 'Flat ₹50 OFF on orders above ₹299',
-          couponCode: 'LUCKY50',
-          discountType: 'fixed',
-          discountValue: 50,
-          minOrder: 299
-        }
-
-        if (config.enabled) {
+      const configKey = `qs_scratch_config_${store.id}`
+      const configSaved = localStorage.getItem(configKey)
+      if (configSaved) {
+        const config: ScratchCardConfig = JSON.parse(configSaved)
+        if (config && config.enabled) {
           setScratchCardConfig(config)
-          sessionStorage.setItem(shownKey, 'true')
-          const timer = setTimeout(() => {
-            setScratchCardModalOpen(true)
-          }, 1200)
-          return () => clearTimeout(timer)
+          if (lastScratched !== today && !alreadyShownInSession) {
+            sessionStorage.setItem(shownKey, 'true')
+            const timer = setTimeout(() => {
+              setScratchCardModalOpen(true)
+            }, 1200)
+            return () => clearTimeout(timer)
+          }
         }
       }
     } catch { }

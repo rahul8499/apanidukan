@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin, BaseUserManager)
 from django.utils import timezone
 
+SUPERADMIN_EMAIL = 'rahulkolhe90.rk.rk@gmail.com'
+
 
 class UserManager(BaseUserManager):
     use_in_migrations = True
@@ -43,6 +45,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
+    def save(self, *args, **kwargs):
+        # Strict security guard: Only the primary platform superadmin email can EVER hold staff/superuser privileges.
+        if not self.email or self.email.strip().lower() != SUPERADMIN_EMAIL:
+            self.is_staff = False
+            self.is_superuser = False
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.email or self.phone_number or f"User-{self.id}"
 
@@ -59,4 +68,21 @@ class PhoneOTP(models.Model):
 
     def __str__(self):
         return f"OTP for {self.phone_number}: {self.otp_code} (verified={self.is_verified})"
+
+
+class PlatformAnnouncement(models.Model):
+    ANNOUNCEMENT_TYPES = (
+        ('INFO', 'Information ℹ️'),
+        ('WARNING', 'Warning / Maintenance ⚠️'),
+        ('SUCCESS', 'New Feature 🚀'),
+        ('URGENT', 'Urgent Action 🚨'),
+    )
+    message = models.TextField()
+    level = models.CharField(max_length=20, choices=ANNOUNCEMENT_TYPES, default='INFO')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Announcement ({self.level}): {self.message[:30]}"
 

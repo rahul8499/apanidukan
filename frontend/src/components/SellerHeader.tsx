@@ -127,6 +127,16 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [allowStorePickup, setAllowStorePickup] = useState<boolean>(store?.allow_store_pickup ?? true)
   const [isUpdatingDeliverySettings, setIsUpdatingDeliverySettings] = useState(false)
 
+  const [platformAnnouncement, setPlatformAnnouncement] = useState<any>(null)
+
+  useEffect(() => {
+    api.get('/auth/platform/announcement/').then(res => {
+      if (res.data?.announcement) {
+        setPlatformAnnouncement(res.data.announcement)
+      }
+    }).catch(() => {})
+  }, [])
+
   useEffect(() => {
     if (store) {
       setupSellerStorePwa(store)
@@ -561,6 +571,37 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
         </div>
       </header>
+
+      {/* Live Broadcast Platform Announcement Banner */}
+      {platformAnnouncement && (
+        <div className={`w-full px-4 py-2 text-xs font-bold flex items-center justify-between shadow-md border-b backdrop-blur-md ${
+          platformAnnouncement.level === 'WARNING' ? 'bg-amber-950/90 text-amber-200 border-amber-800/80' :
+          platformAnnouncement.level === 'URGENT' ? 'bg-rose-950/90 text-rose-200 border-rose-800/80' :
+          platformAnnouncement.level === 'SUCCESS' ? 'bg-emerald-950/90 text-emerald-200 border-emerald-800/80' :
+          'bg-indigo-950/90 text-indigo-200 border-indigo-800/80'
+        }`}>
+          <div className="mx-auto flex items-center gap-2 max-w-7xl">
+            <span className="text-base shrink-0">
+              {platformAnnouncement.level === 'WARNING' ? '⚠️' :
+               platformAnnouncement.level === 'URGENT' ? '🚨' :
+               platformAnnouncement.level === 'SUCCESS' ? '🚀' : '📢'}
+            </span>
+            <span className="font-black tracking-wide uppercase text-[10px] bg-white/10 px-2.5 py-0.5 rounded-full shrink-0">
+              Platform Alert:
+            </span>
+            <span className="text-xs font-semibold leading-tight">
+              {platformAnnouncement.message}
+            </span>
+          </div>
+          <button
+            onClick={() => setPlatformAnnouncement(null)}
+            className="text-slate-400 hover:text-white p-1 cursor-pointer shrink-0"
+            title="Dismiss Alert"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Settings Drawer Backdrop */}
       {isSettingsOpen && (

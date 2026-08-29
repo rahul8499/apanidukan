@@ -93,6 +93,7 @@ function AppContent() {
     location.pathname.startsWith('/reset-password') ||
     location.pathname === '/dashboard' ||
     location.pathname === '/platform' ||
+    location.pathname === '/admin' ||
     location.pathname === '/login' ||
     location.pathname === '/start' ||
     location.pathname === '/register' ||
@@ -150,6 +151,7 @@ function AppContent() {
           <Route path="/stores/:storeId/coupons" element={<SellerCoupons />} />
           <Route path="/start" element={<StartStore />} />
           <Route path="/platform" element={<PlatformDashboard />} />
+          <Route path="/admin" element={<PlatformDashboard />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/orders" element={<Orders />} />

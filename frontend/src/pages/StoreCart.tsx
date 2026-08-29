@@ -360,21 +360,17 @@ function CartContent() {
     finally { setOtpLoading(false) }
   }
 
-  async function orderOnWhatsApp() {
+  async function handlePlaceOrder(openWhatsApp: boolean = true) {
     const trimmedName = customerName.trim()
     const trimmedPhone = customerPhone.trim()
     const number = String(store?.phone_number || '').replace(/\D/g, '')
 
     if (!trimmedPhone) {
-      setError('WhatsApp phone number is required to place your order.')
+      setError('Mobile phone number is required to place your order.')
       return
     }
     if (!checkoutVerificationToken) {
       setError('Verify your phone number with OTP before placing the order.')
-      return
-    }
-    if (!number) {
-      setError('This seller has not added a WhatsApp number yet.')
       return
     }
 
@@ -387,7 +383,6 @@ function CartContent() {
         : 0
       const couponDiscount = appliedCoupons.reduce((sum, item) => sum + (Number(item.discount_amount) || Number(item.discount) || 0), 0)
       const totalDiscountAmt = couponDiscount + flashSaleDiscount
-      const finalTotal = Math.max(0, cart.total - totalDiscountAmt)
       const appliedCodes = appliedCoupons.map(c => c.code).join(', ')
 
       const finalDeliveryAddress = orderType === 'STORE_PICKUP'
@@ -410,44 +405,47 @@ function CartContent() {
         localStorage.setItem(`qs_customer_phone_${storeSlug}`, trimmedPhone)
         localStorage.setItem(`qs_chat_phone`, trimmedPhone)
       }
-      const paymentLabel = order.payment_type === 'ONLINE' ? 'Online payment' : 'Cash on delivery'
-      const fulfillmentLabel = orderType === 'STORE_PICKUP' ? 'Store pickup' : 'Home delivery'
-      const itemLines = order.items.map((item: any) => {
-        const unitPrice = Number(item.price || 0)
-        const quantity = Number(item.quantity || 1)
-        return `• ${item.name || 'Item'} × ${quantity} ${formatUnitDisplay(item.unit) || ''} — ₹${(unitPrice * quantity).toFixed(2)}`
-      })
-      const itemSubtotal = order.items.reduce((total: number, item: any) => total + (Number(item.price || 0) * Number(item.quantity || 1)), 0)
 
-      const bTypeConfig = getBusinessType(store?.business_type)
-      const lines = [
-        `*NEW ORDER* #${order.reference}`,
-        '',
-        '*Customer details*',
-        `Name: ${order.customer_name || 'Customer'}`,
-        `Phone: ${order.customer_phone || trimmedPhone} (Verified ✓)`,
-        ...(customNote.trim() && bTypeConfig.customFieldLabel ? [`*${bTypeConfig.customFieldLabel}*: ${customNote.trim()}`] : []),
-        '',
-        '*Order items*',
-        ...itemLines,
-        '',
-        '*Payment & delivery*',
-        `Payment: ${paymentLabel}`,
-        `Fulfilment: ${fulfillmentLabel}`,
-        ...(orderType === 'STORE_PICKUP'
-          ? [`Pickup from: ${store?.address || store?.name || 'Store location'}`]
-          : [`Delivery address: ${order.delivery_address || 'Not provided'}`]),
-        ...(order.location_url ? [`Location: ${order.location_url}`] : []),
-        '',
-        '*Bill summary*',
-        `Items subtotal: ₹${itemSubtotal.toFixed(2)}`,
-        ...(Number(order.discount_amount || 0) > 0 ? [`Discount: -₹${Number(order.discount_amount).toFixed(2)}`] : []),
-        ...(Number(order.delivery_fee || 0) > 0 ? [`Delivery fee: ₹${Number(order.delivery_fee).toFixed(2)}`] : []),
-        `*Total payable: ₹${Number(order.total).toFixed(2)}*`,
-        '',
-        'Please confirm this order with the customer.'
-      ]
-      window.open(`https://wa.me/${number}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer')
+      if (openWhatsApp && number) {
+        const paymentLabel = order.payment_type === 'ONLINE' ? 'Online payment' : 'Cash on delivery'
+        const fulfillmentLabel = orderType === 'STORE_PICKUP' ? 'Store pickup' : 'Home delivery'
+        const itemLines = order.items.map((item: any) => {
+          const unitPrice = Number(item.price || 0)
+          const quantity = Number(item.quantity || 1)
+          return `• ${item.name || 'Item'} × ${quantity} ${formatUnitDisplay(item.unit) || ''} — ₹${(unitPrice * quantity).toFixed(2)}`
+        })
+        const itemSubtotal = order.items.reduce((total: number, item: any) => total + (Number(item.price || 0) * Number(item.quantity || 1)), 0)
+
+        const bTypeConfig = getBusinessType(store?.business_type)
+        const lines = [
+          `*NEW ORDER* #${order.reference}`,
+          '',
+          '*Customer details*',
+          `Name: ${order.customer_name || 'Customer'}`,
+          `Phone: ${order.customer_phone || trimmedPhone} (Verified ✓)`,
+          ...(customNote.trim() && bTypeConfig.customFieldLabel ? [`*${bTypeConfig.customFieldLabel}*: ${customNote.trim()}`] : []),
+          '',
+          '*Order items*',
+          ...itemLines,
+          '',
+          '*Payment & delivery*',
+          `Payment: ${paymentLabel}`,
+          `Fulfilment: ${fulfillmentLabel}`,
+          ...(orderType === 'STORE_PICKUP'
+            ? [`Pickup from: ${store?.address || store?.name || 'Store location'}`]
+            : [`Delivery address: ${order.delivery_address || 'Not provided'}`]),
+          ...(order.location_url ? [`Location: ${order.location_url}`] : []),
+          '',
+          '*Bill summary*',
+          `Items subtotal: ₹${itemSubtotal.toFixed(2)}`,
+          ...(Number(order.discount_amount || 0) > 0 ? [`Discount: -₹${Number(order.discount_amount).toFixed(2)}`] : []),
+          ...(Number(order.delivery_fee || 0) > 0 ? [`Delivery fee: ₹${Number(order.delivery_fee).toFixed(2)}`] : []),
+          `*Total payable: ₹${Number(order.total).toFixed(2)}*`,
+          '',
+          'Please confirm this order with the customer.'
+        ]
+        window.open(`https://wa.me/${number}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer')
+      }
 
       cart.clear()
       navigate(`/store/${storeSlug}/order/${order.reference}?token=${order.tracking_token}`)
@@ -1115,16 +1113,50 @@ function CartContent() {
                 </div>
               )}
 
-              {/* MAIN CHECKOUT BUTTON (ALWAYS VISIBLE) */}
-              <button
-                onClick={orderOnWhatsApp}
-                className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs sm:text-sm font-black text-white shadow-lg transition-all cursor-pointer active:scale-98 mt-2 border ${isStandalone
-                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 border-emerald-400/40 shadow-emerald-600/30'
-                  : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500 shadow-emerald-200'
-                  }`}
-              >
-                <span>{isStandalone ? '📲 Order Now' : 'Order Now ↗'} (₹{finalTotalAmount.toFixed(2)})</span>
-              </button>
+              {/* CLEAR TWO CHECKOUT OPTIONS (WHATSAPP vs DIRECT WEB ORDER) */}
+              <div className="space-y-2.5 pt-3 border-t border-slate-200">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                  Select Order Mode / ऑर्डर करण्याची पद्धत निवडा:
+                </p>
+
+                {/* Option 1: WhatsApp Order */}
+                <button
+                  onClick={() => handlePlaceOrder(true)}
+                  className="w-full flex items-center justify-between gap-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 p-3 text-white shadow-md transition-all cursor-pointer border border-emerald-400/50 active:scale-98"
+                >
+                  <div className="flex items-center gap-2.5 text-left min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 text-lg shadow-inner">
+                      💬
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-black text-xs text-white truncate">Order via WhatsApp (व्हॉट्सॲप ऑर्डर)</h4>
+                      <p className="text-[9.5px] text-emerald-100 font-medium truncate">ऑर्डर मेसेज दुकानदाराच्या व्हॉट्सॲपवर पाठवा</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-[11px] font-black bg-white/20 px-2 py-1 rounded-lg">
+                    ₹{finalTotalAmount.toFixed(2)} ↗
+                  </span>
+                </button>
+
+                {/* Option 2: Direct Web Order */}
+                <button
+                  onClick={() => handlePlaceOrder(false)}
+                  className="w-full flex items-center justify-between gap-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 p-3 text-white shadow-md transition-all cursor-pointer border border-indigo-400/50 active:scale-98"
+                >
+                  <div className="flex items-center gap-2.5 text-left min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 text-lg shadow-inner">
+                      💳
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-black text-xs text-white truncate">Direct Web Order (डायरेक्ट ऑनलाईन ऑर्डर)</h4>
+                      <p className="text-[9.5px] text-indigo-100 font-medium truncate">व्हॉट्सॲपशिवाय थेट साईटवरूनच ऑर्डर करा</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-[11px] font-black bg-white/20 px-2 py-1 rounded-lg">
+                    ₹{finalTotalAmount.toFixed(2)} ↗
+                  </span>
+                </button>
+              </div>
             </div>
 
           </div>
@@ -1153,7 +1185,7 @@ function CartContent() {
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 py-0">
             <div className="flex items-center gap-1.5 leading-none min-w-0">
               <span className="text-[8px] text-slate-400 font-extrabold uppercase tracking-tight shrink-0">
-                {isStandalone ? '📱 App Total:' : 'Total:'}
+                {isStandalone ? '📱 Total:' : 'Total:'}
               </span>
               <span className="text-xs font-black text-emerald-400 shrink-0">
                 ₹{finalTotalAmount.toFixed(2)}
@@ -1165,16 +1197,22 @@ function CartContent() {
               )}
             </div>
 
-            <button
-              onClick={orderOnWhatsApp}
-              className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] sm:text-[11px] font-black text-white shadow-xs active:scale-95 transition-all cursor-pointer shrink-0 border ${isStandalone
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400/40'
-                : 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500'
-                }`}
-            >
-              <span>{isStandalone ? '📲 Order Now' : 'Order Now ↗'}</span>
-              <ChevronRight className="h-2.5 w-2.5" />
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => handlePlaceOrder(true)}
+                className="flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/40 px-2 py-1 text-[9.5px] font-black text-white cursor-pointer active:scale-95"
+                title="Order via WhatsApp"
+              >
+                <span>💬 WhatsApp</span>
+              </button>
+              <button
+                onClick={() => handlePlaceOrder(false)}
+                className="flex items-center gap-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 px-2 py-1 text-[9.5px] font-black text-white cursor-pointer active:scale-95"
+                title="Direct Web Order"
+              >
+                <span>💳 Web Order</span>
+              </button>
+            </div>
           </div>
         }
       />

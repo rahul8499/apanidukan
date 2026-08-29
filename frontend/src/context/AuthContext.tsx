@@ -12,6 +12,7 @@ export type User = {
 
 type AuthContextType = {
   user: User | null
+  loading: boolean
   login: (email: string, password: string) => Promise<User>
   register: (data: any) => Promise<void>
   logout: () => void
@@ -100,19 +101,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      api.get('/auth/me/').then(res => setUser(res.data.data || res.data)).catch(() => {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        delete api.defaults.headers.common['Authorization']
-        setUser(null)
-      })
+      api.get('/auth/me/')
+        .then(res => setUser(res.data.data || res.data))
+        .catch(() => {
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+          delete api.defaults.headers.common['Authorization']
+          setUser(null)
+        })
+        .finally(() => setLoading(false))
     } else {
       setUser(null)
+      setLoading(false)
     }
   }, [])
 
@@ -176,7 +182,7 @@ export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, sendOTP, verifyOTP, registerWithOTP }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, sendOTP, verifyOTP, registerWithOTP }}>
       {children}
     </AuthContext.Provider>
   )

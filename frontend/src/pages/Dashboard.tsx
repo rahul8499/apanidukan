@@ -10,19 +10,23 @@ export default function Dashboard(){
   const auth = useAuth()
   const navigate = useNavigate()
 
-  useEffect(()=>{
-    api.get('/stores/').then(res=> {
+  useEffect(() => {
+    if (auth.user?.is_staff) {
+      navigate('/admin', { replace: true })
+      return
+    }
+
+    api.get('/stores/').then(res => {
       setStores(res.data)
-      // A seller with a single store should go directly to their own management area.
       if (res.data.length === 1) {
         navigate(`/stores/${res.data[0].id}/manage`, { replace: true })
       } else {
         setLoading(false)
       }
-    }).catch(()=>{
+    }).catch(() => {
       setLoading(false)
     })
-  },[navigate])
+  }, [auth.user, navigate])
 
   if (loading) {
     return <SellerSplashLoader label="Loading your store workspace..." />
@@ -31,6 +35,26 @@ export default function Dashboard(){
   return (
     <div className="min-h-screen w-full bg-slate-50 font-sans p-6 pb-20">
       <div className="max-w-3xl mx-auto space-y-6">
+        {auth.user?.is_staff && (
+          <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-slate-900 to-indigo-950 p-4 text-white shadow-lg border border-slate-800">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400 text-lg">
+                🛡️
+              </span>
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-wider text-indigo-300">Superadmin Account Active</h3>
+                <p className="text-xs text-slate-300 font-medium">Access platform-wide store metrics, link visits & revenue.</p>
+              </div>
+            </div>
+            <Link
+              to="/admin"
+              className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-500 transition-all shadow-md"
+            >
+              Open Admin Panel ➔
+            </Link>
+          </div>
+        )}
+
         <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
           <h1 className="text-xl font-black text-slate-900">Your Storefronts</h1>
           <button 

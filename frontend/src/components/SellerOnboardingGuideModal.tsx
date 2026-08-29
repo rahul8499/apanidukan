@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Sparkles, X, QrCode, Package, Share2, Bell, CheckCircle2, ChevronRight, Play } from 'lucide-react'
+import { Sparkles, X, QrCode, Package, Share2, CheckCircle2, ChevronRight, ArrowRight, Lightbulb } from 'lucide-react'
 import api from '../services/api'
 
 interface SellerOnboardingGuideModalProps {
@@ -28,24 +28,28 @@ export default function SellerOnboardingGuideModal({
       title: '🌐 WhatsApp & Counter QR Standee',
       subtitle: 'Order phone save karein & Official Standee Poster print karein.',
       icon: QrCode,
-      color: 'from-blue-600 to-indigo-700',
+      gradient: 'from-blue-600 via-indigo-600 to-purple-600',
+      accentColor: 'text-blue-400',
+      borderColor: 'border-blue-500/30',
       bullets: [
-        'WhatsApp Order Number save karein jisse direct orders aayenge.',
+        'WhatsApp Order Number save karein jisse direct customer orders aayenge.',
         'Official Store Link copy karke customers ya WhatsApp status par share karein.',
-        '🖨️ QR Standee button se HD print poster print karke counter par lagayein.'
+        '🖨️ QR Standee button se HD print poster print karke shop counter par lagayein.'
       ]
     },
     {
       id: 'step2',
       badge: 'Step 02',
       title: '📦 Product Categories (वर्गीकरण)',
-      subtitle: 'Dukaan ke aytem ko categories me organize karein.',
+      subtitle: 'Dukaan ke items ko categories me organize karein.',
       icon: Package,
-      color: 'from-amber-600 to-orange-600',
+      gradient: 'from-amber-500 via-orange-600 to-red-600',
+      accentColor: 'text-amber-400',
+      borderColor: 'border-amber-500/30',
       bullets: [
         'Category name type karke instant category create karein.',
         'Electronics, Kirana, Mobiles, Garments jaisi multiple categories add karein.',
-        'Categories se customer ko aapka dukaan browse karne me aasan hota hai.'
+        'Categories se customers ko aapka dukaan browse karna aur shopping karna aasan hota hai.'
       ]
     },
     {
@@ -54,7 +58,9 @@ export default function SellerOnboardingGuideModal({
       title: '⚡ Add & Publish Products',
       subtitle: 'Single product instantly publish karein (Photo optional).',
       icon: Sparkles,
-      color: 'from-emerald-600 to-teal-700',
+      gradient: 'from-emerald-500 via-teal-600 to-cyan-600',
+      accentColor: 'text-emerald-400',
+      borderColor: 'border-emerald-500/30',
       bullets: [
         'Product Name, Price (₹) aur Stock Quantity enter karein.',
         'Ordering Unit choose karein (Pieces/नग, Kg, Liters, Meters, Box).',
@@ -67,10 +73,12 @@ export default function SellerOnboardingGuideModal({
       title: '📲 1-Click WhatsApp Share & Orders',
       subtitle: 'Har product ki direct share link aur sound order alerts.',
       icon: Share2,
-      color: 'from-purple-600 to-pink-700',
+      gradient: 'from-purple-600 via-pink-600 to-rose-600',
+      accentColor: 'text-purple-400',
+      borderColor: 'border-purple-500/30',
       bullets: [
         'Seller Catalog me har product par 📲 Share button se WhatsApp par promo bhejein.',
-        '📋 Copy Link se single product URL kisi ko bhi bhejein.',
+        '📋 Copy Link se single product URL kisi ko bhi directly bhejein.',
         '🔔 Naye customer order aane par Soundbell alert bajega.'
       ]
     }
@@ -96,94 +104,127 @@ export default function SellerOnboardingGuideModal({
   }
 
   const current = steps[activeStep]
+  const progressPercent = ((activeStep + 1) / steps.length) * 100
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-5 font-sans animate-fade-in bg-slate-950/80 backdrop-blur-md">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl text-white">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-5 font-sans animate-fade-in bg-slate-950/85 backdrop-blur-xl">
+      {/* Outer Glow Ring Card */}
+      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 shadow-[0_20px_60px_rgba(0,0,0,0.8)] text-slate-100 flex flex-col">
         
-        {/* Header Banner */}
-        <div className={`bg-gradient-to-r ${current.color} p-4 sm:p-5 text-white relative transition-all duration-300`}>
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/20 text-white hover:bg-black/40 transition-all cursor-pointer"
-          >
-            <X className="h-4 w-4" />
-          </button>
+        {/* Top Slim Ambient Progress Line */}
+        <div className="w-full bg-slate-800 h-1 relative overflow-hidden">
+          <div
+            className={`h-full bg-gradient-to-r ${current.gradient} transition-all duration-500 ease-out`}
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
 
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-black tracking-wide text-white uppercase backdrop-blur-xs">
-              {current.badge}
-            </span>
-            <span className="text-[10px] text-white/80 font-bold">Apani Dukan Seller Tour</span>
+        {/* Clean Header Section */}
+        <div className="p-4 sm:p-5 pb-3 border-b border-slate-800/80 bg-slate-900/90 relative">
+          {/* Top Info Bar */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-indigo-400">
+                <Sparkles className="h-3 w-3 text-indigo-400" />
+                <span>Apani Dukan Tour</span>
+              </span>
+              <span className="text-[11px] font-extrabold text-slate-400">
+                Step {activeStep + 1} of {steps.length}
+              </span>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all cursor-pointer border border-slate-700/60 shrink-0"
+              title="Close Tour"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
 
-          <h2 className="text-base sm:text-lg font-black tracking-tight mt-1 flex items-center gap-2">
-            <current.icon className="h-5 w-5 shrink-0" />
-            <span>{current.title}</span>
-          </h2>
-          <p className="text-xs text-white/90 font-medium mt-0.5">{current.subtitle}</p>
+          {/* Title & Badge */}
+          <div className="flex items-start gap-3">
+            <div className={`h-11 w-11 shrink-0 rounded-2xl bg-gradient-to-br ${current.gradient} p-0.5 shadow-lg flex items-center justify-center`}>
+              <div className="h-full w-full bg-slate-900 rounded-[14px] flex items-center justify-center">
+                <current.icon className={`h-5 w-5 ${current.accentColor}`} />
+              </div>
+            </div>
 
-          {/* Progress Indicators */}
-          <div className="flex items-center gap-1.5 mt-3">
-            {steps.map((s, idx) => (
-              <button
-                key={s.id}
-                onClick={() => setActiveStep(idx)}
-                className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                  idx === activeStep ? 'w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/60'
-                }`}
-              />
-            ))}
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base sm:text-lg font-black text-white tracking-tight leading-snug">
+                {current.title}
+              </h2>
+              <p className="text-xs text-slate-400 font-medium mt-0.5 leading-normal">
+                {current.subtitle}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Content Body */}
-        <div className="p-4 sm:p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+        <div className="p-4 sm:p-5 space-y-3.5 max-h-[55vh] overflow-y-auto bg-slate-950/40">
+          
+          {/* Step Bullets List */}
           <div className="space-y-2.5">
             {current.bullets.map((bullet, idx) => (
-              <div key={idx} className="flex items-start gap-2.5 rounded-2xl bg-slate-800/80 border border-slate-700/80 p-3 text-xs text-slate-200">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span className="leading-relaxed font-medium">{bullet}</span>
+              <div
+                key={idx}
+                className="flex items-start gap-3 rounded-2xl bg-slate-850/80 border border-slate-800 p-3.5 text-xs text-slate-200 transition-all hover:border-slate-700"
+              >
+                <CheckCircle2 className={`h-4 w-4 ${current.accentColor} shrink-0 mt-0.5`} />
+                <span className="leading-relaxed font-semibold text-slate-200">{bullet}</span>
               </div>
             ))}
           </div>
 
-          {/* Quick Tip Box */}
-          <div className="rounded-2xl bg-indigo-950/50 border border-indigo-500/30 p-3 text-xs text-indigo-200 space-y-1">
-            <p className="font-extrabold text-indigo-300 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+          {/* Pro Tip Callout Card */}
+          <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/25 p-3.5 text-xs text-amber-200 space-y-1">
+            <div className="flex items-center gap-1.5 font-extrabold text-amber-400">
+              <Lightbulb className="h-4 w-4 text-amber-400 shrink-0" />
               <span>Pro Tip for Sellers:</span>
-            </p>
-            <p className="text-[11px] text-indigo-200/90 leading-snug">
-              Dukaan ko hamesha <strong>🟢 LIVE</strong> mode me rakhein aur WhatsApp number updated rakhein taaki orders direct aapko milein!
+            </div>
+            <p className="text-[11px] text-amber-200/90 leading-relaxed font-medium pl-5">
+              Dukaan ko hamesha <strong className="text-emerald-400">🟢 LIVE</strong> mode me rakhein aur WhatsApp number updated rakhein taaki customer orders direct aap tak pahuche!
             </p>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-slate-800 bg-slate-950/90 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none">
+        <div className="border-t border-slate-800 bg-slate-900/95 p-4 space-y-3">
+          
+          {/* Don't show again toggle */}
+          <div className="flex items-center justify-between px-1">
+            <label className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500"
+                className="h-4 w-4 rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-indigo-500/50 cursor-pointer"
               />
               <span>Don't show this tour again on login</span>
             </label>
 
-            <span className="text-[10px] font-bold text-slate-500">
-              {activeStep + 1} of {steps.length}
-            </span>
+            {/* Step Pills */}
+            <div className="flex items-center gap-1">
+              {steps.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveStep(idx)}
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    idx === activeStep ? 'w-5 bg-indigo-500' : 'w-1.5 bg-slate-700 hover:bg-slate-500'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2.5">
             {activeStep > 0 && (
               <button
                 type="button"
                 onClick={() => setActiveStep(prev => prev - 1)}
-                className="flex-1 rounded-xl border border-slate-800 bg-slate-900 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all cursor-pointer"
+                className="flex-1 rounded-xl border border-slate-700/80 bg-slate-800 py-2.5 text-xs font-extrabold text-slate-300 hover:bg-slate-750 hover:text-white transition-all cursor-pointer"
               >
                 Back
               </button>
@@ -193,7 +234,7 @@ export default function SellerOnboardingGuideModal({
               <button
                 type="button"
                 onClick={() => setActiveStep(prev => prev + 1)}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition-all shadow-md cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-2.5 text-xs font-black text-white hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg cursor-pointer"
               >
                 <span>Next Step</span>
                 <ChevronRight className="h-4 w-4" />
@@ -203,12 +244,14 @@ export default function SellerOnboardingGuideModal({
                 type="button"
                 disabled={saving}
                 onClick={handleFinish}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-2.5 text-xs font-black text-white hover:opacity-90 transition-all shadow-md cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 py-2.5 text-xs font-black text-white hover:opacity-95 transition-all shadow-lg cursor-pointer"
               >
                 <span>🚀 Start Managing Shop</span>
+                <ArrowRight className="h-4 w-4" />
               </button>
             )}
           </div>
+
         </div>
 
       </div>

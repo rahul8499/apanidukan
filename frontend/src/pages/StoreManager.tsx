@@ -1781,8 +1781,8 @@ export default function StoreManager() {
               </div>
             </div>
 
-            {/* Category Badges with Selection Checkboxes */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
+            {/* Category Badges with Selection Checkboxes (Scrollable Container for large lists) */}
+            <div className="max-h-36 sm:max-h-44 overflow-y-auto pr-1 flex flex-wrap gap-1.5 pt-1 scrollbar-thin">
               {categories.map(item => {
                 const isSelected = selectedCatIds.includes(item.id)
                 return (

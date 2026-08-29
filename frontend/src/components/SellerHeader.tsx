@@ -14,6 +14,7 @@ import SellerThemeCustomizerModal from './SellerThemeCustomizerModal'
 import SellerCustomDomainModal from './SellerCustomDomainModal'
 import SellerDeactivateModal from './SellerDeactivateModal'
 import LanguageSwitcherModal from './LanguageSwitcherModal'
+import SellerOnboardingGuideModal from './SellerOnboardingGuideModal'
 import { ScratchCardConfig } from './CustomerScratchCardModal'
 import InstallAppButton from '../pwa/InstallAppButton'
 import { setupSellerStorePwa } from '../pwa/pwaManager'
@@ -103,6 +104,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
   const [showThemeModal, setShowThemeModal] = useState(false)
   const [showCustomDomainModal, setShowCustomDomainModal] = useState(false)
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false)
   const [isLangModalOpen, setIsLangModalOpen] = useState(false)
   const [storeName, setStoreName] = useState(store?.name || '')
   const [storeDescription, setStoreDescription] = useState(store?.description || '')
@@ -668,6 +670,27 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
           {/* 1. PWA Install Button */}
           <InstallAppButton storeSlug={store?.slug} variant="drawer_item" />
+
+          {/* 📖 Store Setup & Usage Guide Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsSettingsOpen(false)
+              setShowOnboardingModal(true)
+            }}
+            className="w-full flex items-center justify-between rounded-2xl border border-indigo-200/90 bg-gradient-to-r from-indigo-50 to-purple-50 p-3 text-xs font-black text-indigo-950 hover:border-indigo-300 transition-all cursor-pointer shadow-xs"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white text-sm font-bold shadow-xs">
+                📖
+              </span>
+              <div className="text-left">
+                <p className="font-black text-indigo-950">Store Setup Guide & Tour</p>
+                <p className="text-[10px] text-indigo-700 font-semibold">दुकान कशी वापरावी ते शिका (मार्गदर्शक)</p>
+              </div>
+            </div>
+            <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-black text-white">OPEN</span>
+          </button>
 
           {/* 2. 🏪 STORE PROFILE & IDENTITY */}
           <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
@@ -1552,6 +1575,16 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       <LanguageSwitcherModal
         isOpen={isLangModalOpen}
         onClose={() => setIsLangModalOpen(false)}
+      />
+
+      {/* Seller Onboarding Tour Guide Modal */}
+      <SellerOnboardingGuideModal
+        isOpen={showOnboardingModal}
+        onClose={() => setShowOnboardingModal(false)}
+        storeId={store?.id}
+        onDismissPermanently={() => {
+          if (onStoreUpdate) onStoreUpdate()
+        }}
       />
 
       {/* Global Floating AI Copilot Chatbot Icon (Draggable) - DISABLED */}

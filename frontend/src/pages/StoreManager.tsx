@@ -9,6 +9,7 @@ import SellerBottomNav from '../components/SellerBottomNav'
 import api from '../services/api'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
+import SellerOnboardingGuideModal from '../components/SellerOnboardingGuideModal'
 import { useTranslation } from 'react-i18next'
 import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeCategories, getBusinessTypeProducts, getBusinessTypeCheckoutHint, getUnitDisplayLabel, getUnitHint, formatUnitDisplay, UNIT_LABEL_MAP } from '../utils/businessTypes'
 import { X, Trash2 } from 'lucide-react'
@@ -383,13 +384,15 @@ export default function StoreManager() {
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       new Notification(testNotif.title, {
         body: testNotif.body,
-        icon: '/icons/multistore-icon.svg'
+        icon: '/favicon.ico'
       })
       toast.success('⚡ Sent test Web Push Notification!')
     } else {
       requestNotificationPermission()
     }
   }
+
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false)
 
   function markAllNotificationsRead() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
@@ -417,6 +420,12 @@ export default function StoreManager() {
       setStore(found || null)
       setPhoneNumber(found?.phone_number || '')
       if (found) {
+        const hideKey = `qs_hide_seller_tour_${found.id}`
+        const hiddenInStorage = localStorage.getItem(hideKey) === 'true'
+        if (!found.has_seen_onboarding_tour && !hiddenInStorage) {
+          setShowOnboardingModal(true)
+        }
+
         const [categoryResult, productResult] = await Promise.all([
           api.get(`/stores/${found.id}/categories/`), api.get('/products/')
         ])
@@ -2480,6 +2489,18 @@ export default function StoreManager() {
           </div>
         </div>
       )}
+
+      {/* Seller Onboarding Tour Guide Modal */}
+      <SellerOnboardingGuideModal
+        isOpen={showOnboardingModal}
+        onClose={() => setShowOnboardingModal(false)}
+        storeId={store?.id}
+        onDismissPermanently={() => {
+          if (store?.id) {
+            setStore((prev: any) => prev ? { ...prev, has_seen_onboarding_tour: true } : prev)
+          }
+        }}
+      />
 
     </div>
     {/* Unified Seller Bottom Navigation Bar */}

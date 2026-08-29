@@ -14,6 +14,16 @@ interface StoreQrStandeeModalProps {
   onClose: () => void
 }
 
+function escapeHtml(str?: string): string {
+  if (!str) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 export default function StoreQrStandeeModal({ store, publicUrl: initialPublicUrl, onClose }: StoreQrStandeeModalProps) {
   // Seamless resolution: If testing locally on localhost, map to local network IP for mobile cameras.
   // When deployed to production, it uses the exact live domain URL automatically!
@@ -31,7 +41,7 @@ export default function StoreQrStandeeModal({ store, publicUrl: initialPublicUrl
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Print Shop QR Standee - ${store.name}</title>
+          <title>Print Shop QR Standee - ${escapeHtml(store.name)}</title>
           <style>
             @page {
               size: A4 portrait;
@@ -113,8 +123,8 @@ export default function StoreQrStandeeModal({ store, publicUrl: initialPublicUrl
         <body>
           <div class="standee-card">
             <div class="badge">✨ OFFICIAL DIGITAL STOREFRONT</div>
-            <h1 class="title">${store.name}</h1>
-            <div class="tagline">${store.tagline || 'Scan Karo, Ghar Baithe Online Order Karo'}</div>
+            <h1 class="title">${escapeHtml(store.name)}</h1>
+            <div class="tagline">${escapeHtml(store.tagline || 'Scan Karo, Ghar Baithe Online Order Karo')}</div>
             
             <div class="qr-box">
               <img src="${qrImageUrl}" alt="Store QR Code" />
@@ -133,7 +143,7 @@ export default function StoreQrStandeeModal({ store, publicUrl: initialPublicUrl
               <span>COD / UPI</span>
             </div>
 
-            <div class="url-footer">${displayUrl}</div>
+            <div class="url-footer">${escapeHtml(displayUrl)}</div>
           </div>
 
           <script>

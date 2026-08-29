@@ -33,6 +33,16 @@ interface ThermalReceiptModalProps {
   onClose: () => void
 }
 
+function escapeHtml(str?: string): string {
+  if (!str) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 export default function ThermalReceiptModal({ order, store, onClose }: ThermalReceiptModalProps) {
   const [printerWidth, setPrinterWidth] = useState<'58mm' | '80mm'>('80mm')
   const [includeGst, setIncludeGst] = useState(false)
@@ -60,15 +70,16 @@ export default function ThermalReceiptModal({ order, store, onClose }: ThermalRe
 
     let itemsHtml = ''
     items.forEach((it) => {
-      const itemName = it.name || it.product_name || 'Product'
+      const itemName = escapeHtml(it.name || it.product_name || 'Product')
       const qty = Number(it.quantity || 1)
       const price = Number(it.price || 0)
       const itemTotal = qty * price
+      const unit = escapeHtml(it.unit || 'pcs')
       itemsHtml += `
         <div style="margin-bottom: 5px;">
           <div style="font-weight: bold; word-break: break-word; color: #000;">${itemName}</div>
           <div style="display: flex; justify-content: space-between; font-size: 0.9em; color: #222;">
-            <span style="padding-left: 6px;">${qty} ${it.unit || 'pcs'} x ₹${price.toFixed(2)}</span>
+            <span style="padding-left: 6px;">${qty} ${unit} x ₹${price.toFixed(2)}</span>
             <span style="font-weight: bold; color: #000;">₹${itemTotal.toFixed(2)}</span>
           </div>
         </div>
@@ -79,7 +90,7 @@ export default function ThermalReceiptModal({ order, store, onClose }: ThermalRe
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Receipt #${order.reference} - ${store.name}</title>
+          <title>Receipt #${escapeHtml(order.reference)} - ${escapeHtml(store.name)}</title>
           <style>
             @page {
               size: ${paperWidthCss} auto;
@@ -107,19 +118,19 @@ export default function ThermalReceiptModal({ order, store, onClose }: ThermalRe
         </head>
         <body>
           <div class="text-center">
-            <div style="font-size: 1.3em; font-weight: 900; text-transform: uppercase;">${store.name}</div>
-            ${store.tagline ? `<div style="font-size: 0.85em; font-style: italic; color: #333;">${store.tagline}</div>` : ''}
-            ${store.phone_number ? `<div style="font-size: 0.9em; font-weight: bold;">Ph: ${store.phone_number}</div>` : ''}
-            ${includeGst && gstNumber ? `<div style="font-size: 0.85em; font-weight: bold;">GSTIN: ${gstNumber}</div>` : ''}
+            <div style="font-size: 1.3em; font-weight: 900; text-transform: uppercase;">${escapeHtml(store.name)}</div>
+            ${store.tagline ? `<div style="font-size: 0.85em; font-style: italic; color: #333;">${escapeHtml(store.tagline)}</div>` : ''}
+            ${store.phone_number ? `<div style="font-size: 0.9em; font-weight: bold;">Ph: ${escapeHtml(store.phone_number)}</div>` : ''}
+            ${includeGst && gstNumber ? `<div style="font-size: 0.85em; font-weight: bold;">GSTIN: ${escapeHtml(gstNumber)}</div>` : ''}
           </div>
 
           <div class="dashed-line"></div>
 
           <div style="font-size: 0.9em; font-weight: 600;">
-            <div class="row"><span>Receipt #:</span><span class="font-bold">#${order.reference}</span></div>
+            <div class="row"><span>Receipt #:</span><span class="font-bold">#${escapeHtml(order.reference)}</span></div>
             <div class="row"><span>Date/Time:</span><span>${new Date(order.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span></div>
-            <div class="row"><span>Customer:</span><span class="font-bold">${order.customer_name || 'Counter Customer'}</span></div>
-            ${order.customer_phone ? `<div class="row"><span>Phone:</span><span>${order.customer_phone}</span></div>` : ''}
+            <div class="row"><span>Customer:</span><span class="font-bold">${escapeHtml(order.customer_name || 'Counter Customer')}</span></div>
+            ${order.customer_phone ? `<div class="row"><span>Phone:</span><span>${escapeHtml(order.customer_phone)}</span></div>` : ''}
             <div class="row"><span>Type:</span><span class="font-bold" style="text-transform: uppercase;">${order.order_type === 'STORE_PICKUP' ? 'Store Pickup' : 'Home Delivery'}</span></div>
           </div>
 
@@ -145,15 +156,15 @@ export default function ThermalReceiptModal({ order, store, onClose }: ThermalRe
             </div>
             <div class="row" style="font-size: 0.9em; margin-top: 4px;">
               <span>Payment Mode:</span>
-              <span style="text-transform: uppercase; font-weight: bold;">${order.payment_type || 'COD'}</span>
+              <span style="text-transform: uppercase; font-weight: bold;">${escapeHtml(order.payment_type || 'COD')}</span>
             </div>
           </div>
 
           <div class="dashed-line"></div>
 
           <div class="text-center" style="font-size: 0.85em; margin-top: 6px;">
-            <div style="font-weight: bold;">${footerMessage}</div>
-            <div style="font-size: 0.75em; font-family: monospace; margin-top: 4px;">Scan to Reorder: apanidukan.com/s/${store.slug}</div>
+            <div style="font-weight: bold;">${escapeHtml(footerMessage)}</div>
+            <div style="font-size: 0.75em; font-family: monospace; margin-top: 4px;">Scan to Reorder: apanidukan.com/s/${escapeHtml(store.slug)}</div>
           </div>
 
           <script>

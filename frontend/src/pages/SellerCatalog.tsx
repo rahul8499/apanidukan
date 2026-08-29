@@ -6,6 +6,8 @@ import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { useTranslation } from 'react-i18next'
+import { X, Trash2 } from 'lucide-react'
+import { getBusinessType, UNIT_LABEL_MAP, formatUnitDisplay, getUnitDisplayLabel, getUnitHint } from '../utils/businessTypes'
 
 const errorMessage = (error: any) =>
   error?.response?.data?.detail || Object.values(error?.response?.data || {}).flat().join(' ') || 'Error processing request.'
@@ -23,12 +25,74 @@ export default function SellerCatalog() {
   const [message, setMessage] = useState('')
   const [isRefreshingData, setIsRefreshingData] = useState(false)
 
+  // Multi-Select & Universal Confirmation Modal State
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([])
+  const [isBulkDeletingProducts, setIsBulkDeletingProducts] = useState(false)
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    confirmText?: string
+    cancelText?: string
+    variant?: 'danger' | 'warning' | 'primary' | 'success'
+    onConfirm: () => void | Promise<void>
+  } | null>(null)
+
+  function toggleSelectProduct(id: number) {
+    setSelectedProductIds(prev =>
+      prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
+    )
+  }
+
+  function toggleSelectAllFilteredProducts() {
+    const currentFilteredIds = filteredProducts.map(p => p.id)
+    if (selectedProductIds.length === currentFilteredIds.length && currentFilteredIds.length > 0) {
+      setSelectedProductIds([])
+    } else {
+      setSelectedProductIds(currentFilteredIds)
+    }
+  }
+
+  function requestBulkDeleteProducts() {
+    if (selectedProductIds.length === 0) return
+    setConfirmModal({
+      isOpen: true,
+      title: `🗑️ Delete ${selectedProductIds.length} Selected Products?`,
+      message: `तुम्हाला निवडलेले ${selectedProductIds.length} प्रॉडक्ट्स दुकानातून कायमचे डिलीट करायचे आहेत का? हे प्रॉडक्ट्स रिकव्हर होणार नाहीत.`,
+      confirmText: `🗑️ Yes, Delete (${selectedProductIds.length})`,
+      cancelText: 'Cancel',
+      variant: 'danger',
+      onConfirm: confirmBulkDeleteProducts
+    })
+  }
+
+  async function confirmBulkDeleteProducts() {
+    if (selectedProductIds.length === 0) return
+    setIsBulkDeletingProducts(true)
+    const loadingToast = toast.loading(`Deleting ${selectedProductIds.length} products...`)
+    try {
+      await Promise.all(selectedProductIds.map(id => api.delete(`/products/${id}/`)))
+      toast.success(`🗑️ ${selectedProductIds.length} products deleted successfully!`, { id: loadingToast })
+      setSelectedProductIds([])
+      await loadData()
+    } catch (error) {
+      toast.error(errorMessage(error), { id: loadingToast })
+    } finally {
+      setIsBulkDeletingProducts(false)
+    }
+  }
+
+  // Custom Delete Modal State
+  const [productToDelete, setProductToDelete] = useState<{ id: number; name: string } | null>(null)
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false)
+
   // Edit Modal State
   const [editingProduct, setEditingProduct] = useState<any | null>(null)
   const [editName, setEditName] = useState('')
   const [editPrice, setEditPrice] = useState('')
   const [editStock, setEditStock] = useState('')
   const [editCategory, setEditCategory] = useState('')
+  const [editUnit, setEditUnit] = useState('Pc')
   const [isUpdatingProduct, setIsUpdatingProduct] = useState(false)
   const [isAddingProduct, setIsAddingProduct] = useState(false)
 
@@ -38,6 +102,7 @@ export default function SellerCatalog() {
   const [newProdPrice, setNewProdPrice] = useState('0')
   const [newProdStock, setNewProdStock] = useState('100')
   const [newProdCat, setNewProdCat] = useState('')
+  const [newProdUnit, setNewProdUnit] = useState('Pc')
   const [newProdFile, setNewProdFile] = useState<File | null>(null)
   const [newProdImage, setNewProdImage] = useState<File | null>(null)
   const [newProdImages, setNewProdImages] = useState<File[]>([])
@@ -126,6 +191,7 @@ export default function SellerCatalog() {
     setEditPrice(String(prod.price || '0'))
     setEditStock(String(prod.stock_quantity ?? 100))
     setEditCategory(prod.category ? String(prod.category) : '')
+    setEditUnit(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)
     setEditNewImages([])
   }
 
@@ -138,6 +204,7 @@ export default function SellerCatalog() {
       formData.append('name', editName)
       formData.append('price', editPrice)
       formData.append('stock_quantity', editStock)
+      formData.append('unit', editUnit)
       if (editCategory) formData.append('category', editCategory)
 
       // Upload extra gallery images
@@ -210,14 +277,22 @@ export default function SellerCatalog() {
     }
   }
 
-  async function handleDeleteProduct(productId: number) {
-    if (!window.confirm('Kya aap is product ko delete karna chahte hain?')) return
+  function promptDeleteProduct(prod: any) {
+    setProductToDelete({ id: prod.id, name: prod.name })
+  }
+
+  async function confirmDeleteProduct() {
+    if (!productToDelete) return
+    setIsDeletingProduct(true)
     try {
-      await api.delete(`/products/${productId}/`)
-      toast.success('Product deleted successfully.')
+      await api.delete(`/products/${productToDelete.id}/`)
+      toast.success(`Product "${productToDelete.name}" deleted successfully.`)
+      setProductToDelete(null)
       await loadData()
     } catch (error) {
       toast.error(errorMessage(error))
+    } finally {
+      setIsDeletingProduct(false)
     }
   }
 
@@ -232,6 +307,7 @@ export default function SellerCatalog() {
       formData.append('name', newProdName)
       formData.append('price', newProdPrice)
       formData.append('stock_quantity', newProdStock)
+      formData.append('unit', newProdUnit || getBusinessType(store?.business_type).defaultUnit)
       if (newProdCat) formData.append('category', newProdCat)
       if (newProdFile) formData.append('digital_file', newProdFile)
 
@@ -357,6 +433,43 @@ export default function SellerCatalog() {
           </select>
         </div>
 
+        {/* Multi-Select & Bulk Delete Products Toolbar */}
+        {filteredProducts.length > 0 && (
+          <div className="flex items-center justify-between gap-2 flex-wrap bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-800 select-none">
+              <input
+                type="checkbox"
+                checked={filteredProducts.length > 0 && selectedProductIds.length === filteredProducts.length}
+                onChange={toggleSelectAllFilteredProducts}
+                className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-4 w-4 cursor-pointer"
+              />
+              <span>Select All Products ({filteredProducts.length})</span>
+            </label>
+
+            <div className="flex items-center gap-2">
+              {selectedProductIds.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={requestBulkDeleteProducts}
+                  disabled={isBulkDeletingProducts}
+                  className="rounded-xl bg-gradient-to-r from-rose-600 to-red-600 px-3.5 py-1.5 text-xs font-black text-white shadow-md hover:from-rose-500 hover:to-red-500 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete Selected ({selectedProductIds.length})</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={toggleSelectAllFilteredProducts}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all cursor-pointer"
+                >
+                  ☑️ Select All to Delete
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Category-Wise Grouped Product Sections */}
         {groupedProducts.length === 0 || filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-xs">
@@ -417,14 +530,34 @@ export default function SellerCatalog() {
                         })
                       }
 
+                      const isSelected = selectedProductIds.includes(prod.id)
+
                       return (
                         <div
                           key={prod.id}
-                          className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-xs hover:shadow-md transition-all space-y-3"
+                          className={`relative flex flex-col justify-between rounded-2xl border p-4 transition-all space-y-3 ${
+                            isSelected
+                              ? 'border-rose-400 bg-rose-50/30 ring-2 ring-rose-300 shadow-md'
+                              : 'border-slate-200 bg-white shadow-xs hover:shadow-md'
+                          }`}
                         >
+                          {/* Selection Checkbox */}
+                          <label
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute top-3 right-3 z-10 flex items-center justify-center p-1 cursor-pointer"
+                            title="Select Product to Delete"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectProduct(prod.id)}
+                              className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-4 w-4 cursor-pointer"
+                            />
+                          </label>
+
                           <div className="space-y-3">
                             {/* Product Header & Image */}
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-start gap-3 pr-6">
                               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200 shadow-xs flex items-center justify-center group">
                                 {prod.image ? (
                                   <img src={mediaUrl(prod.image)} alt={prod.name} className="h-full w-full object-cover" />
@@ -456,7 +589,12 @@ export default function SellerCatalog() {
                                   {group.name === 'Uncategorized' ? t('uncategorized') : group.name}
                                 </span>
                                 <h3 className="mt-0.5 text-sm font-extrabold text-slate-900 truncate leading-snug">{prod.name}</h3>
-                                <p className="mt-1 text-sm font-black text-indigo-600">₹{prod.price}</p>
+                                <p className="mt-1 text-sm font-black text-indigo-600 flex items-center gap-1">
+                                  <span>₹{prod.price}</span>
+                                  <span className="text-[11px] font-bold text-slate-500">
+                                    / {formatUnitDisplay(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)}
+                                  </span>
+                                </p>
                               </div>
                             </div>
 
@@ -505,7 +643,11 @@ export default function SellerCatalog() {
                                     : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 }`}
                               >
-                                {isOutOfStock ? t('outOfStock') : isLowStock ? `${t('lowStock')}: ${prod.stock_quantity}` : `${t('stockCountLabel')}: ${prod.stock_quantity ?? 100}`}
+                                {isOutOfStock
+                                  ? t('outOfStock')
+                                  : isLowStock
+                                  ? `${t('lowStock')}: ${prod.stock_quantity} ${formatUnitDisplay(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)}`
+                                  : `✓ Stock: ${prod.stock_quantity ?? 100} ${formatUnitDisplay(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)}`}
                               </span>
 
                               {prod.digital_file && (
@@ -543,11 +685,11 @@ export default function SellerCatalog() {
 
                             <button
                               type="button"
-                              onClick={() => handleDeleteProduct(prod.id)}
-                              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition-colors"
+                              onClick={() => promptDeleteProduct(prod)}
+                              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer flex items-center justify-center gap-1"
                               title="Delete Product"
                             >
-                              🗑️
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         </div>
@@ -628,6 +770,25 @@ export default function SellerCatalog() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700">Ordering Unit (विक्री युनिट)</label>
+                <select
+                  value={editUnit}
+                  onChange={(e) => setEditUnit(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                >
+                  {getBusinessType(store?.business_type).units.map((u) => (
+                    <option key={u} value={u}>
+                      {getUnitDisplayLabel(u, store?.business_type)}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-indigo-700 font-semibold mt-1 bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
+                  <span>💡</span>
+                  <span><strong>{formatUnitDisplay(editUnit)}:</strong> {getUnitHint(editUnit, store?.business_type)}</span>
+                </p>
               </div>
 
               {/* Multi-Image Gallery & Primary Photo Selector */}
@@ -809,6 +970,25 @@ export default function SellerCatalog() {
                 </select>
               </div>
 
+              <div>
+                <label className="text-xs font-bold text-slate-700">Ordering Unit (विक्री युनिट)</label>
+                <select
+                  value={newProdUnit}
+                  onChange={(e) => setNewProdUnit(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                >
+                  {getBusinessType(store?.business_type).units.map((u) => (
+                    <option key={u} value={u}>
+                      {getUnitDisplayLabel(u, store?.business_type)}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-indigo-700 font-semibold mt-1 bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
+                  <span>💡</span>
+                  <span><strong>{formatUnitDisplay(newProdUnit)}:</strong> {getUnitHint(newProdUnit, store?.business_type)}</span>
+                </p>
+              </div>
+
               {/* Multiple Images Selector with Primary Card Photo Chooser */}
               <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
                 <div className="flex items-center justify-between">
@@ -897,6 +1077,113 @@ export default function SellerCatalog() {
         </div>
       )}
 
+
+      {/* Premium Custom Product Delete Dialogue Modal */}
+      {productToDelete && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200 text-center space-y-4 font-sans">
+            <button
+              onClick={() => setProductToDelete(null)}
+              className="absolute top-3.5 right-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 shadow-md">
+              <Trash2 className="h-7 w-7 text-rose-600" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900">
+                Product Delete Karaycha?
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                तुम्हाला <strong className="text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded font-bold">"{productToDelete.name}"</strong> हा प्रॉडक्ट कॅटलॉग मधून नक्की डिलीट करायचा आहे का?
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setProductToDelete(null)}
+                disabled={isDeletingProduct}
+                className="flex-1 rounded-xl border border-slate-300 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteProduct}
+                disabled={isDeletingProduct}
+                className="flex-1 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 py-2.5 text-xs font-bold text-white shadow-lg hover:from-rose-500 hover:to-red-500 disabled:opacity-60 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                {isDeletingProduct ? 'Deleting…' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Universal Reusable Confirmation Dialogue Modal */}
+      {confirmModal && confirmModal.isOpen && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200 text-center space-y-4 font-sans">
+            <button
+              onClick={() => setConfirmModal(null)}
+              className="absolute top-3.5 right-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl shadow-md ${
+              confirmModal.variant === 'danger' ? 'bg-rose-100 text-rose-600' :
+              confirmModal.variant === 'warning' ? 'bg-amber-100 text-amber-600' :
+              confirmModal.variant === 'success' ? 'bg-emerald-100 text-emerald-600' :
+              'bg-indigo-100 text-indigo-600'
+            }`}>
+              {confirmModal.variant === 'danger' ? <Trash2 className="h-7 w-7" /> :
+               confirmModal.variant === 'success' ? <span className="text-2xl">🚀</span> :
+               confirmModal.variant === 'warning' ? <span className="text-2xl">⚡</span> :
+               <span className="text-2xl">⚙️</span>}
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900">
+                {confirmModal.title}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                {confirmModal.message}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 rounded-xl border border-slate-300 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-all cursor-pointer"
+              >
+                {confirmModal.cancelText || 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const action = confirmModal.onConfirm
+                  setConfirmModal(null)
+                  await action()
+                }}
+                className={`flex-1 rounded-xl py-2.5 text-xs font-bold shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  confirmModal.variant === 'danger' ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-500 hover:to-red-500' :
+                  confirmModal.variant === 'success' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500' :
+                  confirmModal.variant === 'warning' ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black hover:brightness-110' :
+                  'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                {confirmModal.confirmText || 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Unified Seller Bottom Navigation Bar */}
       <SellerBottomNav storeId={store.id} activeTab="catalog" />

@@ -17,6 +17,7 @@ import { getStoreTheme } from '../utils/storeTheme'
 import { setupCustomerStorePwa } from '../pwa/pwaManager'
 import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
+import { formatUnitDisplay } from '../utils/businessTypes'
 
 export default function StoreHome() {
   const { storeSlug } = useParams()
@@ -1185,10 +1186,15 @@ function Storefront() {
                           </h3>
 
                           <div className="flex items-center justify-between gap-1 pt-1">
-                            <div className="flex items-baseline gap-1.5 min-w-0">
+                            <div className="flex items-baseline gap-1 min-w-0 flex-wrap">
                               <span className={`text-sm sm:text-base font-black ${storeTheme.text_primary_class}`}>
                                 ₹{p.price}
                               </span>
+                              {p.unit && (
+                                <span className="text-[9.5px] font-black text-indigo-500 bg-indigo-500/10 px-1 py-0.2 rounded border border-indigo-500/20">
+                                  /{formatUnitDisplay(p.unit)}
+                                </span>
+                              )}
                               {mockMrp && mockMrp > p.price && (
                                 <span className="text-[10px] font-semibold text-slate-400 line-through">
                                   ₹{mockMrp}
@@ -1229,11 +1235,14 @@ function Storefront() {
                             >
                               <Minus className="h-3.5 w-3.5" />
                             </button>
-                            <span className="font-black text-xs px-2">{cartItem.quantity}</span>
+                            <span className="font-black text-xs px-1.5 truncate max-w-[55px] text-center">
+                              {cartItem.quantity} <span className="text-[9px] font-normal opacity-90">{formatUnitDisplay(p.unit)}</span>
+                            </span>
                             <button
                               type="button"
+                              disabled={p.stock_quantity !== undefined && p.stock_quantity !== null && cartItem.quantity >= Number(p.stock_quantity)}
                               onClick={() => cart.change(p.id, cartItem.quantity + 1)}
-                              className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/25 hover:bg-black/40 font-black text-sm active:scale-90 transition-transform cursor-pointer"
+                              className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/25 hover:bg-black/40 font-black text-sm active:scale-90 transition-transform cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
                             >
                               <Plus className="h-3.5 w-3.5" />
                             </button>
@@ -1241,7 +1250,7 @@ function Storefront() {
                         ) : (
                           <button
                             disabled={isOutOfStock}
-                            onClick={() => cart.add({ id: p.id, slug: p.slug, name: p.name, price: p.price, image: p.image })}
+                            onClick={() => cart.add({ id: p.id, slug: p.slug, name: p.name, price: p.price, image: p.image, unit: p.unit })}
                             className={`flex w-full items-center justify-center gap-1 rounded-xl py-1.5 text-xs font-black text-white shadow-sm disabled:opacity-40 transition-all cursor-pointer active:scale-95 bg-gradient-to-r ${storeTheme.btn_gradient}`}
                           >
                             <Plus className="h-3.5 w-3.5" />

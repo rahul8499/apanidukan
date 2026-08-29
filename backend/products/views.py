@@ -231,6 +231,8 @@ class ProductViewSet(viewsets.ModelViewSet):
                 except Exception:
                     stock_val = 100
 
+                raw_unit = (item.get('unit') or item.get('ordering_unit') or item.get('sales_unit') or '').strip()
+
                 product_obj = Product(
                     store=store,
                     category=target_category,
@@ -238,6 +240,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                     slug=slug,
                     price=price_val,
                     currency='INR',
+                    unit=raw_unit if raw_unit else ('Plate' if store.business_type == 'HOTEL_RESTAURANT' else ('Kg' if store.business_type in ['KIRANA', 'DAIRY_SWEETS'] else ('Strip' if store.business_type == 'PHARMACY' else 'Pc'))),
                     stock_quantity=stock_val,
                     description=item.get('description', ''),
                     is_published=True

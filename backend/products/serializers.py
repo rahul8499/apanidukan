@@ -16,7 +16,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('id', 'store', 'category', 'name', 'slug', 'short_description', 'description', 'image', 'images', 'price', 'currency', 'stock_quantity', 'digital_file', 'file_size', 'is_published', 'created_at', 'updated_at')
+        fields = ('id', 'store', 'category', 'name', 'slug', 'short_description', 'description', 'image', 'images', 'price', 'currency', 'unit', 'stock_quantity', 'digital_file', 'file_size', 'is_published', 'created_at', 'updated_at')
         read_only_fields = ('file_size', 'created_at', 'updated_at')
 
     def to_internal_value(self, data):
@@ -64,7 +64,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('id', 'name', 'slug', 'short_description', 'description', 'image', 'images', 'price', 'currency', 'stock_quantity', 'category')
+        fields = ('id', 'name', 'slug', 'short_description', 'description', 'image', 'images', 'price', 'currency', 'unit', 'stock_quantity', 'category')
 
     def get_category(self, obj):
         if obj.category:

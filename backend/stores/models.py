@@ -34,10 +34,27 @@ class Store(models.Model):
         ('HYBRID', 'Base Fee + Per KM'),
     ]
 
+    BUSINESS_TYPE_CHOICES = [
+        ('GENERAL', 'General Store / सर्वसाधारण दुकान'),
+        ('KIRANA', 'Kirana & Grocery / किराणा व धान्य'),
+        ('PHOTO_STUDIO', 'Photo Studio & Services / फोटो स्टुडिओ व सर्व्हिसेस'),
+        ('HOTEL_RESTAURANT', 'Hotel & Restaurant / हॉटेल व खानावळ'),
+        ('GARMENTS', 'Clothing & Garments / कपडे व फॅशन'),
+        ('HARDWARE', 'Hardware & Plumbing / हार्डवेअर व प्लंबिंग'),
+        ('ELECTRONICS', 'Electronics & Mobiles / इलेक्ट्रॉनिक्स व मोबाईल'),
+        ('AUTOMOBILE', 'Automobile & Spares / ऑटोमोबाईल व सर्व्हिसेस'),
+        ('PHARMACY', 'Medical & Pharmacy / मेडिकल व फार्मसी'),
+        ('GIFT_TOYS', 'Gift Shop & Toys / गिफ्ट शॉप व खेळणी'),
+        ('DAIRY_SWEETS', 'Dairy & Sweet Mart / डेअरी व मिठाई'),
+        ('STATIONERY', 'Books & Stationery / पुस्तके व स्टेशनरी'),
+        ('BEAUTY_JEWELLERY', 'Jewellery & Beauty / दागिने व ब्यूटी'),
+    ]
+
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='stores')
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
+    business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES, default='GENERAL')
     address = models.TextField(blank=True, null=True)
     phone_number = models.CharField(max_length=40, blank=True, null=True)
     logo = models.ImageField(upload_to='stores/logos/', null=True, blank=True)

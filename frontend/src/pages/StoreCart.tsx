@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
+import { getBusinessType, formatUnitDisplay } from '../utils/businessTypes'
 
 export default function StoreCart() {
   const { storeSlug } = useParams()
@@ -50,6 +51,7 @@ function CartContent() {
   const [otpSent, setOtpSent] = useState(false)
   const [otpLoading, setOtpLoading] = useState(false)
   const [checkoutVerificationToken, setCheckoutVerificationToken] = useState('')
+  const [customNote, setCustomNote] = useState('')
 
   // Coupons State
   const [availableCoupons, setAvailableCoupons] = useState<any[]>([])
@@ -413,18 +415,18 @@ function CartContent() {
       const itemLines = order.items.map((item: any) => {
         const unitPrice = Number(item.price || 0)
         const quantity = Number(item.quantity || 1)
-        return `• ${item.name || 'Item'} × ${quantity} — ₹${(unitPrice * quantity).toFixed(2)}`
+        return `• ${item.name || 'Item'} × ${quantity} ${formatUnitDisplay(item.unit) || ''} — ₹${(unitPrice * quantity).toFixed(2)}`
       })
       const itemSubtotal = order.items.reduce((total: number, item: any) => total + (Number(item.price || 0) * Number(item.quantity || 1)), 0)
 
-      // WhatsApp opens from the customer's device, so it must contain a real,
-      // complete order slip for the seller—not an internal dashboard alert.
+      const bTypeConfig = getBusinessType(store?.business_type)
       const lines = [
         `*NEW ORDER* #${order.reference}`,
         '',
         '*Customer details*',
         `Name: ${order.customer_name || 'Customer'}`,
         `Phone: ${order.customer_phone || trimmedPhone} (Verified ✓)`,
+        ...(customNote.trim() && bTypeConfig.customFieldLabel ? [`*${bTypeConfig.customFieldLabel}*: ${customNote.trim()}`] : []),
         '',
         '*Order items*',
         ...itemLines,
@@ -639,10 +641,15 @@ function CartContent() {
                         {item.name}
                       </h3>
 
-                      <div className="flex items-baseline gap-1.5">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
                         <span className="font-black text-sm text-slate-950">
                           ₹{item.price}
                         </span>
+                        {item.unit && (
+                          <span className="text-[9.5px] font-black text-indigo-600 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded">
+                            /{formatUnitDisplay(item.unit)}
+                          </span>
+                        )}
                         <span className="text-[10px] text-emerald-600 font-bold">
                           In Stock
                         </span>
@@ -657,7 +664,7 @@ function CartContent() {
 
                       {/* Quantity Controller & Remove */}
                       <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-2 rounded-lg bg-slate-100 p-0.5 border border-slate-200">
+                        <div className="flex items-center gap-1.5 rounded-lg bg-slate-100 p-0.5 border border-slate-200">
                           <button
                             type="button"
                             onClick={() => cart.change(item.id, item.quantity - 1)}
@@ -665,7 +672,10 @@ function CartContent() {
                           >
                             <Minus className="h-3 w-3" />
                           </button>
-                          <span className="font-extrabold text-xs px-1 text-slate-900">{item.quantity}</span>
+                          <span className="font-extrabold text-xs px-1 text-slate-900 flex items-baseline gap-0.5">
+                            {item.quantity}
+                            {item.unit && <span className="text-[9.5px] font-bold text-slate-600">{formatUnitDisplay(item.unit)}</span>}
+                          </span>
                           <button
                             type="button"
                             onClick={() => cart.change(item.id, item.quantity + 1)}
@@ -801,17 +811,36 @@ function CartContent() {
                         type="button"
                         onClick={useCurrentLocation}
                         disabled={locationLoading}
-                        className="text-[10px] font-extrabold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-[10px] font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
                       >
-                        <MapPin className="h-3 w-3 text-amber-500" />
-                        <span>{locationLoading ? 'Locating…' : 'Use Current GPS'}</span>
+                        <MapPin className="h-3 w-3" />
+                        <span>{locationLoading ? 'Locating...' : 'Use GPS Location'}</span>
                       </button>
                     </div>
                     <textarea
-                      className="w-full mt-1 rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none min-h-16"
-                      placeholder="House/Flat No., Landmark, Pincode"
+                      rows={2}
+                      className="w-full mt-1 rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-semibold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none"
+                      placeholder="Street address, house no, landmark, city"
                       value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      onChange={e => setDeliveryAddress(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {/* Category-Specific Custom Note / Details Field */}
+                {store && getBusinessType(store.business_type).customFieldLabel && (
+                  <div className="space-y-1 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 p-3 border border-indigo-200/80 shadow-2xs">
+                    <label className="text-[11px] font-extrabold text-indigo-950 flex items-center gap-1.5">
+                      <span>{getBusinessType(store.business_type).icon}</span>
+                      <span>{getBusinessType(store.business_type).customFieldLabel}</span>
+                      <span className="text-[9px] font-normal text-indigo-600">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-indigo-200 bg-white p-2 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:outline-none shadow-2xs"
+                      placeholder={getBusinessType(store.business_type).customFieldPlaceholder}
+                      value={customNote}
+                      onChange={e => setCustomNote(e.target.value)}
                     />
                   </div>
                 )}

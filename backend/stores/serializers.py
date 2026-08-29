@@ -15,7 +15,7 @@ class StoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Store
         fields = (
-            'id', 'owner', 'name', 'slug', 'description', 'address', 'phone_number', 'logo',
+            'id', 'owner', 'name', 'slug', 'description', 'business_type', 'address', 'phone_number', 'logo',
             'theme', 'status', 'is_published', 'manage_in_app',
             'allow_home_delivery', 'allow_store_pickup',
             'min_delivery_order', 'delivery_radius_km', 'delivery_charge_type',
@@ -58,7 +58,7 @@ class PublicStoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Store
         fields = (
-            'id', 'name', 'slug', 'description', 'address', 'logo', 'theme', 'settings',
+            'id', 'name', 'slug', 'description', 'business_type', 'address', 'logo', 'theme', 'settings',
             'phone_number', 'manage_in_app', 'allow_home_delivery', 'allow_store_pickup',
             'min_delivery_order', 'delivery_radius_km', 'delivery_charge_type',
             'delivery_flat_fee', 'delivery_per_km_fee', 'free_delivery_above',

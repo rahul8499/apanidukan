@@ -18,6 +18,7 @@ import { ScratchCardConfig } from './CustomerScratchCardModal'
 import InstallAppButton from '../pwa/InstallAppButton'
 import { setupSellerStorePwa } from '../pwa/pwaManager'
 import { useTranslation } from 'react-i18next'
+import { BUSINESS_TYPES, getBusinessType } from '../utils/businessTypes'
 import {
   Globe,
   Store,
@@ -107,6 +108,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [storeDescription, setStoreDescription] = useState(store?.description || '')
   const [storeAddress, setStoreAddress] = useState(store?.address || '')
   const [phoneNumber, setPhoneNumber] = useState(store?.phone_number || store?.whatsapp_phone || '')
+  const [businessType, setBusinessType] = useState(store?.business_type || 'GENERAL')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(store?.logo || null)
   const [isSavingProfile, setIsSavingProfile] = useState(false)
@@ -330,6 +332,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       setStoreDescription(store.description || '')
       setStoreAddress(store.address || '')
       setPhoneNumber(store.phone_number || store.whatsapp_phone || '')
+      setBusinessType(store.business_type || 'GENERAL')
       if (store.logo) {
         setLogoPreview(store.logo)
       }
@@ -414,6 +417,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       formData.append('address', storeAddress)
       formData.append('phone_number', phoneNumber)
       formData.append('whatsapp_phone', phoneNumber)
+      formData.append('business_type', businessType)
       if (logoFile) {
         formData.append('logo', logoFile)
       }
@@ -683,6 +687,21 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   />
                 </div>
 
+                <div>
+                  <label className="text-[10px] font-bold text-slate-700">Business Category</label>
+                  <select
+                    value={businessType}
+                    onChange={e => setBusinessType(e.target.value)}
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-indigo-500 focus:outline-none"
+                  >
+                    {BUSINESS_TYPES.map(b => (
+                      <option key={b.id} value={b.id}>
+                        {b.icon} {b.name} ({b.nameMr})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <button
                   type="submit"
                   disabled={isSavingProfile}
@@ -697,6 +716,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
                   <span className="text-[10px] text-slate-500 font-bold">{t('storeNameLabel')}</span>
                   <span className="font-extrabold text-slate-900">{store.name}</span>
+                </div>
+                <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-500 font-bold">Business Type</span>
+                  <span className="font-extrabold text-indigo-700 flex items-center gap-1">
+                    <span>{getBusinessType(store.business_type).icon}</span>
+                    <span>{getBusinessType(store.business_type).name}</span>
+                  </span>
                 </div>
                 <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
                   <span className="text-[10px] text-slate-500 font-bold">{t('orderPhoneLabel')}</span>

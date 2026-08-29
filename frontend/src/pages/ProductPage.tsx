@@ -13,6 +13,7 @@ import {
 import { getStoreTheme } from '../utils/storeTheme'
 import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
+import { formatUnitDisplay } from '../utils/businessTypes'
 
 export default function ProductPage() {
   const { storeSlug } = useParams()
@@ -202,7 +203,8 @@ function ProductContent() {
       slug: product.slug,
       name: product.name,
       price: product.price,
-      image: currentImage || product.image
+      image: currentImage || product.image,
+      unit: product.unit
     }, quantity)
     setAddedToast(true)
     setTimeout(() => setAddedToast(false), 2200)
@@ -215,7 +217,8 @@ function ProductContent() {
       slug: product.slug,
       name: product.name,
       price: product.price,
-      image: currentImage || product.image
+      image: currentImage || product.image,
+      unit: product.unit
     }, quantity)
     navigate(`/store/${storeSlug}/cart`)
   }
@@ -553,6 +556,11 @@ function ProductContent() {
 
                 <div className="flex items-baseline gap-2 pt-0.5">
                   <span className="text-xl sm:text-2xl font-black text-slate-950">₹{product.price}</span>
+                  {product.unit && (
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-600">
+                      /{formatUnitDisplay(product.unit)}
+                    </span>
+                  )}
                   {savings > 0 && (
                     <>
                       <span className="text-xs sm:text-sm font-bold text-slate-400 line-through">₹{originalMRP}</span>

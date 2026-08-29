@@ -10,6 +10,8 @@ import api from '../services/api'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
 import { useTranslation } from 'react-i18next'
+import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeCategories, getBusinessTypeProducts, getBusinessTypeCheckoutHint, getUnitDisplayLabel, getUnitHint, formatUnitDisplay, UNIT_LABEL_MAP } from '../utils/businessTypes'
+import { X, Trash2 } from 'lucide-react'
 
 const errorMessage = (error: any) =>
   error?.response?.data?.detail || Object.values(error?.response?.data || {}).flat().join(' ') || 'Please check the form and try again.'
@@ -34,12 +36,16 @@ function playNotificationChime() {
 }
 
 export default function StoreManager() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { storeId } = useParams()
   const auth = useAuth()
   const navigate = useNavigate()
   const [store, setStore] = useState<any>(() => getCachedStore(storeId))
   const [categories, setCategories] = useState<any[]>([])
+  const [categoryToDelete, setCategoryToDelete] = useState<{ id: number; name: string } | null>(null)
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<{ id: number; name: string } | null>(null)
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false)
   const [products, setProducts] = useState<any[]>([])
   const [categoryName, setCategoryName] = useState('')
   const [productName, setProductName] = useState('')
@@ -73,6 +79,8 @@ export default function StoreManager() {
   const [guideModalType, setGuideModalType] = useState<'csv' | 'text' | 'matrix' | null>(null)
 
   // Product Edit Modal & Sidebar Drawer State
+  const [productUnit, setProductUnit] = useState('')
+  const [editUnit, setEditUnit] = useState('')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<any | null>(null)
   const [editName, setEditName] = useState('')
@@ -83,6 +91,80 @@ export default function StoreManager() {
   const [isAddingProduct, setIsAddingProduct] = useState(false)
   const [isPublishingStore, setIsPublishingStore] = useState(false)
   const [isAddingCategory, setIsAddingCategory] = useState(false)
+  const [showDemoCsvModal, setShowDemoCsvModal] = useState(false)
+  const [demoCsvViewMode, setDemoCsvViewMode] = useState<'table' | 'raw'>('table')
+  const [selectedCatIds, setSelectedCatIds] = useState<number[]>([])
+  const [isBulkDeletingCats, setIsBulkDeletingCats] = useState(false)
+  const [showBulkDeleteCatModal, setShowBulkDeleteCatModal] = useState(false)
+
+  // Universal Reusable Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    confirmText?: string
+    cancelText?: string
+    variant?: 'danger' | 'warning' | 'primary' | 'success'
+    onConfirm: () => void | Promise<void>
+  } | null>(null)
+
+  function requestPublish() {
+    if (!store) return
+    const isGoingLive = !store.is_published
+    setConfirmModal({
+      isOpen: true,
+      title: isGoingLive ? '🚀 Store Live Karayche?' : '⏸️ Store Draft Mode Karayche?',
+      message: isGoingLive
+        ? 'तुम्हाला तुमचे दुकान ऑनलाईन Live (Publish) करायचे आहे का? ग्राहक दुकान पाहू शकतील आणि ऑर्डर देऊ शकतील.'
+        : 'तुम्हाला दुकान Draft मोडवर ठेवायचे आहे का? ग्राहक दुकान ऑनलाईन पाहू शकणार नाहीत.',
+      confirmText: isGoingLive ? '🚀 Yes, Make Live' : 'Yes, Set to Draft',
+      cancelText: 'Cancel',
+      variant: isGoingLive ? 'success' : 'warning',
+      onConfirm: publish
+    })
+  }
+
+  function requestAutoCreateSampleCategories() {
+    if (!store) return
+    const currentBType = getBusinessType(store.business_type)
+    const bTitle = getBusinessTypeTitle(currentBType, i18n.language || 'mr')
+    setConfirmModal({
+      isOpen: true,
+      title: `⚡ 1-Click Ready Categories Add Karayche?`,
+      message: `तुम्हाला "${bTitle}" व्यवसायासाठी तयार कॅटेगरीज दुकानात १-क्लिकमध्ये जोडायचे आहेत का? (फक्त कॅटेगरीज जोडल्या जातील, प्रॉडक्ट्स नाही)`,
+      confirmText: '⚡ Yes, Import Categories',
+      cancelText: 'Cancel',
+      variant: 'warning',
+      onConfirm: handleAutoCreateSampleCategories
+    })
+  }
+
+  function requestUpdateBusinessType(newType: string) {
+    if (!store || newType === store.business_type) return
+    const bTitle = getBusinessTypeTitle(getBusinessType(newType), i18n.language || 'mr')
+    setConfirmModal({
+      isOpen: true,
+      title: 'Business Category Badlaychi?',
+      message: `तुम्हाला दुकानाची श्रेणी "${bTitle}" मध्ये बदलावायची आहे का? यामुळे चेकाऊट नियम आणि युनिट्स अपडेट होतील.`,
+      confirmText: '⚙️ Yes, Change',
+      cancelText: 'Cancel',
+      variant: 'primary',
+      onConfirm: () => handleUpdateBusinessType(newType)
+    })
+  }
+
+  function requestBulkDeleteCategories() {
+    if (selectedCatIds.length === 0) return
+    setConfirmModal({
+      isOpen: true,
+      title: `🗑️ Delete ${selectedCatIds.length} Selected Categories?`,
+      message: `तुम्हाला निवडलेल्या ${selectedCatIds.length} कॅटेगरीज दुकानातून कायमच्या डिलीट करायच्या आहेत का?`,
+      confirmText: `🗑️ Yes, Delete (${selectedCatIds.length})`,
+      cancelText: 'Cancel',
+      variant: 'danger',
+      onConfirm: confirmBulkDeleteCategories
+    })
+  }
 
   function openEditModal(prod: any) {
     setEditingProduct(prod)
@@ -90,6 +172,7 @@ export default function StoreManager() {
     setEditPrice(String(prod.price || '0'))
     setEditStock(String(prod.stock_quantity ?? 100))
     setEditCategory(prod.category ? String(prod.category) : '')
+    setEditUnit(prod.unit || getBusinessType(store?.business_type).defaultUnit)
   }
 
   async function handleSaveProductEdit(e: React.FormEvent) {
@@ -101,7 +184,8 @@ export default function StoreManager() {
         name: editName,
         price: editPrice,
         stock_quantity: parseInt(editStock || '0', 10),
-        category: editCategory ? parseInt(editCategory, 10) : null
+        category: editCategory ? parseInt(editCategory, 10) : null,
+        unit: editUnit || 'Pc'
       })
       toast.success(`✏️ '${editName}' updated successfully!`)
       setEditingProduct(null)
@@ -110,6 +194,43 @@ export default function StoreManager() {
       toast.error(errorMessage(err))
     } finally {
       setIsUpdatingProduct(false)
+    }
+  }
+
+  async function handleUpdateBusinessType(newType: string) {
+    if (!store) return
+    const loadingId = toast.loading('Updating business category...')
+    try {
+      const res = await api.patch(`/stores/${store.id}/`, { business_type: newType })
+      setStore(res.data)
+      setCachedStore(res.data)
+      toast.success(`🎉 Business Category set to ${getBusinessType(newType).name}!`, { id: loadingId })
+    } catch (err) {
+      toast.error(errorMessage(err), { id: loadingId })
+    }
+  }
+
+  async function handleAutoCreateSampleCategories() {
+    if (!store) return
+    const currentBType = getBusinessType(store.business_type)
+    const activeLang = i18n.language || 'mr'
+    const sampleCats = getBusinessTypeCategories(currentBType, activeLang)
+    const bTitle = getBusinessTypeTitle(currentBType, activeLang)
+
+    const loadingId = toast.loading(`Creating preset categories for ${bTitle}...`)
+    try {
+      let createdCats = 0
+      for (const catName of sampleCats) {
+        if (!categories.some(c => c.name.toLowerCase() === catName.toLowerCase())) {
+          await api.post(`/stores/${store.id}/categories/`, { name: catName })
+          createdCats++
+        }
+      }
+
+      toast.success(`✨ ${createdCats > 0 ? `${createdCats} new categories` : 'Categories already exist'} added for ${bTitle}!`, { id: loadingId })
+      load()
+    } catch (err) {
+      toast.error(errorMessage(err), { id: loadingId })
     }
   }
 
@@ -330,6 +451,56 @@ export default function StoreManager() {
     }
   }
 
+  function promptDeleteCategory(catId: number, catName: string) {
+    setCategoryToDelete({ id: catId, name: catName })
+  }
+
+  async function confirmDeleteCategory() {
+    if (!categoryToDelete) return
+    setIsDeletingCategory(true)
+    try {
+      await api.delete(`/categories/${categoryToDelete.id}/`)
+      setCategories(prev => prev.filter(c => c.id !== categoryToDelete.id))
+      toast.success(`Category "${categoryToDelete.name}" delete jhali!`)
+      setCategoryToDelete(null)
+    } catch (error) {
+      toast.error(errorMessage(error))
+    } finally {
+      setIsDeletingCategory(false)
+    }
+  }
+
+  function toggleSelectCat(id: number) {
+    setSelectedCatIds(prev =>
+      prev.includes(id) ? prev.filter(cId => cId !== id) : [...prev, id]
+    )
+  }
+
+  function toggleSelectAllCats() {
+    if (selectedCatIds.length === categories.length) {
+      setSelectedCatIds([])
+    } else {
+      setSelectedCatIds(categories.map(c => c.id))
+    }
+  }
+
+  async function confirmBulkDeleteCategories() {
+    if (selectedCatIds.length === 0) return
+    setIsBulkDeletingCats(true)
+    const toastId = toast.loading(`⏳ Deleting ${selectedCatIds.length} categories...`)
+    try {
+      await Promise.all(selectedCatIds.map(id => api.delete(`/categories/${id}/`)))
+      setCategories(prev => prev.filter(c => !selectedCatIds.includes(c.id)))
+      toast.success(`🗑️ Successfully deleted ${selectedCatIds.length} categories!`, { id: toastId })
+      setSelectedCatIds([])
+      setShowBulkDeleteCatModal(false)
+    } catch (error) {
+      toast.error(errorMessage(error), { id: toastId })
+    } finally {
+      setIsBulkDeletingCats(false)
+    }
+  }
+
   async function addProduct(e: React.FormEvent) {
     e.preventDefault()
     if (!store || !productName.trim()) return
@@ -343,6 +514,7 @@ export default function StoreManager() {
       data.append('stock_quantity', stockQuantity || '100')
       data.append('currency', 'INR')
       data.append('is_published', 'true')
+      data.append('unit', productUnit || getBusinessType(store?.business_type).defaultUnit)
       if (category) data.append('category', category)
       if (file) {
         data.append('digital_file', file)
@@ -530,37 +702,42 @@ export default function StoreManager() {
 
   // CSV Import Handlers
   function downloadSampleCsv() {
-    const csvContent = `Category,Product Name,Price,Stock,Description,Image URL
-Bikes & Accessories,Full Face Riding Helmet,1850,50,DOT & ISI certified safety helmet,"helmet.jpg, helmet-side.jpg, helmet-back.jpg"
-Bikes & Accessories,Premium Racing Helmet,2499,30,Aerodynamic racing helmet with dual visor,"https://images.unsplash.com/photo-1558981403-c5f9899a28bc, https://images.unsplash.com/photo-1558981806-ec527fa84c39"
-Bikes & Accessories,Chain Lube & Cleaner Spray,399,100,High performance synthetic chain spray,https://images.unsplash.com/photo-1486006920555-c77dce18193b
-Bikes & Accessories,Waterproof Bike Cover,499,35,Heavy duty UV and rain protection cover,"bike-cover-front.jpg, bike-cover-folded.jpg"
-Groceries,Organic Forest Honey 500g,450,20,100% natural raw forest honey,https://images.unsplash.com/photo-1587049352846-4a222e784d38
-Groceries,Cold Pressed Coconut Oil 1L,520,40,Unrefined pure extra virgin coconut oil,https://images.unsplash.com/photo-1615485290382-441e4d049cb5
-Digital Templates,WhatsApp Store Setup Guide,299,999,E-book step-by-step store setup,https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7
-Electronics,Bluetooth Wireless Earbuds,1299,15,IPX7 waterproof earbuds with bass,"earbuds-case.jpg, earbuds-side.jpg"`
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const currentBType = getBusinessType(store?.business_type)
+    const header = 'Category,Product Name,Price,Stock,Unit,Description,Image URL\n'
+    
+    let rows = ''
+    if (currentBType.sampleProducts && currentBType.sampleProducts.length > 0) {
+      rows = currentBType.sampleProducts.map(sp => 
+        `"${sp.category}","${sp.name}",${sp.price},${sp.stock},"${sp.unit}","Quality ${sp.name} for your store","${sp.image || ''}"`
+      ).join('\n')
+    } else {
+      rows = `General Products,Sample Item 1,199,50,Pc,Sample description,"sample1.jpg, sample2.jpg"`
+    }
+
+    const csvContent = header + rows
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.setAttribute('href', url)
-    link.setAttribute('download', 'products_import_multi_image_sample.csv')
+    link.setAttribute('download', `${(store?.slug || 'store')}_sample_products_import.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
   }
 
   function downloadSampleText() {
-    const textContent = `Full Face Riding Helmet - 1850 - 50
-Engine Oil 1L - 450 - 20
-Chain Lube & Cleaner Spray - 399 - 100
-Waterproof Bike Cover - 499 - 35
-Organic Forest Honey 500g - 450 - 25
-Bluetooth Wireless Earbuds - 1299 - 15`
+    const currentBType = getBusinessType(store?.business_type)
+    let textContent = ''
+    if (currentBType.sampleProducts && currentBType.sampleProducts.length > 0) {
+      textContent = currentBType.sampleProducts.map(sp => `${sp.name} - ${sp.price} - ${sp.stock} - ${sp.unit}`).join('\n')
+    } else {
+      textContent = `Full Face Riding Helmet - 1850 - 50 - Pc\nEngine Oil 1L - 450 - 20 - Litre\nSugar - 42 - 100 - Kg`
+    }
     const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.setAttribute('href', url)
-    link.setAttribute('download', 'sample_products_text_list.txt')
+    link.setAttribute('download', `${(store?.slug || 'store')}_sample_products_text_list.txt`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -618,6 +795,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
       let nameIdx = headers.findIndex(h => h.includes('name') || h.includes('product') || h.includes('item') || h.includes('title'))
       let priceIdx = headers.findIndex(h => h.includes('price') || h.includes('cost') || h.includes('rate') || h.includes('amt') || h.includes('amount'))
       let stockIdx = headers.findIndex(h => h.includes('stock') || h.includes('qty') || h.includes('quantity') || h.includes('count'))
+      let unitIdx = headers.findIndex(h => h.includes('unit') || h.includes('measure') || h.includes('pkg'))
       let descIdx = headers.findIndex(h => h.includes('desc') || h.includes('details') || h.includes('note'))
       let imgIdx = headers.findIndex(h => h.includes('img') || h.includes('image') || h.includes('photo') || h.includes('pic') || h.includes('url'))
 
@@ -626,7 +804,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
       if (nameIdx === -1 && rawHeaders.length >= 3) nameIdx = 1
       if (priceIdx === -1 && rawHeaders.length >= 3) priceIdx = 2
 
-      const parsedItems: { category_name: string; name: string; price: string; description: string; stock?: string; image_url?: string }[] = []
+      const parsedItems: { category_name: string; name: string; price: string; description: string; stock?: string; unit?: string; image_url?: string }[] = []
 
       for (let i = 1; i < lines.length; i++) {
         const cols = parseCSVLine(lines[i], delimiter)
@@ -637,6 +815,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
         const rawPriceStr = priceIdx >= 0 && cols[priceIdx] ? cols[priceIdx] : (cols[2] || cols[1] || '0')
         const prodPrice = rawPriceStr.replace(/[^\d.]/g, '')
         const prodStock = stockIdx >= 0 && cols[stockIdx] ? cols[stockIdx].replace(/[^\d]/g, '') : '100'
+        const prodUnit = unitIdx >= 0 && cols[unitIdx] ? cols[unitIdx] : ''
         const prodDesc = descIdx >= 0 && cols[descIdx] ? cols[descIdx] : ''
         const prodImg = imgIdx >= 0 && cols[imgIdx] ? cols[imgIdx] : ''
 
@@ -646,6 +825,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
             name: prodName,
             price: prodPrice || '0',
             stock: prodStock || '100',
+            unit: prodUnit,
             description: prodDesc,
             image_url: prodImg
           })
@@ -773,14 +953,22 @@ Bluetooth Wireless Earbuds - 1299 - 15`
     }
   }
 
-  async function handleDeleteProduct(productId: number) {
-    if (!window.confirm('Kya aap is product ko delete karna chahte hain?')) return
+  function promptDeleteProduct(prod: any) {
+    setProductToDelete({ id: prod.id, name: prod.name })
+  }
+
+  async function confirmDeleteProduct() {
+    if (!productToDelete) return
+    setIsDeletingProduct(true)
     try {
-      await api.delete(`/products/${productId}/`)
-      toast.success('Product deleted successfully.')
+      await api.delete(`/products/${productToDelete.id}/`)
+      toast.success(`Product "${productToDelete.name}" deleted!`)
+      setProductToDelete(null)
       await load()
     } catch (error) {
       toast.error(errorMessage(error))
+    } finally {
+      setIsDeletingProduct(false)
     }
   }
 
@@ -857,7 +1045,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
           <div className="flex items-center sm:flex-col sm:items-end justify-between gap-1.5 sm:gap-2.5 shrink-0 border-t border-white/10 sm:border-t-0 pt-2 sm:pt-0">
             <button
               type="button"
-              onClick={publish}
+              onClick={requestPublish}
               title={store.is_published ? "Store is LIVE (Click to set Draft)" : "Click to Make Store LIVE"}
               className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 py-1 text-[9px] sm:text-xs font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${store.is_published
                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30'
@@ -1079,10 +1267,19 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                       <span>📊 CSV Columns Supported:</span>
                       <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Multi-Image Active</span>
                     </p>
-                    <p className="text-[11px] font-mono text-slate-600 mt-0.5">Category, Product Name, Price, Stock, Description, Image URL</p>
+                    <p className="text-[11px] font-mono text-slate-600 mt-0.5">Category, Product Name, Price, Stock, Unit, Description, Image URL</p>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowDemoCsvModal(true)}
+                      className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all flex items-center gap-1 cursor-pointer"
+                      title="Preview Demo CSV content & 1-Click Auto-Import"
+                    >
+                      <span>👁️ 1-Click Live CSV Demo</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => setGuideModalType('csv')}
@@ -1418,6 +1615,73 @@ Bluetooth Wireless Earbuds - 1299 - 15`
         )}
       </section>
 
+      {/* Business Category & Ordering Logic Customizer Section */}
+      {store && (
+        <section id="business-category" className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-r from-indigo-900 via-slate-900 to-slate-950 p-3.5 sm:p-5 text-white shadow-md space-y-3 transition-all">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-800/60 pb-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-2xl shadow-inner border border-white/20">
+                {getBusinessType(store.business_type).icon}
+              </span>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full bg-amber-400/20 text-amber-300 text-[9px] font-black px-2 py-0.5 border border-amber-400/40 uppercase">
+                    Category & Logic Setup
+                  </span>
+                </div>
+                <h3 className="text-xs sm:text-base font-black text-white mt-0.5">
+                  {getBusinessTypeTitle(getBusinessType(store.business_type), i18n.language)}
+                </h3>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={requestAutoCreateSampleCategories}
+                className="rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 px-3 py-1.5 text-[10px] sm:text-xs font-black text-slate-950 hover:brightness-110 shadow-xs transition-all cursor-pointer flex items-center gap-1"
+              >
+                <span>{t('autoAddSampleCategories', '⚡ 1-Click रेडी कॅटेगरीज जोडा')}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div>
+              <label className="text-[10px] font-extrabold text-indigo-300 uppercase tracking-wider block">Change Business Category:</label>
+              <select
+                value={store.business_type || 'GENERAL'}
+                onChange={e => requestUpdateBusinessType(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-indigo-700 bg-slate-900 p-2 text-xs font-bold text-white focus:border-amber-400 focus:outline-none"
+              >
+                {BUSINESS_TYPES.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.icon} {getBusinessTypeTitle(b, i18n.language)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="rounded-xl bg-white/5 p-2.5 border border-white/10 space-y-1">
+              <p className="text-[10px] font-extrabold text-amber-300 uppercase tracking-wider">🎯 Checkout UX & Unit Rules:</p>
+              <p className="text-[11px] text-slate-200 font-medium">
+                {getBusinessTypeCheckoutHint(getBusinessType(store.business_type), i18n.language)}
+              </p>
+              <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                <span className="text-[9.5px] text-slate-400 font-bold">Units:</span>
+                {getBusinessType(store.business_type).units.map(u => (
+                  <span key={u} className="bg-indigo-950 text-indigo-300 border border-indigo-700/50 px-1.5 py-0.2 rounded text-[9px] font-bold">
+                    {u}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+
+
       {/* Step 02: Category Add */}
       <section id="categories" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs transition-all">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
@@ -1459,12 +1723,77 @@ Bluetooth Wireless Earbuds - 1299 - 15`
         </form>
 
         {categories.length > 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-1 pt-2 border-t border-slate-100">
-            {categories.map(item => (
-              <span key={item.id} className="rounded-md sm:rounded-lg bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-slate-700">
-                📁 {item.name}
-              </span>
-            ))}
+          <div className="mt-3 pt-2.5 border-t border-slate-100 space-y-2">
+            {/* Category Bulk Action Toolbar */}
+            <div className="flex items-center justify-between gap-2 flex-wrap bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-800 select-none">
+                <input
+                  type="checkbox"
+                  checked={categories.length > 0 && selectedCatIds.length === categories.length}
+                  onChange={toggleSelectAllCats}
+                  className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-4 w-4 cursor-pointer"
+                />
+                <span>Select All ({categories.length})</span>
+              </label>
+
+              <div className="flex items-center gap-1.5">
+                {selectedCatIds.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={requestBulkDeleteCategories}
+                    disabled={isBulkDeletingCats}
+                    className="rounded-lg bg-rose-600 px-3 py-1 text-xs font-extrabold text-white shadow-xs hover:bg-rose-700 transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                  >
+                    <span>🗑️ Delete Selected ({selectedCatIds.length})</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={toggleSelectAllCats}
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition-all cursor-pointer"
+                  >
+                    ☑️ Select All to Delete
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Category Badges with Selection Checkboxes */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {categories.map(item => {
+                const isSelected = selectedCatIds.includes(item.id)
+                return (
+                  <span
+                    key={item.id}
+                    onClick={() => toggleSelectCat(item.id)}
+                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer select-none ${
+                      isSelected
+                        ? 'bg-rose-50 border-rose-300 text-rose-900 shadow-xs ring-1 ring-rose-200'
+                        : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {}}
+                      className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-3.5 w-3.5 cursor-pointer pointer-events-none"
+                    />
+                    <span>📁 {item.name}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        promptDeleteCategory(item.id, item.name)
+                      }}
+                      className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-rose-600 hover:text-white transition-all cursor-pointer ml-0.5"
+                      title={`Delete category ${item.name}`}
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )
+              })}
+            </div>
           </div>
         )}
       </section>
@@ -1487,7 +1816,7 @@ Bluetooth Wireless Earbuds - 1299 - 15`
         </div>
 
         <form onSubmit={addProduct} className="space-y-2.5">
-          <div className="grid gap-2 sm:gap-3 sm:grid-cols-2">
+          <div className="grid gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <label className="text-[11px] sm:text-xs font-bold text-slate-700">Product Name</label>
               <input value={productName} onChange={e => setProductName(e.target.value)} required placeholder="Product name" className="premium-input mt-0.5 p-2 text-xs" />
@@ -1499,6 +1828,22 @@ Bluetooth Wireless Earbuds - 1299 - 15`
             <div>
               <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('stock')}</label>
               <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Stock Qty (default 100)" className="premium-input mt-0.5 p-2 text-xs" />
+            </div>
+            <div>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Ordering Unit (विक्री युनिट)</label>
+              <select
+                value={productUnit || getBusinessType(store?.business_type).defaultUnit}
+                onChange={e => setProductUnit(e.target.value)}
+                className="premium-input mt-0.5 p-2 text-xs font-medium"
+              >
+                {getBusinessType(store?.business_type).units.map(u => (
+                  <option key={u} value={u}>{getUnitDisplayLabel(u, store?.business_type)}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-indigo-700 font-semibold mt-1 bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
+                <span>💡</span>
+                <span><strong>{formatUnitDisplay(productUnit || getBusinessType(store?.business_type).defaultUnit)}:</strong> {getUnitHint(productUnit || getBusinessType(store?.business_type).defaultUnit, store?.business_type)}</span>
+              </p>
             </div>
             <div>
               <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('category')}</label>
@@ -1623,14 +1968,22 @@ Bluetooth Wireless Earbuds - 1299 - 15`
                 <label className="text-xs font-bold text-slate-800">Product Name</label>
                 <input value={editName} onChange={e => setEditName(e.target.value)} required className="premium-input mt-1" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="text-xs font-bold text-slate-800">Price (₹)</label>
                   <input value={editPrice} onChange={e => setEditPrice(e.target.value)} required min="0" type="number" step="0.01" className="premium-input mt-1" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-800">Stock Quantity</label>
+                  <label className="text-xs font-bold text-slate-800">Stock Qty</label>
                   <input value={editStock} onChange={e => setEditStock(e.target.value)} required min="0" type="number" className="premium-input mt-1" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-800">Unit</label>
+                  <select value={editUnit} onChange={e => setEditUnit(e.target.value)} className="premium-input mt-1">
+                    {getBusinessType(store?.business_type).units.map(u => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div>
@@ -1782,6 +2135,180 @@ Bluetooth Wireless Earbuds - 1299 - 15`
         </div>
       )}
 
+      {/* Live Demo CSV Viewer & 1-Click Importer Modal */}
+      {showDemoCsvModal && store && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200 text-left space-y-4 font-sans max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">📊</span>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <span>1-Click Live CSV Demo & Excel Preview</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full border border-emerald-300">
+                      {getBusinessType(store.business_type).icon} {getBusinessType(store.business_type).nameMr}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    इथे CSV फाईलचा लाईव्ह डेटा Excel टेबल टेबल रूपात दाखवला आहे
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDemoCsvModal(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-all cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 overflow-y-auto pr-1 text-xs text-slate-700">
+              <div className="rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200/80 p-3.5 space-y-1.5 text-teal-950">
+                <p className="font-extrabold text-xs flex items-center gap-1.5 text-teal-900">
+                  <span>💡 ही खरीखुरी CSV फाईल अपलोड केल्यावर काय घडते त्याचा डेमो आहे!</span>
+                </p>
+                <p className="font-medium text-[11px] leading-relaxed text-teal-800">
+                  खालील तक्त्यात दाखवल्याप्रमाणे <b>Category, Product Name, Price, Stock, Unit, Description, Image URL</b> हे ७ कॉलम असतात. <b>"🚀 1-Click Auto-Import This Demo CSV"</b> वर क्लिक करताच हे सर्व प्रॉडक्ट्स अचूक युनिट्ससह १ सेकंदात तयार होतात!
+                </p>
+              </div>
+
+              {/* View Switcher Tabs */}
+              <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setDemoCsvViewMode('table')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                      demoCsvViewMode === 'table'
+                        ? 'bg-white text-indigo-700 shadow-xs border border-indigo-100'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📊 Visual Excel Table
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDemoCsvViewMode('raw')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                      demoCsvViewMode === 'raw'
+                        ? 'bg-white text-indigo-700 shadow-xs border border-indigo-100'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📝 Raw CSV Code
+                  </button>
+                </div>
+
+                <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                  {(store.slug || 'store')}_sample_products_import.csv
+                </span>
+              </div>
+
+              {/* View Content */}
+              {demoCsvViewMode === 'table' ? (
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-900 text-slate-200 text-[11px] font-bold uppercase tracking-wider">
+                        <th className="p-2.5 border-b border-slate-800">Category</th>
+                        <th className="p-2.5 border-b border-slate-800">Product Name</th>
+                        <th className="p-2.5 border-b border-slate-800 text-right">Price</th>
+                        <th className="p-2.5 border-b border-slate-800 text-center">Stock</th>
+                        <th className="p-2.5 border-b border-slate-800 text-center">Unit</th>
+                        <th className="p-2.5 border-b border-slate-800">Image URL / Files</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                      {(() => {
+                        const currentBType = getBusinessType(store.business_type)
+                        const items = getBusinessTypeProducts(currentBType, i18n.language)
+                        if (items.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan={6} className="p-4 text-center text-slate-400">No sample items found</td>
+                            </tr>
+                          )
+                        }
+                        return items.map((sp, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="p-2.5 font-bold text-slate-900 whitespace-nowrap">
+                              <span className="bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-md border border-indigo-200 text-[11px]">
+                                {sp.category}
+                              </span>
+                            </td>
+                            <td className="p-2.5 font-bold text-slate-900">{sp.name}</td>
+                            <td className="p-2.5 text-right font-black text-emerald-600 whitespace-nowrap">₹{sp.price}</td>
+                            <td className="p-2.5 text-center font-bold text-slate-700 whitespace-nowrap">
+                              <span className="bg-slate-100 px-2 py-0.5 rounded-full text-[11px] text-slate-800 font-mono">
+                                {sp.stock}
+                              </span>
+                            </td>
+                            <td className="p-2.5 text-center whitespace-nowrap">
+                              <span className="bg-amber-100 text-amber-900 font-extrabold px-2 py-0.5 rounded-full text-[10px] border border-amber-300">
+                                {sp.unit}
+                              </span>
+                            </td>
+                            <td className="p-2.5 text-slate-500 font-mono text-[10px] max-w-[150px] truncate" title={sp.image || 'None'}>
+                              {sp.image ? (
+                                <span className="text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 font-sans font-bold flex items-center gap-1 w-fit">
+                                  <span>📷</span>
+                                  <span className="truncate max-w-[120px]">{sp.image}</span>
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 italic">No image link</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="bg-slate-900 text-emerald-300 p-3.5 rounded-2xl font-mono text-[11px] leading-relaxed border border-slate-800 overflow-x-auto whitespace-pre select-all shadow-inner">
+                  {(() => {
+                    const currentBType = getBusinessType(store.business_type)
+                    const sampleProds = getBusinessTypeProducts(currentBType, i18n.language)
+                    const header = 'Category,Product Name,Price,Stock,Unit,Description,Image URL\n'
+                    let rows = ''
+                    if (sampleProds && sampleProds.length > 0) {
+                      rows = sampleProds.map(sp => 
+                        `"${sp.category}","${sp.name}",${sp.price},${sp.stock},"${sp.unit}","Quality ${sp.name}","${sp.image || ''}"`
+                      ).join('\n')
+                    } else {
+                      rows = `General Products,Sample Item 1,199,50,Pc,Sample description,"sample.jpg"`
+                    }
+                    return header + rows
+                  })()}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={downloadSampleCsv}
+                className="w-full sm:w-auto rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>📥 Download CSV File</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDemoCsvModal(false)
+                  requestAutoCreateSampleCategories()
+                }}
+                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2.5 text-xs font-black text-white shadow-lg hover:from-emerald-500 hover:to-teal-500 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>🚀 1-Click Auto-Import Demo CSV Data</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Printable Shop QR Code Standee & Poster Modal */}
       {showQrModal && store && (
         <StoreQrStandeeModal
@@ -1789,6 +2316,159 @@ Bluetooth Wireless Earbuds - 1299 - 15`
           publicUrl={publicUrl}
           onClose={() => setShowQrModal(false)}
         />
+      )}
+
+      {/* Premium Custom Category Delete Dialogue Modal */}
+      {categoryToDelete && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200 text-center space-y-4 font-sans">
+            <button
+              onClick={() => setCategoryToDelete(null)}
+              className="absolute top-3.5 right-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 shadow-md">
+              <Trash2 className="h-7 w-7 text-rose-600" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900">
+                Category Delete Karayechi?
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                तुम्हाला <strong className="text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded font-bold">"{categoryToDelete.name}"</strong> ही कॅटेगरी नक्की डिलीट करायची आहे का?
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setCategoryToDelete(null)}
+                disabled={isDeletingCategory}
+                className="flex-1 rounded-xl border border-slate-300 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteCategory}
+                disabled={isDeletingCategory}
+                className="flex-1 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 py-2.5 text-xs font-bold text-white shadow-lg hover:from-rose-500 hover:to-red-500 disabled:opacity-60 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                {isDeletingCategory ? 'Deleting…' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Custom Product Delete Dialogue Modal */}
+      {productToDelete && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200 text-center space-y-4 font-sans">
+            <button
+              onClick={() => setProductToDelete(null)}
+              className="absolute top-3.5 right-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 shadow-md">
+              <Trash2 className="h-7 w-7 text-rose-600" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900">
+                Product Delete Karaycha?
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                तुम्हाला <strong className="text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded font-bold">"{productToDelete.name}"</strong> हा प्रॉडक्ट दुकानातून नक्की डिलीट करायचा आहे का?
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setProductToDelete(null)}
+                disabled={isDeletingProduct}
+                className="flex-1 rounded-xl border border-slate-300 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteProduct}
+                disabled={isDeletingProduct}
+                className="flex-1 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 py-2.5 text-xs font-bold text-white shadow-lg hover:from-rose-500 hover:to-red-500 disabled:opacity-60 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                {isDeletingProduct ? 'Deleting…' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Universal Reusable Confirmation Dialogue Modal */}
+      {confirmModal && confirmModal.isOpen && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200 text-center space-y-4 font-sans">
+            <button
+              onClick={() => setConfirmModal(null)}
+              className="absolute top-3.5 right-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl shadow-md ${
+              confirmModal.variant === 'danger' ? 'bg-rose-100 text-rose-600' :
+              confirmModal.variant === 'warning' ? 'bg-amber-100 text-amber-600' :
+              confirmModal.variant === 'success' ? 'bg-emerald-100 text-emerald-600' :
+              'bg-indigo-100 text-indigo-600'
+            }`}>
+              {confirmModal.variant === 'danger' ? <Trash2 className="h-7 w-7" /> :
+               confirmModal.variant === 'success' ? <span className="text-2xl">🚀</span> :
+               confirmModal.variant === 'warning' ? <span className="text-2xl">⚡</span> :
+               <span className="text-2xl">⚙️</span>}
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900">
+                {confirmModal.title}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                {confirmModal.message}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 rounded-xl border border-slate-300 bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition-all cursor-pointer"
+              >
+                {confirmModal.cancelText || 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const action = confirmModal.onConfirm
+                  setConfirmModal(null)
+                  await action()
+                }}
+                className={`flex-1 rounded-xl py-2.5 text-xs font-bold shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  confirmModal.variant === 'danger' ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-500 hover:to-red-500' :
+                  confirmModal.variant === 'success' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500' :
+                  confirmModal.variant === 'warning' ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black hover:brightness-110' :
+                  'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                {confirmModal.confirmText || 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

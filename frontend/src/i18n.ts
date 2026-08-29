@@ -24,10 +24,11 @@ const resources = {
       step2Title: 'Category Add Karein',
       step2Subtext: 'Customers ko products discover karne mein help karega.',
       step3Title: 'Single Product Add Karein',
-      step3Subtext: 'Price aur downloadable file set karke instantly publish karein.',
+      step3Subtext: 'Price, stock, unit aur photos set karke instantly publish karein.',
       categoryCatalog: 'Category Catalog',
       viewAllProducts: 'View all products organized by category. Edit prices & photos.',
       openCategoryCatalog: '📁 Open Category Catalog',
+      autoAddSampleCategories: '⚡ 1-Click Import Ready Categories',
 
       // Killer Feature: 1-Click Bulk Import
       killerFeature: '👑 KILLER FEATURE',
@@ -442,6 +443,7 @@ const resources = {
       categoryCatalog: 'श्रेणी कैटलॉग (Category Catalog)',
       viewAllProducts: 'श्रेणी के अनुसार सभी उत्पाद देखें। कीमतें और फोटो संपादित करें।',
       openCategoryCatalog: '📁 श्रेणी कैटलॉग खोलें',
+      autoAddSampleCategories: '⚡ 1-क्लिक रेडी श्रेणियां व उत्पाद जोड़ें',
 
       // Killer Feature: 1-Click Bulk Import
       killerFeature: '👑 किलर फीचर',
@@ -856,6 +858,7 @@ const resources = {
       categoryCatalog: 'प्रवर्ग कॅटलॉग (Category Catalog)',
       viewAllProducts: 'प्रवर्गानुसार सर्व उत्पादने पाहा. किमती आणि फोटो संपादीत करा.',
       openCategoryCatalog: '📁 प्रवर्ग कॅटलॉग उघडा',
+      autoAddSampleCategories: '⚡ 1-Click रेडी कॅटेगरीज जोडा',
 
       // Killer Feature: 1-Click Bulk Import
       killerFeature: '👑 किलर फीचर',

@@ -16,6 +16,7 @@ class Product(models.Model):
     image = models.ImageField(upload_to='products/images/', null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     currency = models.CharField(max_length=10, default='USD')
+    unit = models.CharField(max_length=50, default='Pc', blank=True)
     stock_quantity = models.IntegerField(default=100)
     digital_file = models.FileField(upload_to='products/files/private/', null=True, blank=True)
     file_size = models.BigIntegerField(null=True, blank=True)

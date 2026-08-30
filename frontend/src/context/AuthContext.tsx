@@ -17,7 +17,13 @@ type AuthContextType = {
   register: (data: any) => Promise<void>
   logout: () => void
   sendOTP: (phone_number: string) => Promise<{ success: boolean; message: string; user_exists: boolean; phone_number: string }>
-  verifyOTP: (phone_number: string, otp: string, access_token?: string) => Promise<{ is_new_user: boolean; user?: User }>
+  verifyOTP: (phone_number: string, otp: string, access_token?: string) => Promise<{
+    is_new_user: boolean
+    has_store?: boolean
+    stores_count?: number
+    store?: { id: number; name: string; slug: string }
+    user?: User
+  }>
   registerWithOTP: (data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; email?: string }) => Promise<User>
 }
 
@@ -145,15 +151,26 @@ export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
     if (!verifiedToken) throw new Error('MSG91 did not return a verification token.')
     const res = await api.post('/auth/otp/verify/', { phone_number, otp: '', access_token: verifiedToken })
     const data = res.data
-    if (!data.is_new_user && data.access) {
+    if (data.access) {
       localStorage.setItem('access_token', data.access)
       localStorage.setItem('refresh_token', data.refresh)
       api.defaults.headers.common['Authorization'] = `Bearer ${data.access}`
       const userObj = data.user
       setUser(userObj)
-      return { is_new_user: false, user: userObj }
+      return {
+        is_new_user: Boolean(data.is_new_user),
+        has_store: Boolean(data.has_store),
+        stores_count: data.stores_count || 0,
+        store: data.store || undefined,
+        user: userObj
+      }
     }
-    return { is_new_user: true }
+    return {
+      is_new_user: Boolean(data.is_new_user),
+      has_store: Boolean(data.has_store),
+      stores_count: data.stores_count || 0,
+      store: data.store || undefined
+    }
   }
 
   async function registerWithOTP(data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; email?: string }): Promise<User> {

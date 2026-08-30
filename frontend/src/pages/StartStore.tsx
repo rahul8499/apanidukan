@@ -45,19 +45,28 @@ export default function StartStore() {
     }
   }, [countdown])
 
-  // Handle URL query pre-fills from login redirect
+  // Handle URL query pre-fills from login redirect & logged-in user state
   useEffect(() => {
     const queryPhone = searchParams.get('phone')
     const queryOtp = searchParams.get('otp')
     if (queryPhone) {
       setPhone(queryPhone)
       setRegMode('otp')
+    } else if (auth.user && auth.user.phone_number) {
+      setPhone(auth.user.phone_number)
     }
+
+    if (auth.user) {
+      if (auth.user.first_name && !firstName) setFirstName(auth.user.first_name)
+      if (auth.user.last_name && !lastName) setLastName(auth.user.last_name)
+      if (auth.user.email && !email && !auth.user.email.includes('@store.local')) setEmail(auth.user.email)
+    }
+
     if (queryOtp) {
       setOtp(queryOtp)
       setOtpVerified(true)
     }
-  }, [searchParams])
+  }, [searchParams, auth.user])
 
   // Send OTP
   async function handleSendOTP() {
@@ -97,13 +106,19 @@ export default function StartStore() {
     setLoading(true)
     try {
       const res = await auth.verifyOTP(cleanPhone, otp)
-      if (!res.is_new_user) {
-        // User already exists, redirect to dashboard
-        navigate('/dashboard')
-        return
-      }
       setOtpVerified(true)
-      setSuccessMsg('Mobile number verified! Please enter your store & account details below.')
+
+      if (res.user) {
+        if (res.user.first_name && !firstName) setFirstName(res.user.first_name)
+        if (res.user.last_name && !lastName) setLastName(res.user.last_name)
+        if (res.user.email && !email && !res.user.email.includes('@store.local')) setEmail(res.user.email)
+      }
+
+      if (res.has_store && res.store) {
+        setSuccessMsg(`✅ Mobile verified! Found existing store "${res.store.name}". Enter new store details below to create another store, or click Dashboard to manage your store.`)
+      } else {
+        setSuccessMsg('✅ Mobile number verified! Please enter your store & account details below to launch your store.')
+      }
     } catch (err: any) {
       setError(errorMessage(err))
     } finally {

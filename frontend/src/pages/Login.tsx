@@ -90,8 +90,8 @@ export default function Login() {
     setLoading(true)
     try {
       const res = await auth.verifyOTP(cleanPhone, otp)
-      if (res.is_new_user) {
-        // User doesn't exist, redirect to registration with phone prefilled
+      if (res.is_new_user || !res.has_store) {
+        // User is new or doesn't have a store yet -> send to store setup with phone prefilled
         navigate(`/start?phone=${cleanPhone}&otp=${otp}`)
       } else {
         const user = res.user

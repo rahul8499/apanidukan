@@ -379,11 +379,15 @@ class VerifyOTPView(APIView):
         user = User.objects.filter(phone_number=clean_phone).first()
 
         if user:
-
+            store = Store.objects.filter(owner=user).first()
+            stores_count = Store.objects.filter(owner=user).count()
             refresh = RefreshToken.for_user(user)
             return Response({
                 'success': True,
                 'is_new_user': False,
+                'has_store': stores_count > 0,
+                'stores_count': stores_count,
+                'store': {'id': store.id, 'name': store.name, 'slug': store.slug} if store else None,
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),
                 'user': UserSerializer(user).data
@@ -392,6 +396,9 @@ class VerifyOTPView(APIView):
             return Response({
                 'success': True,
                 'is_new_user': True,
+                'has_store': False,
+                'stores_count': 0,
+                'store': None,
                 'phone_number': clean_phone,
                 'message': 'OTP verified! Complete your account details to start your store.'
             })
@@ -414,22 +421,23 @@ class OTPRegisterCompleteView(APIView):
         if not clean_phone or len(clean_phone) < 10:
             return Response({'detail': 'Valid 10-digit phone number is required.'}, status=400)
 
-        # Registration is allowed only after an OTP was actually verified.
-        # Widget verification creates this short-lived proof in VerifyOTPView.
+        # Registration is allowed if OTP proof verified OR user is logged in session OR valid OTP provided.
         verified = PhoneOTP.objects.filter(
             phone_number=clean_phone, is_verified=True, expires_at__gte=timezone.now()
         ).order_by('-created_at').first()
+
         if not verified:
-            if not otp:
+            if request.user and request.user.is_authenticated and (request.user.phone_number == clean_phone or not request.user.phone_number):
+                pass
+            elif not otp:
                 return Response({'detail': 'Please verify your mobile number with OTP first.'}, status=400)
-            is_valid, msg = verify_otp(clean_phone, otp)
-            if not is_valid:
-                return Response({'detail': msg}, status=400)
-            verified = PhoneOTP.objects.filter(
-                phone_number=clean_phone, is_verified=True, expires_at__gte=timezone.now()
-            ).order_by('-created_at').first()
-            if not verified:
-                return Response({'detail': 'OTP verification could not be confirmed.'}, status=400)
+            else:
+                is_valid, msg = verify_otp(clean_phone, otp)
+                if not is_valid:
+                    return Response({'detail': msg}, status=400)
+                verified = PhoneOTP.objects.filter(
+                    phone_number=clean_phone, is_verified=True, expires_at__gte=timezone.now()
+                ).order_by('-created_at').first()
 
         if not email:
             email = f"user_{clean_phone}@store.local"
@@ -440,25 +448,34 @@ class OTPRegisterCompleteView(APIView):
         elif User.objects.filter(email=email).exclude(phone_number=clean_phone).exists():
             return Response({'detail': 'An account with this email address already exists.'}, status=400)
 
-        user, created = User.objects.get_or_create(
-            phone_number=clean_phone,
-            defaults={
-                'email': email,
-                'first_name': first_name,
-                'last_name': last_name,
-                'is_staff': False,
-                'is_superuser': False,
-            }
-        )
-        if not created:
+        if request.user and request.user.is_authenticated:
+            user = request.user
+            if clean_phone and not user.phone_number:
+                user.phone_number = clean_phone
             if first_name: user.first_name = first_name
             if last_name: user.last_name = last_name
             user.save()
         else:
-            user.set_unusable_password()
-            user.save()
+            user, created = User.objects.get_or_create(
+                phone_number=clean_phone,
+                defaults={
+                    'email': email,
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'is_staff': False,
+                    'is_superuser': False,
+                }
+            )
+            if not created:
+                if first_name: user.first_name = first_name
+                if last_name: user.last_name = last_name
+                user.save()
+            else:
+                user.set_unusable_password()
+                user.save()
 
-        store = Store.objects.filter(owner=user).first()
+        # Check if user already has a store with this exact name, or if we should create a new store
+        store = Store.objects.filter(owner=user, name=store_name).first() if store_name else Store.objects.filter(owner=user).first()
         if not store:
             if not store_name:
                 store_name = f"{first_name or 'My'} Store"
@@ -472,9 +489,9 @@ class OTPRegisterCompleteView(APIView):
                 manage_in_app=True,
             )
 
-        # A verification proof is single-use; prevent it from being replayed.
-        verified.expires_at = timezone.now()
-        verified.save(update_fields=["expires_at"])
+        if verified:
+            verified.expires_at = timezone.now()
+            verified.save(update_fields=["expires_at"])
 
         refresh = RefreshToken.for_user(user)
         return Response({

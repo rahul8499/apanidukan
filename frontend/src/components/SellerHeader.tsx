@@ -913,14 +913,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!allowHomeDelivery) {
-                          // Opening settings allows confirming config before enabling
-                          setShowDeliveryModal(true)
-                        } else {
-                          handleToggleDeliverySetting('allow_home_delivery', false)
-                        }
-                      }}
+                      onClick={() => handleToggleDeliverySetting('allow_home_delivery', !allowHomeDelivery)}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowHomeDelivery ? 'bg-emerald-600' : 'bg-slate-300'
                         }`}
                     >

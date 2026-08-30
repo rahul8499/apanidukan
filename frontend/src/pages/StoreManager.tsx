@@ -409,7 +409,7 @@ export default function StoreManager() {
 
   const whatsappShareUrl = useMemo(() => {
     if (!store?.name || !publicUrl) return ''
-    const inviteMsg = `🛍️ *${store.name}* me aapka swagat hai!\n\nAap hamari dukaan se ghar baithe saara samaan online order kar sakte hain. Direct WhatsApp checkout & Fast Doorstep Delivery! 🚀\n\n👇 *Store Check Karein & Order Karein:*\n${publicUrl}`
+    const inviteMsg = `🛍️ *${store.name}*\n👇 Order karne ke liye link par click karein:\n${publicUrl}`
     return `https://wa.me/?text=${encodeURIComponent(inviteMsg)}`
   }, [store?.name, publicUrl])
 

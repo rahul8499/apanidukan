@@ -1417,7 +1417,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
       {/* Unpublish Confirmation Dialogue Modal */}
       {showUnpublishConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 text-slate-900 animate-in zoom-in-95">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 mx-auto">
               <AlertTriangle className="h-6 w-6" />

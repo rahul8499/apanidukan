@@ -241,7 +241,7 @@ export default function SellerThemeCustomizerModal({
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-2 sm:p-4 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/85 p-2 sm:p-4 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-6xl h-[94vh] max-h-[900px] flex flex-col rounded-2xl sm:rounded-3xl border border-slate-700/80 bg-slate-900 shadow-2xl overflow-hidden my-auto text-white">
 
         {/* ULTRA-PREMIUM OBSIDIAN GOLD VIP STUDIO HEADER */}

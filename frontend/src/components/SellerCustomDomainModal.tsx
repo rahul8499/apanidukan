@@ -59,7 +59,7 @@ export default function SellerCustomDomainModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-xs animate-in fade-in">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-xs animate-in fade-in">
       <div className="relative w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 text-slate-900 animate-in zoom-in-95 overflow-hidden">
         
         {/* Header */}

@@ -50,7 +50,7 @@ export default function StorePosterModal({ store, publicUrl, onClose }: StorePos
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
       <div className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl text-white my-auto max-h-[92vh] flex flex-col">
         
         {/* Header */}

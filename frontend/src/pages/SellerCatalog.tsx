@@ -111,8 +111,21 @@ export default function SellerCatalog() {
 
   const loadData = async () => {
     try {
-      const stores = await api.get('/stores/')
-      const found = stores.data.find((item: any) => String(item.id) === storeId)
+      let found: any = null
+      if (storeId) {
+        try {
+          const directRes = await api.get(`/stores/${storeId}/`)
+          found = directRes.data
+        } catch {
+          const stores = await api.get('/stores/')
+          const storeList = Array.isArray(stores.data) ? stores.data : (stores.data?.results || [])
+          found = storeList.find((item: any) => String(item.id) === storeId)
+        }
+      } else {
+        const stores = await api.get('/stores/')
+        const storeList = Array.isArray(stores.data) ? stores.data : (stores.data?.results || [])
+        found = storeList[0] || null
+      }
       if (!found) return navigate('/dashboard')
       setCachedStore(found)
       setStore(found)
@@ -121,8 +134,10 @@ export default function SellerCatalog() {
         api.get(`/stores/${found.id}/categories/`),
         api.get('/products/')
       ])
-      setCategories(categoryResult.data || [])
-      setProducts((productResult.data || []).filter((item: any) => item.store === found.id))
+      const catList = Array.isArray(categoryResult.data) ? categoryResult.data : (categoryResult.data?.results || [])
+      const prodList = Array.isArray(productResult.data) ? productResult.data : (productResult.data?.results || [])
+      setCategories(catList)
+      setProducts(prodList.filter((item: any) => item.store === found.id))
     } catch {
       toast.error('Failed to load catalog data.')
     }

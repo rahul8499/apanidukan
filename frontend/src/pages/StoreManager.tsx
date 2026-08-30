@@ -415,12 +415,27 @@ export default function StoreManager() {
 
   async function load() {
     try {
-      const stores = await api.get('/stores/')
-      const found = stores.data.find((item: any) => String(item.id) === storeId)
-      if (found) setCachedStore(found)
-      setStore(found || null)
-      setPhoneNumber(found?.phone_number || '')
+      let found: any = null
+      if (storeId) {
+        try {
+          const directRes = await api.get(`/stores/${storeId}/`)
+          found = directRes.data
+        } catch {
+          const stores = await api.get('/stores/')
+          const storeList = Array.isArray(stores.data) ? stores.data : (stores.data?.results || [])
+          found = storeList.find((item: any) => String(item.id) === storeId)
+        }
+      } else {
+        const stores = await api.get('/stores/')
+        const storeList = Array.isArray(stores.data) ? stores.data : (stores.data?.results || [])
+        found = storeList[0] || null
+      }
+
       if (found) {
+        setCachedStore(found)
+        setStore(found)
+        setPhoneNumber(found?.phone_number || '')
+
         const hideKey = `qs_hide_seller_tour_${found.id}`
         const hiddenInStorage = localStorage.getItem(hideKey) === 'true'
         if (!found.has_seen_onboarding_tour && !hiddenInStorage) {
@@ -430,8 +445,13 @@ export default function StoreManager() {
         const [categoryResult, productResult] = await Promise.all([
           api.get(`/stores/${found.id}/categories/`), api.get('/products/')
         ])
-        setCategories(categoryResult.data)
-        setProducts(productResult.data.filter((item: any) => item.store === found.id))
+        const catList = Array.isArray(categoryResult.data) ? categoryResult.data : (categoryResult.data?.results || [])
+        const prodList = Array.isArray(productResult.data) ? productResult.data : (productResult.data?.results || [])
+        setCategories(catList)
+        setProducts(prodList.filter((item: any) => item.store === found.id))
+      } else {
+        setStore(null)
+        setMessage('Store load nahi ho paaya ya access permissions nahi hain.')
       }
     } catch {
       setMessage('Store load nahi ho paaya. Please login again.')

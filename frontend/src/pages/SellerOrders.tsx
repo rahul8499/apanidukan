@@ -34,14 +34,29 @@ export default function SellerOrders() {
 
   const load = async () => {
     try {
-      const stores = await api.get('/stores/')
-      const found = stores.data.find((x: any) => String(x.id) === storeId)
+      let found: any = null
+      if (storeId) {
+        try {
+          const directRes = await api.get(`/stores/${storeId}/`)
+          found = directRes.data
+        } catch {
+          const stores = await api.get('/stores/')
+          const storeList = Array.isArray(stores.data) ? stores.data : (stores.data?.results || [])
+          found = storeList.find((x: any) => String(x.id) === storeId)
+        }
+      } else {
+        const stores = await api.get('/stores/')
+        const storeList = Array.isArray(stores.data) ? stores.data : (stores.data?.results || [])
+        found = storeList[0] || null
+      }
+
       if (!found) return navigate('/dashboard')
       setCachedStore(found)
       setStore(found)
 
       const response = await api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
-      setOrders(response.data)
+      const orderList = Array.isArray(response.data) ? response.data : (response.data?.results || [])
+      setOrders(orderList)
     } catch {
       navigate('/login')
     }

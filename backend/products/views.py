@@ -58,6 +58,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if self.request.user and self.request.user.is_staff:
+            return Product.objects.all()
         return Product.objects.filter(store__owner=self.request.user)
 
     def perform_create(self, serializer):

@@ -943,6 +943,15 @@ export default function PlatformDashboard() {
                                     <span>Inspect 📊</span>
                                   </button>
 
+                                  <button
+                                    onClick={() => navigate(`/stores/${st.id}/manage`)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-600/20 px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer"
+                                    title="Manage Seller Store Account & Workspace"
+                                  >
+                                    <Building2 className="h-3 w-3 text-emerald-400" />
+                                    <span>Manage ⚙️</span>
+                                  </button>
+
                                   <a
                                     href={`/store/${st.slug}`}
                                     target="_blank"
@@ -1654,7 +1663,7 @@ export default function PlatformDashboard() {
                 className="flex-1 rounded-xl bg-indigo-600 py-3 text-xs font-black text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/30 cursor-pointer flex items-center justify-center gap-2 min-w-[160px]"
               >
                 <Building2 className="h-4 w-4" />
-                <span>Inspect Workspace ⚙️</span>
+                <span>Manage Store Account ⚙️</span>
               </button>
             </div>
           </div>

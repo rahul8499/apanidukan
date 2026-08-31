@@ -15,7 +15,7 @@ const errorMessage = (error: any) =>
 export default function SellerCatalog() {
   const { storeId } = useParams()
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const [store, setStore] = useState<any>(() => getCachedStore(storeId))
   const [categories, setCategories] = useState<any[]>([])

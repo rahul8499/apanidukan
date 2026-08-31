@@ -343,6 +343,8 @@ class SellerWhatsAppOrdersView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_store(self, request, store_id):
+        if request.user and request.user.is_staff:
+            return get_object_or_404(Store, id=store_id)
         return get_object_or_404(Store, id=store_id, owner=request.user)
 
     def get(self, request, store_id):

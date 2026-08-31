@@ -50,7 +50,7 @@ class PresignedUploadView(APIView):
 class IsStoreOwner(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
-        return obj.store.owner == request.user
+        return obj.store.owner == request.user or (request.user and request.user.is_staff)
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -64,7 +64,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         store = serializer.validated_data.get('store')
-        if not store or store.owner != self.request.user:
+        if not store or (store.owner != self.request.user and not self.request.user.is_staff):
             raise PermissionDenied('You can only add products to your own store.')
 
         # Save product (photos are optional)
@@ -94,7 +94,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         store = serializer.validated_data.get('store', serializer.instance.store)
-        if store.owner != self.request.user:
+        if store.owner != self.request.user and not self.request.user.is_staff:
             raise PermissionDenied('You can only use your own store.')
         product = serializer.save()
 
@@ -171,7 +171,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         if not store_id or not isinstance(items_data, list) or len(items_data) == 0:
             return Response({'detail': 'store_id and non-empty products list required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        store = get_object_or_404(Store, id=store_id, owner=request.user)
+        if request.user and request.user.is_staff:
+            store = get_object_or_404(Store, id=store_id)
+        else:
+            store = get_object_or_404(Store, id=store_id, owner=request.user)
         default_category = None
         if category_id:
             from categories.models import Category
@@ -324,15 +327,23 @@ class CouponViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         from .models import Coupon
+        if self.request.user and self.request.user.is_staff:
+            return Coupon.objects.all()
         return Coupon.objects.filter(store__owner=self.request.user)
 
     def perform_create(self, serializer):
         from .models import Coupon
         store_id = self.request.data.get('store')
         if not store_id:
-            store = Store.objects.filter(owner=self.request.user).first()
+            if self.request.user and self.request.user.is_staff:
+                store = Store.objects.first()
+            else:
+                store = Store.objects.filter(owner=self.request.user).first()
         else:
-            store = get_object_or_404(Store, id=store_id, owner=self.request.user)
+            if self.request.user and self.request.user.is_staff:
+                store = get_object_or_404(Store, id=store_id)
+            else:
+                store = get_object_or_404(Store, id=store_id, owner=self.request.user)
         
         if not store:
             raise PermissionDenied('No valid store found for this user.')

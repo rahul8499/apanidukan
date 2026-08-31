@@ -11,6 +11,8 @@ class IsStoreOwner(permissions.BasePermission):
         store_id = view.kwargs.get('store_id')
         if not store_id:
             return False
+        if request.user and request.user.is_staff:
+            return True
         store = get_object_or_404(Store, pk=store_id)
         return store.owner == request.user
 
@@ -36,7 +38,7 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         obj = super().get_object()
-        if obj.store.owner != self.request.user:
+        if obj.store.owner != self.request.user and not (self.request.user and self.request.user.is_staff):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied()
         return obj

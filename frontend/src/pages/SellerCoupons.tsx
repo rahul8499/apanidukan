@@ -1081,7 +1081,16 @@ export default function SellerCoupons() {
                       Customers opening your shop see this animated top banner:
                     </p>
 
-                    <div className="mt-2 rounded-lg border border-rose-500/50 bg-gradient-to-r from-rose-900 via-red-900 to-rose-950 p-2.5 text-white shadow-xs relative overflow-hidden">
+                    <div className={`mt-2 rounded-lg border p-2.5 text-white shadow-xs relative overflow-hidden transition-all ${
+                      flashSaleActive
+                        ? 'border-rose-500/50 bg-gradient-to-r from-rose-900 via-red-900 to-rose-950'
+                        : 'border-slate-300 bg-slate-800 text-slate-400'
+                    }`}>
+                      {!flashSaleActive && (
+                        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-[1px] flex items-center justify-center text-rose-300 text-[10px] font-black z-10 border border-slate-700">
+                          <span>⚪ FLASH SALE INACTIVE (HIDDEN FROM CUSTOMERS)</span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
                           <span className="flex h-5 w-5 items-center justify-center rounded-md bg-white/20 text-rose-200 font-black animate-bounce text-[10px] shrink-0">

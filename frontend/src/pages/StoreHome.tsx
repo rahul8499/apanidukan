@@ -263,7 +263,7 @@ function Storefront() {
         if (item) return JSON.parse(item)
       }
     } catch { }
-    return { active: true, discount: 25, title: '⚡ EVENING CLEARANCE FLASH SALE IS LIVE!' }
+    return { active: false, discount: 25, title: '⚡ EVENING CLEARANCE FLASH SALE IS LIVE!' }
   })
 
   useEffect(() => {
@@ -522,6 +522,7 @@ function Storefront() {
 
             // 3. Flash Sale Selection
             if (selectedKey.startsWith('FLASH:')) {
+              if (!flashSale?.active) return null
               const disc = selectedKey.split(':')[1] || '25'
               return (
                 <div className="relative z-50 px-3 py-1.5 text-center text-[10.5px] sm:text-xs font-black shadow-xs overflow-hidden transition-all border-b border-rose-400 flex items-center justify-between gap-2 bg-gradient-to-r from-rose-600 via-rose-500 to-rose-600 text-white animate-pulse">

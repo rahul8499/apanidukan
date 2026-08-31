@@ -147,7 +147,7 @@ function CartContent() {
         if (item) return JSON.parse(item)
       }
     } catch { }
-    return { active: true, discount: 25, title: '⚡ EVENING CLEARANCE FLASH SALE IS LIVE!' }
+    return { active: false, discount: 25, title: '⚡ EVENING CLEARANCE FLASH SALE IS LIVE!' }
   })
 
   useEffect(() => {

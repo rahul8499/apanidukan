@@ -138,7 +138,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Valid image_id required to set as primary.'}, status=status.HTTP_400_BAD_REQUEST)
 
         elif request.method == 'POST':
-            images = request.FILES.getlist('images') or request.FILES.getlist('image')
+            images = (request.FILES.getlist('images') or request.FILES.getlist('image'))[:3]
             created = []
             for idx, img in enumerate(images):
                 pi = ProductImage.objects.create(product=product, image=img)

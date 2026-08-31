@@ -286,8 +286,14 @@ export default function SellerCatalog() {
   }
 
   async function handleDirectProductImageUpload(productId: number, files: FileList | File[]) {
-    const fileArray = Array.from(files)
+    let fileArray = Array.from(files)
     if (fileArray.length === 0) return
+
+    if (fileArray.length > 3) {
+      toast.error('⚠️ Maximum 3 photos allowed! (Only first 3 photos selected)')
+      fileArray = fileArray.slice(0, 3)
+    }
+
     const loadingToast = toast.loading(`⏳ Uploading ${fileArray.length} image(s)...`)
     try {
       const formData = new FormData()
@@ -935,17 +941,24 @@ export default function SellerCatalog() {
                 </div>
 
                 <div className="pt-2 border-t border-slate-200">
-                  <label className="text-[11px] font-bold text-slate-700">Add More Photos to Gallery (Select Multiple At Once)</label>
+                  <label className="text-[11px] font-bold text-slate-700">Add More Photos to Gallery (Max 3 Allowed)</label>
                   <input
                     type="file"
                     accept="image/*"
                     multiple
-                    onChange={(e) => setEditNewImages(Array.from(e.target.files || []))}
+                    onChange={(e) => {
+                      let selectedFiles = Array.from(e.target.files || [])
+                      if (selectedFiles.length > 3) {
+                        toast.error('⚠️ Maximum 3 photos allowed! (Only first 3 photos selected)')
+                        selectedFiles = selectedFiles.slice(0, 3)
+                      }
+                      setEditNewImages(selectedFiles)
+                    }}
                     className="mt-1 w-full text-xs text-slate-600"
                   />
                   {editNewImages.length > 0 && (
                     <p className="mt-1 text-[10px] font-bold text-emerald-600">
-                      ✓ {editNewImages.length} new photos selected to upload on save!
+                      ✓ {editNewImages.length} new photo(s) selected to upload on save! (Max 3)
                     </p>
                   )}
                 </div>
@@ -1089,7 +1102,11 @@ export default function SellerCatalog() {
                   accept="image/*"
                   multiple
                   onChange={(e) => {
-                    const files = Array.from(e.target.files || [])
+                    let files = Array.from(e.target.files || [])
+                    if (files.length > 3) {
+                      toast.error('⚠️ Maximum 3 photos allowed! (Only first 3 photos selected)')
+                      files = files.slice(0, 3)
+                    }
                     setNewProdImages(files)
                     setNewProdPrimaryIndex(0)
                   }}

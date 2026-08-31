@@ -168,9 +168,9 @@ function ProductContent() {
   const isOutOfStock = product.stock_quantity !== undefined && product.stock_quantity !== null && Number(product.stock_quantity) <= 0
 
   const numPrice = Number(product.price) || 0
-  const originalMRP = (numPrice * 1.25).toFixed(0)
-  const savings = Math.max(0, Number(originalMRP) - numPrice)
-  const discountPercent = Math.round((savings / Number(originalMRP)) * 100)
+  const actualMRP = product.mrp && Number(product.mrp) > numPrice ? Number(product.mrp) : null
+  const savings = actualMRP ? Math.max(0, actualMRP - numPrice) : 0
+  const discountPercent = actualMRP ? Math.round((savings / actualMRP) * 100) : 0
 
   const similarItems = otherProducts.filter(p => p.id !== product.id).slice(0, 6)
 
@@ -561,9 +561,9 @@ function ProductContent() {
                       /{formatUnitDisplay(product.unit)}
                     </span>
                   )}
-                  {savings > 0 && (
+                  {savings > 0 && actualMRP && (
                     <>
-                      <span className="text-xs sm:text-sm font-bold text-slate-400 line-through">₹{originalMRP}</span>
+                      <span className="text-xs sm:text-sm font-bold text-slate-400 line-through">₹{actualMRP}</span>
                       <span className="text-xs font-black text-emerald-600">{discountPercent}% OFF</span>
                     </>
                   )}
@@ -905,8 +905,8 @@ function ProductContent() {
           <div className="flex flex-col justify-center pr-2 border-r border-slate-700/40 min-w-[75px]">
             <div className="flex items-baseline gap-1">
               <span className={`text-sm font-black ${storeTheme.text_primary_class}`}>₹{product.price}</span>
-              {savings > 0 && (
-                <span className="text-[9px] font-bold text-slate-400 line-through">₹{originalMRP}</span>
+              {savings > 0 && actualMRP && (
+                <span className="text-[9px] font-bold text-slate-400 line-through">₹{actualMRP}</span>
               )}
             </div>
             <span className="text-[9px] font-extrabold text-emerald-400">

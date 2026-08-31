@@ -1105,7 +1105,7 @@ function Storefront() {
                   })()
 
                   const extraOffersCount = allApplicableCoupons.length > 1 ? allApplicableCoupons.length - 1 : 0
-                  const mockMrp = allApplicableCoupons.length > 0 ? null : Math.round(Number(p.price) * 1.25)
+                  const actualMrp = p.mrp && Number(p.mrp) > Number(p.price) ? Number(p.mrp) : null
 
                   return (
                     <div
@@ -1189,19 +1189,23 @@ function Storefront() {
                                   /{formatUnitDisplay(p.unit)}
                                 </span>
                               )}
-                              {mockMrp && mockMrp > p.price && (
+                              {actualMrp && actualMrp > p.price && (
                                 <span className="text-[10px] font-semibold text-slate-400 line-through">
-                                  ₹{mockMrp}
+                                  ₹{actualMrp}
                                 </span>
                               )}
                             </div>
 
                             {/* Savings percentage tag */}
-                            {mockMrp && mockMrp > p.price && (
+                            {actualMrp && actualMrp > p.price ? (
                               <span className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md shrink-0">
-                                {Math.round(((mockMrp - p.price) / mockMrp) * 100)}% OFF
+                                {Math.round(((actualMrp - p.price) / actualMrp) * 100)}% OFF
                               </span>
-                            )}
+                            ) : flashSale?.active && flashSale?.discount ? (
+                              <span className="text-[9px] font-black text-rose-500 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded-md shrink-0 animate-pulse">
+                                ⚡ {flashSale.discount}% OFF
+                              </span>
+                            ) : null}
                           </div>
 
                           {p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) > 0 && Number(p.stock_quantity) <= 5 && (

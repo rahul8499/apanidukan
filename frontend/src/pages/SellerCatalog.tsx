@@ -147,16 +147,22 @@ export default function SellerCatalog() {
     loadData()
   }, [storeId])
 
+  const getProdCategoryId = (prod: any) => {
+    if (!prod || !prod.category) return null
+    return typeof prod.category === 'object' ? prod.category.id : prod.category
+  }
+
   // Filtered Products
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      const catId = getProdCategoryId(p)
       const matchesSearch =
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.category_name && p.category_name.toLowerCase().includes(searchQuery.toLowerCase()))
       const matchesCategory =
         selectedCategoryFilter === 'ALL' ||
-        (selectedCategoryFilter === 'UNCATEGORIZED' && !p.category) ||
-        String(p.category) === String(selectedCategoryFilter)
+        (selectedCategoryFilter === 'UNCATEGORIZED' && !catId) ||
+        String(catId) === String(selectedCategoryFilter)
       return matchesSearch && matchesCategory
     })
   }, [products, searchQuery, selectedCategoryFilter])
@@ -173,7 +179,8 @@ export default function SellerCatalog() {
 
     // Assign products to groups
     filteredProducts.forEach((prod) => {
-      const catObj = categories.find((c) => c.id === prod.category)
+      const catId = getProdCategoryId(prod)
+      const catObj = categories.find((c) => Number(c.id) === Number(catId))
       const groupKey = catObj ? catObj.name : 'Uncategorized'
       if (!groups[groupKey]) {
         groups[groupKey] = { categoryId: catObj ? catObj.id : null, items: [] }
@@ -205,7 +212,8 @@ export default function SellerCatalog() {
     setEditName(prod.name || '')
     setEditPrice(String(prod.price || '0'))
     setEditStock(String(prod.stock_quantity ?? 100))
-    setEditCategory(prod.category ? String(prod.category) : '')
+    const catVal = getProdCategoryId(prod)
+    setEditCategory(catVal ? String(catVal) : '')
     setEditUnit(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)
     setEditNewImages([])
   }
@@ -220,7 +228,9 @@ export default function SellerCatalog() {
       formData.append('price', editPrice)
       formData.append('stock_quantity', editStock)
       formData.append('unit', editUnit)
-      if (editCategory) formData.append('category', editCategory)
+      if (editCategory && editCategory !== '[object Object]' && editCategory.trim() !== '') {
+        formData.append('category', editCategory)
+      }
 
       // Upload extra gallery images
       if (editNewImages.length > 0) {

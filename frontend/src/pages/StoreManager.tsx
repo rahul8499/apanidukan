@@ -12,7 +12,7 @@ import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
 import SellerOnboardingGuideModal from '../components/SellerOnboardingGuideModal'
 import StoreSetupProgressWidget from '../components/StoreSetupProgressWidget'
 import { useTranslation } from 'react-i18next'
-import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeCategories, getBusinessTypeProducts, getBusinessTypeCheckoutHint, getUnitDisplayLabel, getUnitHint, formatUnitDisplay, UNIT_LABEL_MAP } from '../utils/businessTypes'
+import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeCategories, getBusinessTypeProducts, getBusinessTypeCheckoutHint, getUnitDisplayLabel, getUnitHint, formatUnitDisplay, UNIT_LABEL_MAP, getStockLabel, getStockHint } from '../utils/businessTypes'
 import { X, Trash2 } from 'lucide-react'
 
 const errorMessage = (error: any) =>
@@ -1869,8 +1869,8 @@ export default function StoreManager() {
               <input value={price} onChange={e => setPrice(e.target.value)} required min="0.01" type="number" step="0.01" placeholder="Price in INR (> 0)" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('stock')}</label>
-              <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Stock Qty (default 100)" className="premium-input mt-0.5 p-2 text-xs" />
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language)}</label>
+              <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Default 100" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
               <label className="text-[11px] sm:text-xs font-bold text-slate-700">Ordering Unit (विक्री युनिट)</label>

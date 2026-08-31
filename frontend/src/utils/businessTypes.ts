@@ -526,3 +526,29 @@ export function getBusinessTypeCheckoutHint(b: BusinessTypeConfig, lang: string 
   if (currentLang.startsWith('hi')) return b.checkoutHintHi || b.checkoutHint
   return b.checkoutHintMr || b.checkoutHint
 }
+
+export function getStockLabel(businessTypeId?: string, lang: string = 'mr'): string {
+  const bType = (businessTypeId || '').toUpperCase()
+  const currentLang = (lang || 'mr').toLowerCase()
+  if (bType === 'PHOTO_STUDIO' || bType === 'SERVICES') {
+    if (currentLang.startsWith('en')) return 'Booking Slots Capacity'
+    if (currentLang.startsWith('hi')) return 'बुकिंग स्लॉट्स (Booking Slots)'
+    return 'बुकिंग स्लॉट्स (Booking Slots)'
+  }
+  if (currentLang.startsWith('en')) return 'Stock Quantity'
+  if (currentLang.startsWith('hi')) return 'स्टॉक संख्या (Stock Qty)'
+  return 'शिल्लक स्टॉक संख्या (Stock Qty)'
+}
+
+export function getStockHint(businessTypeId?: string, lang: string = 'mr'): string {
+  const bType = (businessTypeId || '').toUpperCase()
+  const currentLang = (lang || 'mr').toLowerCase()
+  if (bType === 'PHOTO_STUDIO' || bType === 'SERVICES') {
+    if (currentLang.startsWith('en')) return 'Number of shoot bookings/slots available (e.g. 1000 for unlimited)'
+    if (currentLang.startsWith('hi')) return 'उपलब्ध बुकिंग स्लॉट्स: कितने शूट/ऑर्डर स्वीकार कर सकते हैं (उदा. 1000 अनलिमिटेड के लिए)'
+    return 'उपलब्ध बुकिंग स्लॉट्स: तुम्ही किती शुट्स किंवा ऑर्डर्स स्वीकारू शकता (उदा. 1000 unlimited साठी)'
+  }
+  if (currentLang.startsWith('en')) return 'Stock quantity available for sale'
+  if (currentLang.startsWith('hi')) return 'दुकान में उपलब्ध स्टॉक (0 होने पर आउट ऑफ स्टॉक)'
+  return 'दुकानात विक्रीसाठी उपलब्ध माल (0 झाल्यावर आउट ऑफ स्टॉक होईल)'
+}

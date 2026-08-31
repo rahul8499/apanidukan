@@ -7,7 +7,7 @@ import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { useTranslation } from 'react-i18next'
 import { X, Trash2, Copy, Share2 } from 'lucide-react'
-import { getBusinessType, UNIT_LABEL_MAP, formatUnitDisplay, getUnitDisplayLabel, getUnitHint } from '../utils/businessTypes'
+import { getBusinessType, UNIT_LABEL_MAP, formatUnitDisplay, getUnitDisplayLabel, getUnitHint, getStockLabel } from '../utils/businessTypes'
 
 const errorMessage = (error: any) =>
   error?.response?.data?.detail || Object.values(error?.response?.data || {}).flat().join(' ') || 'Error processing request.'
@@ -688,10 +688,12 @@ export default function SellerCatalog() {
                                 }`}
                               >
                                 {isOutOfStock
-                                  ? t('outOfStock')
+                                  ? ((store?.business_type === 'PHOTO_STUDIO' || store?.business_type === 'SERVICES') ? 'No Slots Left' : t('outOfStock'))
                                   : isLowStock
                                   ? `${t('lowStock')}: ${prod.stock_quantity} ${formatUnitDisplay(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)}`
-                                  : `✓ Stock: ${prod.stock_quantity ?? 100} ${formatUnitDisplay(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)}`}
+                                  : ((store?.business_type === 'PHOTO_STUDIO' || store?.business_type === 'SERVICES')
+                                      ? `✓ Slots: ${prod.stock_quantity ?? 100} ${formatUnitDisplay(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)}`
+                                      : `✓ Stock: ${prod.stock_quantity ?? 100} ${formatUnitDisplay(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)}`)}
                               </span>
 
                               {prod.digital_file && (
@@ -816,7 +818,7 @@ export default function SellerCatalog() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700">{t('stockQuantityLabel')}</label>
+                  <label className="text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language)}</label>
                   <input
                     type="number"
                     value={editStock}
@@ -1015,7 +1017,7 @@ export default function SellerCatalog() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700">{t('stockQuantityLabel')}</label>
+                  <label className="text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language)}</label>
                   <input
                     type="number"
                     value={newProdStock}

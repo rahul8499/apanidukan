@@ -16,7 +16,6 @@ export default function SellerOnboardingGuideModal({
   onDismissPermanently
 }: SellerOnboardingGuideModalProps) {
   const [activeStep, setActiveStep] = useState(0)
-  const [dontShowAgain, setDontShowAgain] = useState(false)
   const [saving, setSaving] = useState(false)
 
   if (!isOpen) return null
@@ -89,18 +88,17 @@ export default function SellerOnboardingGuideModal({
   ]
 
   const handleFinish = async () => {
+    if (saving) return;
     setSaving(true)
     try {
       if (storeId) {
         localStorage.setItem(`qs_hide_seller_tour_${storeId}`, 'true')
-        if (dontShowAgain) {
-          await api.patch(`/stores/${storeId}/`, { has_seen_onboarding_tour: true }).catch(() => {})
-        }
+        await api.patch(`/stores/${storeId}/`, { has_seen_onboarding_tour: true }).catch(() => {})
       }
     } catch {}
     finally {
       setSaving(false)
-      if (dontShowAgain && onDismissPermanently) {
+      if (onDismissPermanently) {
         onDismissPermanently()
       }
       onClose()
@@ -138,7 +136,7 @@ export default function SellerOnboardingGuideModal({
             </div>
 
             <button
-              onClick={onClose}
+              onClick={handleFinish}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all cursor-pointer border border-slate-200 shrink-0"
               title="Close Tour"
             >
@@ -194,19 +192,8 @@ export default function SellerOnboardingGuideModal({
         {/* Footer Actions */}
         <div className="border-t border-slate-100 bg-slate-50/90 p-4 space-y-3">
           
-          {/* Don't show again toggle */}
-          <div className="flex items-center justify-between px-1">
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={dontShowAgain}
-                onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500/30 cursor-pointer"
-              />
-              <span>Don't show this tour again on login</span>
-            </label>
-
-            {/* Step Pills */}
+          {/* Step Pills */}
+          <div className="flex items-center justify-center w-full px-1">
             <div className="flex items-center gap-1">
               {steps.map((_, idx) => (
                 <button

@@ -1869,11 +1869,7 @@ export default function StoreManager() {
               <input value={price} onChange={e => setPrice(e.target.value)} required min="0.01" type="number" step="0.01" placeholder="Price in INR (> 0)" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language)}</label>
-              <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Default 100" className="premium-input mt-0.5 p-2 text-xs" />
-            </div>
-            <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Ordering Unit (विक्री युनिट)</label>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Ordering Unit (युनिट)</label>
               <select
                 value={productUnit || getBusinessType(store?.business_type).defaultUnit}
                 onChange={e => setProductUnit(e.target.value)}
@@ -1883,10 +1879,16 @@ export default function StoreManager() {
                   <option key={u} value={u}>{getUnitDisplayLabel(u, store?.business_type)}</option>
                 ))}
               </select>
-              <p className="text-[10px] text-indigo-700 font-semibold mt-1 bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
+            </div>
+            <div className="col-span-full lg:col-span-3">
+              <p className="text-[10px] text-indigo-700 font-semibold bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
                 <span>💡</span>
                 <span><strong>{formatUnitDisplay(productUnit || getBusinessType(store?.business_type).defaultUnit)}:</strong> {getUnitHint(productUnit || getBusinessType(store?.business_type).defaultUnit, store?.business_type)}</span>
               </p>
+            </div>
+            <div>
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language, productUnit || getBusinessType(store?.business_type).defaultUnit)}</label>
+              <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Default 100" className="premium-input mt-0.5 p-2 text-xs" />
             </div>
             <div>
               <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('category')} <span className="text-rose-500 font-extrabold">*</span></label>

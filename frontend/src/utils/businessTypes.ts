@@ -32,11 +32,7 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     defaultUnit: 'Pc',
     units: ['Pc', 'Pack', 'Box', 'Set', 'Kg', 'Gm', 'Litre', 'Day'],
     sampleCategories: ['जनरल प्रॉडक्ट्स', 'ऑफर आयटम्स', 'नवीन आगमन (New Arrivals)', 'घरगुती सामान', 'डेली युझ आयटम्स'],
-    sampleProducts: [
-      { name: 'मल्टी-पर्पज होम क्लीनर 500ml', category: 'घरगुती सामान', price: 199, stock: 40, unit: 'Bottle', image: 'cleaner.jpg, cleaner-back.jpg' },
-      { name: 'स्टेनलेस स्टील वॉटर बॉटल 1L', category: 'डेली युझ आयटम्स', price: 349, stock: 30, unit: 'Pc', image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8' },
-      { name: 'प्रीमियम बॅटरी संच (4 Pcs)', category: 'जनरल प्रॉडक्ट्स', price: 120, stock: 50, unit: 'Pack', image: 'battery-pack.jpg' },
-    ],
+    sampleProducts: [],
     checkoutHint: 'Standard Delivery & Contact Details',
   },
   {
@@ -47,12 +43,7 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     defaultUnit: 'Kg',
     units: ['Kg', 'Gm', 'Litre', 'Ml', 'Pack', 'Packet', 'Pc'],
     sampleCategories: ['धान्य व डाळी', 'तेल व तूप', 'मसाले व ड्रायफ्रूट्स', 'स्नॅक्स व बिस्किट्स', 'पर्सनल केअर व सोप', 'डेअरी व बेव्हरेजेस'],
-    sampleProducts: [
-      { name: 'साखर (Pure White Sugar)', category: 'धान्य व डाळी', price: 42, stock: 100, unit: 'Kg', image: 'sugar.jpg, sugar-pack.jpg' },
-      { name: 'बास्मती तांदूळ (Premium Basmati)', category: 'धान्य व डाळी', price: 110, stock: 50, unit: 'Kg', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c' },
-      { name: 'रिफाईंड सोयाबीन तेल (1 Litre)', category: 'तेल व तूप', price: 135, stock: 40, unit: 'Litre', image: 'oil.jpg, oil-back.jpg' },
-      { name: 'पारले-जी बिस्कीट (Family Pack)', category: 'स्नॅक्स व बिस्किट्स', price: 30, stock: 80, unit: 'Pack', image: 'parleg.jpg' },
-    ],
+    sampleProducts: [],
     checkoutHint: 'Home Delivery Address & Quantity (Kg/Gm)',
     customFieldLabel: 'Delivery Instructions / Landmark',
     customFieldPlaceholder: 'e.g. Leave near doorstep / Call before arrival',
@@ -65,32 +56,36 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     defaultUnit: 'Day',
     units: ['Day', 'Hour', 'Event', 'Shoot', 'Nag', 'Pc', 'Album', 'Frame'],
     sampleCategories: ['वेडिंग फोटोग्राफी पॅकेजेस', 'प्री-वेडिंग व रील्स शुट', 'वाढदिवस व इव्हेंट शुट', 'फोटो फ्रेम व अल्बम्स', 'कस्टम प्रिंटेड भेटवस्तू'],
-    sampleProducts: [
-      { name: 'वेडिंग फोटोग्राफी पूर्ण दिवस पॅकेज', category: 'वेडिंग फोटोग्राफी पॅकेजेस', price: 15000, stock: 10, unit: 'Event', image: 'wedding-shoot-1.jpg, wedding-shoot-2.jpg' },
-      { name: 'कनव्हासा फोटो फ्रेम 12x18 Inches', category: 'फोटो फ्रेम व अल्बम्स', price: 750, stock: 25, unit: 'Frame', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38' },
-      { name: 'कस्टम प्रिंटेड फोटो कॉफी मग', category: 'कस्टम प्रिंटेड भेटवस्तू', price: 299, stock: 40, unit: 'Pc', image: 'photo-mug.jpg' },
-    ],
+    sampleProducts: [],
     checkoutHint: 'Booking Date, Event Location & Event Hours',
     customFieldLabel: 'Event / Shoot Date & Location Details',
     customFieldPlaceholder: 'e.g. Shoot Date: 15th Oct 2026 | Hall Name & City',
   },
   {
-    id: 'HOTEL_RESTAURANT',
-    name: 'Hotel, Restaurant & Bakery',
-    nameMr: 'हॉटेल, रेस्टॉरंट व बेकरी',
+    id: 'RESTAURANT',
+    name: 'Hotel & Restaurant',
+    nameMr: 'हॉटेल व रेस्टॉरंट',
     icon: '🍔',
     defaultUnit: 'Plate',
-    units: ['Plate', 'Half', 'Full', 'Portion', 'Pc', 'Box', 'Kg'],
-    sampleCategories: ['थाळी व मेन कोर्स', 'स्टार्टर्स व स्नॅक्स', 'चायनीज व फास्टफूड', 'केक्स व बेकरी पॅक', 'पेये व ज्यूस'],
-    sampleProducts: [
-      { name: 'विशेष व्हेज थाळी (Special Veg Thali)', category: 'थाळी व मेन कोर्स', price: 160, stock: 50, unit: 'Plate', image: 'veg-thali.jpg, thali-full.jpg' },
-      { name: 'दम चिकन बिर्याणी (Chicken Biryani)', category: 'थाळी व मेन कोर्स', price: 180, stock: 40, unit: 'Full', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8' },
-      { name: 'पनीर बटर मसाला (Paneer Butter Masala)', category: 'थाळी व मेन कोर्स', price: 210, stock: 30, unit: 'Portion', image: 'paneer-masala.jpg' },
-      { name: 'ब्लॅक फॉरेस्ट केक (Fresh Cake 500g)', category: 'केक्स व बेकरी पॅक', price: 350, stock: 15, unit: 'Pc', image: 'blackforest.jpg' },
-    ],
+    units: ['Plate', 'Half', 'Full', 'Bowl', 'Pc', 'Kg', 'Litre', 'Glass'],
+    sampleCategories: ['नाश्ता व स्नॅक्स', 'व्हेज डिशेस व थाळी', 'चिकन व मटण डिशेस', 'राइस आणि बिर्याणी', 'रोटी, चपाती व भाकरी', 'कोल्ड्रिंक्स व ताक'],
+    sampleProducts: [],
     checkoutHint: 'Order Type (Dine-in / Parcel / Delivery) & Cooking Instructions',
     customFieldLabel: 'Cooking / Table Instructions',
     customFieldPlaceholder: 'e.g. Make less spicy / Table No. 4 / Parcel Packing',
+  },
+  {
+    id: 'BAKERY_SWEETS',
+    name: 'Bakery, Cakes & Sweets',
+    nameMr: 'बेकरी, केक्स व मिठाई',
+    icon: '🎂',
+    defaultUnit: 'Kg',
+    units: ['Kg', 'Half Kg', 'Quarter Kg', 'Gm', 'Pound', 'Pc', 'Box', 'Pack'],
+    sampleCategories: ['कस्टम डिझाईन केक्स', 'ताजी मिठाई व पेढे', 'बेकरी स्नॅक्स (पफ, पॅटीस)', 'ब्रेड व टोस्ट पॅक', 'चॉकलेट्स व गिफ्ट पॅक'],
+    sampleProducts: [],
+    checkoutHint: 'Delivery Slot & Cake Note (if applicable)',
+    customFieldLabel: 'Cake Message / Sweet Delivery Note',
+    customFieldPlaceholder: 'e.g. Write "Happy Anniversary" on cake',
   },
   {
     id: 'GARMENTS',
@@ -99,32 +94,37 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     icon: '👗',
     defaultUnit: 'Pc',
     units: ['Pc', 'Pair', 'Set', 'Size S', 'Size M', 'Size L', 'Size XL', 'Size XXL'],
-    sampleCategories: ['मेन्स वेअर (शर्ट, टी-शर्ट)', 'लेडीज वेअर (साडी, कुर्ती)', 'किड्स वेअर (लहान मुलांचे कपडे)', 'फूटवेअर व चप्पल', 'ॲक्सेसरीज (बेल्ट, पर्स, सॉक्स)'],
-    sampleProducts: [
-      { name: 'कॉटन कॅज्युअल मेन्स शर्ट (Size L)', category: 'मेन्स वेअर (शर्ट, टी-शर्ट)', price: 699, stock: 30, unit: 'Pc', image: 'shirt-front.jpg, shirt-back.jpg' },
-      { name: 'डिजिटल प्रिंट पैठणी साडी', category: 'लेडीज वेअर (साडी, कुर्ती)', price: 1499, stock: 20, unit: 'Pc', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c' },
-      { name: 'स्पोर्ट्स रनिंग शूज (Size 8)', category: 'फूटवेअर व चप्पल', price: 999, stock: 15, unit: 'Pair', image: 'shoes-pair.jpg' },
-    ],
+    sampleCategories: ['पुरुषांचे कपडे (शर्ट, पॅन्ट, जीन्स)', 'महिलांचे कपडे (साडी, ड्रेस, कुर्ती)', 'लहान मुलांचे कपडे', 'चप्पल, बूट आणि शूज', 'परफ्यूम, बेल्ट व इतर ॲक्सेसरीज'],
+    sampleProducts: [],
     checkoutHint: 'Select Size, Color & Delivery Address',
     customFieldLabel: 'Size & Color Confirmation',
     customFieldPlaceholder: 'e.g. Size L, Blue color preferred',
   },
   {
-    id: 'HARDWARE',
-    name: 'Hardware, Plumbing & Building Tools',
+    id: 'HARDWARE_PLUMBING',
+    name: 'Hardware, Plumbing & Tools',
     nameMr: 'हार्डवेअर, प्लंबिंग व टूल्स',
-    icon: '🔨',
+    icon: '🔧',
     defaultUnit: 'Pc',
-    units: ['Pc', 'Box', 'Meter', 'Set', 'Bundle', 'Kg', 'Pack', 'Litre'],
-    sampleCategories: ['प्लंबिंग व पाईप फिटिंग्स', 'हार्डवेअर फिटिंग्स व स्क्रू', 'टूल्स व पेंट', 'नट, बोल्ट व वॉशर', 'सीमेंट व बांधकाम साहित्य'],
-    sampleProducts: [
-      { name: 'PVC पाईप 1 इंच (Length 10ft)', category: 'प्लंबिंग व पाईप फिटिंग्स', price: 180, stock: 50, unit: 'Meter', image: 'pvc-pipe.jpg' },
-      { name: 'स्क्रू ड्रायव्हर व टूल संच (Screw Driver Set)', category: 'टूल्स व पेंट', price: 290, stock: 20, unit: 'Set', image: 'https://images.unsplash.com/photo-1581147036324-c17ac41dfa6c' },
-      { name: 'स्टेनलेस स्टील डोअर हिंजेस सेट (Door Hinges)', category: 'हार्डवेअर फिटिंग्स व स्क्रू', price: 150, stock: 35, unit: 'Pair', image: 'door-hinge.jpg' },
-    ],
+    units: ['Pc', 'Box', 'Kg', 'Gm', 'Litre', 'Meter', 'Ft', 'Length', 'Set', 'Pack'],
+    sampleCategories: ['प्लंबिंग साहित्य (पाइप, नळ, फिटिंग)', 'हार्डवेअर आणि नट-बोल्ट्स', 'कलर, पेंट आणि ब्रश', 'इलेक्ट्रिकल साहित्य (वायर, स्विच)', 'मशिनरी आणि टूल्स (पाने, हातोडी)'],
+    sampleProducts: [],
     checkoutHint: 'Delivery Address & Specification Notes',
     customFieldLabel: 'Product Size / Specification Note',
     customFieldPlaceholder: 'e.g. 2 inch size / Galvanized coating',
+  },
+  {
+    id: 'BUILDING_MATERIAL',
+    name: 'Building Materials & Cement',
+    nameMr: 'बांधकाम साहित्य व सिमेंट',
+    icon: '🧱',
+    defaultUnit: 'Bag',
+    units: ['Bag', 'Brass', 'Trolley', 'Truck', 'Ton', 'Kg', 'Sqft', 'Box', 'Pc', 'Bundle', 'Litre'],
+    sampleCategories: ['सिमेंट, पुट्टी आणि पीओपी', 'लोखंड, सळ्या आणि पत्रे', 'वाळू, खडी आणि विटा', 'टाईल्स आणि ग्रॅनाईट', 'वॉटरप्रूफिंग आणि केमिकल', 'हार्डवेअर आणि इतर साहित्य'],
+    sampleProducts: [],
+    checkoutHint: 'Delivery Address & Unloading Instructions',
+    customFieldLabel: 'Site Address / Unloading Info',
+    customFieldPlaceholder: 'e.g. Unload at site 2, near main gate',
   },
   {
     id: 'ELECTRONICS',
@@ -167,38 +167,10 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
       '⌚ स्मार्टवॉच व मोबाईल ॲक्सेसरीज',
       '📺 होम व किचन अप्लायन्सेस'
     ],
-    sampleProducts: [
-      { name: 'सिलिकॉन ट्रान्सपरंट बॅक कव्हर (All Models)', category: '🛡️ मोबाईल कव्हर्स, टेम्पर्ड ग्लास व स्किन', price: 149, stock: 100, unit: 'Pc', image: 'phone-cover.jpg, cover-back.jpg' },
-      { name: '11D मॅट टेम्पर्ड ग्लास स्क्रीन गार्ड', category: '🛡️ मोबाईल कव्हर्स, टेम्पर्ड ग्लास व स्किन', price: 99, stock: 150, unit: 'Pc', image: 'tempered-glass.jpg' },
-      { name: 'फास्ट 20W टाइप-C चार्जर अडॅप्टर', category: '⚡ चार्जर, केबल्स व पॉवर बँक', price: 499, stock: 40, unit: 'Pc', image: 'charger-adapter.jpg' },
-      { name: 'टाइप-C फास्ट charge डेटा केबल (1.5m)', category: '⚡ चार्जर, केबल्स व पॉवर बँक', price: 199, stock: 80, unit: 'Pc', image: 'data-cable.jpg' },
-      { name: 'ब्लूटूथ वायरलेस इयरफोन (Neckband)', category: '🎧 इयरफोन, नेकबँड व ब्लूटूथ स्पीकर', price: 899, stock: 25, unit: 'Pc', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e' },
-      { name: 'स्मार्ट फिटनेस वॉच (Heart Rate & SpO2)', category: '⌚ स्मार्टवॉच व मोबाईल ॲक्सेसरीज', price: 1499, stock: 15, unit: 'Pc', image: 'smartwatch.jpg' },
-    ],
-    sampleProductsEn: [
-      { name: 'Transparent Silicon Back Cover (All Models)', category: '🛡️ Mobile Covers, Tempered Glass & Skins', price: 149, stock: 100, unit: 'Pc', image: 'phone-cover.jpg, cover-back.jpg' },
-      { name: '11D Matte Tempered Glass Screen Guard', category: '🛡️ Mobile Covers, Tempered Glass & Skins', price: 99, stock: 150, unit: 'Pc', image: 'tempered-glass.jpg' },
-      { name: 'Fast 20W Type-C Charger Adapter', category: '⚡ Fast Chargers, Cables & Power Banks', price: 499, stock: 40, unit: 'Pc', image: 'charger-adapter.jpg' },
-      { name: 'Type-C Fast Charging Data Cable (1.5m)', category: '⚡ Fast Chargers, Cables & Power Banks', price: 199, stock: 80, unit: 'Pc', image: 'data-cable.jpg' },
-      { name: 'Bluetooth Wireless Earphones (Neckband)', category: '🎧 Earphones, Neckbands & Bluetooth Speakers', price: 899, stock: 25, unit: 'Pc', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e' },
-      { name: 'Smart Fitness Watch (Heart Rate & SpO2)', category: '⌚ Smartwatches & Mobile Accessories', price: 1499, stock: 15, unit: 'Pc', image: 'smartwatch.jpg' },
-    ],
-    sampleProductsHi: [
-      { name: 'सिलिकॉन ट्रांसपैरेंट बैक कवर (All Models)', category: '🛡️ मोबाइल कवर्स, टेम्पर्ड ग्लास एवं स्किन', price: 149, stock: 100, unit: 'Pc', image: 'phone-cover.jpg, cover-back.jpg' },
-      { name: '11D मैट टेम्पर्ड ग्लास स्क्रीन गार्ड', category: '🛡️ मोबाइल कवर्स, टेम्पर्ड ग्लास एवं स्किन', price: 99, stock: 150, unit: 'Pc', image: 'tempered-glass.jpg' },
-      { name: 'फास्ट 20W टाइप-C चार्जर एडेप्टर', category: '⚡ चार्जर्स, केबल्स एवं पावर बैंक', price: 499, stock: 40, unit: 'Pc', image: 'charger-adapter.jpg' },
-      { name: 'टाइप-C फास्ट चार्जिंग डेटा केबल (1.5m)', category: '⚡ चार्जर्स, केबल्स एवं पावर बैंक', price: 199, stock: 80, unit: 'Pc', image: 'data-cable.jpg' },
-      { name: 'ब्लूटूथ वायरलेस ईयरफोन (Neckband)', category: '🎧 ईयरफोन, नेकबैंड एवं ब्लूटूथ स्पीकर्स', price: 899, stock: 25, unit: 'Pc', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e' },
-      { name: 'स्मार्ट फिटनेस वॉच (Heart Rate & SpO2)', category: '⌚ स्मार्टवॉच एवं मोबाइल एक्सेसरीज़', price: 1499, stock: 15, unit: 'Pc', image: 'smartwatch.jpg' },
-    ],
-    sampleProductsMr: [
-      { name: 'सिलिकॉन ट्रान्सपरंट बॅक कव्हर (All Models)', category: '🛡️ मोबाईल कव्हर्स, टेम्पर्ड ग्लास व स्किन', price: 149, stock: 100, unit: 'Pc', image: 'phone-cover.jpg, cover-back.jpg' },
-      { name: '11D मॅट टेम्पर्ड ग्लास स्क्रीन गार्ड', category: '🛡️ मोबाईल कव्हर्स, टेम्पर्ड ग्लास व स्किन', price: 99, stock: 150, unit: 'Pc', image: 'tempered-glass.jpg' },
-      { name: 'फास्ट 20W टाइप-C चार्जर अडॅप्टर', category: '⚡ चार्जर, केबल्स व पॉवर बँक', price: 499, stock: 40, unit: 'Pc', image: 'charger-adapter.jpg' },
-      { name: 'टाइप-C फास्ट चार्जिंग डेटा केबल (1.5m)', category: '⚡ चार्जर, केबल्स व पॉवर बँक', price: 199, stock: 80, unit: 'Pc', image: 'data-cable.jpg' },
-      { name: 'ब्लूटूथ वायरलेस इयरफोन (Neckband)', category: '🎧 इयरफोन, नेकबँड व ब्लूटूथ स्पीकर', price: 899, stock: 25, unit: 'Pc', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e' },
-      { name: 'स्मार्ट फिटनेस वॉच (Heart Rate & SpO2)', category: '⌚ स्मार्टवॉच व मोबाईल ॲक्सेसरीज', price: 1499, stock: 15, unit: 'Pc', image: 'smartwatch.jpg' },
-    ],
+    sampleProducts: [],
+    sampleProductsEn: [],
+    sampleProductsHi: [],
+    sampleProductsMr: [],
     checkoutHint: 'Model Confirmation, Color & Delivery Address',
     checkoutHintEn: 'Mobile Model, Preferred Color & Delivery Address',
     checkoutHintHi: 'मोबाइल मॉडल, मनपसंद कलर एवं डिलीवरी पता',
@@ -207,19 +179,27 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     customFieldPlaceholder: 'e.g. Mobile Model: Redmi Note 12 Pro / Color: Black / Specification details',
   },
   {
-    id: 'AUTOMOBILE',
-    name: 'Automobile, Bikes & Spares',
-    nameMr: 'ऑटोमोबाईल, कार/बाइक व सर्व्हिसिंग',
-    icon: '🚗',
+    id: 'AUTO_DEALER',
+    name: '2-Wheeler / 4-Wheeler Showroom',
+    nameMr: '२/४-व्हीलर शोरूम',
+    icon: '🛵',
+    defaultUnit: 'Bike',
+    units: ['Bike', 'Scooter', 'Car', 'E-Bike', 'Tractor', 'Pc'],
+    sampleCategories: ['नवीन टू-व्हीलर (New 2-Wheelers)', 'सेकंड हँड गाड्या (Used Vehicles)', 'इलेक्ट्रिक बाइक्स आणि स्कूटर (EV)', 'नवीन फोर-व्हीलर (New 4-Wheelers)', 'गाडीचे ॲक्सेसरीज (Accessories)'],
+    sampleProducts: [],
+    checkoutHint: 'Vehicle Model Inquiry & Booking Details',
+    customFieldLabel: 'Test Drive / Booking Notes',
+    customFieldPlaceholder: 'e.g. Want to schedule a test drive on Sunday',
+  },
+  {
+    id: 'AUTO_SPARES',
+    name: 'Spare Parts & Servicing',
+    nameMr: 'स्पेयर पार्ट्स व सर्व्हिसिंग',
+    icon: '🛠️',
     defaultUnit: 'Pc',
     units: ['Pc', 'Set', 'Pair', 'Service', 'Litre', 'Bottle', 'Box', 'Pack', 'Hour'],
     sampleCategories: ['बाइक स्पेयर पार्ट्स (टू-व्हीलर)', 'कार ॲक्सेसरीज व सीट कव्हर', 'इंजिन ऑईल, कुलंट व ल्युब', 'हेल्मेट व रायडिंग गिअर', 'वॉशिंग व फुल सर्व्हिसिंग पॅकेजेस'],
-    sampleProducts: [
-      { name: '4T इंजिन ऑईल 20W40 (1 Litre Bottle)', category: 'इंजिन ऑईल, कुलंट व ल्युब', price: 380, stock: 25, unit: 'Litre', image: 'engine-oil.jpg, oil-back.jpg' },
-      { name: 'स्टायलिश फुल-फेस हेल्मेट (Full Face Helmet)', category: 'हेल्मेट व रायडिंग गिअर', price: 1250, stock: 10, unit: 'Pc', image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc, https://images.unsplash.com/photo-1558981806-ec527fa84c39' },
-      { name: 'टू-व्हीलर क्लच प्लेट सेट (Clutch Assembly)', category: 'बाइक स्पेयर पार्ट्स (टू-व्हीलर)', price: 650, stock: 15, unit: 'Set', image: 'clutch-plate.jpg' },
-      { name: 'बाइक फोम वॉशिंग व ऑईल सर्व्हिस पॅकेज', category: 'वॉशिंग व फुल सर्व्हिसिंग पॅकेजेस', price: 250, stock: 100, unit: 'Service', image: 'bike-wash.jpg' },
-    ],
+    sampleProducts: [],
     checkoutHint: 'Vehicle Model & Service Slot Booking',
     customFieldLabel: 'Vehicle Model & Registration No',
     customFieldPlaceholder: 'e.g. Honda Activa 6G / MH12 AB 1234',
@@ -232,11 +212,7 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     defaultUnit: 'Strip',
     units: ['Strip', 'Bottle', 'Box', 'Pc', 'Pack'],
     sampleCategories: ['ओव्हर-द-काउंटर औषधे (OTC)', 'हेल्थ व व्हिटॅमिन सप्लीमेंट्स', 'मेडिकल डिव्हाइसेस', 'बेबी केअर व डायपर्स', 'पर्सनल हायजीन व स्किनकेअर'],
-    sampleProducts: [
-      { name: 'पॅरासिटामॉल 650mg (Paracetamol Strip 15 Tab)', category: 'ओव्हर-द-काउंटर औषधे (OTC)', price: 32, stock: 100, unit: 'Strip', image: 'paracetamol.jpg, paracetamol-back.jpg' },
-      { name: 'व्हिटॅमिन सी व झिंक गोळ्या (Vitamin C Tablets)', category: 'हेल्थ व व्हिटॅमिन सप्लीमेंट्स', price: 120, stock: 50, unit: 'Bottle', image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae' },
-      { name: 'डिजिटल थर्मामीटर (Digital Thermometer)', category: 'मेडिकल डिव्हाइसेस', price: 249, stock: 20, unit: 'Pc', image: 'thermometer.jpg' },
-    ],
+    sampleProducts: [],
     checkoutHint: 'Upload Prescription / Note Medicine Names',
     customFieldLabel: 'Doctor Prescription / Medicine Details',
     customFieldPlaceholder: 'e.g. Note doctor instructions or prescription details',
@@ -249,32 +225,12 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     defaultUnit: 'Pc',
     units: ['Pc', 'Set', 'Box', 'Pack', 'Pair'],
     sampleCategories: ['कस्टम भेटवस्तू (Gifts)', 'खेळणी व टॉईज (Toys)', 'ग्रीटिंग कार्ड्स व फोटो फ्रेम', 'पार्टी डेकोरेशन व फुगे', 'सरप्राईज गिफ्ट बॉक्सेस'],
-    sampleProducts: [
-      { name: 'लहान मुलांची रिमोट कंट्रोल कार (RC Car)', category: 'खेळणी व टॉईज (Toys)', price: 599, stock: 15, unit: 'Pc', image: 'rc-car.jpg, rc-car-box.jpg' },
-      { name: 'कस्टम फोटो लाकडी फ्रेम 8x12', category: 'ग्रीटिंग कार्ड्स व फोटो फ्रेम', price: 399, stock: 20, unit: 'Frame', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38' },
-      { name: 'सरप्राईज वाढदिवस गिफ्ट हॅम्पर बॉक्स', category: 'सरप्राईज गिफ्ट बॉक्सेस', price: 899, stock: 10, unit: 'Box', image: 'gift-hamper.jpg' },
-    ],
+    sampleProducts: [],
     checkoutHint: 'Gift Note & Custom Name Request',
     customFieldLabel: 'Gift Message / Custom Name Note',
     customFieldPlaceholder: 'e.g. Write "Happy Birthday Rahul" on card',
   },
-  {
-    id: 'DAIRY_SWEETS',
-    name: 'Dairy, Milk & Sweet Mart',
-    nameMr: 'डेअरी, दूध व मिठाई दुकान',
-    icon: '🥛',
-    defaultUnit: 'Kg',
-    units: ['Kg', 'Gm', 'Litre', 'Ml', 'Pc', 'Box', 'Pack'],
-    sampleCategories: ['ताजे दूध, ताक व लस्सी', 'पनीर, खवा व बटर', 'ताजी मिठाई व पेढे', 'नमकीन, फरसाण व शेव', 'डेअरी प्रॉडक्ट्स व आईस्क्रीम'],
-    sampleProducts: [
-      { name: 'ताजे म्हैशीचे दूध (Fresh Buffalo Milk 1L)', category: 'ताजे दूध, ताक व लस्सी', price: 66, stock: 60, unit: 'Litre', image: 'milk-pouch.jpg' },
-      { name: 'ताजी केशर पेढा (Keshar Pedha 250g)', category: 'ताजी मिठाई व पेढे', price: 140, stock: 30, unit: 'Gm', image: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28' },
-      { name: 'मऊ फ्रेश पनीर (Fresh Paneer 500g)', category: 'पनीर, खवा व बटर', price: 180, stock: 25, unit: 'Kg', image: 'paneer-pack.jpg' },
-    ],
-    checkoutHint: 'Morning/Evening Slot & Weight',
-    customFieldLabel: 'Delivery Timing Preference',
-    customFieldPlaceholder: 'e.g. Deliver before 8:00 AM',
-  },
+
   {
     id: 'STATIONERY',
     name: 'Books, Stationery & Office',
@@ -283,10 +239,7 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     defaultUnit: 'Pc',
     units: ['Pc', 'Set', 'Box', 'Pack', 'Bundle'],
     sampleCategories: ['शालेय व कॉलेज पुस्तके', 'नोटबुक्स, वह्या व डायरी', 'पेन, पेन्सिल व स्टेशनरी', 'ऑफिस व फाईल सप्लाय', 'आर्ट, क्राफ्ट व ड्रॉइंग'],
-    sampleProducts: [
-      { name: 'क्लासमेट वही 200 पेज (Classmate Long Notebook)', category: 'नोटबुक्स, वह्या व डायरी', price: 65, stock: 100, unit: 'Pc', image: 'notebook.jpg, notebook-pages.jpg' },
-      { name: 'ब्लू जेल पेन बॉक्स (Box of 10 Pcs)', category: 'पेन, पेन्सिल व स्टेशनरी', price: 100, stock: 40, unit: 'Box', image: 'pen-box.jpg' },
-    ],
+    sampleProducts: [],
     checkoutHint: 'Standard Delivery & Contact Details',
   },
   {
@@ -297,33 +250,35 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     defaultUnit: 'Pc',
     units: ['Pc', 'Set', 'Pair', 'Box', 'Gm', 'Pack'],
     sampleCategories: ['इमिटेशन ज्वेलरी व नेकलेस', 'कॉस्मेटिक्स व मेकअप किट', 'स्किनकेअर क्रीम व वॉश', 'हेअर केअर व ऑईल', 'ब्रांडेड परफ्यूम व सुगंध'],
-    sampleProducts: [
-      { name: 'गोल्डन इमिटेशन नेकलेस सेट (Bridal Necklace)', category: 'इमिटेशन ज्वेलरी व नेकलेस', price: 799, stock: 15, unit: 'Set', image: 'necklace-set.jpg, necklace-box.jpg' },
-      { name: 'मॅट लिपस्टिक (Matte Longwear Lipstick)', category: 'कॉस्मेटिक्स व मेकअप किट', price: 299, stock: 30, unit: 'Pc', image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa' },
-    ],
+    sampleProducts: [],
     checkoutHint: 'Select Design, Color & Delivery Address',
   },
 ]
 
 export const UNIT_LABEL_MAP: Record<string, { label: string; hint: string }> = {
-  Kg: { label: 'Kg (किलो)', hint: 'धान्य, साखर, डाळी (वजन)' },
+  Kg: { label: 'Kg (किलो)', hint: 'धान्य, साखर, डाळी, मिठाई (किलो)' },
+  'Half Kg': { label: 'Half Kg (अर्धा किलो)', hint: 'अर्धा किलो (500 Gm)' },
+  'Quarter Kg': { label: 'Quarter Kg (पाव किलो)', hint: 'पाव किलो (250 Gm)' },
   Gm: { label: 'Gm (ग्रॅम)', hint: 'मसाले, ड्रायफ्रूट्स (ग्रॅम वजन)' },
-  Litre: { label: 'Litre (लीटर)', hint: 'दूध, तेल, ज्यूस (द्रवपदार्थ)' },
+  Pound: { label: 'Pound (पाऊंड)', hint: 'केकसाठी (पाऊंड)' },
+  Litre: { label: 'Litre (लिटर)', hint: 'दूध, तेल, ज्यूस (द्रवपदार्थ)' },
   Ml: { label: 'Ml (मिली)', hint: 'तेल, ज्यूस, लिक्विड (मिली)' },
-  Pack: { label: 'Pack / Packet (पॅक/पाकीट)', hint: 'बिस्कीट, वेफर्स, मसाले (पॅकबंद वस्तू)' },
+  Pack: { label: 'Pack (पॅक)', hint: 'बिस्कीट, वेफर्स, मसाले (पॅकबंद वस्तू)' },
   Packet: { label: 'Packet (पाकीट)', hint: 'वेफर्स, मॅगी, पाकीट' },
-  Pc: { label: 'Pieces (नग / पीसेस)', hint: 'साबण, पेन, कपडे, मोबाईल ॲक्सेसरीज (नग)' },
+  Pc: { label: 'Pc (नग / पीस)', hint: 'साबण, पेन, कपडे, मोबाईल ॲक्सेसरीज (नग)' },
   Box: { label: 'Box (बॉक्स)', hint: 'बॉक्स पॅकिंग आयटम्स' },
   Nag: { label: 'Nag (नग)', hint: 'नगाने विकल्या जाणाऱ्या गोष्टी' },
   Day: { label: 'Day (दिवस)', hint: 'फोटो स्टुडिओ / रेंटल सर्व्हिस' },
-  Shoot: { label: 'Shoot (फोटो शूट)', hint: 'फोटोग्राफी सर्व्हिस' },
+  Shoot: { label: 'Shoot (शूट)', hint: 'फोटोग्राफी सर्व्हिस' },
   Hour: { label: 'Hour (तास)', hint: 'तासानुसार सर्व्हिस' },
-  Event: { label: 'Event (कार्यक्रम)', hint: 'इव्हेंट / कार्यक्रम पॅकेज' },
-  Plate: { label: 'Plate (प्लेट)', hint: 'हॉटेल डिश / थाळी' },
+  Event: { label: 'Event (इव्हेंट)', hint: 'इव्हेंट / कार्यक्रम पॅकेज' },
+  Plate: { label: 'Plate (प्लेट/थाळी)', hint: 'हॉटेल डिश / थाळी' },
   Half: { label: 'Half (हाफ)', hint: 'हाफ डिश' },
   Full: { label: 'Full (फुल)', hint: 'फुल डिश' },
+  Bowl: { label: 'Bowl (वाटी)', hint: 'वाटी (करी / उसळ / भाजी)' },
+  Glass: { label: 'Glass (ग्लास)', hint: 'ग्लास (ताक / लस्सी / ज्यूस)' },
   Portion: { label: 'Portion (पोर्शन)', hint: 'एक पोर्शन डिश' },
-  Strip: { label: 'Strip (स्ट्रिप)', hint: 'औषध गोळ्यांची पट्टी' },
+  Strip: { label: 'Strip (पट्टी)', hint: 'औषध गोळ्यांची पट्टी' },
   Bottle: { label: 'Bottle (बाटली)', hint: 'सिरप / बाटली' },
   Pair: { label: 'Pair (जोडी)', hint: 'चप्पल, सॉक्स (जोडी)' },
   Set: { label: 'Set (सेट)', hint: 'कपडे / भांडी सेट' },
@@ -331,7 +286,21 @@ export const UNIT_LABEL_MAP: Record<string, { label: string; hint: string }> = {
   Frame: { label: 'Frame (फ्रेम)', hint: 'फोटो फ्रेम' },
   Bundle: { label: 'Bundle (बंडल)', hint: 'बंडल पॅकिंग' },
   Meter: { label: 'Meter (मीटर)', hint: 'कापड / वायर मीटर' },
+  Ft: { label: 'Ft (फूट)', hint: 'फूट (पाईप, वायर, नेट)' },
+  Length: { label: 'Length (लेन्थ - 10/20ft)', hint: 'लेन्थ (10/20 फूट पाईप)' },
   Service: { label: 'Service (सर्व्हिस)', hint: 'ऑटो / बाईक सर्व्हिस पॅकेज' },
+  Bag: { label: 'Bag (पोते / बॅग)', hint: 'सिमेंट, पुट्टी, खत (पोते)' },
+  Ton: { label: 'Ton (टन)', hint: 'स्टील, वाळू, खडी (टन)' },
+  Brass: { label: 'Brass (ब्रास)', hint: 'वाळू, खडी, विटा (ब्रास)' },
+  Trolley: { label: 'Trolley (ट्रॉली)', hint: '१ ट्रॅक्टर ट्रॉली (वाळू/विटा/माती)' },
+  Sqft: { label: 'Sqft (स्क्वेअर फूट)', hint: 'टाईल्स, ग्रॅनाईट, प्लायवुड' },
+  Truck: { label: 'Truck (ट्रक)', hint: 'वाळू, विटा, माती (ट्रक)' },
+  Vehicle: { label: 'Vehicle', hint: 'कोणतेही वाहन' },
+  Bike: { label: 'Bike', hint: 'नवीन किंवा जुनी बाईक/मोटरसायकल' },
+  Scooter: { label: 'Scooter', hint: 'स्कूटर, मोपेड किंवा ऍक्टिव्हा' },
+  Car: { label: 'Car', hint: 'नवीन किंवा जुनी कार' },
+  'E-Bike': { label: 'E-Bike', hint: 'इलेक्ट्रिक बाईक / स्कूटर' },
+  Tractor: { label: 'Tractor', hint: 'ट्रॅक्टर किंवा शेतीचे वाहन' },
 }
 
 export function formatUnitDisplay(unit?: string): string {
@@ -346,7 +315,19 @@ export function formatUnitDisplay(unit?: string): string {
 export function getUnitHint(unit: string, businessTypeId?: string): string {
   const bType = businessTypeId?.toUpperCase() || ''
 
-  if (bType === 'AUTOMOBILE') {
+  if (bType === 'AUTO_DEALER') {
+    switch (unit) {
+      case 'Bike': return 'कोणतीही नवीन किंवा जुनी मोटरसायकल'
+      case 'Scooter': return 'स्कूटर किंवा मोपेड'
+      case 'Car': return 'चारचाकी वाहन'
+      case 'E-Bike': return 'इलेक्ट्रिक बाईक किंवा स्कूटर'
+      case 'Tractor': return 'शेतीसाठी ट्रॅक्टर'
+      case 'Pc':
+      case 'Pieces': return 'अतिरिक्त ॲक्सेसरीज (नग)'
+    }
+  }
+
+  if (bType === 'AUTO_SPARES' || bType === 'AUTOMOBILE') {
     switch (unit) {
       case 'Pc':
       case 'Pieces': return 'स्पेयर पार्ट, हेल्मेट, ऑइल फिल्टर, स्पार्क प्लग, टायर, ट्यूब, बेअरिंग (नग)'
@@ -360,22 +341,29 @@ export function getUnitHint(unit: string, businessTypeId?: string): string {
       case 'Hour': return 'मेकॅनिक लेबर चार्जेस, सर्व्हिस वेळ (तास)'
     }
   }
-  
+
   if (bType === 'HOTEL_RESTAURANT' || bType === 'RESTAURANT') {
     switch (unit) {
-      case 'Kg': return 'केक, मिठाई, बिर्याणी, फॅमिली पॅक (वजन)'
-      case 'Gm': return 'स्वीट्स, ड्रायफ्रूट्स पॅक (ग्रॅम)'
-      case 'Pack': return 'बेकरी पॅक, स्नॅक्स पॅक'
-      case 'Packet': return 'स्नॅक्स पाकीट'
-      case 'Pc':
-      case 'Pieces': return 'बर्गर, पेस्ट्री, समोसा, पॅटीस, रोल्स (नग)'
-      case 'Box': return 'मिठाई बॉक्स, केक बॉक्स, कॉम्बो पार्सल'
       case 'Plate': return 'हॉटेल थाळी, डिश किंवा प्लेट'
       case 'Half': return 'हाफ पोर्शन / डिश'
       case 'Full': return 'फुल पोर्शन / डिश'
       case 'Portion': return 'एक पोर्शन डिश'
+      case 'Pc':
+      case 'Pieces': return 'बर्गर, पेस्ट्री, समोसा, पॅटीस, रोल्स, चपाती, रोटी (नग)'
+      case 'Box': return 'कॉम्बो पार्सल बॉक्स'
       case 'Litre': return 'लस्सी, ड्रिंक्स, ग्रेव्ही (लीटर)'
-      case 'Bottle': return 'ज्यूस, कोल्डड्रिंक, सॉस बाटली'
+      case 'Bottle': return 'ज्यूस, कोल्डड्रिंक, पाण्याची बाटली'
+    }
+  }
+
+  if (bType === 'BAKERY_SWEETS') {
+    switch (unit) {
+      case 'Kg': return 'केक, मिठाई, फॅमिली पॅक (वजन)'
+      case 'Gm': return 'स्वीट्स, ड्रायफ्रूट्स पॅक (ग्रॅम)'
+      case 'Pack': return 'बेकरी पॅक, टोस्ट, खारी, स्नॅक्स पॅक'
+      case 'Pc':
+      case 'Pieces': return 'पेस्ट्री, पफ, पॅटीस, डोनट (नग)'
+      case 'Box': return 'मिठाई बॉक्स, केक बॉक्स, गिफ्ट बॉक्स'
     }
   }
 
@@ -404,16 +392,30 @@ export function getUnitHint(unit: string, businessTypeId?: string): string {
     }
   }
 
-  if (bType === 'HARDWARE' || bType === 'ELECTRONICS') {
+  if (bType === 'HARDWARE' || bType === 'HARDWARE_PLUMBING') {
     switch (unit) {
       case 'Pc':
-      case 'Pieces': return 'टीव्ही, फ्रिज, वॉशिंग मशीन, मोबाईल, स्विचेस, टूल्स (नग)'
-      case 'Set': return 'होम थिएटर, डिश टीव्ही सेट, टूल सेट, सॉकेट सेट'
-      case 'Box': return 'स्क्रू बॉक्स, स्विचेस बॉक्स, सील बॉक्स आयटम'
-      case 'Meter': return 'वायर, केबल, पाईप (मीटर)'
-      case 'Bundle': return 'वायर / पाईप / केबल बंडल'
-      case 'Kg': return 'कीळ, हार्डवेअर सामान (वजन)'
-      case 'Pack': return 'इलेक्ट्रीकल / इलेक्ट्रॉनिक पॅक'
+      case 'Pieces': return 'स्विचेस, टूल्स, नट-बोल्ट, डोअर फिटिंग (नग)'
+      case 'Set': return 'टूल सेट, स्क्रू ड्रायव्हर सेट, सॉकेट सेट'
+      case 'Box': return 'स्क्रू बॉक्स, हार्डवेअर बॉक्स'
+      case 'Meter': return 'वायर, पाईप (मीटर)'
+      case 'Pair': return 'बिजागरी (Hinges), डोअर हँडल (जोडी)'
+      case 'Kg': return 'खिळे, वायर (वजन)'
+      case 'Pack': return 'पेंट्स, फेव्हिकॉल पॅक'
+    }
+  }
+
+  if (bType === 'BUILDING_MATERIAL') {
+    switch (unit) {
+      case 'Bag': return 'सिमेंट, पुट्टी, वॉलकेअर पोते (बॅग)'
+      case 'Ton': return 'स्टील, वाळू, खडी, सळई (टन)'
+      case 'Brass': return 'वाळू, खडी (ब्रास)'
+      case 'Sqft': return 'टाईल्स, ग्रॅनाईट, प्लायवुड, मार्बल (स्क्वेअर फूट)'
+      case 'Pc':
+      case 'Pieces': return 'रेडिमेड दरवाजे, पत्रा, सिमेंट शीट (नग)'
+      case 'Bundle': return 'टीएमटी बार, वायर बंडल'
+      case 'Litre': return 'पेंट्स, प्रायमर, वॉटरप्रूफिंग (लीटर)'
+      case 'Truck': return 'वाळू, विटा, माती डंपर (ट्रक)'
     }
   }
 
@@ -431,9 +433,11 @@ export function getUnitHint(unit: string, businessTypeId?: string): string {
   if (bType === 'ELECTRONICS') {
     switch (unit) {
       case 'Pc':
-      case 'Pieces': return 'मोबाईल, हेडफोन, चार्जर, ॲक्सेसरीज (नग)'
-      case 'Set': return 'होम थिएटर / कॉम्बो सेट'
-      case 'Box': return 'सील बॉक्स आयटम'
+      case 'Pieces': return 'स्मार्ट टीव्ही, लॅपटॉप, मोबाईल, फ्रिज, वॉशिंग मशीन, ॲक्सेसरीज (नग)'
+      case 'Set': return 'होम थिएटर, कॉम्बो सेट, स्पीकर सेट'
+      case 'Box': return 'सील बॉक्स आयटम, राउटर बॉक्स'
+      case 'Pair': return 'वायरलेस इयरबड्स (TWS) जोडी'
+      case 'Pack': return 'बॅटरी पॅक, केबल पॅक, स्क्रीन गार्ड पॅक'
     }
   }
 
@@ -490,8 +494,7 @@ export function getUnitHint(unit: string, businessTypeId?: string): string {
 
 export function getUnitDisplayLabel(unit: string, businessTypeId?: string): string {
   const label = UNIT_LABEL_MAP[unit]?.label || formatUnitDisplay(unit)
-  const hint = getUnitHint(unit, businessTypeId)
-  return `${label} — ${hint}`
+  return label
 }
 
 export function getBusinessType(typeId?: string): BusinessTypeConfig {
@@ -527,28 +530,47 @@ export function getBusinessTypeCheckoutHint(b: BusinessTypeConfig, lang: string 
   return b.checkoutHintMr || b.checkoutHint
 }
 
-export function getStockLabel(businessTypeId?: string, lang: string = 'mr'): string {
+export function getStockLabel(businessTypeId?: string, lang: string = 'mr', unit?: string): string {
   const bType = (businessTypeId || '').toUpperCase()
   const currentLang = (lang || 'mr').toLowerCase()
-  if (bType === 'PHOTO_STUDIO' || bType === 'SERVICES') {
-    if (currentLang.startsWith('en')) return 'Booking Slots Capacity'
-    if (currentLang.startsWith('hi')) return 'बुकिंग स्लॉट्स (Booking Slots)'
-    return 'बुकिंग स्लॉट्स (Booking Slots)'
+
+  const serviceUnits = ['Shoot', 'Event', 'Hour', 'Day', 'Service']
+  const isService = (unit && serviceUnits.includes(unit)) || ((bType === 'SERVICES' || bType === 'PHOTO_STUDIO') && (!unit || serviceUnits.includes(unit)))
+
+  if (isService && (unit === 'Shoot' || unit === 'Event' || unit === 'Hour' || unit === 'Day' || unit === 'Service' || !unit)) {
+    // If unit is specifically Frame, Album, or Pc, it falls to the physical product label.
+    if (unit && !serviceUnits.includes(unit)) {
+      // do nothing, let it fall through
+    } else {
+      if (currentLang.startsWith('en')) return 'Max Bookings / Capacity'
+      if (currentLang.startsWith('hi')) return 'आप कितनी बुकिंग ले सकते हैं?'
+      return 'तुम्ही किती ऑर्डर्स / बुकिंग्स घेऊ शकता?'
+    }
   }
-  if (currentLang.startsWith('en')) return 'Stock Quantity'
-  if (currentLang.startsWith('hi')) return 'स्टॉक संख्या (Stock Qty)'
-  return 'शिल्लक स्टॉक संख्या (Stock Qty)'
+
+  if (currentLang.startsWith('en')) return 'Available Quantity (In Shop)'
+  if (currentLang.startsWith('hi')) return 'अभी दुकान में कितना माल है? (Available Qty)'
+  return 'सध्या दुकानात किती माल उपलब्ध आहे? (Available Qty)'
 }
 
-export function getStockHint(businessTypeId?: string, lang: string = 'mr'): string {
+export function getStockHint(businessTypeId?: string, lang: string = 'mr', unit?: string): string {
   const bType = (businessTypeId || '').toUpperCase()
   const currentLang = (lang || 'mr').toLowerCase()
-  if (bType === 'PHOTO_STUDIO' || bType === 'SERVICES') {
-    if (currentLang.startsWith('en')) return 'Number of shoot bookings/slots available (e.g. 1000 for unlimited)'
-    if (currentLang.startsWith('hi')) return 'उपलब्ध बुकिंग स्लॉट्स: कितने शूट/ऑर्डर स्वीकार कर सकते हैं (उदा. 1000 अनलिमिटेड के लिए)'
-    return 'उपलब्ध बुकिंग स्लॉट्स: तुम्ही किती शुट्स किंवा ऑर्डर्स स्वीकारू शकता (उदा. 1000 unlimited साठी)'
+
+  const serviceUnits = ['Shoot', 'Event', 'Hour', 'Day', 'Service']
+  const isService = (unit && serviceUnits.includes(unit)) || ((bType === 'SERVICES' || bType === 'PHOTO_STUDIO') && (!unit || serviceUnits.includes(unit)))
+
+  if (isService && (unit === 'Shoot' || unit === 'Event' || unit === 'Hour' || unit === 'Day' || unit === 'Service' || !unit)) {
+    if (unit && !serviceUnits.includes(unit)) {
+      // do nothing, let it fall through
+    } else {
+      if (currentLang.startsWith('en')) return 'Enter maximum orders you can accept (Enter 1000 for Unlimited)'
+      if (currentLang.startsWith('hi')) return 'लिमिट सेट करें (अगर कोई लिमिट नहीं है, तो 1000 टाइप करें)'
+      return 'लिमिट सेट करा (जर कोणतीही लिमिट नसेल, तर 1000 टाइप करा)'
+    }
   }
-  if (currentLang.startsWith('en')) return 'Stock quantity available for sale'
-  if (currentLang.startsWith('hi')) return 'दुकान में उपलब्ध स्टॉक (0 होने पर आउट ऑफ स्टॉक)'
-  return 'दुकानात विक्रीसाठी उपलब्ध माल (0 झाल्यावर आउट ऑफ स्टॉक होईल)'
+
+  if (currentLang.startsWith('en')) return 'Enter the total items currently available for sale in your shop'
+  if (currentLang.startsWith('hi')) return 'आपके पास बेचने के लिए कितने पीस/किलो रखे हैं? (0 होने पर आउट ऑफ स्टॉक दिखेगा)'
+  return 'तुमच्याकडे विकण्यासाठी किती नग/किलो माल शिल्लक आहे? (0 झाल्यावर आउट ऑफ स्टॉक दिसेल)'
 }

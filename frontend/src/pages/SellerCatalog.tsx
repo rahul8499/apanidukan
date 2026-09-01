@@ -834,7 +834,28 @@ export default function SellerCatalog() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language)}</label>
+                  <label className="text-xs font-bold text-slate-700">Ordering Unit (युनिट)</label>
+                  <select
+                    value={editUnit}
+                    onChange={(e) => setEditUnit(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                  >
+                    {getBusinessType(store?.business_type).units.map((u) => (
+                      <option key={u} value={u}>
+                        {getUnitDisplayLabel(u, store?.business_type)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="text-[10px] text-indigo-700 font-semibold bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1 mt-0.5">
+                <span>💡</span>
+                <span><strong>{formatUnitDisplay(editUnit)}:</strong> {getUnitHint(editUnit, store?.business_type)}</span>
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language, editUnit)}</label>
                   <input
                     type="number"
                     value={editStock}
@@ -843,41 +864,21 @@ export default function SellerCatalog() {
                     required
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700">{t('categoryLabel')}</label>
-                <select
-                  value={editCategory}
-                  onChange={(e) => setEditCategory(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
-                >
-                  <option value="">{t('noCategory')}</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700">Ordering Unit (विक्री युनिट)</label>
-                <select
-                  value={editUnit}
-                  onChange={(e) => setEditUnit(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
-                >
-                  {getBusinessType(store?.business_type).units.map((u) => (
-                    <option key={u} value={u}>
-                      {getUnitDisplayLabel(u, store?.business_type)}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-indigo-700 font-semibold mt-1 bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
-                  <span>💡</span>
-                  <span><strong>{formatUnitDisplay(editUnit)}:</strong> {getUnitHint(editUnit, store?.business_type)}</span>
-                </p>
+                <div>
+                  <label className="text-xs font-bold text-slate-700">{t('categoryLabel')}</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                  >
+                    <option value="">{t('noCategory')}</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Multi-Image Gallery & Primary Photo Selector */}
@@ -1040,7 +1041,28 @@ export default function SellerCatalog() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language)}</label>
+                  <label className="text-xs font-bold text-slate-700">Ordering Unit (युनिट)</label>
+                  <select
+                    value={newProdUnit}
+                    onChange={(e) => setNewProdUnit(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                  >
+                    {getBusinessType(store?.business_type).units.map((u) => (
+                      <option key={u} value={u}>
+                        {getUnitDisplayLabel(u, store?.business_type)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="text-[10px] text-indigo-700 font-semibold bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1 mt-0.5">
+                <span>💡</span>
+                <span><strong>{formatUnitDisplay(newProdUnit)}:</strong> {getUnitHint(newProdUnit, store?.business_type)}</span>
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language, newProdUnit)}</label>
                   <input
                     type="number"
                     value={newProdStock}
@@ -1049,42 +1071,22 @@ export default function SellerCatalog() {
                     required
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700">{t('categoryLabel')} <span className="text-rose-500 font-extrabold">*</span></label>
-                <select
-                  value={newProdCat}
-                  onChange={(e) => setNewProdCat(e.target.value)}
-                  required
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
-                >
-                  <option value="">-- Select Category (Required) --</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700">Ordering Unit (विक्री युनिट)</label>
-                <select
-                  value={newProdUnit}
-                  onChange={(e) => setNewProdUnit(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
-                >
-                  {getBusinessType(store?.business_type).units.map((u) => (
-                    <option key={u} value={u}>
-                      {getUnitDisplayLabel(u, store?.business_type)}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-indigo-700 font-semibold mt-1 bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
-                  <span>💡</span>
-                  <span><strong>{formatUnitDisplay(newProdUnit)}:</strong> {getUnitHint(newProdUnit, store?.business_type)}</span>
-                </p>
+                <div>
+                  <label className="text-xs font-bold text-slate-700">{t('categoryLabel')} <span className="text-rose-500 font-extrabold">*</span></label>
+                  <select
+                    value={newProdCat}
+                    onChange={(e) => setNewProdCat(e.target.value)}
+                    required
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                  >
+                    <option value="">-- Select Category (Required) --</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Multiple Images Selector with Primary Card Photo Chooser */}

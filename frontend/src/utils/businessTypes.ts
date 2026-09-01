@@ -119,8 +119,16 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     nameMr: 'बांधकाम साहित्य व सिमेंट',
     icon: '🧱',
     defaultUnit: 'Bag',
-    units: ['Bag', 'Brass', 'Trolley', 'Truck', 'Ton', 'Kg', 'Sqft', 'Box', 'Pc', 'Bundle', 'Litre'],
-    sampleCategories: ['सिमेंट, पुट्टी आणि पीओपी', 'लोखंड, सळ्या आणि पत्रे', 'वाळू, खडी आणि विटा', 'टाईल्स आणि ग्रॅनाईट', 'वॉटरप्रूफिंग आणि केमिकल', 'हार्डवेअर आणि इतर साहित्य'],
+    units: ['Bag', 'Ton', 'Quintal', 'Kg', 'Brass', 'Trolley', 'Truck', 'Bar', 'Sqft', 'Box', 'Pc', 'Bundle', 'Litre'],
+    sampleCategories: [
+      'सिमेंट, पुट्टी आणि पीओपी',
+      'लोखंड (TMT बार, सळ्या, तार आणि पत्रे)',
+      'वाळू, खडी, विटा आणि मुरूम',
+      'टाईल्स, ग्रॅनाईट आणि मार्बल',
+      'प्लंबिंग आणि पाईप फिटिंग',
+      'वॉटरप्रूफिंग आणि बांधकाम केमिकल',
+      'हार्डवेअर आणि इतर साहित्य'
+    ],
     sampleProducts: [],
     checkoutHint: 'Delivery Address & Unloading Instructions',
     customFieldLabel: 'Site Address / Unloading Info',
@@ -289,10 +297,12 @@ export const UNIT_LABEL_MAP: Record<string, { label: string; hint: string }> = {
   Ft: { label: 'Ft (फूट)', hint: 'फूट (पाईप, वायर, नेट)' },
   Length: { label: 'Length (लेन्थ - 10/20ft)', hint: 'लेन्थ (10/20 फूट पाईप)' },
   Service: { label: 'Service (सर्व्हिस)', hint: 'ऑटो / बाईक सर्व्हिस पॅकेज' },
-  Bag: { label: 'Bag (पोते / बॅग)', hint: 'सिमेंट, पुट्टी, खत (पोते)' },
-  Ton: { label: 'Ton (टन)', hint: 'स्टील, वाळू, खडी (टन)' },
-  Brass: { label: 'Brass (ब्रास)', hint: 'वाळू, खडी, विटा (ब्रास)' },
-  Trolley: { label: 'Trolley (ट्रॉली)', hint: '१ ट्रॅक्टर ट्रॉली (वाळू/विटा/माती)' },
+  Bag: { label: 'Bag (पोते)', hint: 'सिमेंट, पुट्टी, खत (१ पोत्याची किंमत)' },
+  Ton: { label: 'Ton (टन - 1000 Kg)', hint: 'लोखंड, वाळू, खडी (1000 किलोची किंमत)' },
+  Quintal: { label: 'Quintal (क्विंटल - 100 Kg)', hint: 'लोखंड, सिमेंट (100 किलोची किंमत)' },
+  Bar: { label: 'Bar/Length (१ सळी)', hint: '१ लोखंडी सळीची किंमत (उदा. 8mm/10mm)' },
+  Brass: { label: 'Brass (ब्रास)', hint: 'वाळू, खडी, विटा (१ ब्रासची किंमत)' },
+  Trolley: { label: 'Trolley (ट्रॉली)', hint: '१ ट्रॅक्टर ट्रॉलीची किंमत (वाळू/विटा/माती)' },
   Sqft: { label: 'Sqft (स्क्वेअर फूट)', hint: 'टाईल्स, ग्रॅनाईट, प्लायवुड' },
   Truck: { label: 'Truck (ट्रक)', hint: 'वाळू, विटा, माती (ट्रक)' },
   Vehicle: { label: 'Vehicle', hint: 'कोणतेही वाहन' },
@@ -495,6 +505,42 @@ export function getUnitHint(unit: string, businessTypeId?: string): string {
 export function getUnitDisplayLabel(unit: string, businessTypeId?: string): string {
   const label = UNIT_LABEL_MAP[unit]?.label || formatUnitDisplay(unit)
   return label
+}
+
+export function getCartLabels(businessTypeId?: string): {
+  addButton: string;
+  cartTitle: string;
+  ordersTitle: string;
+  addedButton: string;
+} {
+  const type = businessTypeId?.toUpperCase() || 'GENERAL'
+
+  if (type === 'PHOTO_STUDIO' || type === 'SERVICES' || type === 'CONSULTING') {
+    return { addButton: 'BOOK', addedButton: 'BOOKED', cartTitle: 'Booking Cart', ordersTitle: 'My Bookings' }
+  }
+  if (type === 'AUTO_DEALER' || type === 'AUTO_SPARES' || type === 'REAL_ESTATE' || type === 'WHOLESALE') {
+    return { addButton: 'ENQUIRE', addedButton: 'ADDED', cartTitle: 'Inquiry Cart', ordersTitle: 'My Inquiries' }
+  }
+  if (type === 'RESTAURANT' || type === 'HOTEL_RESTAURANT') {
+    return { addButton: 'ADD', addedButton: 'ADDED', cartTitle: 'Food Cart', ordersTitle: 'My Orders' }
+  }
+
+  return { addButton: 'ADD', addedButton: 'ADDED', cartTitle: 'Shopping Cart', ordersTitle: 'My Orders' }
+}
+
+export function getProductAddButtonLabel(businessTypeId?: string, unit?: string): string {
+  const type = businessTypeId?.toUpperCase() || 'GENERAL'
+  const cartLabels = getCartLabels(businessTypeId)
+
+  if (type === 'PHOTO_STUDIO') {
+    const serviceUnits = ['day', 'hour', 'event', 'shoot', 'session', 'month']
+    if (unit && serviceUnits.includes(unit.toLowerCase())) {
+      return 'BOOK'
+    }
+    return 'ADD'
+  }
+
+  return cartLabels.addButton
 }
 
 export function getBusinessType(typeId?: string): BusinessTypeConfig {

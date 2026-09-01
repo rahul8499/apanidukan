@@ -17,7 +17,7 @@ import { getStoreTheme } from '../utils/storeTheme'
 import { setupCustomerStorePwa } from '../pwa/pwaManager'
 import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
-import { formatUnitDisplay } from '../utils/businessTypes'
+import { formatUnitDisplay, getCartLabels, getProductAddButtonLabel } from '../utils/businessTypes'
 
 export default function StoreHome() {
   const { storeSlug } = useParams()
@@ -52,6 +52,8 @@ function Storefront() {
   const [userLocation, setUserLocation] = useState(() => localStorage.getItem('multistore_user_delivery_address') || '')
   const [locationModalOpen, setLocationModalOpen] = useState(false)
   const [locationInput, setLocationInput] = useState('')
+
+  const cartLabels = getCartLabels(store?.business_type)
   const [detectingGps, setDetectingGps] = useState(false)
   const [locationError, setLocationError] = useState('')
 
@@ -668,7 +670,7 @@ function Storefront() {
                 <Link
                   to={`/store/${storeSlug}/cart`}
                   className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer shadow-xs"
-                  title="Shopping Cart"
+                  title={cartLabels.cartTitle}
                 >
                   <ShoppingCart className="h-5 w-5" />
                   {cart.count > 0 && (
@@ -848,7 +850,7 @@ function Storefront() {
                     >
                       <div className="flex items-center gap-3">
                         <PackageCheck className="h-4 w-4 text-emerald-600" />
-                        <span>My Orders</span>
+                        <span>{cartLabels.ordersTitle}</span>
                       </div>
                       <span className="text-[9px] font-extrabold bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
                         Live Tracking
@@ -862,7 +864,7 @@ function Storefront() {
                     >
                       <div className="flex items-center gap-3">
                         <ShoppingBag className="h-4 w-4 text-purple-600" />
-                        <span>Shopping Cart</span>
+                        <span>{cartLabels.cartTitle}</span>
                       </div>
                       {cart.count > 0 && (
                         <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black text-white shadow-xs">
@@ -1252,7 +1254,7 @@ function Storefront() {
                             className={`flex w-full items-center justify-center gap-1 rounded-xl py-1.5 text-xs font-black text-white shadow-sm disabled:opacity-40 transition-all cursor-pointer active:scale-95 bg-gradient-to-r ${storeTheme.btn_gradient}`}
                           >
                             <Plus className="h-3.5 w-3.5" />
-                            <span>{isOutOfStock ? 'Out of Stock' : 'ADD'}</span>
+                            <span>{isOutOfStock ? 'Out of Stock' : getProductAddButtonLabel(store?.business_type, p.unit)}</span>
                           </button>
                         )}
                       </div>

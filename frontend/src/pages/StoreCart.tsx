@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
-import { getBusinessType, formatUnitDisplay } from '../utils/businessTypes'
+import { getBusinessType, formatUnitDisplay, getCartLabels } from '../utils/businessTypes'
 
 export default function StoreCart() {
   const { storeSlug } = useParams()
@@ -52,6 +52,16 @@ function CartContent() {
   const [otpLoading, setOtpLoading] = useState(false)
   const [checkoutVerificationToken, setCheckoutVerificationToken] = useState('')
   const [customNote, setCustomNote] = useState('')
+  
+  let cartLabels = getCartLabels(store?.business_type)
+  
+  // ⚡ HYBRID SMART CART LOGIC: If a Photo Studio cart only has physical products (Album, Frame), revert to normal Order labels!
+  if (store?.business_type === 'PHOTO_STUDIO') {
+    const hasService = cart.items.some(item => ['day', 'hour', 'event', 'shoot', 'session', 'month'].includes(item.unit?.toLowerCase() || ''))
+    if (!hasService) {
+      cartLabels = getCartLabels('GENERAL') // Fallback to ADD, Shopping Cart, Order etc.
+    }
+  }
 
   // Coupons State
   const [availableCoupons, setAvailableCoupons] = useState<any[]>([])
@@ -386,7 +396,9 @@ function CartContent() {
       const appliedCodes = appliedCoupons.map(c => c.code).join(', ')
 
       const finalDeliveryAddress = orderType === 'STORE_PICKUP'
-        ? `🏪 Walk-in Store Pickup (Customer will collect from shop: ${store?.address || store?.name})`
+        ? (cartLabels.addButton === 'BOOK' 
+            ? `📸 Studio/Shop Visit (Customer will visit the studio/shop: ${store?.address || store?.name})`
+            : `🏪 Walk-in Store Pickup (Customer will collect from shop: ${store?.address || store?.name})`)
         : deliveryAddress
 
       const result = await api.post(`/public/stores/${storeSlug}/whatsapp-orders/`, {
@@ -432,8 +444,8 @@ function CartContent() {
           `Payment: ${paymentLabel}`,
           `Fulfilment: ${fulfillmentLabel}`,
           ...(orderType === 'STORE_PICKUP'
-            ? [`Pickup from: ${store?.address || store?.name || 'Store location'}`]
-            : [`Delivery address: ${order.delivery_address || 'Not provided'}`]),
+            ? [`${cartLabels.addButton === 'BOOK' ? 'Service at' : 'Pickup from'}: ${store?.address || store?.name || 'Store location'}`]
+            : [`${cartLabels.addButton === 'BOOK' ? 'Venue Address' : 'Delivery address'}: ${order.delivery_address || 'Not provided'}`]),
           ...(order.location_url ? [`Location: ${order.location_url}`] : []),
           '',
           '*Bill summary*',
@@ -475,7 +487,7 @@ function CartContent() {
               <ArrowLeft className="h-4 w-4" />
               <span className="font-bold text-xs sm:text-sm">Back to Store</span>
             </Link>
-            <h1 className="font-extrabold text-sm sm:text-base">Shopping Cart</h1>
+            <h1 className="font-extrabold text-sm sm:text-base">{cartLabels.cartTitle}</h1>
             <NotificationBellHeader />
           </div>
         </header>
@@ -486,9 +498,9 @@ function CartContent() {
               🛍️
             </div>
             <div className="space-y-1">
-              <h2 className="text-base sm:text-lg font-black text-slate-900">Your Cart is Empty</h2>
+              <h2 className="text-base sm:text-lg font-black text-slate-900">Your {cartLabels.cartTitle} is Empty</h2>
               <p className="text-xs text-slate-500 font-medium">
-                Looks like you haven't added any products to your cart yet.
+                Looks like you haven't added any products to your {cartLabels.cartTitle.toLowerCase()} yet.
               </p>
             </div>
             <Link
@@ -526,7 +538,7 @@ function CartContent() {
               </p>
               <div className="flex items-center gap-2">
                 <h1 className="font-extrabold text-xs sm:text-sm text-white">
-                  My Shopping Cart ({cart.count})
+                  My {cartLabels.cartTitle} ({cart.count})
                 </h1>
                 {isStandalone ? (
                   <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[9px] font-black text-emerald-300">
@@ -555,17 +567,17 @@ function CartContent() {
           <div className="mx-auto max-w-7xl flex items-center justify-center gap-4 sm:gap-12">
             <div className="flex items-center gap-1.5 text-emerald-400 font-extrabold">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-slate-950 text-[9px]">1</span>
-              <span>Cart Summary</span>
+              <span>{cartLabels.cartTitle} Summary</span>
             </div>
             <span className="h-0.5 w-6 bg-slate-700 sm:w-12 rounded" />
             <div className="flex items-center gap-1.5 text-indigo-300 font-bold">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-white text-[9px]">2</span>
-              <span>Delivery Details</span>
+              <span>Details</span>
             </div>
             <span className="h-0.5 w-6 bg-slate-700 sm:w-12 rounded" />
             <div className="flex items-center gap-1.5 text-slate-400 font-medium">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-800 text-slate-400 text-[9px]">3</span>
-              <span>Place Order</span>
+              <span>Submit {cartLabels.addButton === 'BOOK' ? 'Booking' : cartLabels.addButton === 'ENQUIRE' ? 'Inquiry' : 'Order'}</span>
             </div>
           </div>
         </div>
@@ -605,7 +617,7 @@ function CartContent() {
               <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-3.5 py-2.5">
                 <h2 className="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
                   <ShoppingBag className="h-4 w-4 text-indigo-600" />
-                  <span>Items in Bag ({cart.count})</span>
+                  <span>Items in {cartLabels.cartTitle.split(' ').pop()} ({cart.count})</span>
                 </h2>
                 <button
                   onClick={() => cart.clear()}
@@ -728,8 +740,8 @@ function CartContent() {
                           : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                           }`}
                       >
-                        <span className="text-xs">🚚</span>
-                        <span>Home Delivery</span>
+                        <span className="text-xs">{cartLabels.addButton === 'BOOK' ? '📍' : '🚚'}</span>
+                        <span>{cartLabels.addButton === 'BOOK' ? 'At My Location' : 'Home Delivery'}</span>
                       </button>
                     )}
 
@@ -742,8 +754,8 @@ function CartContent() {
                           : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                           }`}
                       >
-                        <span className="text-xs">🏪</span>
-                        <span>Walk-in / Pickup</span>
+                        <span className="text-xs">{cartLabels.addButton === 'BOOK' ? '📸' : '🏪'}</span>
+                        <span>{cartLabels.addButton === 'BOOK' ? 'At Studio / Shop' : 'Walk-in / Pickup'}</span>
                       </button>
                     )}
                   </div>
@@ -791,20 +803,26 @@ function CartContent() {
                 {orderType === 'STORE_PICKUP' ? (
                   <div className="rounded-xl bg-amber-50/90 border border-amber-200 p-3 space-y-1 shadow-2xs">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">🏪</span>
-                      <span className="text-xs font-black text-amber-900">Walk-in Store Pickup Selected</span>
+                      <span className="text-base">{cartLabels.addButton === 'BOOK' ? '📸' : '🏪'}</span>
+                      <span className="text-xs font-black text-amber-900">
+                        {cartLabels.addButton === 'BOOK' ? 'At Studio / Shop Selected' : 'Walk-in Store Pickup Selected'}
+                      </span>
                     </div>
                     <p className="text-[11px] text-amber-800 font-medium">
-                      Customer will collect order directly from shop. No home delivery address required!
+                      {cartLabels.addButton === 'BOOK' 
+                        ? 'You will visit the studio/shop for the service. No venue address required!'
+                        : 'Customer will collect order directly from shop. No home delivery address required!'}
                     </p>
                     <p className="text-xs font-extrabold text-slate-900 bg-white p-2 rounded-lg border border-amber-200/80 mt-1">
-                      📍 Store Pickup Location: {store?.address || store?.name || 'Shop Location'}
+                      📍 {cartLabels.addButton === 'BOOK' ? 'Studio/Shop Location' : 'Store Pickup Location'}: {store?.address || store?.name || 'Shop Location'}
                     </p>
                   </div>
                 ) : (
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-slate-700">Delivery Address</label>
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {cartLabels.addButton === 'BOOK' ? 'Venue / Location Address' : 'Delivery Address'}
+                      </label>
                       <button
                         type="button"
                         onClick={useCurrentLocation}
@@ -1116,7 +1134,7 @@ function CartContent() {
               {/* CLEAR TWO CHECKOUT OPTIONS (WHATSAPP vs DIRECT WEB ORDER) */}
               <div className="space-y-2.5 pt-3 border-t border-slate-200">
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                  Select Order Mode / ऑर्डर करण्याची पद्धत निवडा:
+                  Select {cartLabels.addButton === 'BOOK' ? 'Booking' : cartLabels.addButton === 'ENQUIRE' ? 'Inquiry' : 'Order'} Mode / {cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'} करण्याची पद्धत निवडा:
                 </p>
 
                 {/* Option 1: WhatsApp Order */}
@@ -1129,8 +1147,12 @@ function CartContent() {
                       💬
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-black text-xs text-white truncate">Order via WhatsApp (व्हॉट्सॲप ऑर्डर)</h4>
-                      <p className="text-[9.5px] text-emerald-100 font-medium truncate">ऑर्डर मेसेज दुकानदाराच्या व्हॉट्सॲपवर पाठवा</p>
+                      <h4 className="font-black text-xs text-white truncate">
+                        {cartLabels.addButton === 'BOOK' ? 'Book' : cartLabels.addButton === 'ENQUIRE' ? 'Inquire' : 'Order'} via WhatsApp (व्हॉट्सॲप {cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'})
+                      </h4>
+                      <p className="text-[9.5px] text-emerald-100 font-medium truncate">
+                        {cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'} मेसेज दुकानदाराच्या व्हॉट्सॲपवर पाठवा
+                      </p>
                     </div>
                   </div>
                   <span className="shrink-0 text-[11px] font-black bg-white/20 px-2 py-1 rounded-lg">
@@ -1148,8 +1170,10 @@ function CartContent() {
                       💳
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-black text-xs text-white truncate">Direct Web Order (डायरेक्ट ऑनलाईन ऑर्डर)</h4>
-                      <p className="text-[9.5px] text-indigo-100 font-medium truncate">व्हॉट्सॲपशिवाय थेट साईटवरूनच ऑर्डर करा</p>
+                      <h4 className="font-black text-xs text-white truncate">
+                        Direct Web {cartLabels.addButton === 'BOOK' ? 'Booking' : cartLabels.addButton === 'ENQUIRE' ? 'Inquiry' : 'Order'} (डायरेक्ट ऑनलाईन {cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'})
+                      </h4>
+                      <p className="text-[9.5px] text-indigo-100 font-medium truncate">व्हॉट्सॲपशिवाय थेट साईटवरूनच {cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'} करा</p>
                     </div>
                   </div>
                   <span className="shrink-0 text-[11px] font-black bg-white/20 px-2 py-1 rounded-lg">
@@ -1201,16 +1225,16 @@ function CartContent() {
               <button
                 onClick={() => handlePlaceOrder(true)}
                 className="flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/40 px-2 py-1 text-[9.5px] font-black text-white cursor-pointer active:scale-95"
-                title="Order via WhatsApp"
+                title={`${cartLabels.addButton === 'BOOK' ? 'Book' : cartLabels.addButton === 'ENQUIRE' ? 'Inquire' : 'Order'} via WhatsApp`}
               >
                 <span>💬 WhatsApp</span>
               </button>
               <button
                 onClick={() => handlePlaceOrder(false)}
                 className="flex items-center gap-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 px-2 py-1 text-[9.5px] font-black text-white cursor-pointer active:scale-95"
-                title="Direct Web Order"
+                title={`Direct Web ${cartLabels.addButton === 'BOOK' ? 'Booking' : cartLabels.addButton === 'ENQUIRE' ? 'Inquiry' : 'Order'}`}
               >
-                <span>💳 Web Order</span>
+                <span>💳 Web {cartLabels.addButton === 'BOOK' ? 'Book' : cartLabels.addButton === 'ENQUIRE' ? 'Inquire' : 'Order'}</span>
               </button>
             </div>
           </div>

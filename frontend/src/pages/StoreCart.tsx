@@ -844,15 +844,34 @@ function CartContent() {
                             </button>
                           </div>
 
-                          {/* Primary QR Code Button */}
-                          <button
-                            type="button"
-                            onClick={() => setShowOnlineQrModal(true)}
-                            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 p-2.5 text-xs font-black text-white shadow-md hover:from-slate-800 hover:to-indigo-900 transition-all cursor-pointer active:scale-95"
-                          >
-                            <span className="text-base">📲</span>
-                            <span>Open Store Payment QR Code (₹{finalTotalAmount.toFixed(2)})</span>
-                          </button>
+                          {/* Direct App Deep Link Buttons */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                            <a
+                              href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR&tn=Order Payment`}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-white border border-slate-200 p-2 text-[10.5px] font-black text-slate-800 hover:bg-slate-50 shadow-2xs cursor-pointer active:scale-95 text-center"
+                            >
+                              <span>🔵 GPay</span>
+                            </a>
+                            <a
+                              href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR&tn=Order Payment`}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-purple-700 text-white p-2 text-[10.5px] font-black hover:bg-purple-800 shadow-2xs cursor-pointer active:scale-95 text-center"
+                            >
+                              <span>🟣 PhonePe</span>
+                            </a>
+                            <a
+                              href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR&tn=Order Payment`}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-sky-500 text-white p-2 text-[10.5px] font-black hover:bg-sky-600 shadow-2xs cursor-pointer active:scale-95 text-center"
+                            >
+                              <span>🔷 Paytm</span>
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => setShowOnlineQrModal(true)}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-slate-900 text-white p-2 text-[10.5px] font-black hover:bg-slate-800 shadow-2xs cursor-pointer active:scale-95 text-center"
+                            >
+                              <span>📲 QR Code</span>
+                            </button>
+                          </div>
                         </div>
 
                         {/* Clear 3-Step Simple Guide */}

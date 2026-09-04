@@ -1294,6 +1294,9 @@ export default function StoreManager() {
                 className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none shadow-2xs font-mono"
               />
               <p className="text-[9.5px] text-slate-500 mt-1">Customers will pay directly to this UPI ID on GPay, PhonePe & Paytm</p>
+              <p className="text-[9.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 p-1.5 rounded-lg mt-1">
+                💡 <strong>Pro Tip:</strong> Use your Mobile-linked UPI ID (e.g. <code className="font-mono">7796216506@ybl</code> or <code className="font-mono">7796216506@paytm</code>) for 100% instant 1-click PhonePe/GPay auto-redirects!
+              </p>
             </div>
 
             <div>

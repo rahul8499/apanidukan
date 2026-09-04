@@ -54,6 +54,7 @@ function CartContent() {
   const [customNote, setCustomNote] = useState('')
   const [utrInput, setUtrInput] = useState('')
   const [showOnlineQrModal, setShowOnlineQrModal] = useState(false)
+  const [copiedUpi, setCopiedUpi] = useState(false)
   
   let cartLabels = getCartLabels(store?.business_type)
   
@@ -816,38 +817,56 @@ function CartContent() {
 
                     {store?.upi_id ? (
                       <div className="space-y-2.5">
-                        <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                          Pay directly to <strong className="text-slate-900">{store.upi_name || store.name}</strong> (<span className="font-mono text-indigo-700 font-bold">{store.upi_id}</span>):
-                        </p>
+                        <div className="flex items-center justify-between flex-wrap gap-1 text-[11px] text-slate-600 font-medium">
+                          <span>Pay to <strong className="text-slate-900">{store.upi_name || store.name}</strong>:</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (store?.upi_id) {
+                                navigator.clipboard.writeText(store.upi_id)
+                                setCopiedUpi(true)
+                                setTimeout(() => setCopiedUpi(false), 2500)
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 border border-indigo-300 px-2 py-0.5 rounded-lg cursor-pointer transition-all active:scale-95"
+                          >
+                            <span>📋 {copiedUpi ? 'Copied VPA!' : 'Copy UPI ID'}</span>
+                            <span className="font-mono text-[10px] text-indigo-950 font-black">({store.upi_id})</span>
+                          </button>
+                        </div>
 
-                        {/* Mobile App Deep-Link Buttons */}
+                        {/* Mobile Universal Standard Deep-Link Buttons */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                           <a
-                            href={`intent://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR#Intent;scheme=upi;package=com.google.android.apps.nfc.phone;end`}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-white border border-slate-200 p-2 text-[10px] font-black text-slate-800 hover:bg-slate-50 shadow-2xs cursor-pointer active:scale-95"
+                            href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR`}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-white border border-slate-200 p-2 text-[10.5px] font-black text-slate-800 hover:bg-slate-50 shadow-2xs cursor-pointer active:scale-95 text-center"
                           >
-                            <span>🔵 GPay</span>
+                            <span>🔵 GPay / UPI</span>
                           </a>
                           <a
-                            href={`intent://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR#Intent;scheme=upi;package=com.phonepe.app;end`}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-purple-700 text-white p-2 text-[10px] font-black hover:bg-purple-800 shadow-2xs cursor-pointer active:scale-95"
+                            href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR`}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-purple-700 text-white p-2 text-[10.5px] font-black hover:bg-purple-800 shadow-2xs cursor-pointer active:scale-95 text-center"
                           >
                             <span>🟣 PhonePe</span>
                           </a>
                           <a
-                            href={`intent://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR#Intent;scheme=upi;package=net.one97.paytm;end`}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-sky-500 text-white p-2 text-[10px] font-black hover:bg-sky-600 shadow-2xs cursor-pointer active:scale-95"
+                            href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR`}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-sky-500 text-white p-2 text-[10.5px] font-black hover:bg-sky-600 shadow-2xs cursor-pointer active:scale-95 text-center"
                           >
                             <span>🔷 Paytm</span>
                           </a>
                           <button
                             type="button"
                             onClick={() => setShowOnlineQrModal(true)}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-slate-900 text-white p-2 text-[10px] font-black hover:bg-slate-800 shadow-2xs cursor-pointer active:scale-95"
+                            className="flex items-center justify-center gap-1 rounded-xl bg-slate-900 text-white p-2 text-[10.5px] font-black hover:bg-slate-800 shadow-2xs cursor-pointer active:scale-95 text-center"
                           >
-                            <span>📲 QR / Any UPI</span>
+                            <span>📲 QR Code</span>
                           </button>
                         </div>
+
+                        <p className="text-[10px] text-amber-900 bg-amber-50 border border-amber-200 p-2 rounded-xl font-medium">
+                          💡 <strong>NPCI Note:</strong> If PhonePe shows security prompt for personal VPAs, tap <strong>"📋 Copy UPI ID"</strong> above or scan <strong>"📲 QR Code"</strong>!
+                        </p>
 
                         {/* UTR Entry Field */}
                         <div className="pt-1">

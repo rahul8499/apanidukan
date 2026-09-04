@@ -588,6 +588,22 @@ export default function SellerOrders() {
                   </p>
                 ) : null}
 
+                {/* UTR Payment Verification Badge */}
+                {order.utr_number && (
+                  <div className="flex items-center justify-between bg-emerald-50/90 border border-emerald-200 px-2 py-1 rounded-md text-[9px] sm:text-[11px] text-emerald-950 font-bold">
+                    <span className="flex items-center gap-1 font-mono">
+                      <span>💳 UTR: {order.utr_number}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(order.id, 'PAID')}
+                      className="bg-emerald-600 text-white px-2 py-0.5 rounded text-[8.5px] sm:text-[10px] font-black hover:bg-emerald-700 cursor-pointer shadow-2xs"
+                    >
+                      {order.status === 'PAID' ? '✓ Paid Verified' : 'Confirm PAID'}
+                    </button>
+                  </div>
+                )}
+
                 {/* 4. Compact Purchased Items List */}
                 <div className="rounded-md sm:rounded-lg bg-slate-50/80 p-1 sm:p-2 text-xs border border-slate-100 space-y-0.2">
                   <div className="flex justify-between items-center text-[8px] sm:text-[9px] font-black uppercase text-slate-400 tracking-wider">

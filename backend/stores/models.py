@@ -91,6 +91,14 @@ class Store(models.Model):
     custom_domain = models.CharField(max_length=255, unique=True, null=True, blank=True, db_index=True)
     custom_domain_verified = models.BooleanField(default=False)
 
+    # Merchant Online Payment Credentials (UPI & Razorpay)
+    upi_id = models.CharField(max_length=150, blank=True, default='')
+    upi_name = models.CharField(max_length=200, blank=True, default='')
+    upi_qr_code = models.ImageField(upload_to='stores/upiqr/', null=True, blank=True)
+    razorpay_key_id = models.CharField(max_length=150, blank=True, default='')
+    razorpay_key_secret = models.CharField(max_length=150, blank=True, default='')
+    enable_online_payments = models.BooleanField(default=True)
+
     visits_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)

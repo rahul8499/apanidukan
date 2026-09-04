@@ -58,6 +58,12 @@ export default function StoreManager() {
   const [productImages, setProductImages] = useState<File[]>([])
   const [productPrimaryIndex, setProductPrimaryIndex] = useState<number>(0)
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [upiId, setUpiId] = useState('')
+  const [upiName, setUpiName] = useState('')
+  const [razorpayKeyId, setRazorpayKeyId] = useState('')
+  const [razorpayKeySecret, setRazorpayKeySecret] = useState('')
+  const [enableOnlinePayments, setEnableOnlinePayments] = useState(true)
+  const [isSavingPaymentSetup, setIsSavingPaymentSetup] = useState(false)
   const [productRequests, setProductRequests] = useState<any[]>([])
   const [message, setMessage] = useState('')
 
@@ -435,6 +441,11 @@ export default function StoreManager() {
         setCachedStore(found)
         setStore(found)
         setPhoneNumber(found?.phone_number || '')
+        setUpiId(found?.upi_id || '')
+        setUpiName(found?.upi_name || '')
+        setRazorpayKeyId(found?.razorpay_key_id || '')
+        setRazorpayKeySecret(found?.razorpay_key_secret || '')
+        setEnableOnlinePayments(found?.enable_online_payments ?? true)
 
         const hideKey = `qs_hide_seller_tour_${found.id}`
         const hiddenInStorage = localStorage.getItem(hideKey) === 'true'
@@ -1041,6 +1052,29 @@ export default function StoreManager() {
     } catch (error) { toast.error(errorMessage(error)) }
   }
 
+  async function savePaymentSetup(e: React.FormEvent) {
+    e.preventDefault()
+    if (!store) return
+    setIsSavingPaymentSetup(true)
+    const toastId = toast.loading('Saving payment methods setup...')
+    try {
+      const response = await api.patch(`/stores/${store.id}/`, {
+        upi_id: upiId.trim(),
+        upi_name: upiName.trim(),
+        razorpay_key_id: razorpayKeyId.trim(),
+        razorpay_key_secret: razorpayKeySecret.trim(),
+        enable_online_payments: enableOnlinePayments
+      })
+      setStore(response.data)
+      setCachedStore(response.data)
+      toast.success('💳 Online Payment Setup saved successfully! Customers can now pay via UPI/Razorpay at checkout.', { id: toastId })
+    } catch (error) {
+      toast.error(errorMessage(error), { id: toastId })
+    } finally {
+      setIsSavingPaymentSetup(false)
+    }
+  }
+
   async function toggleManageInApp(newValue: boolean) {
     if (!store) return
     try {
@@ -1226,6 +1260,118 @@ export default function StoreManager() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ONLINE PAYMENT CREDENTIALS & MERCHANT UPI SETUP CARD */}
+      <section id="payment-setup" className="rounded-xl sm:rounded-2xl border border-indigo-200 bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/20 p-3.5 sm:p-5 shadow-xs space-y-3.5">
+        <div className="flex items-center justify-between border-b border-indigo-100 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-600 text-white text-xs font-black shadow-xs">
+              💳
+            </span>
+            <div>
+              <h2 className="text-xs sm:text-sm font-black text-slate-900">Direct Merchant UPI & Online Payment Setup</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Accept 100% Direct GPay/PhonePe payments to your bank with 0% commission</p>
+            </div>
+          </div>
+          <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-700 border border-emerald-200 flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            0% Fee
+          </span>
+        </div>
+
+        <form onSubmit={savePaymentSetup} className="space-y-3">
+          {/* Main Merchant UPI Settings */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-extrabold text-slate-800 block mb-1">
+                Merchant UPI VPA / ID <span className="text-rose-500">*</span>
+              </label>
+              <input
+                value={upiId}
+                onChange={e => setUpiId(e.target.value)}
+                placeholder="e.g. 9876543210@paytm or shop@okicici"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none shadow-2xs font-mono"
+              />
+              <p className="text-[9.5px] text-slate-500 mt-1">Customers will pay directly to this UPI ID on GPay, PhonePe & Paytm</p>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-extrabold text-slate-800 block mb-1">
+                Shop / Payee Display Name
+              </label>
+              <input
+                value={upiName}
+                onChange={e => setUpiName(e.target.value)}
+                placeholder={store?.name || "e.g. Ramesh Kirana Store"}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-900 focus:border-indigo-600 focus:outline-none shadow-2xs"
+              />
+              <p className="text-[9.5px] text-slate-500 mt-1">Displayed on customer's UPI app payment confirmation screen</p>
+            </div>
+          </div>
+
+          {/* Locked Razorpay Gateway Section */}
+          <details className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs opacity-75">
+            <summary className="font-extrabold text-slate-700 cursor-pointer flex items-center justify-between text-[11px]">
+              <span className="flex items-center gap-1.5">
+                <span>⚙️ Advanced: Razorpay Gateway Integration (Cards & NetBanking)</span>
+                <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[9.5px] font-black text-slate-600 border border-slate-300">
+                  🔒 Locked / Disabled
+                </span>
+              </span>
+              <span className="text-[10px] text-slate-500 font-bold">View →</span>
+            </summary>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-200">
+              <div>
+                <label className="text-[10.5px] font-bold text-slate-500 block mb-1">Razorpay Key ID (Locked)</label>
+                <input
+                  disabled
+                  value={razorpayKeyId}
+                  onChange={e => setRazorpayKeyId(e.target.value)}
+                  placeholder="rzp_live_... (Disabled)"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-mono text-slate-400 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="text-[10.5px] font-bold text-slate-500 block mb-1">Razorpay Key Secret (Locked)</label>
+                <input
+                  disabled
+                  type="password"
+                  value={razorpayKeySecret}
+                  onChange={e => setRazorpayKeySecret(e.target.value)}
+                  placeholder="•••••••••••••••• (Disabled)"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-mono text-slate-400 cursor-not-allowed"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500 font-medium mt-2">
+              🔒 <strong>Locked:</strong> Direct 0% Commission Merchant UPI is active by default. Custom gateway keys are disabled.
+            </p>
+          </details>
+
+          {/* Toggle & Submit Button */}
+          <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={enableOnlinePayments}
+                onChange={e => setEnableOnlinePayments(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-xs font-extrabold text-slate-800">
+                Enable Online Payment Option for Customers
+              </span>
+            </label>
+
+            <button
+              type="submit"
+              disabled={isSavingPaymentSetup}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-xs font-black text-white hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            >
+              <span>{isSavingPaymentSetup ? 'Saving...' : '💾 Save Payment Settings'}</span>
+            </button>
+          </div>
+        </form>
       </section>
 
       {/* DEDICATED STANDALONE SECTION: Ultra-Premium Collapsible 1-Click Bulk & CSV Product Import */}

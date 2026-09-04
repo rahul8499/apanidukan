@@ -666,6 +666,23 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                       </p>
                     )}
 
+                    {/* Permanent UTR Payment Proof Card */}
+                    {order.utr_number && (
+                      <div className="text-[10.5px] font-medium bg-indigo-500/10 border border-indigo-500/20 p-2.5 rounded-xl text-indigo-900 dark:text-indigo-200 flex items-center justify-between font-mono">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span>💳 UTR:</span>
+                          <strong className="text-indigo-700 dark:text-indigo-300 font-extrabold truncate">{order.utr_number}</strong>
+                        </div>
+                        <span className={`text-[9.5px] font-black px-2 py-0.5 rounded text-white shrink-0 ${
+                          order.payment_verified || order.status === 'PAID'
+                            ? 'bg-emerald-600'
+                            : 'bg-amber-600'
+                        }`}>
+                          {order.payment_verified || order.status === 'PAID' ? '✓ Verified & Paid' : '⌛ Pending Verification'}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Actions Row */}
                     <div className="border-t border-current/10 pt-2.5 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">

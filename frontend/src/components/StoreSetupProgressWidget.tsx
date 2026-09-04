@@ -32,6 +32,15 @@ export default function StoreSetupProgressWidget({
       icon: '📲'
     },
     {
+      id: 'payment',
+      title: 'Payment UPI',
+      isCompleted: Boolean(store?.upi_id),
+      completedLabel: '✓ UPI Added',
+      pendingLabel: '+ Add UPI',
+      targetId: 'payment-setup',
+      icon: '💳'
+    },
+    {
       id: 'category',
       title: 'Category',
       isCompleted: hasCategory,
@@ -108,8 +117,8 @@ export default function StoreSetupProgressWidget({
         />
       </div>
 
-      {/* Ultra-Compact 4-Pill Grid (2x2 on Mobile, 4-col on Desktop) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+      {/* Ultra-Compact 5-Pill Grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
         {tasks.map((task) => (
           <div
             key={task.id}

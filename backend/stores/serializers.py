@@ -23,6 +23,7 @@ class StoreSerializer(serializers.ModelSerializer):
             'delivery_estimated_time', 'pickup_instructions',
             'enable_loyalty_cashback', 'loyalty_cashback_percent', 'loyalty_min_order_amount',
             'custom_domain', 'custom_domain_verified',
+            'upi_id', 'upi_name', 'upi_qr_code', 'razorpay_key_id', 'razorpay_key_secret', 'enable_online_payments',
             'created_at', 'updated_at', 'settings'
         )
         read_only_fields = ('owner', 'slug', 'created_at', 'updated_at')
@@ -64,7 +65,8 @@ class PublicStoreSerializer(serializers.ModelSerializer):
             'delivery_flat_fee', 'delivery_per_km_fee', 'free_delivery_above',
             'delivery_estimated_time', 'pickup_instructions',
             'enable_loyalty_cashback', 'loyalty_cashback_percent', 'loyalty_min_order_amount',
-            'custom_domain', 'custom_domain_verified', 'is_published'
+            'custom_domain', 'custom_domain_verified', 'is_published',
+            'upi_id', 'upi_name', 'upi_qr_code', 'razorpay_key_id', 'enable_online_payments'
         )
 
 

@@ -514,11 +514,38 @@ function CustomerOrderTrackingContent() {
                     <span className="font-bold text-slate-900">{order.customer_phone}</span>
                   </div>
                 )}
-                <div>
-                  <span className="text-slate-400 block text-[10px] font-semibold uppercase">Payment Preference</span>
-                  <span className="font-bold text-slate-900">
-                    {order.payment_type === 'COD' ? '💵 Cash on Delivery / At Shop' : '💳 Online Payment'}
-                  </span>
+                <div className="space-y-1">
+                  <span className="text-slate-400 block text-[10px] font-semibold uppercase">Payment Mode & Status</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[11px]">
+                      {order.payment_type === 'COD' ? '💵 Cash on Delivery / At Shop' : '💳 Direct Merchant UPI'}
+                    </span>
+                    <span className={`font-black px-2 py-0.5 rounded border text-[10.5px] ${
+                      order.payment_verified || order.status === 'PAID'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                        : order.utr_number
+                        ? 'bg-amber-50 text-amber-800 border-amber-300'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}>
+                      {order.payment_verified || order.status === 'PAID'
+                        ? '✓ Verified & Paid'
+                        : order.utr_number
+                        ? '⌛ Proof Submitted (Awaiting Seller Check)'
+                        : 'Unpaid'
+                      }
+                    </span>
+                  </div>
+                  {order.utr_number && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-indigo-50/90 border border-indigo-200 text-[11px] space-y-1">
+                      <div className="flex items-center justify-between font-mono">
+                        <span className="text-indigo-900 font-bold">💳 UPI Ref / UTR No:</span>
+                        <span className="bg-indigo-600 text-white px-2 py-0.5 rounded font-black text-xs">{order.utr_number}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium border-t border-indigo-100 pt-1">
+                        🔒 Immutable Proof Recorded: {new Date(order.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -10,6 +10,9 @@ interface ThermalReceiptModalProps {
     delivery_address?: string
     order_type?: string
     payment_type?: string
+    utr_number?: string
+    payment_verified?: boolean
+    payment_verified_at?: string
     status?: string
     total: number | string
     delivery_fee?: number | string
@@ -158,6 +161,7 @@ export default function ThermalReceiptModal({ order, store, onClose }: ThermalRe
               <span>Payment Mode:</span>
               <span style="text-transform: uppercase; font-weight: bold;">${escapeHtml(order.payment_type || 'COD')}</span>
             </div>
+            ${order.utr_number ? `<div class="row" style="font-size: 0.85em; margin-top: 2px;"><span>UPI Ref/UTR:</span><span style="font-family: monospace; font-weight: bold;">${escapeHtml(order.utr_number)}</span></div>` : ''}
           </div>
 
           <div class="dashed-line"></div>
@@ -410,6 +414,13 @@ export default function ThermalReceiptModal({ order, store, onClose }: ThermalRe
                     <span>Payment Mode:</span>
                     <span className="uppercase">{order.payment_type || 'COD'}</span>
                   </div>
+
+                  {order.utr_number && (
+                    <div className="flex justify-between text-[9px] font-mono font-bold text-indigo-900 pt-0.5">
+                      <span>UPI Ref/UTR:</span>
+                      <span>{order.utr_number}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-b border-dashed border-slate-950 my-2" />

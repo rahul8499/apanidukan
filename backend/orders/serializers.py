@@ -61,6 +61,8 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
     customer_phone = serializers.CharField(max_length=40, required=True, allow_blank=False, trim_whitespace=True)
     order_type = serializers.ChoiceField(choices=('HOME_DELIVERY', 'STORE_PICKUP'), required=False, default='HOME_DELIVERY')
     payment_type = serializers.ChoiceField(choices=('COD', 'ONLINE'), required=False, default='COD')
+    utr_number = serializers.CharField(required=False, allow_blank=True, max_length=64, default='')
+    payment_gateway_ref = serializers.CharField(required=False, allow_blank=True, max_length=128, default='')
     delivery_address = serializers.CharField(required=False, allow_blank=True, max_length=1000)
     delivery_fee = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=Decimal('0.00'))
     delivery_distance_km = serializers.DecimalField(max_digits=6, decimal_places=2, required=False, allow_null=True)
@@ -270,6 +272,10 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                 customer_name=c_name,
                 customer_phone=c_phone,
                 payment_type=validated_data.get('payment_type', 'COD'),
+                utr_number=validated_data.get('utr_number', '').strip(),
+                payment_gateway_ref=validated_data.get('payment_gateway_ref', '').strip(),
+                payment_verified=True if validated_data.get('payment_gateway_ref') else False,
+                payment_verified_at=timezone.now() if validated_data.get('payment_gateway_ref') else None,
                 delivery_address=validated_data.get('delivery_address', ''),
                 delivery_fee=server_delivery_fee,
                 delivery_distance_km=validated_data.get('delivery_distance_km'),
@@ -289,7 +295,8 @@ class WhatsAppOrderSerializer(serializers.ModelSerializer):
         model = WhatsAppOrder
         fields = (
             'id', 'reference', 'tracking_token', 'order_type', 'customer_name', 'customer_phone',
-            'payment_type', 'delivery_address', 'delivery_fee', 'delivery_distance_km',
+            'payment_type', 'utr_number', 'payment_gateway_ref', 'payment_verified', 'payment_verified_at',
+            'delivery_address', 'delivery_fee', 'delivery_distance_km',
             'location_url', 'coupon_code', 'discount_amount', 'wallet_points_redeemed',
             'wallet_cashback_earned', 'items', 'total',
             'currency', 'status', 'cancellation_reason', 'cancelled_by', 'created_at', 'updated_at'

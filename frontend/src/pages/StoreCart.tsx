@@ -52,6 +52,8 @@ function CartContent() {
   const [otpLoading, setOtpLoading] = useState(false)
   const [checkoutVerificationToken, setCheckoutVerificationToken] = useState('')
   const [customNote, setCustomNote] = useState('')
+  const [utrInput, setUtrInput] = useState('')
+  const [showOnlineQrModal, setShowOnlineQrModal] = useState(false)
   
   let cartLabels = getCartLabels(store?.business_type)
   
@@ -407,6 +409,7 @@ function CartContent() {
         customer_phone: trimmedPhone,
         checkout_verification_token: checkoutVerificationToken,
         payment_type: paymentType,
+        utr_number: utrInput.trim(),
         delivery_address: finalDeliveryAddress,
         location_url: locationUrl,
         coupon_code: appliedCodes,
@@ -799,6 +802,78 @@ function CartContent() {
                     <option value="ONLINE">💳 Online Payment (UPI / Card / NetBanking)</option>
                   </select>
                 </div>
+
+                {paymentType === 'ONLINE' && (
+                  <div className="space-y-3 rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/70 to-purple-50/50 p-3.5 shadow-2xs">
+                    <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
+                      <span className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                        <span>⚡ Direct Merchant UPI Payment</span>
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        0% Gateway Fee
+                      </span>
+                    </div>
+
+                    {store?.upi_id ? (
+                      <div className="space-y-2.5">
+                        <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                          Pay directly to <strong className="text-slate-900">{store.upi_name || store.name}</strong> (<span className="font-mono text-indigo-700 font-bold">{store.upi_id}</span>):
+                        </p>
+
+                        {/* Mobile App Deep-Link Buttons */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                          <a
+                            href={`intent://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR#Intent;scheme=upi;package=com.google.android.apps.nfc.phone;end`}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-white border border-slate-200 p-2 text-[10px] font-black text-slate-800 hover:bg-slate-50 shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <span>🔵 GPay</span>
+                          </a>
+                          <a
+                            href={`intent://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR#Intent;scheme=upi;package=com.phonepe.app;end`}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-purple-700 text-white p-2 text-[10px] font-black hover:bg-purple-800 shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <span>🟣 PhonePe</span>
+                          </a>
+                          <a
+                            href={`intent://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR#Intent;scheme=upi;package=net.one97.paytm;end`}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-sky-500 text-white p-2 text-[10px] font-black hover:bg-sky-600 shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <span>🔷 Paytm</span>
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setShowOnlineQrModal(true)}
+                            className="flex items-center justify-center gap-1 rounded-xl bg-slate-900 text-white p-2 text-[10px] font-black hover:bg-slate-800 shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <span>📲 QR / Any UPI</span>
+                          </button>
+                        </div>
+
+                        {/* UTR Entry Field */}
+                        <div className="pt-1">
+                          <label className="text-[11px] font-bold text-slate-800 block">
+                            12-Digit UPI Transaction UTR / Ref No. (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={utrInput}
+                            onChange={(e) => setUtrInput(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                            placeholder="e.g. 423456789012"
+                            className="w-full mt-1 rounded-xl border border-indigo-200 bg-white p-2.5 text-xs font-mono font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                          />
+                          <p className="text-[9.5px] text-slate-500 mt-1">
+                            Enter the 12-digit UTR from your payment receipt to attach instant proof!
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-white rounded-xl border border-indigo-100 text-[11px] text-slate-600">
+                        <p className="font-bold text-slate-800">ℹ️ Online Payment Info</p>
+                        <p className="mt-0.5">Store owner will provide their official UPI QR code / details on WhatsApp upon order submission.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {orderType === 'STORE_PICKUP' ? (
                   <div className="rounded-xl bg-amber-50/90 border border-amber-200 p-3 space-y-1 shadow-2xs">
@@ -1240,6 +1315,50 @@ function CartContent() {
           </div>
         }
       />
+      {/* ONLINE PAYMENTS DYNAMIC UPI QR MODAL */}
+      {showOnlineQrModal && store?.upi_id && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-5 text-center shadow-2xl space-y-4 border border-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                <span>📲 Scan UPI QR Code to Pay</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowOnlineQrModal(false)}
+                className="rounded-full bg-slate-100 p-1 text-slate-500 hover:bg-slate-200 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-2xl border-2 border-indigo-200 bg-white p-2 shadow-inner">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=${store.upi_id}&pn=${store.upi_name || store.name}&am=${finalTotalAmount.toFixed(2)}&cu=INR`)}`}
+                  alt="Merchant UPI QR Code"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+
+              <div className="bg-indigo-50 p-2.5 rounded-xl border border-indigo-100 space-y-0.5 text-xs">
+                <p className="font-extrabold text-indigo-950">{store.upi_name || store.name}</p>
+                <p className="font-mono text-[11px] text-indigo-700 font-bold">{store.upi_id}</p>
+                <p className="text-sm font-black text-slate-900 mt-1">Amount: ₹{finalTotalAmount.toFixed(2)}</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowOnlineQrModal(false)}
+              className="w-full rounded-2xl bg-indigo-600 py-2.5 text-xs font-black text-white hover:bg-indigo-700 shadow-md transition-all cursor-pointer"
+            >
+              Done & Return to Checkout
+            </button>
+          </div>
+        </div>
+      )}
+
       <CustomerChatWidget storeSlug={storeSlug!} />
     </div>
   )

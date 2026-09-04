@@ -816,57 +816,54 @@ function CartContent() {
                     </div>
 
                     {store?.upi_id ? (
-                      <div className="space-y-2.5">
-                        <div className="flex items-center justify-between flex-wrap gap-1 text-[11px] text-slate-600 font-medium">
-                          <span>Pay to <strong className="text-slate-900">{store.upi_name || store.name}</strong>:</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (store?.upi_id) {
-                                navigator.clipboard.writeText(store.upi_id)
-                                setCopiedUpi(true)
-                                setTimeout(() => setCopiedUpi(false), 2500)
-                              }
-                            }}
-                            className="inline-flex items-center gap-1 text-[10.5px] font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 border border-indigo-300 px-2 py-0.5 rounded-lg cursor-pointer transition-all active:scale-95"
-                          >
-                            <span>📋 {copiedUpi ? 'Copied VPA!' : 'Copy UPI ID'}</span>
-                            <span className="font-mono text-[10px] text-indigo-950 font-black">({store.upi_id})</span>
-                          </button>
-                        </div>
+                      <div className="space-y-3">
+                        <div className="bg-white p-3 rounded-2xl border border-indigo-100 shadow-2xs space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-slate-600 font-bold">Payable Merchant:</span>
+                            <span className="text-xs font-black text-indigo-950">{store.upi_name || store.name}</span>
+                          </div>
 
-                        {/* Mobile Universal Standard Deep-Link Buttons */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                          <a
-                            href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR`}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-white border border-slate-200 p-2 text-[10.5px] font-black text-slate-800 hover:bg-slate-50 shadow-2xs cursor-pointer active:scale-95 text-center"
-                          >
-                            <span>🔵 GPay / UPI</span>
-                          </a>
-                          <a
-                            href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR`}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-purple-700 text-white p-2 text-[10.5px] font-black hover:bg-purple-800 shadow-2xs cursor-pointer active:scale-95 text-center"
-                          >
-                            <span>🟣 PhonePe</span>
-                          </a>
-                          <a
-                            href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR`}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-sky-500 text-white p-2 text-[10.5px] font-black hover:bg-sky-600 shadow-2xs cursor-pointer active:scale-95 text-center"
-                          >
-                            <span>🔷 Paytm</span>
-                          </a>
+                          {/* 1-Click Copy UPI ID Button */}
+                          <div className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <div className="min-w-0 pr-2">
+                              <span className="text-[9.5px] font-extrabold text-slate-400 uppercase block leading-none">Merchant UPI ID</span>
+                              <span className="text-xs font-mono font-black text-indigo-700 truncate block mt-0.5">{store.upi_id}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (store?.upi_id) {
+                                  navigator.clipboard.writeText(store.upi_id)
+                                  setCopiedUpi(true)
+                                  setTimeout(() => setCopiedUpi(false), 2500)
+                                }
+                              }}
+                              className="shrink-0 inline-flex items-center gap-1 text-[10.5px] font-black text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg shadow-2xs cursor-pointer transition-all active:scale-95"
+                            >
+                              <span>📋 {copiedUpi ? 'Copied!' : 'Copy UPI ID'}</span>
+                            </button>
+                          </div>
+
+                          {/* Primary QR Code Button */}
                           <button
                             type="button"
                             onClick={() => setShowOnlineQrModal(true)}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-slate-900 text-white p-2 text-[10.5px] font-black hover:bg-slate-800 shadow-2xs cursor-pointer active:scale-95 text-center"
+                            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 p-2.5 text-xs font-black text-white shadow-md hover:from-slate-800 hover:to-indigo-900 transition-all cursor-pointer active:scale-95"
                           >
-                            <span>📲 QR Code</span>
+                            <span className="text-base">📲</span>
+                            <span>Open Store Payment QR Code (₹{finalTotalAmount.toFixed(2)})</span>
                           </button>
                         </div>
 
-                        <p className="text-[10px] text-amber-900 bg-amber-50 border border-amber-200 p-2 rounded-xl font-medium">
-                          💡 <strong>NPCI Note:</strong> If PhonePe shows security prompt for personal VPAs, tap <strong>"📋 Copy UPI ID"</strong> above or scan <strong>"📲 QR Code"</strong>!
-                        </p>
+                        {/* Clear 3-Step Simple Guide */}
+                        <div className="bg-amber-50/80 border border-amber-200/90 rounded-xl p-2.5 text-[10.5px] text-amber-950 space-y-1">
+                          <p className="font-extrabold text-[11px] text-amber-900">💡 100% Direct UPI Transfer Guide:</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 text-[10px] text-amber-900 font-medium">
+                            <div>1️⃣ <strong>Copy UPI ID</strong> or tap <strong>Open QR</strong></div>
+                            <div>2️⃣ Pay on <strong>GPay / PhonePe / Paytm</strong></div>
+                            <div>3️⃣ Enter <strong>12-Digit UTR #</strong> below</div>
+                          </div>
+                        </div>
 
                         {/* UTR Entry Field */}
                         <div className="pt-1">

@@ -847,19 +847,28 @@ function CartContent() {
                           {/* Direct App Deep Link Buttons */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                             <a
-                              href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR&tn=Order Payment`}
+                              href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order Payment to ${store.name}`)}&mode=02&purpose=00&tr=PAY${Date.now().toString().slice(-8)}`}
+                              onClick={() => {
+                                if (store?.upi_id) navigator.clipboard.writeText(store.upi_id)
+                              }}
                               className="flex items-center justify-center gap-1 rounded-xl bg-white border border-slate-200 p-2 text-[10.5px] font-black text-slate-800 hover:bg-slate-50 shadow-2xs cursor-pointer active:scale-95 text-center"
                             >
                               <span>🔵 GPay</span>
                             </a>
                             <a
-                              href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR&tn=Order Payment`}
+                              href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order Payment to ${store.name}`)}&mode=02&purpose=00&tr=PAY${Date.now().toString().slice(-8)}`}
+                              onClick={() => {
+                                if (store?.upi_id) navigator.clipboard.writeText(store.upi_id)
+                              }}
                               className="flex items-center justify-center gap-1 rounded-xl bg-purple-700 text-white p-2 text-[10.5px] font-black hover:bg-purple-800 shadow-2xs cursor-pointer active:scale-95 text-center"
                             >
                               <span>🟣 PhonePe</span>
                             </a>
                             <a
-                              href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR&tn=Order Payment`}
+                              href={`upi://pay?pa=${encodeURIComponent(store.upi_id)}&pn=${encodeURIComponent(store.upi_name || store.name)}&am=${finalTotalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order Payment to ${store.name}`)}&mode=02&purpose=00&tr=PAY${Date.now().toString().slice(-8)}`}
+                              onClick={() => {
+                                if (store?.upi_id) navigator.clipboard.writeText(store.upi_id)
+                              }}
                               className="flex items-center justify-center gap-1 rounded-xl bg-sky-500 text-white p-2 text-[10.5px] font-black hover:bg-sky-600 shadow-2xs cursor-pointer active:scale-95 text-center"
                             >
                               <span>🔷 Paytm</span>

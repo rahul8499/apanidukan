@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "Apani Dukan Customer",
+  "short_name": "Apani Dukan",
+  "description": "Shop from local stores with one customer app.",
+  "start_url": "/?source=customer-app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "icons": [
+    { "src": "/apanidukan1.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/apanidukan1.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,8 +1,5 @@
 /**
- * Dynamic Multi-Store PWA Manifest Controller
- * Automatically configures store-specific installation for:
- * 1. Customer Storefront (/store/:slug) -> Installs as specific Customer Shopping App
- * 2. Seller Hub (/stores/:storeId/...) -> Installs as Seller Management Hub
+ * PWA metadata controller for the shared customer app and seller app.
  */
 
 interface ManifestConfig {
@@ -107,16 +104,9 @@ export function setupCustomerStorePwa(store: { id?: string | number; name: strin
   }
   localStorage.setItem('multistore-installed-type', 'customer')
 
-  updateDynamicManifest({
-    name: `${store.name || 'Store'} - Shopping`,
-    shortName: store.name || 'Store',
-    description: `Shop online directly from ${store.name} with express delivery and COD.`,
-    startUrl: `/s/${store.slug}`,
-    themeColor: '#f8fafc',
-    backgroundColor: '#f8fafc',
-    iconUrl: store.logo || '/apanidukan1.png',
-    id: `customer-store-${store.slug}`,
-  })
+  // The customer Play Store app is shared by every store. Store identity is
+  // carried by the URL, never by the installed app manifest.
+  resetGenericPlatformPwa()
 }
 
 /**

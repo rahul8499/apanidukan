@@ -31,6 +31,7 @@ import SellerAnalytics from './pages/SellerAnalytics'
 import SellerCatalog from './pages/SellerCatalog'
 import SellerSubscription from './pages/SellerSubscription'
 import SellerCoupons from './pages/SellerCoupons'
+import DownloadApp from './pages/DownloadApp'
 
 class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
   constructor(props: any) {
@@ -157,6 +158,8 @@ function AppContent() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/downloads" element={<Downloads />} />
+          <Route path="/download" element={<DownloadApp />} />
+          <Route path="/seller" element={<Navigate to="/dashboard" replace />} />
 
           {/* Customer Store Front Routes (/store/:slug and /s/:slug) */}
           <Route path="/store/:storeSlug" element={<StoreHome />} />

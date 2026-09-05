@@ -1,0 +1,16 @@
+{
+  "id": "/seller",
+  "name": "Apani Dukan Seller",
+  "short_name": "Dukan Seller",
+  "description": "Manage your Apani Dukan store, products and orders.",
+  "start_url": "/seller",
+  "scope": "/seller",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "icons": [
+    { "src": "/apanidukan1.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/apanidukan1.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

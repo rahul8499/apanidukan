@@ -13,8 +13,17 @@ import SellerSplashLoader from '../components/SellerSplashLoader'
 export default function PwaLaunch() {
   const token = localStorage.getItem('access_token')
   const installType = localStorage.getItem('multistore-installed-type')
-  const customerStore = localStorage.getItem('multistore-installed-store')
+  const queryStore = new URLSearchParams(window.location.search).get('store')
+  const pendingStore = localStorage.getItem('pending-customer-store')
+  const customerStore = queryStore || pendingStore || localStorage.getItem('multistore-installed-store')
   const sellerStoreId = localStorage.getItem('multistore-installed-seller-id')
+
+  if (queryStore) {
+    localStorage.setItem('multistore-installed-store', queryStore)
+    localStorage.setItem('multistore-installed-type', 'customer')
+    localStorage.removeItem('pending-customer-store')
+    window.history.replaceState({}, '', '/')
+  }
 
   const isStandalone =
     window.matchMedia('(display-mode: standalone)').matches ||

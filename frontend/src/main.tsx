@@ -5,6 +5,13 @@ import './styles.css'
 import './i18n'
 import App from './App'
 
+const appRole = (import.meta as any).env?.VITE_APP_ROLE || 'customer'
+const manifestPath = appRole === 'seller'
+  ? '/manifest-seller.webmanifest'
+  : '/manifest-customer.webmanifest'
+const manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null
+if (manifestLink) manifestLink.href = manifestPath
+
 // Handle dynamic import/chunk loading failures automatically after deployment updates
 window.addEventListener('error', (e) => {
   if (

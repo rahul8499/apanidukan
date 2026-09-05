@@ -2,6 +2,7 @@ from datetime import timedelta
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.core import signing
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -179,6 +180,43 @@ class PublicCustomerOrdersListView(APIView):
         queryset = WhatsAppOrder.objects.filter(store=store).filter(filters).distinct().order_by('-created_at')[:50]
         serializer = WhatsAppOrderSerializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class PublicCustomerOrdersVerifyPhoneView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_tracking'
+
+    def post(self, request):
+        phone = normalize_phone(request.data.get('phone_number', ''))
+        access_token = str(request.data.get('access_token', '')).strip()
+        verified = verify_msg91_widget_token(access_token) if access_token else {'success': False}
+        verified_phone = normalize_phone(verified.get('data', {}).get('mobile', '')) if verified.get('success') else ''
+        if len(phone) != 10 or not verified.get('success') or (verified_phone and verified_phone != phone):
+            return Response({'detail': 'Mobile verification failed.'}, status=status.HTTP_400_BAD_REQUEST)
+        customer_token = signing.dumps({'phone': phone}, salt='customer-orders')
+        return Response({'success': True, 'customer_token': customer_token, 'expires_in_seconds': 86400})
+
+
+class PublicCustomerAllOrdersView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_tracking'
+
+    def get(self, request):
+        token = request.query_params.get('customer_token', '').strip()
+        try:
+            payload = signing.loads(token, salt='customer-orders', max_age=86400)
+            phone = normalize_phone(payload.get('phone', ''))
+        except (signing.BadSignature, signing.SignatureExpired, AttributeError, TypeError):
+            return Response({'detail': 'Customer verification expired. Please verify your mobile again.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        orders = WhatsAppOrder.objects.filter(customer_phone__icontains=phone[-10:]).select_related('store').order_by('-created_at')[:100]
+        data = []
+        for order in orders:
+            serialized = WhatsAppOrderSerializer(order).data
+            serialized['store_name'] = order.store.name
+            serialized['store_slug'] = order.store.slug
+            data.append(serialized)
+        return Response(data)
 
 
 

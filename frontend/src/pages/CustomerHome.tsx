@@ -111,7 +111,7 @@ export default function CustomerHome() {
               <h1 className="mt-1 text-2xl font-black sm:text-3xl">Shop near you</h1>
               <p className="mt-1 text-sm font-semibold text-slate-500">Nearby stores, products aur quick delivery.</p>
             </div>
-            <img src="/apanidukan1.png" alt="Apani Dukan" className="h-12 w-12 rounded-xl shadow-sm" />
+            <Link to="/customer-orders" className="rounded-xl bg-white px-3 py-2 text-xs font-black text-indigo-700 shadow-sm">My Orders</Link>
           </header>
 
           <section className="mb-5 rounded-3xl bg-slate-900 p-4 text-white shadow-lg sm:p-5">

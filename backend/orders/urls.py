@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     CreateOrderView, ListOrdersView, OrderDetailView, ListAccessesView,
-    PublicCheckoutPhoneOTPSendView, PublicCheckoutPhoneOTPVerifyView, PublicWhatsAppOrderView, PublicCustomerOrdersListView, PublicCustomerOrdersVerifyPhoneView, PublicCustomerAllOrdersView, PublicWhatsAppOrderDetailView, PublicQuickReorderView,
+    PublicCheckoutPhoneOTPSendView, PublicCheckoutPhoneOTPVerifyView, PublicWhatsAppOrderView, PublicCustomerOrdersListView, PublicCustomerOrdersVerifyPhoneView, PublicCustomerAllOrdersView, PublicCustomerNotificationsView, PublicWhatsAppOrderDetailView, PublicQuickReorderView,
     SellerWhatsAppOrdersView, PublicCustomerWalletView, PublicCustomerCancelOrderView
 )
 
@@ -16,6 +16,7 @@ urlpatterns = [
     path('public/stores/<slug:slug>/customer-orders/', PublicCustomerOrdersListView.as_view(), name='public-customer-orders-list'),
     path('public/customer-orders/verify-phone/', PublicCustomerOrdersVerifyPhoneView.as_view(), name='public-customer-orders-verify-phone'),
     path('public/customer-orders/', PublicCustomerAllOrdersView.as_view(), name='public-customer-all-orders'),
+    path('public/customer-notifications/', PublicCustomerNotificationsView.as_view(), name='public-customer-notifications'),
     path('public/stores/<slug:slug>/orders/<str:reference>/', PublicWhatsAppOrderDetailView.as_view(), name='public-whatsapp-order-detail'),
     path('public/stores/<slug:slug>/orders/<str:reference>/cancel/', PublicCustomerCancelOrderView.as_view(), name='public-customer-cancel-order'),
     path('public/stores/<slug:slug>/orders/<str:reference>/quick-reorder/', PublicQuickReorderView.as_view(), name='public-quick-reorder'),

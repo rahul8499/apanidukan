@@ -219,6 +219,37 @@ class PublicCustomerAllOrdersView(APIView):
         return Response(data)
 
 
+class PublicCustomerNotificationsView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'public_tracking'
+
+    def get(self, request):
+        token = request.query_params.get('customer_token', '').strip()
+        try:
+            payload = signing.loads(token, salt='customer-orders', max_age=86400)
+            phone = normalize_phone(payload.get('phone', ''))
+        except (signing.BadSignature, signing.SignatureExpired, AttributeError, TypeError):
+            return Response({'detail': 'Customer verification expired.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        orders = WhatsAppOrder.objects.filter(customer_phone__icontains=phone[-10:]).select_related('store').order_by('-updated_at')[:100]
+        notifications = []
+        for order in orders:
+            reference = order.reference or str(order.id)
+            status_label = str(order.status).replace('_', ' ').title()
+            event_time = order.updated_at or order.created_at
+            notifications.append({
+                'id': f'order-{order.id}-{order.status}-{event_time.timestamp():.0f}',
+                'type': 'order',
+                'title': f'{order.store.name}: Order #{reference}',
+                'body': f'₹{order.total} · {status_label}',
+                'created_at': event_time,
+                'store_name': order.store.name,
+                'store_slug': order.store.slug,
+                'link': f'/s/{order.store.slug}/order/{reference}?token={order.tracking_token}',
+            })
+        return Response(notifications)
+
+
 
 class PublicWhatsAppOrderDetailView(APIView):
     permission_classes = [permissions.AllowAny]

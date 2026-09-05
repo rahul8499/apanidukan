@@ -271,6 +271,50 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [effectiveStoreId, auth.user])
 
+  // Customer app notification feed spans every store, using the same verified
+  // customer token as the cross-store order history.
+  useEffect(() => {
+    if (isSellerRoute() || typeof window === 'undefined') return
+
+    let initialLoad = true
+    const knownNotificationIds = new Set<string>()
+    const syncCustomerNotifications = async () => {
+      const customerToken = localStorage.getItem('customer-orders-token')
+      if (!customerToken) return
+      try {
+        const response = await api.get('/public/customer-notifications/', { params: { customer_token: customerToken } })
+        const incoming = Array.isArray(response.data) ? response.data : []
+        const mapped = incoming.map((item: any) => ({
+          id: String(item.id),
+          type: 'order' as const,
+          title: item.title,
+          body: item.body,
+          time: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          read: initialLoad || knownNotificationIds.has(String(item.id)),
+          link: item.link,
+        }))
+        incoming.forEach((item: any) => knownNotificationIds.add(String(item.id)))
+        if (!initialLoad) {
+          const newItems = mapped.filter((item: AppNotification) => !item.read)
+          newItems.forEach((item: AppNotification) => {
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(reg => reg.showNotification(item.title, { body: item.body, icon: '/apanidukan1.png', data: { url: item.link || '/customer-orders' } } as any)).catch(() => {})
+              } else new Notification(item.title, { body: item.body, icon: '/apanidukan1.png' })
+            }
+            playNotificationAudio('customer')
+          })
+        }
+        setCustomerNotifications(mapped)
+        initialLoad = false
+      } catch { }
+    }
+
+    syncCustomerNotifications()
+    const interval = window.setInterval(syncCustomerNotifications, 10000)
+    return () => window.clearInterval(interval)
+  }, [])
+
 
 
   // Fast polling backup sync for instant bell icon notifications (Every 4 seconds - Seller Only)

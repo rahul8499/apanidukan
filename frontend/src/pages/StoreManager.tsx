@@ -218,11 +218,11 @@ export default function StoreManager() {
     }
   }
 
-  async function saveStoreLocation(latitude?: number, longitude?: number) {
+  async function saveStoreLocation(latitude?: number, longitude?: number, addressOverride?: string) {
     if (!store) return
     try {
       const response = await api.patch(`/stores/${store.id}/`, {
-        address: store.address || '',
+        address: addressOverride ?? store.address ?? '',
         latitude: latitude ?? store.latitude ?? null,
         longitude: longitude ?? store.longitude ?? null,
       })
@@ -240,7 +240,20 @@ export default function StoreManager() {
       return
     }
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => saveStoreLocation(Number(coords.latitude.toFixed(6)), Number(coords.longitude.toFixed(6))),
+      async ({ coords }) => {
+        const latitude = Number(coords.latitude.toFixed(6))
+        const longitude = Number(coords.longitude.toFixed(6))
+        let detectedAddress = store?.address || ''
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
+          const data = await response.json()
+          detectedAddress = data.display_name || `GPS location: ${latitude}, ${longitude}`
+        } catch {
+          detectedAddress = `GPS location: ${latitude}, ${longitude}`
+        }
+        setStore((previous: any) => ({ ...previous, address: detectedAddress, latitude, longitude }))
+        await saveStoreLocation(latitude, longitude, detectedAddress)
+      },
       () => toast.error('Location permission denied. Address manually save karein.'),
       { enableHighAccuracy: true, timeout: 10000 }
     )

@@ -218,6 +218,34 @@ export default function StoreManager() {
     }
   }
 
+  async function saveStoreLocation(latitude?: number, longitude?: number) {
+    if (!store) return
+    try {
+      const response = await api.patch(`/stores/${store.id}/`, {
+        address: store.address || '',
+        latitude: latitude ?? store.latitude ?? null,
+        longitude: longitude ?? store.longitude ?? null,
+      })
+      setStore(response.data)
+      setCachedStore(response.data)
+      toast.success('Store address and location saved.')
+    } catch (err) {
+      toast.error(errorMessage(err))
+    }
+  }
+
+  function captureStoreLocation() {
+    if (!navigator.geolocation) {
+      toast.error('Location is not supported on this device.')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => saveStoreLocation(coords.latitude, coords.longitude),
+      () => toast.error('Location permission denied. Address manually save karein.'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
   async function handleAutoCreateSampleCategories() {
     if (!store) return
     const currentBType = getBusinessType(store.business_type)
@@ -1868,6 +1896,26 @@ export default function StoreManager() {
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+      )}
+
+      {store && (
+        <section className="rounded-xl sm:rounded-2xl border border-teal-200 bg-white p-3.5 sm:p-5 shadow-xs">
+          <div className="mb-3">
+            <h2 className="text-sm font-black text-slate-900">Store address and customer location</h2>
+            <p className="mt-1 text-xs font-medium text-slate-500">Save the shop address and GPS location so customers can find this store within 10 km.</p>
+          </div>
+          <textarea
+            value={store.address || ''}
+            onChange={event => setStore((previous: any) => ({ ...previous, address: event.target.value }))}
+            placeholder="Full shop address"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium text-slate-900 outline-none focus:border-teal-400"
+          />
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => saveStoreLocation()} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white">Save address</button>
+            <button type="button" onClick={captureStoreLocation} className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-black text-white">Use current shop location</button>
+            {store.latitude && store.longitude && <span className="text-xs font-bold text-emerald-700">Location saved</span>}
           </div>
         </section>
       )}

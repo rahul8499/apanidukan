@@ -62,6 +62,8 @@ class Store(models.Model):
     description = models.TextField(blank=True)
     business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES, default='GENERAL')
     address = models.TextField(blank=True, null=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     phone_number = models.CharField(max_length=40, blank=True, null=True)
     logo = models.ImageField(upload_to='stores/logos/', null=True, blank=True)
     theme = models.JSONField(default=dict, blank=True)

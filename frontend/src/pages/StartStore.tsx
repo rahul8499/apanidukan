@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
+import { BUSINESS_TYPES, getBusinessTypeTitle } from '../utils/businessTypes'
+import i18n from '../i18n'
 
 const errorMessage = (error: any) => {
   const data = error?.response?.data
@@ -20,6 +22,11 @@ export default function StartStore() {
   // Common store fields
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [businessType, setBusinessType] = useState('GENERAL')
+  const [address, setAddress] = useState('')
+  const [latitude, setLatitude] = useState<number | null>(null)
+  const [longitude, setLongitude] = useState<number | null>(null)
+  const [locationLoading, setLocationLoading] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
 
@@ -37,6 +44,21 @@ export default function StartStore() {
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [loading, setLoading] = useState(false)
+
+  function captureStoreLocation() {
+    if (!navigator.geolocation) { setError('Location is not supported on this device.'); return }
+    setLocationLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setLatitude(coords.latitude)
+        setLongitude(coords.longitude)
+        setLocationLoading(false)
+        if (!address) setAddress(`Location: ${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`)
+      },
+      () => { setLocationLoading(false); setError('Location permission denied. Address manually enter karein.') },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
 
   useEffect(() => {
     if (countdown > 0) {
@@ -155,6 +177,10 @@ export default function StartStore() {
         last_name: lastName,
         store_name: name,
         category: description,
+        business_type: businessType,
+        address,
+        latitude,
+        longitude,
         email: email,
       })
       navigate('/dashboard')
@@ -172,7 +198,7 @@ export default function StartStore() {
     setLoading(true)
     try {
       await auth.register({ email, password, first_name: firstName, last_name: lastName })
-      const store = await api.post('/stores/', { name, description })
+      const store = await api.post('/stores/', { name, description, business_type: businessType, address, latitude, longitude })
       navigate(`/stores/${store.data.id}/manage`)
     } catch (requestError) {
       setError(errorMessage(requestError))
@@ -331,6 +357,9 @@ export default function StartStore() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Aap kya sell karte hain?</label>
+                  <select value={businessType} onChange={e => setBusinessType(e.target.value)} className="premium-input mb-3 w-full">
+                    {BUSINESS_TYPES.map(type => <option key={type.id} value={type.id}>{type.icon} {getBusinessTypeTitle(type, i18n.language)}</option>)}
+                  </select>
                   <textarea
                     value={description}
                     onChange={e => setDescription(e.target.value)}
@@ -338,6 +367,13 @@ export default function StartStore() {
                     className="premium-input min-h-20 w-full"
                   />
                 </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Store address</label>
+                    <textarea value={address} onChange={e => setAddress(e.target.value)} required placeholder="Full shop address" className="premium-input min-h-20 w-full" />
+                    <button type="button" onClick={captureStoreLocation} disabled={locationLoading} className="mt-2 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white">
+                      {locationLoading ? 'Locating...' : latitude ? 'Location captured' : 'Use current shop location'}
+                    </button>
+                  </div>
               </div>
             </section>
 
@@ -443,6 +479,13 @@ export default function StartStore() {
                   placeholder="Last name"
                   className="premium-input"
                 />
+                <select value={businessType} onChange={e => setBusinessType(e.target.value)} className="premium-input">
+                  {BUSINESS_TYPES.map(type => <option key={type.id} value={type.id}>{type.icon} {getBusinessTypeTitle(type, i18n.language)}</option>)}
+                </select>
+                <textarea value={address} onChange={e => setAddress(e.target.value)} required placeholder="Full shop address" className="premium-input min-h-20" />
+                <button type="button" onClick={captureStoreLocation} disabled={locationLoading} className="w-fit rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white">
+                  {locationLoading ? 'Locating...' : latitude ? 'Location captured' : 'Use current shop location'}
+                </button>
               </div>
               <div className="mt-3 grid gap-3">
                 <input

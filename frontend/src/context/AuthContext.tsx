@@ -24,7 +24,7 @@ type AuthContextType = {
     store?: { id: number; name: string; slug: string }
     user?: User
   }>
-  registerWithOTP: (data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; email?: string }) => Promise<User>
+  registerWithOTP: (data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string }) => Promise<User>
 }
 
 declare global {
@@ -173,7 +173,7 @@ export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
     }
   }
 
-  async function registerWithOTP(data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; email?: string }): Promise<User> {
+  async function registerWithOTP(data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string }): Promise<User> {
     const res = await api.post('/auth/otp/register-complete/', data)
     const resData = res.data
     const { access, refresh, user: userObj } = resData

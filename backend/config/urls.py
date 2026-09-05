@@ -36,8 +36,8 @@ urlpatterns = [
     path('store/<slug:slug>/', public_store_og_view),
     path('s/<slug:slug>/', public_store_og_view),
     # Public storefront API
-    path('api/v1/public/stores/<slug:slug>/', PublicStoreDetailView.as_view()),
     path('api/v1/public/stores/', PublicStoreListView.as_view()),
+    path('api/v1/public/stores/<slug:slug>/', PublicStoreDetailView.as_view()),
     path('api/v1/public/stores/<slug:slug>/categories/', PublicStoreCategoriesView.as_view()),
     path('api/v1/public/stores/<slug:slug>/products/', PublicStoreProductsView.as_view()),
     path('api/v1/public/stores/<slug:slug>/products/<slug:product_slug>/', PublicProductDetailView.as_view()),

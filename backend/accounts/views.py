@@ -415,6 +415,10 @@ class OTPRegisterCompleteView(APIView):
         last_name = request.data.get('last_name', '').strip()
         store_name = request.data.get('store_name', '').strip()
         category = request.data.get('category', '').strip()
+        business_type = request.data.get('business_type', 'GENERAL').strip().upper()
+        address = request.data.get('address', '').strip()
+        latitude = request.data.get('latitude')
+        longitude = request.data.get('longitude')
         email = request.data.get('email', '').strip().lower()
 
         clean_phone = normalize_phone(phone_number)
@@ -483,6 +487,10 @@ class OTPRegisterCompleteView(APIView):
                 owner=user,
                 name=store_name,
                 description=f"Store category: {category}" if category else "",
+                business_type=business_type if business_type else 'GENERAL',
+                address=address,
+                latitude=latitude or None,
+                longitude=longitude or None,
                 phone_number=clean_phone,
                 status=Store.STATUS_PUBLISHED,
                 is_published=True,

@@ -11,6 +11,7 @@ from products.serializers import PublicProductSerializer
 
 
 from django.db import models
+from math import asin, cos, radians, sin, sqrt
 
 from config.websocket import broadcast_order_event_sync
 
@@ -57,6 +58,38 @@ class PublicStoreListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Store.objects.filter(is_published=True).order_by('name')
+
+    def list(self, request, *args, **kwargs):
+        stores = list(self.get_queryset())
+        category = request.query_params.get('category', '').strip().upper()
+        if category:
+            stores = [store for store in stores if store.business_type == category]
+
+        try:
+            latitude = float(request.query_params['lat'])
+            longitude = float(request.query_params['lng'])
+            radius_km = min(max(float(request.query_params.get('radius_km', 10)), 1), 100)
+        except (KeyError, TypeError, ValueError):
+            latitude = longitude = None
+            radius_km = 10
+
+        serialized = self.get_serializer(stores, many=True).data
+        if latitude is None or longitude is None:
+            return Response(serialized)
+
+        nearby = []
+        for store, data in zip(stores, serialized):
+            if store.latitude is None or store.longitude is None:
+                continue
+            lat1, lon1 = radians(latitude), radians(longitude)
+            lat2, lon2 = radians(float(store.latitude)), radians(float(store.longitude))
+            delta_lat, delta_lon = lat2 - lat1, lon2 - lon1
+            distance = 6371 * 2 * asin(sqrt(sin(delta_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(delta_lon / 2) ** 2))
+            if distance <= radius_km:
+                data['distance_km'] = round(distance, 1)
+                nearby.append(data)
+        nearby.sort(key=lambda store: store['distance_km'])
+        return Response(nearby)
 
 
 class PublicStoreCategoriesView(generics.ListAPIView):

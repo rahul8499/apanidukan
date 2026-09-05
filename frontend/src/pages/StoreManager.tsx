@@ -1906,11 +1906,13 @@ export default function StoreManager() {
             <h2 className="text-sm font-black text-slate-900">Store address and customer location</h2>
             <p className="mt-1 text-xs font-medium text-slate-500">Save the shop address and GPS location so customers can find this store within 10 km.</p>
           </div>
+          <label className="mb-1.5 block text-xs font-black text-slate-700">Full shop address</label>
           <textarea
+            rows={3}
             value={store.address || ''}
             onChange={event => setStore((previous: any) => ({ ...previous, address: event.target.value }))}
-            placeholder="Full shop address"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-medium text-slate-900 outline-none focus:border-teal-400"
+            placeholder="Shop number, street, area, city, Maharashtra"
+            className="min-h-24 w-full rounded-xl border-2 border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
           />
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => saveStoreLocation()} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white">Save address</button>

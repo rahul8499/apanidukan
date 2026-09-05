@@ -51,6 +51,14 @@ class PublicStoreDetailView(generics.RetrieveAPIView):
         return store
 
 
+class PublicStoreListView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = PublicStoreSerializer
+
+    def get_queryset(self):
+        return Store.objects.filter(is_published=True).order_by('name')
+
+
 class PublicStoreCategoriesView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = CategorySerializer

@@ -110,6 +110,7 @@ export default function PwaLaunch() {
       }
       return <Navigate to="/dashboard" replace />
     }
+    return <Navigate to="/customer-home" replace />
   }
 
   // 2. Normal Web Browser Navigation:

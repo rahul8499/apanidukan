@@ -106,12 +106,11 @@ export default function CustomerHome() {
       <main className="min-h-screen bg-slate-50 px-4 py-5 text-slate-900 sm:px-6 sm:py-8">
         <div className="mx-auto max-w-6xl">
           <header className="mb-6 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">Apani Dukan</p>
-              <h1 className="mt-1 text-2xl font-black sm:text-3xl">Shop near you</h1>
-              <p className="mt-1 text-sm font-semibold text-slate-500">Nearby stores, products aur quick delivery.</p>
+            <div className="flex min-w-0 items-center gap-3">
+                <img src="/apanidukan1.png" alt="Apani Dukan" className="h-14 w-14 shrink-0 rounded-2xl object-cover shadow-sm" />
+                <div className="min-w-0"><p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">Apani Dukan</p><h1 className="mt-1 text-2xl font-black sm:text-3xl">Shop near you</h1><p className="mt-1 text-sm font-semibold text-slate-500">Nearby stores, products aur quick delivery.</p></div>
             </div>
-            <Link to="/customer-orders" className="rounded-xl bg-white px-3 py-2 text-xs font-black text-indigo-700 shadow-sm">My Orders</Link>
+            <Link to="/customer-orders" className="shrink-0 rounded-xl bg-white px-3 py-2 text-xs font-black text-indigo-700 shadow-sm">My Orders</Link>
           </header>
 
           <section className="mb-5 rounded-3xl bg-slate-900 p-4 text-white shadow-lg sm:p-5">

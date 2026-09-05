@@ -113,6 +113,7 @@ export default function SellerOrders() {
           const data = JSON.parse(event.data)
           if (data.type === 'new_order' && data.order) {
             setOrders((prev) => [data.order, ...prev.filter((o) => o.id !== data.order.id)])
+            window.dispatchEvent(new Event('qs-order-count-updated'))
           } else if (data.type === 'order_status_updated' && data.order) {
             setOrders((prev) =>
               prev.map((o) => (o.id === data.order.id ? data.order : o))

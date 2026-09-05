@@ -97,44 +97,31 @@ function executeSpeak(text: string) {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
 
     const synth = window.speechSynthesis
-    if (synth.speaking || synth.pending) {
-      synth.cancel()
-    }
-    if (synth.paused) {
-      synth.resume()
-    }
-
-    const utterance = new SpeechSynthesisUtterance(text + '.')
-    utterance.lang = 'hi-IN'
-    utterance.rate = 0.95
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
+    synth.cancel()
+    synth.resume()
 
     const speakNow = () => {
-      try {
-        const voices = synth.getVoices()
-        if (voices && voices.length > 0) {
-          const hindiVoice = voices.find(v =>
-            v.lang.toLowerCase().includes('hi') ||
-            v.lang.toLowerCase().includes('in') ||
-            v.name.toLowerCase().includes('hindi') ||
-            v.name.toLowerCase().includes('india') ||
-            v.name.toLowerCase().includes('google')
-          )
-          if (hindiVoice) {
-            utterance.voice = hindiVoice
-          }
-        }
-      } catch { }
+      const utterance = new SpeechSynthesisUtterance(text.endsWith('.') ? text : `${text}.`)
+      utterance.lang = 'hi-IN'
+      utterance.rate = 0.9
+      utterance.pitch = 1.0
+      utterance.volume = 1.0
+      const voices = synth.getVoices()
+      const hindiVoice = voices.find(v => v.lang.toLowerCase() === 'hi-in') || voices.find(v => v.lang.toLowerCase().startsWith('hi'))
+      if (hindiVoice) utterance.voice = hindiVoice
       synth.speak(utterance)
     }
 
     if (synth.getVoices().length === 0) {
-      synth.onvoiceschanged = () => {
+      const handleVoicesChanged = () => {
+        synth.removeEventListener('voiceschanged', handleVoicesChanged)
         speakNow()
-        synth.onvoiceschanged = null
       }
-      speakNow()
+      synth.addEventListener('voiceschanged', handleVoicesChanged)
+      window.setTimeout(() => {
+        synth.removeEventListener('voiceschanged', handleVoicesChanged)
+        if (!synth.speaking && !synth.pending) speakNow()
+      }, 1200)
     } else {
       speakNow()
     }
@@ -407,6 +394,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     let socket: WebSocket | null = null
     try {
       socket = new WebSocket(wsUrl)
+      socket.onopen = () => {
+        if (isSellerRoute()) window.dispatchEvent(new CustomEvent('qs-seller-ws-status', { detail: { storeId: effectiveStoreId, connected: true } }))
+      }
       socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data)
@@ -419,6 +409,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           if (data.type === 'new_order' && data.order) {
             // Seller order alerts MUST NOT go to customer
             if (!currentIsSeller) return
+
+            window.dispatchEvent(new Event('qs-order-count-updated'))
 
             knownOrderIdsRef.current.add(data.order.id)
             const orderRef = data.order.reference || data.order.order_number || data.order.id || 'NEW'
@@ -512,7 +504,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       }
     } catch { }
 
-    return () => { socket?.close() }
+    return () => {
+      if (isSellerRoute()) window.dispatchEvent(new CustomEvent('qs-seller-ws-status', { detail: { storeId: effectiveStoreId, connected: false } }))
+      socket?.close()
+    }
   }, [effectiveStoreId])
 
   useEffect(() => {

@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import NotificationBellHeader from './NotificationBellHeader'
-import { useNotifications } from '../context/NotificationContext'
+import { speakSoundboxAlert, useNotifications } from '../context/NotificationContext'
 import SellerAiAssistantModal from './SellerAiAssistantModal'
 import StoreQrStandeeModal from './StoreQrStandeeModal'
 import StorePosterModal from './StorePosterModal'
@@ -299,10 +299,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       api.patch(`/stores/${store.id}/`, { settings: { soundbox_enabled: next } }).catch(console.error)
     }
     if (next && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
-      const u = new SpeechSynthesisUtterance("QuickStore Hindi Soundbox Alert Active hai!")
-      u.lang = 'hi-IN'
-      window.speechSynthesis.speak(u)
+      speakSoundboxAlert('Apani Dukan Hindi voice soundbox active hai')
+      toast.success('Hindi voice soundbox test played')
     }
   }
 

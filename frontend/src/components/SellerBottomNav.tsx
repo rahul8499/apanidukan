@@ -11,25 +11,41 @@ interface SellerBottomNavProps {
 export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavProps) {
   const { t } = useTranslation()
   const [unreadCount, setUnreadCount] = React.useState<number>(0)
+  const [newOrderCount, setNewOrderCount] = React.useState<number>(0)
+  const [wsConnected, setWsConnected] = React.useState(false)
 
   React.useEffect(() => {
     if (!storeId) return
 
     const fetchCount = () => {
       import('../services/api').then(({ default: api }) => {
-         api.get(`/seller/stores/${storeId}/chat-count/`)
-           .then(res => setUnreadCount(res.data.unread_count || 0))
-           .catch(() => {})
+        api.get(`/seller/stores/${storeId}/chat-count/`)
+          .then(res => setUnreadCount(res.data.unread_count || 0))
+          .catch(() => {})
+        if (wsConnected || document.hidden) return
+        api.get(`/seller/stores/${storeId}/whatsapp-orders/count/`)
+          .then(res => setNewOrderCount(res.data.new_orders_count || 0))
+          .catch(() => {})
       })
     }
 
     fetchCount()
     window.addEventListener('qs-chat-count-updated', fetchCount)
+    window.addEventListener('qs-order-count-updated', fetchCount)
+    const interval = window.setInterval(fetchCount, 10000)
+    const handleWsStatus = (event: Event) => {
+      const detail = (event as CustomEvent).detail || {}
+      if (String(detail.storeId) === String(storeId)) setWsConnected(Boolean(detail.connected))
+    }
+    window.addEventListener('qs-seller-ws-status', handleWsStatus)
 
     return () => {
       window.removeEventListener('qs-chat-count-updated', fetchCount)
+      window.removeEventListener('qs-order-count-updated', fetchCount)
+      window.removeEventListener('qs-seller-ws-status', handleWsStatus)
+      window.clearInterval(interval)
     }
-  }, [storeId])
+  }, [storeId, wsConnected])
 
   const tabs = [
     {
@@ -45,6 +61,7 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
       label: t('orders'),
       icon: ShoppingBag,
       path: `/stores/${storeId}/orders`,
+      badge: 'orders',
     },
     {
       key: 'chat',
@@ -52,7 +69,7 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
       label: t('chat'),
       icon: MessageSquare,
       path: `/stores/${storeId}/chat`,
-      badge: true,
+      badge: 'chat',
     },
     {
       key: 'analytics',
@@ -105,18 +122,16 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
                 />
 
                 {/* Live Unread Badge */}
-                {tab.badge && unreadCount > 0 ? (
+                {(tab.badge === 'orders' ? newOrderCount : unreadCount) > 0 ? (
                   <span className="absolute -right-2.5 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-rose-500 text-white font-black text-[8px] px-0.5 border border-slate-950 shadow-[0_0_6px_rgba(244,63,94,0.9)] animate-pulse">
-                    {unreadCount > 99 ? '99+' : unreadCount}
+                    {(tab.badge === 'orders' ? newOrderCount : unreadCount) > 99 ? '99+' : (tab.badge === 'orders' ? newOrderCount : unreadCount)}
                   </span>
-                ) : (
-                  tab.badge && (
-                    <span className="absolute -right-1 -top-1 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-400 border border-slate-950"></span>
-                    </span>
-                  )
-                )}
+                ) : tab.badge ? (
+                  <span className="absolute -right-1 -top-1 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-400 border border-slate-950"></span>
+                  </span>
+                ) : null}
               </div>
 
               {/* Label */}

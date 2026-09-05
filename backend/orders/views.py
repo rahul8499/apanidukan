@@ -456,6 +456,12 @@ class SellerWhatsAppOrdersView(APIView):
         return Response(order_data)
 
 
+class SellerWhatsAppOrderCountView(SellerWhatsAppOrdersView):
+    def get(self, request, store_id):
+        store = self.get_store(request, store_id)
+        return Response({'new_orders_count': store.whatsapp_orders.filter(status=WhatsAppOrder.STATUS_NEW).count()})
+
+
 class PublicCustomerWalletView(APIView):
     def get(self, request, slug):
         store = get_object_or_404(Store, slug=slug, is_published=True)

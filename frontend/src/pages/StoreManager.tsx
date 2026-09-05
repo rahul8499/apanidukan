@@ -350,6 +350,7 @@ export default function StoreManager() {
         try {
           const data = JSON.parse(event.data)
           if (data.type === 'new_order' && data.order) {
+            window.dispatchEvent(new Event('qs-order-count-updated'))
             const orderRef = data.order.reference || data.order.order_number || data.order.id || 'NEW'
             const orderTotal = data.order.total || data.order.subtotal || 0
             const newNotif = {

@@ -50,10 +50,12 @@ export default function StartStore() {
     setLocationLoading(true)
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        setLatitude(coords.latitude)
-        setLongitude(coords.longitude)
+        const roundedLatitude = Number(coords.latitude.toFixed(6))
+        const roundedLongitude = Number(coords.longitude.toFixed(6))
+        setLatitude(roundedLatitude)
+        setLongitude(roundedLongitude)
         setLocationLoading(false)
-        if (!address) setAddress(`Location: ${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`)
+        if (!address) setAddress(`Location: ${roundedLatitude.toFixed(6)}, ${roundedLongitude.toFixed(6)}`)
       },
       () => { setLocationLoading(false); setError('Location permission denied. Address manually enter karein.') },
       { enableHighAccuracy: true, timeout: 10000 }

@@ -240,7 +240,7 @@ export default function StoreManager() {
       return
     }
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => saveStoreLocation(coords.latitude, coords.longitude),
+      ({ coords }) => saveStoreLocation(Number(coords.latitude.toFixed(6)), Number(coords.longitude.toFixed(6))),
       () => toast.error('Location permission denied. Address manually save karein.'),
       { enableHighAccuracy: true, timeout: 10000 }
     )

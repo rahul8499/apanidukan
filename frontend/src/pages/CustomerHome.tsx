@@ -136,9 +136,12 @@ export default function CustomerHome() {
             ))}
           </div>
 
-          <div className="relative mb-6">
-            <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search store, area or category" className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-semibold shadow-sm outline-none focus:border-indigo-400" />
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <label className="mb-2 block text-xs font-black text-slate-700">Search stores</label>
+            <div className="relative">
+              <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by store name, area or category" className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm font-semibold outline-none focus:border-indigo-400 focus:bg-white" />
+            </div>
           </div>
 
           {error && <p className="mb-4 rounded-2xl bg-rose-50 p-4 text-center text-sm font-semibold text-rose-700">{error}</p>}

@@ -6,4 +6,4 @@ RUN apt-get update && apt-get install -y build-essential libpq-dev gettext && rm
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "config.asgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn -k uvicorn.workers.UvicornWorker config.asgi:application --bind 0.0.0.0:${PORT:-8000}"]

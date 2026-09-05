@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Routes, Route, Link, useLocation } from 'react-router-dom'
+import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth, AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { resetGenericPlatformPwa } from './pwa/pwaManager'

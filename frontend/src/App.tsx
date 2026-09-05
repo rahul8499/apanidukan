@@ -94,6 +94,7 @@ function AppContent() {
     location.pathname.startsWith('/stores/') ||
     location.pathname.startsWith('/reset-password') ||
     location.pathname === '/dashboard' ||
+    location.pathname === '/customer-home' ||
     location.pathname === '/platform' ||
     location.pathname === '/admin' ||
     location.pathname === '/login' ||

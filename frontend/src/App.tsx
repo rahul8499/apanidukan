@@ -34,6 +34,7 @@ import SellerCoupons from './pages/SellerCoupons'
 import DownloadApp from './pages/DownloadApp'
 import CustomerHome from './pages/CustomerHome'
 import CustomerOrdersHome from './pages/CustomerOrdersHome'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 
 class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
   constructor(props: any) {
@@ -180,6 +181,7 @@ function AppContent() {
           <Route path="/s/:storeSlug/product/:productSlug" element={<ProductPage />} />
 
           <Route path="/" element={<PwaLaunch />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </main>
     </div>

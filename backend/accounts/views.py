@@ -280,6 +280,7 @@ class AccountDeletionRequestView(APIView):
         open_whatsapp = WhatsAppOrder.objects.filter(store__in=stores, status__in=[WhatsAppOrder.STATUS_NEW, WhatsAppOrder.STATUS_CONFIRMED, WhatsAppOrder.STATUS_PAID]).count()
         if open_orders or open_whatsapp:
             return Response({'detail': 'Resolve all pending or paid customer orders before deactivating the account.', 'orders': open_orders, 'whatsapp_orders': open_whatsapp}, status=409)
+
         now = timezone.now()
         stores.update(is_published=False, status=Store.STATUS_ARCHIVED)
         request.user.is_active = False
@@ -287,6 +288,57 @@ class AccountDeletionRequestView(APIView):
         request.user.deleted_at = now
         request.user.save(update_fields=['is_active', 'deletion_requested_at', 'deleted_at'])
         return Response({'success': True, 'message': 'Account deactivated and storefront unpublished.'})
+
+
+class PublicAccountDeletionRequestView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = 'auth'
+
+    def post(self, request):
+        identifier = (request.data.get('email') or request.data.get('phone_number') or '').strip()
+        if not identifier:
+            return Response({'detail': 'Please provide your registered email or phone number.'}, status=400)
+
+        user = None
+        if '@' in identifier and '.' in identifier:
+            user = User.objects.filter(email__iexact=identifier, is_staff=False).first()
+        else:
+            clean_phone = normalize_phone(identifier)
+            if len(clean_phone) == 10:
+                user = User.objects.filter(phone_number=clean_phone, is_staff=False).first()
+
+        if not user:
+            return Response({'success': True, 'message': 'If an account exists for this email or phone, deletion has been processed. You will receive a confirmation email if the account is active.'})
+
+        if user.deleted_at is not None:
+            return Response({'success': True, 'message': 'Your account has already been deactivated.'})
+
+        stores = Store.objects.filter(owner=user)
+        open_orders = Order.objects.filter(store__in=stores, status__in=[Order.STATUS_PENDING, Order.STATUS_PAID]).count()
+        open_whatsapp = WhatsAppOrder.objects.filter(store__in=stores, status__in=[WhatsAppOrder.STATUS_NEW, WhatsAppOrder.STATUS_CONFIRMED, WhatsAppOrder.STATUS_PAID]).count()
+        if open_orders or open_whatsapp:
+            return Response({
+                'detail': 'Cannot delete account while you have open customer orders. Please resolve all pending or paid orders first.',
+                'orders': open_orders,
+                'whatsapp_orders': open_whatsapp,
+            }, status=409)
+
+        now = timezone.now()
+        stores.update(is_published=False, status=Store.STATUS_ARCHIVED)
+        user.is_active = False
+        user.deletion_requested_at = now
+        user.deleted_at = now
+        user.save(update_fields=['is_active', 'deletion_requested_at', 'deleted_at'])
+
+        if user.email:
+            send_mail(
+                'Apani Dukan Account Deletion Request',
+                'Your seller account has been deactivated as requested. All stores have been unpublished.\n\n'
+                'If you did not request this, please contact support immediately at privacy@apanidukan.com.',
+                settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False,
+            )
+
+        return Response({'success': True, 'message': 'Your account has been deactivated. All stores have been unpublished. A confirmation email has been sent to your registered email if available.'})
 
 
 class DeletedSellerAdminView(APIView):

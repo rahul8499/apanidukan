@@ -1,4 +1,6 @@
-const CACHE_NAME = 'apanidukan-v2';
+// Bump this whenever the app shell or authentication flow changes.  Installed
+// PWAs can otherwise keep executing an old JavaScript bundle after deployment.
+const CACHE_NAME = 'apanidukan-v3';
 const APP_SHELL = ['/'];
 
 self.addEventListener('install', (event) => {
@@ -50,7 +52,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static Assets (JS, CSS, Images) -> Stale While Revalidate / Cache First
+  // 3. JavaScript and CSS must be network-first.  Serving a stale bundle here
+  // can mix an old login flow with a newly deployed backend/API configuration.
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // 4. Other static assets (images, fonts) -> stale while revalidate.
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)

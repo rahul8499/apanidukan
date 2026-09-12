@@ -1,6 +1,8 @@
 import json
 import asyncio
 import logging
+from urllib.parse import parse_qs
+from asgiref.sync import sync_to_async
 
 logger = logging.getLogger(__name__)
 
@@ -8,6 +10,29 @@ logger = logging.getLogger(__name__)
 # Topic examples: "order_<reference>", "store_<store_id>"
 _topic_subscribers = {}
 _subscriber_lock = asyncio.Lock()
+
+
+@sync_to_async
+def _can_access_seller_topic(raw_token: str, store_id: str) -> bool:
+    """Validate both the JWT and ownership before exposing seller events."""
+    try:
+        from rest_framework_simplejwt.authentication import JWTAuthentication
+        from stores.models import Store
+        auth = JWTAuthentication()
+        validated_token = auth.get_validated_token(raw_token)
+        user = auth.get_user(validated_token)
+        return bool(user.is_active and (user.is_staff or Store.objects.filter(id=store_id, owner=user).exists()))
+    except Exception:
+        return False
+
+
+@sync_to_async
+def _can_access_customer_chat(conversation_id: str, session_id: str) -> bool:
+    try:
+        from chat.models import ChatConversation
+        return bool(session_id and ChatConversation.objects.filter(id=conversation_id, session_id=session_id).exists())
+    except Exception:
+        return False
 
 
 async def add_subscriber(topic: str, send_func):
@@ -67,20 +92,32 @@ async def websocket_application(scope, receive, send):
     """
     path = scope.get('path', '')
     parts = [p for p in path.strip('/').split('/') if p]
+    query = parse_qs(scope.get('query_string', b'').decode('utf-8', errors='ignore'))
 
     # Expected path: ['ws', 'order', '<reference>'] or ['ws', 'store', '<store_id>']
     if len(parts) >= 3 and parts[0] == 'ws':
         topic_type = parts[1]
         topic_id = parts[2]
-        # Customer order updates are delivered through the token-protected
-        # HTTP tracking endpoint. Do not expose order updates on a public,
-        # reference-only WebSocket channel.
         if topic_type == 'order':
+            await send({'type': 'websocket.close', 'code': 4403})
+            return
+        if topic_type in {'store', 'store_chats'}:
+            token = query.get('token', [''])[0]
+            if not await _can_access_seller_topic(token, topic_id):
+                await send({'type': 'websocket.close', 'code': 4403})
+                return
+        elif topic_type == 'chat':
+            session_id = query.get('session_id', [''])[0]
+            if not await _can_access_customer_chat(topic_id, session_id):
+                await send({'type': 'websocket.close', 'code': 4403})
+                return
+        else:
             await send({'type': 'websocket.close', 'code': 4403})
             return
         topic = f"{topic_type}_{topic_id}"
     else:
-        topic = 'general'
+        await send({'type': 'websocket.close', 'code': 4403})
+        return
 
     await send({'type': 'websocket.accept'})
     await add_subscriber(topic, send)

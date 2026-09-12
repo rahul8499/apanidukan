@@ -89,6 +89,43 @@ class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode },
   }
 }
 
+function ProtectedRoute({ children }: { children: React.ReactElement }) {
+  const auth = useAuth()
+  const location = useLocation()
+
+  // Do not render protected pages (including any locally cached store data)
+  // until the saved token has been validated by /auth/me/.
+  if (auth.loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" aria-label="Checking session" />
+      </div>
+    )
+  }
+
+  if (!auth.user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  }
+
+  return children
+}
+
+function AdminRoute({ children }: { children: React.ReactElement }) {
+  const auth = useAuth()
+
+  if (auth.loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-700 border-t-indigo-400" aria-label="Checking administrator session" />
+      </div>
+    )
+  }
+
+  if (!auth.user) return <Navigate to="/login" replace />
+  if (!auth.user.is_staff) return <Navigate to="/dashboard" replace />
+  return children
+}
+
 function AppContent() {
   const auth = useAuth()
   const location = useLocation()
@@ -145,25 +182,25 @@ function AppContent() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/stores/create" element={<CreateStore />} />
-          <Route path="/stores/:storeId/manage" element={<StoreManager />} />
-          <Route path="/stores/:storeId/catalog" element={<SellerCatalog />} />
-          <Route path="/stores/:storeId/payments" element={<SellerPayments />} />
-          <Route path="/stores/:storeId/orders" element={<SellerOrders />} />
-          <Route path="/stores/:storeId/chat" element={<SellerChat />} />
-          <Route path="/stores/:storeId/requests" element={<SellerRequests />} />
-          <Route path="/stores/:storeId/analytics" element={<SellerAnalytics />} />
-          <Route path="/stores/:storeId/subscription" element={<SellerSubscription />} />
-          <Route path="/stores/:storeId/coupons" element={<SellerCoupons />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/stores/create" element={<ProtectedRoute><CreateStore /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/manage" element={<ProtectedRoute><StoreManager /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/catalog" element={<ProtectedRoute><SellerCatalog /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/payments" element={<ProtectedRoute><SellerPayments /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/orders" element={<ProtectedRoute><SellerOrders /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/chat" element={<ProtectedRoute><SellerChat /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/requests" element={<ProtectedRoute><SellerRequests /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/analytics" element={<ProtectedRoute><SellerAnalytics /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/subscription" element={<ProtectedRoute><SellerSubscription /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/coupons" element={<ProtectedRoute><SellerCoupons /></ProtectedRoute>} />
           <Route path="/start" element={<StartStore />} />
-          <Route path="/platform" element={<PlatformDashboard />} />
-          <Route path="/admin" element={<PlatformDashboard />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/orders/:id" element={<OrderDetail />} />
-          <Route path="/downloads" element={<Downloads />} />
+          <Route path="/platform" element={<AdminRoute><PlatformDashboard /></AdminRoute>} />
+          <Route path="/admin" element={<AdminRoute><PlatformDashboard /></AdminRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+          <Route path="/downloads" element={<ProtectedRoute><Downloads /></ProtectedRoute>} />
           <Route path="/download" element={<DownloadApp />} />
           <Route path="/seller" element={<Navigate to="/dashboard" replace />} />
           <Route path="/customer-home" element={<CustomerHome />} />

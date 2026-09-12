@@ -14,7 +14,7 @@ class PublicStoreChatView(APIView):
     throttle_scope = 'public_chat'
 
     def post(self, request, slug):
-        store = get_object_or_404(Store, slug=slug)
+        store = get_object_or_404(Store, slug=slug, is_published=True)
         session_id = request.data.get('session_id') or generate_session_id()
         cust_phone = (request.data.get('customer_phone') or '').strip()
         cust_name = (request.data.get('customer_name') or '').strip()
@@ -98,7 +98,7 @@ class PublicSendChatMessageView(APIView):
     throttle_scope = 'public_chat'
 
     def post(self, request, slug):
-        store = get_object_or_404(Store, slug=slug)
+        store = get_object_or_404(Store, slug=slug, is_published=True)
         session_id = request.data.get('session_id')
         text = request.data.get('text', '').strip()
 
@@ -292,7 +292,7 @@ class PublicProductRequestAutoReplyView(APIView):
     throttle_scope = 'public_chat'
 
     def post(self, request, slug):
-        store = get_object_or_404(Store, slug=slug)
+        store = get_object_or_404(Store, slug=slug, is_published=True)
         session_id = request.data.get('session_id')
         product_name = request.data.get('product_name', 'a product').strip()
         cust_phone = (request.data.get('customer_phone') or '').strip()

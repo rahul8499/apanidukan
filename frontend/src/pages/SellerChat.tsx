@@ -128,7 +128,9 @@ export default function SellerChat() {
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = `${window.location.hostname}:8000`
-    const wsUrl = `${protocol}//${host}/ws/store_chats/${storeId}/`
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+    const wsUrl = `${protocol}//${host}/ws/store_chats/${storeId}/?token=${encodeURIComponent(token)}`
 
     let socket: WebSocket | null = null
     try {

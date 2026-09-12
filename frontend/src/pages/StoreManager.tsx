@@ -61,7 +61,6 @@ export default function StoreManager() {
   const [upiId, setUpiId] = useState('')
   const [upiName, setUpiName] = useState('')
   const [razorpayKeyId, setRazorpayKeyId] = useState('')
-  const [razorpayKeySecret, setRazorpayKeySecret] = useState('')
   const [enableOnlinePayments, setEnableOnlinePayments] = useState(true)
   const [isSavingPaymentSetup, setIsSavingPaymentSetup] = useState(false)
   const [productRequests, setProductRequests] = useState<any[]>([])
@@ -341,7 +340,9 @@ export default function StoreManager() {
     if (!store?.id) return
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = `${window.location.hostname}:8000`
-    const wsUrl = `${protocol}//${host}/ws/store/${store.id}/`
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+    const wsUrl = `${protocol}//${host}/ws/store/${store.id}/?token=${encodeURIComponent(token)}`
 
     let socket: WebSocket | null = null
     try {
@@ -486,7 +487,6 @@ export default function StoreManager() {
         setUpiId(found?.upi_id || '')
         setUpiName(found?.upi_name || '')
         setRazorpayKeyId(found?.razorpay_key_id || '')
-        setRazorpayKeySecret(found?.razorpay_key_secret || '')
         setEnableOnlinePayments(found?.enable_online_payments ?? true)
 
         const hideKey = `qs_hide_seller_tour_${found.id}`
@@ -1104,7 +1104,6 @@ export default function StoreManager() {
         upi_id: upiId.trim(),
         upi_name: upiName.trim(),
         razorpay_key_id: razorpayKeyId.trim(),
-        razorpay_key_secret: razorpayKeySecret.trim(),
         enable_online_payments: enableOnlinePayments
       })
       setStore(response.data)
@@ -1382,8 +1381,8 @@ export default function StoreManager() {
                 <input
                   disabled
                   type="password"
-                  value={razorpayKeySecret}
-                  onChange={e => setRazorpayKeySecret(e.target.value)}
+                  value=""
+                  readOnly
                   placeholder="•••••••••••••••• (Disabled)"
                   className="w-full rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1.5 text-xs font-mono text-slate-400 cursor-not-allowed"
                 />

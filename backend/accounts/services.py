@@ -38,8 +38,8 @@ def send_msg91_otp(phone_number: str, otp_code: str) -> bool:
     widget_id = get_msg91_widget_id()
 
     if not auth_key:
-        logger.warning(f"[MSG91] No MSG91_AUTH_KEY found in environment. Logged OTP {otp_code} for {clean_phone}")
-        return True
+        logger.error("[MSG91] OTP delivery is unavailable because MSG91_AUTH_KEY is not configured.")
+        return False
 
     otp_url = "https://api.msg91.com/api/v5/otp"
     params = {
@@ -51,12 +51,10 @@ def send_msg91_otp(phone_number: str, otp_code: str) -> bool:
 
     try:
         res = requests.get(otp_url, params=params, timeout=8)
-        logger.info(f"[MSG91 WIDGET OTP] +{formatted_mobile} (Widget: {widget_id}) -> Status: {res.status_code}, Resp: {res.text}")
-        print(f"[MSG91 WIDGET OTP] Status: {res.status_code} | Widget: {widget_id} | Body: {res.text}")
+        logger.info("[MSG91] OTP delivery completed with HTTP status %s.", res.status_code)
         return res.status_code == 200
     except Exception as e:
-        logger.error(f"[MSG91 Widget OTP Error] {e}")
-        print(f"[MSG91 WIDGET OTP ERROR] {e}")
+        logger.error("[MSG91] OTP delivery failed: %s", type(e).__name__)
         return False
 
 
@@ -126,10 +124,6 @@ def create_and_send_otp(phone_number: str) -> tuple[bool, str, str]:
         expires_at=expires_at,
         is_verified=False
     )
-
-    print(f"\n=======================================================")
-    print(f"[OTP SERVICE - SecureOTPWidget9U4D] Sent OTP [{otp_code}] to Phone: +91 {clean_phone}")
-    print(f"=======================================================\n")
 
     # Send SMS/WhatsApp via MSG91 Widget API
     sent = send_msg91_otp(clean_phone, otp_code)

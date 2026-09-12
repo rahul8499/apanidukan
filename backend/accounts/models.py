@@ -67,7 +67,8 @@ class PhoneOTP(models.Model):
         return not self.is_verified and timezone.now() <= self.expires_at
 
     def __str__(self):
-        return f"OTP for {self.phone_number}: {self.otp_code} (verified={self.is_verified})"
+        masked_phone = f"******{self.phone_number[-4:]}" if self.phone_number else "unknown"
+        return f"OTP verification for {masked_phone} (verified={self.is_verified})"
 
 
 class PlatformAnnouncement(models.Model):
@@ -85,4 +86,3 @@ class PlatformAnnouncement(models.Model):
 
     def __str__(self):
         return f"Announcement ({self.level}): {self.message[:30]}"
-

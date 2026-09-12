@@ -65,11 +65,14 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'ACTIVE' | 'DELIVERED' | 'CANCELLED'>('ALL')
   
-  const [customerPhone, setCustomerPhone] = useState(() => 
+  const [customerPhone, setCustomerPhone] = useState(() =>
     localStorage.getItem(`qs_customer_phone_${storeSlug}`) || localStorage.getItem(`qs_chat_phone`) || ''
   )
-  const [isPhoneVerified, setIsPhoneVerified] = useState(() => 
-    Boolean(localStorage.getItem(`qs_customer_phone_${storeSlug}`))
+  const [customerToken, setCustomerToken] = useState(() =>
+    localStorage.getItem(`qs_customer_orders_token_${storeSlug}`) || ''
+  )
+  const [isPhoneVerified, setIsPhoneVerified] = useState(() =>
+    Boolean(localStorage.getItem(`qs_customer_orders_token_${storeSlug}`))
   )
 
   const [phoneInput, setPhoneInput] = useState(customerPhone)
@@ -89,9 +92,9 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
     document.referrer.includes('android-app://')
   )
 
-  const fetchDynamicOrders = async (phoneToQuery?: string) => {
-    const targetPhone = phoneToQuery || customerPhone
-    if (!targetPhone) {
+  const fetchDynamicOrders = async (tokenToQuery?: string) => {
+    const activeToken = tokenToQuery || customerToken
+    if (!activeToken) {
       setOrders([])
       return
     }
@@ -101,7 +104,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
       const [storeRes, prodRes, ordersRes] = await Promise.allSettled([
         api.get(`/public/stores/${storeSlug}/`),
         api.get(`/public/stores/${storeSlug}/products/`),
-        api.get(`/public/stores/${storeSlug}/customer-orders/`, { params: { phone: targetPhone } })
+        api.get('/public/customer-orders/', { params: { customer_token: activeToken } })
       ])
 
       if (storeRes.status === 'fulfilled') {
@@ -119,7 +122,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
       }
 
       if (ordersRes.status === 'fulfilled' && Array.isArray(ordersRes.value.data)) {
-        setOrders(ordersRes.value.data)
+        setOrders(ordersRes.value.data.filter((order: any) => order.store_slug === storeSlug))
       } else {
         setOrders([])
       }
@@ -131,23 +134,19 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
   }
 
   useEffect(() => {
-    if (customerPhone && isPhoneVerified) {
-      fetchDynamicOrders(customerPhone)
+    if (customerToken && isPhoneVerified) {
+      fetchDynamicOrders(customerToken)
     }
-  }, [storeSlug, customerPhone, isPhoneVerified])
+  }, [storeSlug, customerToken, isPhoneVerified])
 
   const handlePhoneSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!phoneInput.trim()) return
     const cleaned = phoneInput.trim().replace(/\D/g, '')
     setCustomerPhone(cleaned)
-    setIsPhoneVerified(true)
-    if (storeSlug) {
-      localStorage.setItem(`qs_customer_phone_${storeSlug}`, cleaned)
-      localStorage.setItem(`qs_chat_phone`, cleaned)
-    }
-    setShowPhoneSync(false)
-    fetchDynamicOrders(cleaned)
+    setIsPhoneVerified(false)
+    setOtpError('OTP verification is required before order history can be shown.')
+    handleSendOtp()
   }
 
   const handleSendOtp = async (e?: React.FormEvent) => {
@@ -184,18 +183,21 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
 
     try {
       const accessToken = await verifyMsg91WidgetOtp(otpInput.trim())
-      await api.post(`/public/stores/${storeSlug}/checkout-phone/verify-otp/`, {
+      const verification = await api.post('/public/customer-orders/verify-phone/', {
         phone_number: cleanedPhone,
         access_token: accessToken
       })
+      const signedCustomerToken = verification.data.customer_token
 
       localStorage.setItem(`qs_customer_phone_${storeSlug}`, cleanedPhone)
       localStorage.setItem(`qs_chat_phone`, cleanedPhone)
+      localStorage.setItem(`qs_customer_orders_token_${storeSlug}`, signedCustomerToken)
       setCustomerPhone(cleanedPhone)
+      setCustomerToken(signedCustomerToken)
       setIsPhoneVerified(true)
       setOtpSent(false)
       setShowPhoneSync(false)
-      fetchDynamicOrders(cleanedPhone)
+      fetchDynamicOrders(signedCustomerToken)
     } catch (err: any) {
       setOtpError(err?.response?.data?.detail || 'Invalid or expired OTP. Please try again.')
     } finally {
@@ -205,7 +207,9 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
 
   const handleLogoutPhone = () => {
     localStorage.removeItem(`qs_customer_phone_${storeSlug}`)
+    localStorage.removeItem(`qs_customer_orders_token_${storeSlug}`)
     setCustomerPhone('')
+    setCustomerToken('')
     setIsPhoneVerified(false)
     setPhoneInput('')
     setOtpInput('')

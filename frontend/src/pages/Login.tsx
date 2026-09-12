@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
@@ -21,6 +21,10 @@ export default function Login() {
 
   const auth = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const requestedPath = typeof location.state?.from === 'string' && location.state.from.startsWith('/') && !location.state.from.startsWith('//')
+    ? location.state.from
+    : '/dashboard'
 
   // Countdown timer for OTP resend
   useEffect(() => {
@@ -41,7 +45,7 @@ export default function Login() {
       if (user.is_staff) {
         navigate('/admin', { replace: true })
       } else {
-        navigate('/dashboard', { replace: true })
+        navigate(requestedPath, { replace: true })
       }
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Login failed. Please check your credentials.')
@@ -98,7 +102,7 @@ export default function Login() {
         if (user?.is_staff) {
           navigate('/admin', { replace: true })
         } else {
-          navigate('/dashboard', { replace: true })
+          navigate(requestedPath, { replace: true })
         }
       }
     } catch (err: any) {

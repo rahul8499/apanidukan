@@ -389,7 +389,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       }
     }
     
-    const wsUrl = `${wsProtocol}//${wsHost}/ws/store/${effectiveStoreId}/`
+    const token = localStorage.getItem('access_token')
+    if (!token || !isSellerRoute()) return
+    const wsUrl = `${wsProtocol}//${wsHost}/ws/store/${effectiveStoreId}/?token=${encodeURIComponent(token)}`
 
     let socket: WebSocket | null = null
     try {

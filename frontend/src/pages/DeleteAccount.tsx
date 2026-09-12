@@ -1,32 +1,53 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
-
-const getApiBase = () => {
-  const envBase = (import.meta as any).env?.VITE_API_BASE
-  if (envBase) return envBase
-  return `${window.location.protocol}//${window.location.hostname}:8000/api/v1`
-}
+import api from '../services/api'
+import { useAuth, sendMsg91WidgetOtp, verifyMsg91WidgetOtp } from '../context/AuthContext'
 
 type DeleteState = 'form' | 'processing' | 'success' | 'error' | 'open-orders'
 
 const DeleteAccount: React.FC = () => {
   const [identifier, setIdentifier] = useState('')
+  const [phone, setPhone] = useState('')
+  const [otp, setOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
   const [state, setState] = useState<DeleteState>('form')
   const [errorMsg, setErrorMsg] = useState('')
   const [openOrders, setOpenOrders] = useState<{ orders: number; whatsapp_orders: number }>({ orders: 0, whatsapp_orders: 0 })
+  const auth = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!identifier.trim()) {
-      setErrorMsg('Please enter your registered email or phone number.')
+    if (!auth.user) {
+      const cleanPhone = phone.replace(/\D/g, '').slice(-10)
+      if (cleanPhone.length !== 10) {
+        setErrorMsg('Please enter your registered 10-digit mobile number.')
+        setState('error')
+        return
+      }
+      setState('processing')
+      setErrorMsg('')
+      try {
+        await sendMsg91WidgetOtp(cleanPhone)
+        setPhone(cleanPhone)
+        setOtpSent(true)
+        setState('form')
+      } catch (err: any) {
+        setErrorMsg(err?.message || 'Could not send OTP. Please try again.')
+        setState('error')
+      }
+      return
+    }
+
+    if (identifier.trim().toUpperCase() !== 'DELETE') {
+      setErrorMsg('Please type DELETE to confirm account deactivation.')
       setState('error')
       return
     }
     setState('processing')
     setErrorMsg('')
     try {
-      await axios.post(`${getApiBase()}/auth/account/delete-request/`, { identifier })
+      await api.post('/auth/account/deactivate/', { confirmation: 'DELETE' })
+      auth.logout()
       setState('success')
     } catch (err: any) {
       if (err.response?.status === 409) {
@@ -40,6 +61,37 @@ const DeleteAccount: React.FC = () => {
         setState('error')
       } else {
         setErrorMsg(err.response?.data?.detail || 'An unexpected error occurred. Please try again.')
+        setState('error')
+      }
+    }
+  }
+
+  const handleVerifiedDeletion = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (otp.trim().length < 4) {
+      setErrorMsg('Please enter the OTP sent to your mobile number.')
+      setState('error')
+      return
+    }
+    setState('processing')
+    setErrorMsg('')
+    try {
+      const accessToken = await verifyMsg91WidgetOtp(otp.trim())
+      await api.post('/auth/account/delete-request/', {
+        phone_number: phone,
+        access_token: accessToken,
+        confirmation: 'DELETE',
+      })
+      setState('success')
+    } catch (err: any) {
+      if (err.response?.status === 409) {
+        setOpenOrders({
+          orders: err.response.data.orders || 0,
+          whatsapp_orders: err.response.data.whatsapp_orders || 0,
+        })
+        setState('open-orders')
+      } else {
+        setErrorMsg(err.response?.data?.detail || err?.message || 'Verification failed. Please request a new OTP.')
         setState('error')
       }
     }
@@ -66,21 +118,24 @@ const DeleteAccount: React.FC = () => {
                 </div>
                 <h1 className="mt-4 text-2xl font-black text-slate-900">Delete Your Account</h1>
                 <p className="mt-2 text-sm text-slate-600">
-                  Enter your registered email or phone number below to request permanent account deactivation.
+                  {auth.user
+                    ? 'Type DELETE below to confirm account deactivation.'
+                    : 'Verify your registered mobile number to securely request account deletion.'}
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={otpSent && !auth.user ? handleVerifiedDeletion : handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="identifier" className="block text-sm font-medium text-slate-700">
-                    Email or Phone Number
+                    {auth.user ? 'Confirmation' : otpSent ? 'Verification OTP' : 'Registered mobile number'}
                   </label>
                   <input
-                    type="text"
+                    type={auth.user ? 'text' : 'tel'}
                     id="identifier"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="Enter your registered email or phone number"
+                    inputMode={auth.user ? undefined : 'numeric'}
+                    value={auth.user ? identifier : otpSent ? otp : phone}
+                    onChange={(e) => auth.user ? setIdentifier(e.target.value) : otpSent ? setOtp(e.target.value) : setPhone(e.target.value)}
+                    placeholder={auth.user ? 'Type DELETE' : otpSent ? 'Enter OTP' : '10-digit mobile number'}
                     className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
                     required
                   />
@@ -90,8 +145,13 @@ const DeleteAccount: React.FC = () => {
                   disabled={false}
                   className="w-full rounded-xl bg-rose-600 py-2.5 text-sm font-black text-white hover:bg-rose-700 disabled:opacity-50"
                 >
-                  Delete My Account
+                  {auth.user ? 'Delete My Account' : otpSent ? 'Verify OTP & Delete Account' : 'Send Verification OTP'}
                 </button>
+                {!auth.user && (
+                  <p className="text-center text-xs text-slate-500">
+                    Prefer email/password? <Link to="/login" state={{ from: '/delete-account' }} className="font-bold text-indigo-600 hover:underline">Log in securely</Link>.
+                  </p>
+                )}
               </form>
 
               <div className="mt-8 border-t border-slate-200 pt-8">

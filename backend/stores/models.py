@@ -98,7 +98,6 @@ class Store(models.Model):
     upi_name = models.CharField(max_length=200, blank=True, default='')
     upi_qr_code = models.ImageField(upload_to='stores/upiqr/', null=True, blank=True)
     razorpay_key_id = models.CharField(max_length=150, blank=True, default='')
-    razorpay_key_secret = models.CharField(max_length=150, blank=True, default='')
     enable_online_payments = models.BooleanField(default=True)
 
     visits_count = models.PositiveIntegerField(default=0)

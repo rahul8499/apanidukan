@@ -77,7 +77,9 @@ export default function SellerAnalytics() {
     if (!store?.id) return
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = `${window.location.hostname}:8000`
-    const wsUrl = `${protocol}//${host}/ws/store/${store.id}/`
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+    const wsUrl = `${protocol}//${host}/ws/store/${store.id}/?token=${encodeURIComponent(token)}`
 
     let socket: WebSocket | null = null
     try {

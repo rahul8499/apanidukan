@@ -6,10 +6,9 @@ from rest_framework_simplejwt.views import (
 from .views import (
     RegisterView, CurrentUserView, PlatformDashboardView,
     PasswordResetRequestView, PasswordResetConfirmView, LogoutView,
-    SendOTPView, VerifyOTPView, OTPRegisterCompleteView, AccountDeletionRequestView, DeletedSellerAdminView, RestoreDeletedSellerView,
+    SendOTPView, VerifyOTPView, OTPRegisterCompleteView, AccountDeletionRequestView, PublicVerifiedAccountDeletionView, DeletedSellerAdminView, RestoreDeletedSellerView,
     AdminToggleStoreStatusView, AdminDeactivateStoreView, AdminStoreCustomersView,
     PublicPlatformAnnouncementView, AdminPlatformAnnouncementView, AdminExportStoresCSVView,
-    PublicAccountDeletionRequestView
 )
 
 urlpatterns = [
@@ -26,7 +25,7 @@ urlpatterns = [
     path('admin/stores/<int:store_id>/customers/', AdminStoreCustomersView.as_view(), name='admin-store-customers'),
     path('logout/', LogoutView.as_view(), name='auth-logout'),
     path('account/deactivate/', AccountDeletionRequestView.as_view(), name='account-deactivate'),
-    path('account/delete-request/', PublicAccountDeletionRequestView.as_view(), name='account-delete-request'),
+    path('account/delete-request/', PublicVerifiedAccountDeletionView.as_view(), name='account-delete-request'),
     path('admin/deleted-sellers/', DeletedSellerAdminView.as_view(), name='deleted-sellers'),
     path('admin/deleted-sellers/<int:user_id>/restore/', RestoreDeletedSellerView.as_view(), name='restore-deleted-seller'),
     path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),

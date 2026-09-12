@@ -116,7 +116,7 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = `${window.location.hostname}:8000`
-    const wsUrl = `${protocol}//${host}/ws/chat/${conversation.id}/`
+    const wsUrl = `${protocol}//${host}/ws/chat/${conversation.id}/?session_id=${encodeURIComponent(sessionId)}`
 
     let socket: WebSocket | null = null
     try {

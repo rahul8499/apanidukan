@@ -188,7 +188,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
     setDeactivateError(null)
     try {
       setIsDeactivating(true)
-      await api.post('/auth/account/deactivate/')
+      await api.post('/auth/account/deactivate/', { confirmation: 'DELETE' })
       setShowDeactivateModal(false)
       auth.logout()
       navigate('/login')

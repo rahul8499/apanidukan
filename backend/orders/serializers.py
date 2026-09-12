@@ -80,43 +80,44 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         store = self.context['store']
-        verification = CheckoutPhoneVerification.objects.filter(
-            token=validated_data.pop('checkout_verification_token'),
-            store=store,
-            customer_phone=validated_data.get('customer_phone', '').strip(),
-        ).first()
-        if not verification or not verification.is_valid():
-            raise serializers.ValidationError({'checkout_verification_token': 'Verify this phone number before placing the order.'})
+        verification_token = validated_data.pop('checkout_verification_token')
         requested = validated_data['items']
         product_ids = [item.get('id') for item in requested]
         if any(not isinstance(product_id, int) for product_id in product_ids) or len(product_ids) != len(set(product_ids)):
             raise serializers.ValidationError('Invalid cart items.')
-        products = Product.objects.filter(id__in=product_ids, store=store, is_published=True, store__is_published=True)
-        if products.count() != len(product_ids):
-            raise serializers.ValidationError('One or more cart items are no longer available.')
-        product_map = {product.id: product for product in products}
-
-        # Stock check validation before transaction
-        for item in requested:
-            quantity = item.get('quantity', 1)
-            product = product_map[item['id']]
-            if product.stock_quantity <= 0:
-                raise serializers.ValidationError(f"'{product.name}' is out of stock.")
-            if product.stock_quantity < quantity:
-                raise serializers.ValidationError(f"Only {product.stock_quantity} left for '{product.name}'.")
 
         snapshots, subtotal = [], Decimal('0.00')
         order_type = validated_data.get('order_type', 'HOME_DELIVERY')
 
         with transaction.atomic():
+            # Lock the one-time OTP proof and stock rows. This prevents two
+            # concurrent requests from reusing a token or overselling stock.
+            verification = CheckoutPhoneVerification.objects.select_for_update().filter(
+                token=verification_token,
+                store=store,
+                customer_phone=validated_data.get('customer_phone', '').strip(),
+            ).first()
+            if not verification or not verification.is_valid():
+                raise serializers.ValidationError({'checkout_verification_token': 'Verify this phone number before placing the order.'})
+
+            products = list(Product.objects.select_for_update().filter(
+                id__in=product_ids, store=store, is_published=True, store__is_published=True
+            ))
+            if len(products) != len(product_ids):
+                raise serializers.ValidationError('One or more cart items are no longer available.')
+            product_map = {product.id: product for product in products}
+
             for item in requested:
                 quantity = item.get('quantity', 1)
                 if not isinstance(quantity, int) or quantity < 1 or quantity > 50:
                     raise serializers.ValidationError('Quantity must be between 1 and 50.')
                 product = product_map[item['id']]
 
+                if product.stock_quantity < quantity:
+                    raise serializers.ValidationError(f"Only {product.stock_quantity} left for '{product.name}'.")
+
                 # Deduct stock quantity atomically
-                product.stock_quantity = max(0, product.stock_quantity - quantity)
+                product.stock_quantity -= quantity
                 product.save(update_fields=['stock_quantity'])
 
                 # Strict price calculation from database
@@ -180,6 +181,21 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                         models.Q(valid_until__isnull=True) | models.Q(valid_until__gte=timezone.now())
                     ).first()
 
+                    if not coupon:
+                        try:
+                            scratch = store.scratch_config
+                        except Exception:
+                            scratch = None
+                        if scratch and scratch.enabled and scratch.coupon_code.strip().upper() == code:
+                            coupon = Coupon(
+                                store=store,
+                                code=scratch.coupon_code.strip().upper(),
+                                discount_type='PERCENTAGE' if scratch.discount_type.lower() == 'percentage' else 'FLAT',
+                                discount_value=scratch.discount_value,
+                                min_order_amount=scratch.min_order,
+                                is_active=True,
+                            )
+
                     if coupon and subtotal >= coupon.min_order_amount:
                         if coupon.discount_type == 'PERCENTAGE':
                             disc = (subtotal * coupon.discount_value) / Decimal('100.00')
@@ -206,16 +222,12 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                             server_discount += coupon.discount_value
 
                         # Increment coupon usage count atomically
-                        Coupon.objects.filter(id=coupon.id).update(usage_count=models.F('usage_count') + 1)
+                        if coupon.pk:
+                            Coupon.objects.filter(id=coupon.id).update(usage_count=models.F('usage_count') + 1)
 
-                # Check if there was also an active client-side flash sale discount
-                client_disc = Decimal(str(validated_data.get('discount_amount', 0)))
-                if client_disc > server_discount:
-                    flash_diff = min(client_disc - server_discount, (subtotal * Decimal('0.50')))
-                    server_discount += flash_diff
-            else:
-                client_disc = Decimal(str(validated_data.get('discount_amount', 0)))
-                server_discount = min(client_disc, (subtotal * Decimal('0.50')))
+            # Never trust a client-provided discount amount. Every discount that
+            # affects the payable total must be derived from a valid server-side
+            # coupon above.
 
             # Hard clamp: discount can never exceed subtotal
             server_discount = min(server_discount, subtotal)
@@ -274,8 +286,10 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                 payment_type=validated_data.get('payment_type', 'COD'),
                 utr_number=validated_data.get('utr_number', '').strip(),
                 payment_gateway_ref=validated_data.get('payment_gateway_ref', '').strip(),
-                payment_verified=True if validated_data.get('payment_gateway_ref') else False,
-                payment_verified_at=timezone.now() if validated_data.get('payment_gateway_ref') else None,
+                # A gateway reference supplied by a browser is not proof of
+                # payment. Only a verified provider callback may change these.
+                payment_verified=False,
+                payment_verified_at=None,
                 delivery_address=validated_data.get('delivery_address', ''),
                 delivery_fee=server_delivery_fee,
                 delivery_distance_km=validated_data.get('delivery_distance_km'),
@@ -341,5 +355,3 @@ class CustomerWalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerWallet
         fields = ('customer_phone', 'customer_name', 'balance', 'total_earned', 'total_redeemed', 'updated_at')
-
-

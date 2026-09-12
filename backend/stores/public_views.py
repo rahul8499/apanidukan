@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, serializers, status
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Store, StoreReport
+from .models import Store, StoreReport, StoreScratchConfig
 from .serializers import PublicStoreSerializer
 from categories.models import Category
 from categories.serializers import CategorySerializer
@@ -228,22 +228,20 @@ class PublicValidateCouponView(generics.GenericAPIView):
         ).first()
 
         if not coupon:
-            # Auto-create/register dynamic scratch card coupon in database ONLY if explicitly scratch reward code
-            is_scratch = request.data.get('is_scratch')
-            if is_scratch:
-                scratch_val = float(request.data.get('scratch_discount_value', 50.0))
-                scratch_type = str(request.data.get('scratch_discount_type', 'FIXED')).upper()
-                scratch_min = float(request.data.get('scratch_min_order', 0.0))
-
-                coupon, _ = Coupon.objects.get_or_create(
+            # Scratch rewards come only from the seller-owned server config.
+            # Never create coupons from values supplied by an anonymous client.
+            try:
+                scratch = store.scratch_config
+            except StoreScratchConfig.DoesNotExist:
+                scratch = None
+            if scratch and scratch.enabled and scratch.coupon_code.strip().upper() == code:
+                coupon = Coupon(
                     store=store,
-                    code=code,
-                    defaults={
-                        'discount_type': scratch_type if scratch_type in ['PERCENTAGE', 'FIXED'] else 'FIXED',
-                        'discount_value': scratch_val,
-                        'min_order_amount': scratch_min,
-                        'is_active': True
-                    }
+                    code=scratch.coupon_code.strip().upper(),
+                    discount_type='PERCENTAGE' if scratch.discount_type.lower() == 'percentage' else 'FLAT',
+                    discount_value=scratch.discount_value,
+                    min_order_amount=scratch.min_order,
+                    is_active=True,
                 )
 
         if not coupon:
@@ -456,4 +454,3 @@ def public_store_og_view(request, slug):
 </body>
 </html>"""
     return HttpResponse(html, content_type="text/html")
-

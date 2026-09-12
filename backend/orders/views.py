@@ -130,7 +130,7 @@ class PublicWhatsAppOrderView(APIView):
     throttle_scope = 'public_order'
 
     def post(self, request, slug):
-        store = get_object_or_404(Store, slug=slug)
+        store = get_object_or_404(Store, slug=slug, is_published=True)
         serializer = WhatsAppOrderCreateSerializer(data=request.data, context={'store': store})
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
@@ -165,19 +165,14 @@ class PublicCustomerOrdersListView(APIView):
     def get(self, request, slug):
         store = get_object_or_404(Store, slug=slug)
         tokens = [value.strip() for value in request.query_params.get('tracking_tokens', '').split(',') if value.strip()]
-        phone = request.query_params.get('phone', '').strip()
-        cleaned_phone = ''.join(filter(str.isdigit, phone)) if phone else ''
-
-        if not tokens and not cleaned_phone:
+        if not tokens:
             return Response([])
 
-        filters = Q()
-        if tokens:
-            filters |= Q(tracking_token__in=tokens)
-        if cleaned_phone and len(cleaned_phone) >= 7:
-            filters |= Q(customer_phone__icontains=cleaned_phone[-10:])
-
-        queryset = WhatsAppOrder.objects.filter(store=store).filter(filters).distinct().order_by('-created_at')[:50]
+        # Phone numbers are identifiers, not secrets. Order history is returned
+        # only for unguessable tracking tokens issued with each order.
+        queryset = WhatsAppOrder.objects.filter(
+            store=store, tracking_token__in=tokens
+        ).distinct().order_by('-created_at')[:50]
         serializer = WhatsAppOrderSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -480,4 +475,3 @@ class PublicCustomerWalletView(APIView):
             'total_earned': str(wallet.total_earned),
             'total_redeemed': str(wallet.total_redeemed),
         })
-

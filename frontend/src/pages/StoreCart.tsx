@@ -227,20 +227,6 @@ function CartContent() {
     setValidatingCoupon(true)
 
     // Load seller-configured scratch card settings if applicable
-    let scratchVal = 50
-    let scratchType = 'FIXED'
-    let scratchMin = 0
-
-    try {
-      const scratchSaved = store?.id ? localStorage.getItem(`qs_scratch_config_${store.id}`) : null
-      if (scratchSaved) {
-        const parsed = JSON.parse(scratchSaved)
-        scratchVal = parsed.discountValue || 50
-        scratchType = parsed.discountType === 'percentage' ? 'PERCENTAGE' : 'FIXED'
-        scratchMin = parsed.minOrder || 0
-      }
-    } catch { }
-
     // Check min_order_amount locally if available in availableCoupons
     const localCoupon = (availableCoupons || []).find((c: any) => c.code?.toUpperCase() === code)
     if (localCoupon && localCoupon.min_order_amount && cart.total < Number(localCoupon.min_order_amount)) {
@@ -253,11 +239,7 @@ function CartContent() {
       const res = await api.post(`/public/stores/${storeSlug}/validate-coupon/`, {
         code,
         subtotal: cart.total,
-        items: cart.items.map(item => ({ id: item.id, quantity: item.quantity })),
-        is_scratch: scratchConfig?.enabled && scratchConfig?.couponCode?.toUpperCase() === code,
-        scratch_discount_value: scratchVal,
-        scratch_discount_type: scratchType,
-        scratch_min_order: scratchMin
+        items: cart.items.map(item => ({ id: item.id, quantity: item.quantity }))
       })
 
       if (res.data?.valid) {
@@ -277,23 +259,6 @@ function CartContent() {
       const backendError = err.response?.data?.detail || err.response?.data?.message
       if (backendError) {
         setCouponError(backendError)
-      } else if (scratchConfig?.enabled && scratchConfig?.couponCode?.toUpperCase() === code) {
-        if (cart.total < scratchMin) {
-          setCouponError(`Minimum order amount of ₹${scratchMin} required for Scratch Card reward coupon.`)
-        } else {
-          const fallbackDisc = scratchType === 'PERCENTAGE' ? (cart.total * scratchVal) / 100 : scratchVal
-          const finalDisc = Math.min(fallbackDisc, cart.total)
-          const newCoupon = {
-            valid: true,
-            code: code,
-            discount_amount: finalDisc,
-            discount_type: scratchType,
-            discount_value: scratchVal
-          }
-          setAppliedCoupons(prev => [...prev.filter(c => c.code?.toUpperCase() !== code), newCoupon])
-          setCouponSuccess(`Coupon ${code} applied! Saved ₹${finalDisc.toFixed(2)}`)
-          setCouponInput('')
-        }
       } else {
         setCouponError(`Invalid or expired coupon code ${code}.`)
       }

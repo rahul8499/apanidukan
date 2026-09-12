@@ -20,3 +20,6 @@ npm-debug.log*
 # Ollama
 .ollama-runtime/
 *.ollama
+# Python cache
+__pycache__/
+*.py[cod]

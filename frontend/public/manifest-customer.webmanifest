@@ -1,9 +1,9 @@
 {
-  "id": "/",
+  "id": "/customer-home",
   "name": "Apani Dukan Customer",
   "short_name": "Apani Dukan",
   "description": "Shop from local stores with one customer app.",
-  "start_url": "/?source=customer-app",
+  "start_url": "/customer-home?source=customer-app",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

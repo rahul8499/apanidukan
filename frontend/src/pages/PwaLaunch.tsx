@@ -27,7 +27,9 @@ export default function PwaLaunch() {
 
   const isStandalone =
     window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as any).standalone === true
+    (window.navigator as any).standalone === true ||
+    document.referrer.startsWith('android-app://') ||
+    new URLSearchParams(window.location.search).get('source') === 'customer-app'
 
   const [verifying, setVerifying] = useState<boolean>(() => {
     return Boolean(isStandalone && installType === 'customer' && customerStore)

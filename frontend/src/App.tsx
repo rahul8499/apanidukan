@@ -129,7 +129,14 @@ function AdminRoute({ children }: { children: React.ReactElement }) {
 function AppContent() {
   const auth = useAuth()
   const location = useLocation()
-  const hideHeader = location.pathname.startsWith('/store/') ||
+  const isAndroidAppLaunch = typeof document !== 'undefined' && document.referrer.startsWith('android-app://')
+  const isCustomerAppLaunch = location.pathname === '/' && (
+    isAndroidAppLaunch ||
+    window.matchMedia('(display-mode: standalone)').matches ||
+    new URLSearchParams(location.search).get('source') === 'customer-app'
+  )
+  const hideHeader = isCustomerAppLaunch ||
+    location.pathname.startsWith('/store/') ||
     location.pathname.startsWith('/s/') ||
     location.pathname.startsWith('/stores/') ||
     location.pathname.startsWith('/reset-password') ||

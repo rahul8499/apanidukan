@@ -76,17 +76,27 @@ export default function WhatsAppMarketingCrmModal({
     const storeLink = `${window.location.origin}/s/${store.slug}`
     const couponStr = selectedCoupon ? `\n🎟️ Use Coupon Code: *${selectedCoupon}*` : ''
 
+    const allowDelivery = store.allow_home_delivery !== false
+    const allowPickup = store.allow_store_pickup !== false
+    const fulfillmentText = allowDelivery && allowPickup
+      ? '⚡ Express Doorstep Delivery & Store Pickup Available.'
+      : allowDelivery
+      ? '⚡ Express Doorstep Delivery Available.'
+      : allowPickup
+      ? '🏬 Store Pickup & In-Store Shopping Available.'
+      : '💬 Direct WhatsApp Ordering & Support Available.'
+
     return [
-      `${nameStr} 🛍️ *Special Offer from ${store.name}*`,
+      `${nameStr} ✨ *Special Offer from ${store.name}*`,
       ``,
       `🎉 *${customDiscountText}* on your entire cart!`,
       `${customNote}`,
       `${couponStr}`,
       ``,
-      `🛒 Shop Online Directly Here:`,
+      `🛍️ Shop Online Directly Here:`,
       `${storeLink}`,
       ``,
-      `⏱️ Express Doorstep Delivery & COD Available.`
+      fulfillmentText
     ].join('\n')
   }
 

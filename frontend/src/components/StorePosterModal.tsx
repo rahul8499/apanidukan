@@ -36,11 +36,11 @@ export default function StorePosterModal({ store, publicUrl, onClose }: StorePos
     `📍 *${store.name}*\n` +
     `✨ ${subheading}\n` +
     `🎟️ Use Code: *${couponCode}*\n\n` +
-    `📲 *Scan or Click to Order Online:* ${publicUrl}`
+    `👉 *Scan or Click to Order Online:*\n${publicUrl}`
   )
 
   const handleShareWhatsapp = () => {
-    window.open(`https://api.whatsapp.com/send?text=${whatsappCaption}`, '_blank')
+    window.open(`https://wa.me/?text=${whatsappCaption}`, '_blank')
   }
 
   const handleCopyLink = () => {

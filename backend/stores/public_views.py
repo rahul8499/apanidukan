@@ -393,66 +393,169 @@ class PublicCustomerNotificationsView(generics.ListAPIView):
         return Response({'success': True})
 
 
+import html
 from django.http import HttpResponse, Http404
 from django.conf import settings
+
+CATEGORY_OG_METADATA = {
+    'GARMENTS': {
+        'emoji': '👗',
+        'label': 'Fashion & Clothing / फॅशन व कपडे',
+        'desc': 'नवीनतम ड्रेसेस, साड्या व ट्रेंडिंग फॅशन कलेक्शन ऑनलाइन पहा.'
+    },
+    'KIRANA': {
+        'emoji': '🛒',
+        'label': 'किराणा व सुपरमार्केट / Kirana & Grocery',
+        'desc': 'ताजा किराणा, धान्य व रोजच्या गरजेच्या वस्तू ऑनलाइन मागवा.'
+    },
+    'PHOTO_STUDIO': {
+        'emoji': '📸',
+        'label': 'फोटो स्टुडिओ व सर्व्हिसेस / Photo Studio',
+        'desc': 'फोटोशूट, अल्बम प्रिंटिंग, कस्टमाईज फ्रेम्स व डिजिटल सर्व्हिसेस.'
+    },
+    'RESTAURANT': {
+        'emoji': '🍲',
+        'label': 'हॉटेल व रेस्टॉरंट / Food & Dine',
+        'desc': 'गरमागरम स्वादिष्ट जेवण, मेन्यू व पार्सल सुविधा.'
+    },
+    'HOTEL_RESTAURANT': {
+        'emoji': '🍲',
+        'label': 'हॉटेल व रेस्टॉरंट / Food & Dine',
+        'desc': 'गरमागरम स्वादिष्ट जेवण, मेन्यू व पार्सल सुविधा.'
+    },
+    'BAKERY_SWEETS': {
+        'emoji': '🎂',
+        'label': 'बेकरी, केक्स व मिठाई / Bakery & Sweets',
+        'desc': 'ताजे केक्स, मिठाई, पेस्ट्रीज व डेअरी उत्पादने.'
+    },
+    'DAIRY_SWEETS': {
+        'emoji': '🥛',
+        'label': 'डेअरी व मिठाई / Dairy & Sweet Mart',
+        'desc': 'ताजे दूध, मिठाई व डेअरी उत्पादने ऑनलाइन उपलब्ध.'
+    },
+    'ELECTRONICS': {
+        'emoji': '📱',
+        'label': 'इलेक्ट्रॉनिक्स व मोबाईल्स / Electronics Store',
+        'desc': 'मोबाईल्स, गॅजेट्स, इलेक्ट्रॉनिक्स व ॲक्सेसरीज.'
+    },
+    'PHARMACY': {
+        'emoji': '💊',
+        'label': 'मेडिकल व फार्मसी / Medical & Pharmacy',
+        'desc': 'औषधे, हेल्थकेअर व वेलनेस उत्पादने.'
+    },
+    'HARDWARE_PLUMBING': {
+        'emoji': '🔧',
+        'label': 'हार्डवेअर व टूल्स / Hardware & Tools',
+        'desc': 'हार्डवेअर, टूल्स, प्लंबिंग व बांधकाम साहित्य.'
+    },
+    'BUILDING_MATERIAL': {
+        'emoji': '🏗️',
+        'label': 'बांधकाम साहित्य व सिमेंट / Building Materials',
+        'desc': 'सिमेंट, स्टील, प्लंबिंग व दर्जेदार बांधकाम साहित्य.'
+    },
+    'GIFT_TOYS': {
+        'emoji': '🎁',
+        'label': 'गिफ्ट शॉप व खेळणी / Gifts & Toys',
+        'desc': 'आकर्षक गिफ्ट्स, खेळणी व डेकोरेशन उत्पादने.'
+    },
+    'STATIONERY': {
+        'emoji': '📚',
+        'label': 'पुस्तके व स्टेशनरी / Books & Stationery',
+        'desc': 'पुस्तके, वह्या, शालेय व ऑफिस स्टेशनरी साहित्य.'
+    },
+    'BEAUTY_JEWELLERY': {
+        'emoji': '✨',
+        'label': 'दागिने व ब्यूटी / Jewellery & Beauty',
+        'desc': 'आकर्षक ज्वेलरी, कॉस्मेटिक्स व ब्यूटी उत्पादने.'
+    },
+}
+
+def get_store_fulfillment_badge(allow_delivery: bool, allow_pickup: bool) -> str:
+    if allow_delivery and allow_pickup:
+        return "🚚 घरपोच डिलिव्हरी (Home Delivery) व 🏬 स्टोअर पिकअप दोन्ही उपलब्ध."
+    elif allow_delivery and not allow_pickup:
+        return "🚚 थेट घरपोच डिलिव्हरी (Home Delivery) उपलब्ध."
+    elif not allow_delivery and allow_pickup:
+        return "🏬 दुकानातून पिकअप (Store Pickup) व इन-स्टोअर खरेदी उपलब्ध."
+    else:
+        return "📲 थेट WhatsApp वरून ऑर्डर व चौकशी करा."
 
 def public_store_og_view(request, slug):
     store = Store.objects.filter(models.Q(slug=slug) | models.Q(custom_domain=slug)).first()
     if not store:
         return HttpResponse("Store not found", status=404)
 
-    store_name = store.name or "Online Store"
-    store_desc = store.description or f"Order online directly from {store_name}. Fast doorstep delivery & verified quality."
-    
+    store_name = (store.name or "Online Store").strip()
+    b_type = (store.business_type or 'GENERAL').upper()
+    cat_meta = CATEGORY_OG_METADATA.get(b_type, {
+        'emoji': '🛍️',
+        'label': 'Official Online Store',
+        'desc': 'संपूर्ण प्रॉडक्ट कॅटलॉग, ऑफर्स व थेट ऑनलाइन ऑर्डर.'
+    })
+
+    allow_delivery = getattr(store, 'allow_home_delivery', True)
+    allow_pickup = getattr(store, 'allow_store_pickup', True)
+    fulfillment_badge = get_store_fulfillment_badge(allow_delivery, allow_pickup)
+
+    og_title = f"{cat_meta['emoji']} {store_name} | {cat_meta['label']}"
+    if store.description and store.description.strip():
+        og_desc = f"{store.description.strip()} • {fulfillment_badge}"
+    else:
+        og_desc = f"{cat_meta['desc']} {fulfillment_badge}"
+
     logo_url = ""
     if store.logo:
         try:
             logo_url = request.build_absolute_uri(store.logo.url)
         except Exception:
             logo_url = store.logo.url if hasattr(store.logo, 'url') else str(store.logo)
-    
-    if not logo_url:
-        frontend_base = getattr(settings, 'FRONTEND_URL', 'https://www.apanidukan.com').rstrip('/')
-        logo_url = f"{frontend_base}/apanidukan1.png"
 
     frontend_base = getattr(settings, 'FRONTEND_URL', 'https://www.apanidukan.com').rstrip('/')
-    store_url = f"{frontend_base}/store/{store.slug}"
+    if not logo_url:
+        logo_url = f"{frontend_base}/apanidukan1.png"
 
-    html = f"""<!doctype html>
+    store_url = f"{frontend_base}/s/{store.slug}"
+
+    safe_title = html.escape(og_title, quote=True)
+    safe_desc = html.escape(og_desc, quote=True)
+    safe_store_name = html.escape(store_name, quote=True)
+
+    html_content = f"""<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{store_name} - Official Online Store</title>
-    <meta name="title" content="{store_name} - Official Online Store" />
-    <meta name="description" content="{store_desc}" />
+    <title>{safe_title}</title>
+    <meta name="title" content="{safe_title}" />
+    <meta name="description" content="{safe_desc}" />
     
     <!-- Open Graph / WhatsApp Social Preview -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="{store_url}" />
-    <meta property="og:title" content="{store_name} - Official Online Store" />
-    <meta property="og:description" content="{store_desc}" />
+    <meta property="og:title" content="{safe_title}" />
+    <meta property="og:description" content="{safe_desc}" />
     <meta property="og:image" content="{logo_url}" />
-    <meta property="og:site_name" content="{store_name}" />
+    <meta property="og:site_name" content="{safe_store_name}" />
     
     <!-- Twitter Preview -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="{store_url}" />
-    <meta property="twitter:title" content="{store_name} - Official Online Store" />
-    <meta property="twitter:description" content="{store_desc}" />
+    <meta property="twitter:title" content="{safe_title}" />
+    <meta property="twitter:description" content="{safe_desc}" />
     <meta property="twitter:image" content="{logo_url}" />
 
-    <!-- Redirect Browser Visitors to React App -->
+    <!-- Instant Client-side redirect for browser users -->
     <script>
         window.location.href = "{store_url}";
     </script>
 </head>
-<body style="font-family:sans-serif;text-align:center;padding:50px;background:#f8fafc;color:#0f172a;">
-    <h1 style="font-size:24px;font-weight:900;">{store_name}</h1>
-    <p style="font-size:14px;color:#475569;">{store_desc}</p>
-    <a href="{store_url}" style="display:inline-block;margin-top:15px;padding:10px 20px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:bold;">
-        Open {store_name} Store ↗
+<body style="font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:50px 20px;background:#f8fafc;color:#0f172a;">
+    <h1 style="font-size:24px;font-weight:900;margin-bottom:8px;">{safe_store_name}</h1>
+    <p style="font-size:14px;color:#475569;max-width:500px;margin:0 auto 20px;">{safe_desc}</p>
+    <a href="{store_url}" style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:12px;font-weight:bold;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
+        Open Store ↗
     </a>
 </body>
 </html>"""
-    return HttpResponse(html, content_type="text/html")
+    return HttpResponse(html_content, content_type="text/html; charset=utf-8")
+

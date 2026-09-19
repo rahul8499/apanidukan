@@ -14,6 +14,7 @@ import SellerOnboardingGuideModal from '../components/SellerOnboardingGuideModal
 import StoreSetupProgressWidget from '../components/StoreSetupProgressWidget'
 import { useTranslation } from 'react-i18next'
 import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeCategories, getBusinessTypeProducts, getBusinessTypeCheckoutHint, getUnitDisplayLabel, getUnitHint, formatUnitDisplay, UNIT_LABEL_MAP, getStockLabel, getStockHint } from '../utils/businessTypes'
+import { getStoreShareUrl, getStoreWhatsAppShareLink } from '../utils/storeShareMessage'
 import { X, Trash2 } from 'lucide-react'
 
 const errorMessage = (error: any) =>
@@ -453,13 +454,12 @@ export default function StoreManager() {
 
   const [showQrModal, setShowQrModal] = useState(false)
 
-  const publicUrl = useMemo(() => store ? `${window.location.origin}/store/${store.slug}` : '', [store])
+  const publicUrl = useMemo(() => store ? getStoreShareUrl(store, { forceLocalUrl: true }) : '', [store])
 
   const whatsappShareUrl = useMemo(() => {
-    if (!store?.name || !publicUrl) return ''
-    const inviteMsg = `🛍️ *${store.name}*\n👇 Order karne ke liye link par click karein:\n${publicUrl}`
-    return `https://wa.me/?text=${encodeURIComponent(inviteMsg)}`
-  }, [store?.name, publicUrl])
+    if (!store?.name || !store?.slug) return ''
+    return getStoreWhatsAppShareLink(store)
+  }, [store])
 
   async function load() {
     try {

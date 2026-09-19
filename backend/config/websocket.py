@@ -35,6 +35,32 @@ def _can_access_customer_chat(conversation_id: str, session_id: str) -> bool:
         return False
 
 
+@sync_to_async
+def _can_access_order_topic(reference: str, token: str) -> bool:
+    """Validate customer tracking token or seller JWT access for an order topic."""
+    try:
+        from orders.models import WhatsAppOrder
+        order = WhatsAppOrder.objects.filter(reference=reference).select_related('store__owner').first()
+        if not order:
+            return False
+        # 1. Customer token check (tracking_token match)
+        clean_token = (token or '').strip()
+        if clean_token and str(order.tracking_token) == clean_token:
+            return True
+        # 2. Seller JWT check
+        if clean_token:
+            from rest_framework_simplejwt.authentication import JWTAuthentication
+            auth = JWTAuthentication()
+            validated_token = auth.get_validated_token(clean_token)
+            user = auth.get_user(validated_token)
+            if user.is_active and (user.is_staff or order.store.owner_id == user.id):
+                return True
+        return False
+    except Exception:
+        return False
+
+
+
 async def add_subscriber(topic: str, send_func):
     async with _subscriber_lock:
         if topic not in _topic_subscribers:
@@ -97,10 +123,11 @@ async def websocket_application(scope, receive, send):
     # Expected path: ['ws', 'order', '<reference>'] or ['ws', 'store', '<store_id>']
     if len(parts) >= 3 and parts[0] == 'ws':
         topic_type = parts[1]
-        topic_id = parts[2]
         if topic_type == 'order':
-            await send({'type': 'websocket.close', 'code': 4403})
-            return
+            token = query.get('token', [''])[0]
+            if not await _can_access_order_topic(topic_id, token):
+                await send({'type': 'websocket.close', 'code': 4403})
+                return
         if topic_type in {'store', 'store_chats'}:
             token = query.get('token', [''])[0]
             if not await _can_access_seller_topic(token, topic_id):

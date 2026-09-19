@@ -85,9 +85,8 @@ function ProductContent() {
     // Fetch Store Products for Similar Items
     api.get(`/public/stores/${storeSlug}/products/`)
       .then((res) => {
-        if (Array.isArray(res.data)) {
-          setOtherProducts(res.data)
-        }
+        const list = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+        setOtherProducts(list)
       })
       .catch(() => { })
 

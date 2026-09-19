@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
+import { getWebSocketUrl } from '../utils/websocket'
 import { StoreCartProvider } from '../context/StoreCartContext'
 import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
@@ -119,13 +120,12 @@ function CustomerOrderTrackingContent() {
     fetchOrder()
   }, [storeSlug, reference, trackingToken])
 
-  // WebSocket Live Connection + Polling Fallback
+  // WebSocket Live Connection + Adaptive Fallback
   useEffect(() => {
     if (!reference) return
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = `${window.location.hostname}:8000`
-    const wsUrl = `${protocol}//${host}/ws/order/${reference}/`
+    const tokenParam = trackingToken ? `?token=${encodeURIComponent(trackingToken)}` : ''
+    const wsUrl = getWebSocketUrl(`/ws/order/${reference}/${tokenParam}`)
 
     let socket: WebSocket | null = null
 
@@ -191,17 +191,31 @@ function CustomerOrderTrackingContent() {
       socket.onclose = () => {
         setWsConnected(false)
       }
+      socket.onerror = () => {
+        setWsConnected(false)
+      }
     } catch (e) {
-      console.warn('WS Connection failed, using polling fallback:', e)
+      console.warn('WS Connection failed, using gentle adaptive fallback:', e)
     }
 
-    const interval = setInterval(fetchOrder, 5000)
+    // Adaptive fallback: Only polls if WebSocket is disconnected AND user is on the tab
+    const interval = setInterval(() => {
+      if (!document.hidden && !wsConnected) {
+        fetchOrder()
+      }
+    }, 45000)
+
+    const handleVisibility = () => {
+      if (!document.hidden) fetchOrder()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
       if (socket) socket.close()
       clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [reference, trackingToken])
+  }, [reference, trackingToken, wsConnected])
 
   const quickReorder = async () => {
     if (!storeSlug || !reference || reordering) return

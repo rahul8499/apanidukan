@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
 import api from '../services/api'
+import { getWebSocketUrl } from '../utils/websocket'
 import { useAuth } from '../context/AuthContext'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
@@ -126,11 +127,9 @@ export default function SellerChat() {
   useEffect(() => {
     if (!storeId) return
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = `${window.location.hostname}:8000`
     const token = localStorage.getItem('access_token')
     if (!token) return
-    const wsUrl = `${protocol}//${host}/ws/store_chats/${storeId}/?token=${encodeURIComponent(token)}`
+    const wsUrl = getWebSocketUrl(`/ws/store_chats/${storeId}/?token=${encodeURIComponent(token)}`)
 
     let socket: WebSocket | null = null
     try {

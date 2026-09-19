@@ -115,7 +115,9 @@ ASGI_APPLICATION = 'config.asgi.application'
 # Database
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    DATABASES = {'default': dj_database_url.parse(DATABASE_URL)}
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=60, conn_health_checks=True)
+    }
 else:
     DATABASES = {
         'default': {
@@ -123,6 +125,7 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

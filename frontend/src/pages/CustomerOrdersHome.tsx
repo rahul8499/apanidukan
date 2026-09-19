@@ -20,7 +20,7 @@ export default function CustomerOrdersHome() {
     setLoading(true)
     try {
       const response = await api.get('/public/customer-orders/', { params: { customer_token: customerToken } })
-      setOrders(response.data)
+      setOrders(Array.isArray(response.data) ? response.data : (response.data?.results || []))
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Orders load nahi ho paaye.')
       localStorage.removeItem('customer-orders-token')

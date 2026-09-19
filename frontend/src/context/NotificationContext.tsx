@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { useAuth } from './AuthContext'
 import api from '../services/api'
+import { getWebSocketUrl } from '../utils/websocket'
 
 export interface AppNotification {
   id: string
@@ -298,8 +299,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
 
     syncCustomerNotifications()
-    const interval = window.setInterval(syncCustomerNotifications, 10000)
-    return () => window.clearInterval(interval)
+    const interval = window.setInterval(() => {
+      if (!document.hidden) syncCustomerNotifications()
+    }, 60000)
+    const handleVisibility = () => {
+      if (!document.hidden) syncCustomerNotifications()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [])
 
 
@@ -365,39 +375,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Persistent Global WebSocket connection for active store (Seller & Customer)
   useEffect(() => {
     if (!effectiveStoreId) return
-    let wsHost = window.location.host
-    let wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const envBase = (import.meta as any).env?.VITE_API_BASE
-    
-    if (envBase) {
-      try {
-        const url = new URL(envBase)
-        wsHost = url.host
-        wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
-      } catch (e) {
-        // Fallback if parsing fails
-      }
-    } else {
-      const isLocal = typeof window !== 'undefined' && (
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1' ||
-        window.location.port === '5173' ||
-        window.location.port === '3000'
-      )
-      if (isLocal) {
-        wsHost = `${window.location.hostname}:8000`
-      }
-    }
-    
+
     const token = localStorage.getItem('access_token')
     if (!token || !isSellerRoute()) return
-    const wsUrl = `${wsProtocol}//${wsHost}/ws/store/${effectiveStoreId}/?token=${encodeURIComponent(token)}`
+    const wsUrl = getWebSocketUrl(`/ws/store/${effectiveStoreId}/?token=${encodeURIComponent(token)}`)
 
     let socket: WebSocket | null = null
     try {
       socket = new WebSocket(wsUrl)
       socket.onopen = () => {
         if (isSellerRoute()) window.dispatchEvent(new CustomEvent('qs-seller-ws-status', { detail: { storeId: effectiveStoreId, connected: true } }))
+      }
+      socket.onclose = () => {
+        if (isSellerRoute()) window.dispatchEvent(new CustomEvent('qs-seller-ws-status', { detail: { storeId: effectiveStoreId, connected: false } }))
+      }
+      socket.onerror = () => {
+        if (isSellerRoute()) window.dispatchEvent(new CustomEvent('qs-seller-ws-status', { detail: { storeId: effectiveStoreId, connected: false } }))
       }
       socket.onmessage = (event) => {
         try {

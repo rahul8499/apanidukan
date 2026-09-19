@@ -7,6 +7,7 @@ import NotificationBellHeader from '../components/NotificationBellHeader'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import api from '../services/api'
+import { getWebSocketUrl } from '../utils/websocket'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
 import SellerOnboardingGuideModal from '../components/SellerOnboardingGuideModal'
@@ -338,11 +339,9 @@ export default function StoreManager() {
   // Live WebSocket Connection for Real-Time Order & Stock Push Alerts
   useEffect(() => {
     if (!store?.id) return
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = `${window.location.hostname}:8000`
     const token = localStorage.getItem('access_token')
     if (!token) return
-    const wsUrl = `${protocol}//${host}/ws/store/${store.id}/?token=${encodeURIComponent(token)}`
+    const wsUrl = getWebSocketUrl(`/ws/store/${store.id}/?token=${encodeURIComponent(token)}`)
 
     let socket: WebSocket | null = null
     try {

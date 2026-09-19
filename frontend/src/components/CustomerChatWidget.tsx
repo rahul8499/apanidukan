@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import api from '../services/api'
+import { getWebSocketUrl } from '../utils/websocket'
 import { MessageSquare, X, Send, Phone, User, Check, CheckCheck, Sparkles, ExternalLink } from 'lucide-react'
 
 interface CustomerChatWidgetProps {
@@ -114,9 +115,7 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
   useEffect(() => {
     if (!conversation?.id) return
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = `${window.location.hostname}:8000`
-    const wsUrl = `${protocol}//${host}/ws/chat/${conversation.id}/?session_id=${encodeURIComponent(sessionId)}`
+    const wsUrl = getWebSocketUrl(`/ws/chat/${conversation.id}/?session_id=${encodeURIComponent(sessionId)}`)
 
     let socket: WebSocket | null = null
     try {
@@ -167,9 +166,9 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
       console.warn('WS Connect error:', e)
     }
 
-    // Polling fallback every 4 seconds
+    // Adaptive polling fallback: Only poll if WebSocket is NOT connected
     const interval = setInterval(async () => {
-      if (!isOpen) return
+      if (!isOpen || wsConnected || document.hidden) return
       try {
         const res = await api.post(`/public/stores/${storeSlug}/chat/`, {
           session_id: sessionId,
@@ -188,7 +187,7 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
           }
         }
       } catch {}
-    }, 4000)
+    }, 30000)
 
     return () => {
       if (socket) socket.close()

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
+import { getWebSocketUrl } from '../utils/websocket'
 import { useAuth } from '../context/AuthContext'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
@@ -96,11 +97,9 @@ export default function SellerOrders() {
   useEffect(() => {
     if (!storeId) return
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = `${window.location.hostname}:8000`
     const token = localStorage.getItem('access_token')
     if (!token) return
-    const wsUrl = `${protocol}//${host}/ws/store/${storeId}/?token=${encodeURIComponent(token)}`
+    const wsUrl = getWebSocketUrl(`/ws/store/${storeId}/?token=${encodeURIComponent(token)}`)
 
     let socket: WebSocket | null = null
     try {
@@ -127,6 +126,9 @@ export default function SellerOrders() {
       }
 
       socket.onclose = () => {
+        setWsConnected(false)
+      }
+      socket.onerror = () => {
         setWsConnected(false)
       }
     } catch (e) {

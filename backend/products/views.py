@@ -18,6 +18,7 @@ import os
 from rest_framework.views import APIView
 from storage import get_storage
 from config.websocket import broadcast_order_event_sync
+from config.pagination import StandardResultsSetPagination
 
 
 class PresignedUploadView(APIView):
@@ -56,11 +57,13 @@ class IsStoreOwner(permissions.BasePermission):
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
+        qs = Product.objects.select_related('store', 'category').prefetch_related('images').order_by('-created_at')
         if self.request.user and self.request.user.is_staff:
-            return Product.objects.all()
-        return Product.objects.filter(store__owner=self.request.user)
+            return qs.all()
+        return qs.filter(store__owner=self.request.user)
 
     def perform_create(self, serializer):
         store = serializer.validated_data.get('store')

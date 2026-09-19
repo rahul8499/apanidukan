@@ -18,21 +18,23 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
     if (!storeId) return
 
     const fetchCount = () => {
+      if (document.hidden) return
       import('../services/api').then(({ default: api }) => {
-        api.get(`/seller/stores/${storeId}/chat-count/`)
-          .then(res => setUnreadCount(res.data.unread_count || 0))
-          .catch(() => {})
-        if (wsConnected || document.hidden) return
-        api.get(`/seller/stores/${storeId}/whatsapp-orders/count/`)
-          .then(res => setNewOrderCount(res.data.new_orders_count || 0))
-          .catch(() => {})
+        if (!wsConnected) {
+          api.get(`/seller/stores/${storeId}/chat-count/`)
+            .then(res => setUnreadCount(res.data.unread_count || 0))
+            .catch(() => {})
+          api.get(`/seller/stores/${storeId}/whatsapp-orders/count/`)
+            .then(res => setNewOrderCount(res.data.new_orders_count || 0))
+            .catch(() => {})
+        }
       })
     }
 
     fetchCount()
     window.addEventListener('qs-chat-count-updated', fetchCount)
     window.addEventListener('qs-order-count-updated', fetchCount)
-    const interval = window.setInterval(fetchCount, 10000)
+    const interval = window.setInterval(fetchCount, 60000)
     const handleWsStatus = (event: Event) => {
       const detail = (event as CustomEvent).detail || {}
       if (String(detail.storeId) === String(storeId)) setWsConnected(Boolean(detail.connected))

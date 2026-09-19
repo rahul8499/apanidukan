@@ -7,6 +7,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from config.websocket import broadcast_order_event_sync
+from config.pagination import StandardResultsSetPagination
 from downloads.models import DownloadToken
 from stores.models import Store
 from .models import Order, ProductAccess, WhatsAppOrder, CheckoutPhoneVerification
@@ -413,7 +414,13 @@ class SellerWhatsAppOrdersView(APIView):
 
     def get(self, request, store_id):
         store = self.get_store(request, store_id)
-        return Response(WhatsAppOrderSerializer(store.whatsapp_orders.all(), many=True).data)
+        paginator = StandardResultsSetPagination()
+        qs = store.whatsapp_orders.select_related('store').order_by('-created_at')
+        page = paginator.paginate_queryset(qs, request)
+        if page is not None:
+            serializer = WhatsAppOrderSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        return Response(WhatsAppOrderSerializer(qs, many=True).data)
 
     def patch(self, request, store_id, order_id):
         store = self.get_store(request, store_id)

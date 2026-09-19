@@ -5,6 +5,7 @@ import {
   ShieldCheck, Home, Plus, Minus, Star, MapPin, Zap, TrendingUp, Tag, Layers, Crown, Flag, ArrowLeft
 } from 'lucide-react'
 import api from '../services/api'
+import { getWebSocketUrl } from '../utils/websocket'
 import InstallAppButton from '../pwa/InstallAppButton'
 import { StoreCartProvider, useStoreCart } from '../context/StoreCartContext'
 import CustomerBottomNav from '../components/CustomerBottomNav'
@@ -189,7 +190,7 @@ function Storefront() {
         setLoading(false)
       })
 
-    api.get(`/public/stores/${storeSlug}/products/`).then(res => setProducts(res.data)).catch(() => { })
+    api.get(`/public/stores/${storeSlug}/products/`).then(res => setProducts(Array.isArray(res.data) ? res.data : (res.data?.results || []))).catch(() => { })
     api.get(`/public/stores/${storeSlug}/categories/`).then(res => setCategories(res.data)).catch(() => { })
     api.get(`/public/stores/${storeSlug}/coupons/`).then(res => setStoreCoupons(Array.isArray(res.data) ? res.data : [])).catch(() => { })
   }
@@ -330,9 +331,7 @@ function Storefront() {
   // Real-time WebSocket connection for New Product notifications
   useEffect(() => {
     if (!store?.id) return
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = `${window.location.hostname}:8000`
-    const wsUrl = `${protocol}//${host}/ws/store/${store.id}/`
+    const wsUrl = getWebSocketUrl(`/ws/store/${store.id}/`)
 
     let socket: WebSocket | null = null
     try {
@@ -342,7 +341,7 @@ function Storefront() {
           const data = JSON.parse(event.data)
           if (data.type === 'new_product_added' && data.product) {
             playCustomerChime()
-            api.get(`/public/stores/${storeSlug}/products/`).then(res => setProducts(res.data)).catch(() => { })
+            api.get(`/public/stores/${storeSlug}/products/`).then(res => setProducts(Array.isArray(res.data) ? res.data : (res.data?.results || []))).catch(() => { })
             addNotification({
               type: 'product',
               title: `🎁 New Arrival: ${data.product.name}`,

@@ -14,6 +14,7 @@ from django.db import models
 from math import asin, cos, radians, sin, sqrt
 
 from config.websocket import broadcast_order_event_sync
+from config.pagination import StandardResultsSetPagination
 
 from django.http import Http404
 
@@ -105,11 +106,12 @@ class PublicStoreCategoriesView(generics.ListAPIView):
 class PublicStoreProductsView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = PublicProductSerializer
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         slug = self.kwargs.get('slug')
         store = get_public_store_or_404(self.request, slug)
-        qs = Product.objects.filter(store=store)
+        qs = Product.objects.filter(store=store).select_related('store', 'category').prefetch_related('images')
         if not (self.request.user and self.request.user.is_authenticated and store.owner == self.request.user):
             qs = qs.filter(is_published=True)
         category = self.request.query_params.get('category')

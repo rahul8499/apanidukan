@@ -5,6 +5,7 @@ import {
   Repeat, TrendingUp, Sparkles, Phone, MessageSquare, ShoppingBag
 } from 'lucide-react'
 import api from '../services/api'
+import { getWebSocketUrl } from '../utils/websocket'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import WhatsAppMarketingCrmModal from '../components/WhatsAppMarketingCrmModal'
@@ -75,11 +76,9 @@ export default function SellerAnalytics() {
   // Real-time live analytics updates via WebSocket
   useEffect(() => {
     if (!store?.id) return
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = `${window.location.hostname}:8000`
     const token = localStorage.getItem('access_token')
     if (!token) return
-    const wsUrl = `${protocol}//${host}/ws/store/${store.id}/?token=${encodeURIComponent(token)}`
+    const wsUrl = getWebSocketUrl(`/ws/store/${store.id}/?token=${encodeURIComponent(token)}`)
 
     let socket: WebSocket | null = null
     try {

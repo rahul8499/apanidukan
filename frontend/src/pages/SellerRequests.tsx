@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
+import { getWebSocketUrl } from '../utils/websocket'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
@@ -38,11 +39,9 @@ export default function SellerRequests() {
   // Real-time WebSocket connection for live Customer Requests
   useEffect(() => {
     if (!storeId) return
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = `${window.location.hostname}:8000`
     const token = localStorage.getItem('access_token')
     if (!token) return
-    const wsUrl = `${protocol}//${host}/ws/store/${storeId}/?token=${encodeURIComponent(token)}`
+    const wsUrl = getWebSocketUrl(`/ws/store/${storeId}/?token=${encodeURIComponent(token)}`)
 
     let socket: WebSocket | null = null
     try {

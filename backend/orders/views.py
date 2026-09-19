@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from config.websocket import broadcast_order_event_sync
 from config.pagination import StandardResultsSetPagination
+from config.throttling import PhoneRateThrottle, WhitelistedScopedRateThrottle
 from downloads.models import DownloadToken
 from stores.models import Store
 from .models import Order, ProductAccess, WhatsAppOrder, CheckoutPhoneVerification
@@ -118,7 +119,8 @@ from config.websocket import broadcast_order_event_sync
 
 class PublicCheckoutPhoneOTPSendView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_scope = 'public_order'
+    throttle_classes = [WhitelistedScopedRateThrottle, PhoneRateThrottle]
+    throttle_scope = 'otp'
 
     def post(self, request, slug):
         get_object_or_404(Store, slug=slug, is_published=True)
@@ -131,7 +133,8 @@ class PublicCheckoutPhoneOTPSendView(APIView):
 
 class PublicCheckoutPhoneOTPVerifyView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_scope = 'public_order'
+    throttle_classes = [WhitelistedScopedRateThrottle]
+    throttle_scope = 'otp_verify'
 
     def post(self, request, slug):
         store = get_object_or_404(Store, slug=slug, is_published=True)

@@ -14,6 +14,7 @@ from .models import PhoneOTP, PlatformAnnouncement
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.throttling import AnonRateThrottle
+from config.throttling import PhoneRateThrottle, WhitelistedScopedRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterSerializer, UserSerializer
 from stores.models import Store
@@ -365,7 +366,8 @@ class RestoreDeletedSellerView(APIView):
 
 class SendOTPView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_scope = 'auth'
+    throttle_classes = [WhitelistedScopedRateThrottle, PhoneRateThrottle]
+    throttle_scope = 'otp'
 
     def post(self, request):
         phone_number = request.data.get('phone_number', '')
@@ -398,7 +400,8 @@ class SendOTPView(APIView):
 
 class VerifyOTPView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_scope = 'auth'
+    throttle_classes = [WhitelistedScopedRateThrottle]
+    throttle_scope = 'otp_verify'
 
     def post(self, request):
         phone_number = request.data.get('phone_number', '')

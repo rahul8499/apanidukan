@@ -184,6 +184,9 @@ if REDIS_URL:
             'LOCATION': REDIS_URL,
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'IGNORE_EXCEPTIONS': True,  # High availability: don't crash requests if Redis blinks
+                'SOCKET_CONNECT_TIMEOUT': 5,
+                'SOCKET_TIMEOUT': 5,
             }
         }
     }
@@ -219,14 +222,17 @@ REST_FRAMEWORK = {
         'config.throttling.WhitelistedScopedRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '300/hour',          # Anonymous storefront visitors (Scraping & DDoS protection)
-        'user': '3000/hour',         # Authenticated sellers & customers (High concurrency)
+        'anon': '120/minute',        # Anonymous storefront visitors (Scraping & DDoS protection)
+        'user': '600/minute',        # Authenticated sellers & customers (High concurrency: 10 req/s)
         'auth': '10/minute',         # Login/Auth endpoints (Brute-force protection)
-        'public_order': '30/hour',   # Order placement throttling
+        'otp': '5/minute',           # OTP Send endpoints (SMS spam & cost protection)
+        'otp_verify': '10/minute',   # OTP Verify endpoints (Brute-force PIN protection)
+        'otp_phone': '3/minute',     # Per-phone number limit for OTP (Distributed botnet SMS protection)
+        'public_order': '15/minute', # Public checkout order placement
         'ai_assistant': '30/hour',   # AI assistant request quota
         'webhook': '120/minute',     # Payment Webhooks (Razorpay callback limit)
-        'public_chat': '60/hour',
-        'public_tracking': '60/hour',
+        'public_chat': '60/minute',  # Public store chat
+        'public_tracking': '60/minute', # Public order tracking
         'download': '60/hour',
         'public_report': '5/day'
     },

@@ -17,8 +17,15 @@ from stores.public_views import (
     PublicCustomerNotificationsView,
     public_store_og_view
 )
+from config.health import health_check_view
 
 urlpatterns = [
+    # Health checks for Render, Kubernetes, and uptime monitoring
+    path('healthz/', health_check_view, name='healthz'),
+    path('healthz', health_check_view),
+    path('health/', health_check_view, name='health'),
+    path('health', health_check_view),
+    path('api/v1/healthz/', health_check_view),
     # Private purchased files must only be served through the download-token endpoint.
     re_path(r'^media/products/files/private/.*$', lambda request: (_ for _ in ()).throw(Http404())),
     path('admin/', admin.site.urls),

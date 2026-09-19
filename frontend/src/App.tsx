@@ -34,6 +34,8 @@ import SellerCoupons from './pages/SellerCoupons'
 import DownloadApp from './pages/DownloadApp'
 import CustomerHome from './pages/CustomerHome'
 import CustomerOrdersHome from './pages/CustomerOrdersHome'
+import CustomerAccount from './pages/CustomerAccount'
+import CustomerStores from './pages/CustomerStores'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import DeleteAccount from './pages/DeleteAccount'
 
@@ -143,6 +145,8 @@ function AppContent() {
     location.pathname === '/dashboard' ||
     location.pathname === '/customer-home' ||
     location.pathname === '/customer-orders' ||
+    location.pathname === '/customer-account' ||
+    location.pathname === '/customer-stores' ||
     location.pathname === '/platform' ||
     location.pathname === '/admin' ||
     location.pathname === '/login' ||
@@ -155,6 +159,11 @@ function AppContent() {
     if (!isCustomerOrSellerStore) {
       resetGenericPlatformPwa()
     }
+  }, [location.pathname])
+
+  useEffect(() => {
+    const isCustomerTab = ['/customer-home', '/customer-stores', '/customer-orders', '/customer-account'].includes(location.pathname)
+    if (isCustomerTab) window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [location.pathname])
 
   return (
@@ -212,6 +221,8 @@ function AppContent() {
           <Route path="/seller" element={<Navigate to="/dashboard" replace />} />
           <Route path="/customer-home" element={<CustomerHome />} />
           <Route path="/customer-orders" element={<CustomerOrdersHome />} />
+          <Route path="/customer-account" element={<CustomerAccount />} />
+          <Route path="/customer-stores" element={<CustomerStores />} />
 
           {/* Customer Store Front Routes (/store/:slug and /s/:slug) */}
           <Route path="/store/:storeSlug" element={<StoreHome />} />

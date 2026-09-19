@@ -2,16 +2,22 @@ import React from 'react'
 
 interface SellerSplashLoaderProps {
   label?: string
+  variant?: 'seller' | 'customer'
 }
 
-export default function SellerSplashLoader({ label = 'Opening Seller Workspace...' }: SellerSplashLoaderProps) {
+export default function SellerSplashLoader({
+  label = 'Opening Seller Workspace...',
+  variant = 'seller',
+}: SellerSplashLoaderProps) {
+  const isCustomer = variant === 'customer'
+
   return (
     <div className="min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-900 animate-in fade-in duration-300">
       <div className="flex flex-col items-center gap-5 text-center">
         {/* Large Rounded Logo Container — Premium Android PWA Splash */}
         <div className="relative flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center rounded-3xl bg-white p-3 shadow-xl border border-slate-200/80 transform transition-transform hover:scale-105">
           <img
-            src="/apanidukan1.png"
+            src={isCustomer ? '/customer-icon-512.png' : '/apanidukan1.png'}
             alt="Apani Dukan"
             className="h-full w-full object-contain drop-shadow-sm"
           />

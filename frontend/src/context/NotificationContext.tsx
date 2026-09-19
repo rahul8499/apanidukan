@@ -286,8 +286,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           newItems.forEach((item: AppNotification) => {
             if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
               if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.ready.then(reg => reg.showNotification(item.title, { body: item.body, icon: '/apanidukan1.png', data: { url: item.link || '/customer-orders' } } as any)).catch(() => {})
-              } else new Notification(item.title, { body: item.body, icon: '/apanidukan1.png' })
+                navigator.serviceWorker.ready.then(reg => reg.showNotification(item.title, { body: item.body, icon: '/customer-icon-512.png', data: { url: item.link || '/customer-orders' } } as any)).catch(() => {})
+              } else new Notification(item.title, { body: item.body, icon: '/customer-icon-512.png' })
             }
             playNotificationAudio('customer')
           })

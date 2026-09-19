@@ -97,7 +97,12 @@ export default function PwaLaunch() {
   }, [verifying, customerStore])
 
   if (verifying) {
-    return <SellerSplashLoader label="Validating store connection..." />
+    return (
+      <SellerSplashLoader
+        label="Validating store connection..."
+        variant={installType === 'customer' ? 'customer' : 'seller'}
+      />
+    )
   }
 
   if (targetRoute) {

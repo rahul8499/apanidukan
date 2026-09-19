@@ -10,6 +10,7 @@ interface ManifestConfig {
   themeColor: string
   backgroundColor: string
   iconUrl?: string
+  icon192Url?: string
   id?: string
 }
 
@@ -21,11 +22,15 @@ export function updateDynamicManifest({
   themeColor,
   backgroundColor,
   iconUrl = '/apanidukan1.png',
+  icon192Url,
   id,
 }: ManifestConfig) {
   try {
     const isAbsoluteUrl = iconUrl.startsWith('http://') || iconUrl.startsWith('https://')
     const finalIconSrc = isAbsoluteUrl ? iconUrl : window.location.origin + iconUrl
+    const smallIconUrl = icon192Url || iconUrl
+    const isSmallIconAbsolute = smallIconUrl.startsWith('http://') || smallIconUrl.startsWith('https://')
+    const finalSmallIconSrc = isSmallIconAbsolute ? smallIconUrl : window.location.origin + smallIconUrl
 
     const manifestObj = {
       id: id || startUrl,
@@ -40,15 +45,15 @@ export function updateDynamicManifest({
       theme_color: themeColor,
       icons: [
         {
-          src: finalIconSrc,
+          src: finalSmallIconSrc,
           sizes: '192x192',
-          type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
+          type: smallIconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
           purpose: 'any',
         },
         {
-          src: finalIconSrc,
+          src: finalSmallIconSrc,
           sizes: '192x192',
-          type: iconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
+          type: smallIconUrl.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
           purpose: 'maskable',
         },
         {
@@ -119,13 +124,14 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
   localStorage.setItem('multistore-installed-seller-id', String(store.id))
 
   updateDynamicManifest({
-    name: 'Apani Dukan - Seller',
-    shortName: 'Apani Dukan',
+    name: 'Apani Dukan Seller',
+    shortName: 'Apani Dukan Seller',
     description: 'Manage store orders, catalog, coupons & customer chats in real-time.',
     startUrl: `/stores/${store.id}/orders`,
     themeColor: '#f8fafc',
     backgroundColor: '#f8fafc',
-    iconUrl: '/apanidukan1.png',
+    iconUrl: '/seller-icon-512.png',
+    icon192Url: '/seller-icon-192.png',
     id: `seller-hub-${store.id}`,
   })
 }
@@ -134,14 +140,20 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
  * Reset PWA Manifest to Generic Platform Start
  */
 export function resetGenericPlatformPwa() {
+  const appRole = (import.meta as any).env?.VITE_APP_ROLE || 'customer'
+  const isSellerApp = appRole === 'seller'
+
   updateDynamicManifest({
-    name: 'Apani Dukan',
-    shortName: 'Apani Dukan',
+    name: isSellerApp ? 'Apani Dukan Seller' : 'Apani Dukan',
+    shortName: isSellerApp ? 'Apani Dukan Seller' : 'Apani Dukan',
     description: 'Create and launch your online store in seconds.',
     startUrl: '/start',
     themeColor: '#f8fafc',
     backgroundColor: '#f8fafc',
-    iconUrl: '/apanidukan1.png',
+    // Keep the seller branding unchanged; only the customer build gets its
+    // dedicated launcher icon.
+    iconUrl: isSellerApp ? '/seller-icon-512.png' : '/customer-icon-512.png',
+    icon192Url: isSellerApp ? '/seller-icon-192.png' : '/customer-icon-192.png',
     id: 'platform-generic',
   })
 }

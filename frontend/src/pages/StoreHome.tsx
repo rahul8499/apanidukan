@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom'
 import {
   Menu, Search, ShoppingBag, ShoppingCart, Sparkles, PackageCheck, MessageCircle, X, ChevronRight,
-  ShieldCheck, Home, Plus, Minus, Star, MapPin, Zap, TrendingUp, Tag, Layers, Crown, Flag
+  ShieldCheck, Home, Plus, Minus, Star, MapPin, Zap, TrendingUp, Tag, Layers, Crown, Flag, ArrowLeft
 } from 'lucide-react'
 import api from '../services/api'
 import InstallAppButton from '../pwa/InstallAppButton'
@@ -27,6 +27,9 @@ export default function StoreHome() {
 
 function Storefront() {
   const { storeSlug } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
   const [store, setStore] = useState<any>(null)
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -588,6 +591,17 @@ function Storefront() {
 
               {/* Left Group: Menu + Store info */}
               <div className="flex items-center gap-2 min-w-0">
+                {returnTo && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(returnTo)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-white hover:bg-slate-700 transition-all cursor-pointer"
+                    title="Back to customer app"
+                    aria-label="Back to customer app"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(true)}

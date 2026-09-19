@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     CreateOrderView, ListOrdersView, OrderDetailView, ListAccessesView,
     PublicCheckoutPhoneOTPSendView, PublicCheckoutPhoneOTPVerifyView, PublicWhatsAppOrderView, PublicCustomerOrdersListView, PublicCustomerOrdersVerifyPhoneView, PublicCustomerAllOrdersView, PublicCustomerNotificationsView, PublicWhatsAppOrderDetailView, PublicQuickReorderView,
-    SellerWhatsAppOrdersView, SellerWhatsAppOrderCountView, PublicCustomerWalletView, PublicCustomerCancelOrderView
+    SellerWhatsAppOrdersView, SellerWhatsAppOrderCountView, PublicCustomerWalletView, PublicCustomerCancelOrderView,
+    SellerResendWhatsAppInvoiceView
 )
 
 urlpatterns = [
@@ -24,5 +25,6 @@ urlpatterns = [
     path('seller/stores/<int:store_id>/whatsapp-orders/', SellerWhatsAppOrdersView.as_view(), name='seller-whatsapp-orders'),
     path('seller/stores/<int:store_id>/whatsapp-orders/count/', SellerWhatsAppOrderCountView.as_view(), name='seller-whatsapp-order-count'),
     path('seller/stores/<int:store_id>/whatsapp-orders/<int:order_id>/', SellerWhatsAppOrdersView.as_view(), name='seller-whatsapp-order-update'),
+    path('seller/stores/<int:store_id>/whatsapp-orders/<int:order_id>/send-invoice/', SellerResendWhatsAppInvoiceView.as_view(), name='seller-whatsapp-order-send-invoice'),
 ]
 

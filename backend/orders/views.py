@@ -211,6 +211,13 @@ class PublicWhatsAppOrderView(APIView):
             "type": "new_order",
             "order": order_data
         })
+
+        # Automated WhatsApp alerts to Customer & Seller
+        try:
+            from .whatsapp_alerts import send_automated_order_whatsapp_alerts
+            send_automated_order_whatsapp_alerts(order)
+        except Exception:
+            pass
         
         return Response(order_data, status=status.HTTP_201_CREATED)
 
@@ -540,4 +547,19 @@ class PublicCustomerWalletView(APIView):
             'balance': str(wallet.balance),
             'total_earned': str(wallet.total_earned),
             'total_redeemed': str(wallet.total_redeemed),
+        })
+
+
+class SellerResendWhatsAppInvoiceView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, store_id, order_id):
+        store = get_object_or_404(Store, id=store_id, owner=request.user)
+        order = get_object_or_404(WhatsAppOrder, id=order_id, store=store)
+        from .whatsapp_alerts import send_automated_order_whatsapp_alerts
+        result = send_automated_order_whatsapp_alerts(order)
+        return Response({
+            'success': True,
+            'alerts': result,
+            'message': f"WhatsApp invoice alert triggered for #{order.reference}."
         })

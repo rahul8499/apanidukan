@@ -10,6 +10,7 @@ import ThermalReceiptModal from '../components/ThermalReceiptModal'
 import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
+import { openWhatsAppInvoice, openWhatsAppStatusUpdate } from '../utils/whatsappInvoice'
 import { SlidersHorizontal, X, Printer, QrCode } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -682,15 +683,15 @@ export default function SellerOrders() {
 
                   {order.customer_phone ? (
                     <>
-                      <a
+                      <button
+                        type="button"
+                        onClick={() => openWhatsAppInvoice(order.customer_phone, order, store)}
                         className="rounded-md sm:rounded-lg bg-emerald-600 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-emerald-700 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
-                        href={`https://wa.me/${formatPhoneForWhatsApp(order.customer_phone)}`}
-                        target="_blank"
-                        rel="noreferrer"
+                        title="Send formatted bill & live tracking link to buyer on WhatsApp"
                       >
-                        <span className="sm:hidden">💬 WA</span>
-                        <span className="hidden sm:inline">{t('waBtn')}</span>
-                      </a>
+                        <span className="sm:hidden">💬 Bill</span>
+                        <span className="hidden sm:inline">💬 WA Bill</span>
+                      </button>
                       <a
                         className="rounded-md sm:rounded-lg bg-slate-100 border border-slate-200 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
                         href={`tel:${order.customer_phone}`}

@@ -14,6 +14,7 @@ import {
 import { getStoreTheme } from '../utils/storeTheme'
 import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
+import { generateOrderInvoiceWhatsAppMessage } from '../utils/whatsappInvoice'
 
 const ORDER_STEPS = [
   { key: 'NEW', label: 'Order Placed', desc: 'Received by store' },
@@ -616,14 +617,14 @@ function CustomerOrderTrackingContent() {
                 <button
                   type="button"
                   onClick={() => {
-                    const url = `${window.location.origin}/store/${storeSlug}/order/${order.reference}?token=${trackingToken}`
-                    const shareMsg = `📦 Track my Order #${order.reference} live here:\n${url}`
-                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg)}`, '_blank')
+                    const invoiceMsg = generateOrderInvoiceWhatsAppMessage(order, store)
+                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(invoiceMsg)}`, '_blank')
                   }}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 border border-slate-800 py-2.5 px-4 font-black text-xs text-white shadow-xs hover:bg-slate-800 transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-emerald-950/80 border border-emerald-500/40 py-2.5 px-4 font-black text-xs text-emerald-300 shadow-xs hover:bg-emerald-900/80 transition-all cursor-pointer"
+                  title="Share complete digital bill & live tracking link with family or on WhatsApp"
                 >
-                  <Share2 className="h-4 w-4 text-indigo-400" />
-                  <span>Share Order Link on WhatsApp</span>
+                  <Share2 className="h-4 w-4 text-emerald-400" />
+                  <span>📲 Share Full Bill on WhatsApp (व्हॉट्सॲप बिल)</span>
                 </button>
 
                 <button

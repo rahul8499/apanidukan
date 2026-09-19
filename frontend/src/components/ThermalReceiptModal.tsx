@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { Printer, Download, X, Settings2, FileText, Check } from 'lucide-react'
+import { openWhatsAppInvoice } from '../utils/whatsappInvoice'
 
 interface ThermalReceiptModalProps {
   order: {
@@ -447,14 +448,27 @@ export default function ThermalReceiptModal({ order, store, onClose }: ThermalRe
             <span>{copied ? 'Copied Receipt Text!' : 'Copy Bill Text'}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handlePrintReceipt}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-2.5 text-xs font-black text-white hover:from-teal-500 hover:to-emerald-500 transition-all shadow-md shadow-teal-600/30 cursor-pointer"
-          >
-            <Printer className="h-4 w-4" />
-            <span>🖨️ Print Thermal Receipt ({printerWidth})</span>
-          </button>
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2">
+            {order.customer_phone && (
+              <button
+                type="button"
+                onClick={() => openWhatsAppInvoice(order.customer_phone, order, store)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-500 transition-all shadow-md shadow-emerald-600/30 cursor-pointer"
+                title="Send formatted bill with live tracking link to buyer on WhatsApp"
+              >
+                <span>💬 WhatsApp Bill (बिल पाठवा)</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handlePrintReceipt}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-2.5 text-xs font-black text-white hover:from-teal-500 hover:to-emerald-500 transition-all shadow-md shadow-teal-600/30 cursor-pointer"
+            >
+              <Printer className="h-4 w-4" />
+              <span>🖨️ Print Receipt ({printerWidth})</span>
+            </button>
+          </div>
         </div>
 
       </div>

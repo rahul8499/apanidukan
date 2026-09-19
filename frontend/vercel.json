@@ -1,6 +1,50 @@
 {
   "rewrites": [
     {
+      "source": "/s/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|whatsapp|facebookexternalhit|Facebot|facebot|Twitterbot|twitterbot|TelegramBot|telegrambot|LinkedInBot|linkedinbot|Slackbot|slackbot).*"
+        }
+      ],
+      "destination": "https://api.apanidukan.com/s/:slug/"
+    },
+    {
+      "source": "/s/:slug/",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|whatsapp|facebookexternalhit|Facebot|facebot|Twitterbot|twitterbot|TelegramBot|telegrambot|LinkedInBot|linkedinbot|Slackbot|slackbot).*"
+        }
+      ],
+      "destination": "https://api.apanidukan.com/s/:slug/"
+    },
+    {
+      "source": "/store/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|whatsapp|facebookexternalhit|Facebot|facebot|Twitterbot|twitterbot|TelegramBot|telegrambot|LinkedInBot|linkedinbot|Slackbot|slackbot).*"
+        }
+      ],
+      "destination": "https://api.apanidukan.com/store/:slug/"
+    },
+    {
+      "source": "/store/:slug/",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|whatsapp|facebookexternalhit|Facebot|facebot|Twitterbot|twitterbot|TelegramBot|telegrambot|LinkedInBot|linkedinbot|Slackbot|slackbot).*"
+        }
+      ],
+      "destination": "https://api.apanidukan.com/store/:slug/"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

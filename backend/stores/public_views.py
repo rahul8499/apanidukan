@@ -472,13 +472,13 @@ CATEGORY_OG_METADATA = {
 
 def get_store_fulfillment_badge(allow_delivery: bool, allow_pickup: bool) -> str:
     if allow_delivery and allow_pickup:
-        return "🚚 घरपोच डिलिव्हरी (Home Delivery) व 🏬 स्टोअर पिकअप दोन्ही उपलब्ध."
+        return "घरपोच डिलिव्हरी (Home Delivery) व स्टोअर पिकअप उपलब्ध."
     elif allow_delivery and not allow_pickup:
-        return "🚚 थेट घरपोच डिलिव्हरी (Home Delivery) उपलब्ध."
+        return "थेट घरपोच डिलिव्हरी (Home Delivery) उपलब्ध."
     elif not allow_delivery and allow_pickup:
-        return "🏬 दुकानातून पिकअप (Store Pickup) व इन-स्टोअर खरेदी उपलब्ध."
+        return "दुकानातून पिकअप (Store Pickup) व इन-स्टोअर खरेदी उपलब्ध."
     else:
-        return "📲 थेट WhatsApp वरून ऑर्डर व चौकशी करा."
+        return "थेट WhatsApp वरून ऑर्डर व चौकशी करा."
 
 def public_store_og_view(request, slug):
     store = Store.objects.filter(models.Q(slug=slug) | models.Q(custom_domain=slug)).first()
@@ -488,7 +488,6 @@ def public_store_og_view(request, slug):
     store_name = (store.name or "Online Store").strip()
     b_type = (store.business_type or 'GENERAL').upper()
     cat_meta = CATEGORY_OG_METADATA.get(b_type, {
-        'emoji': '🛍️',
         'label': 'Official Online Store',
         'desc': 'संपूर्ण प्रॉडक्ट कॅटलॉग, ऑफर्स व थेट ऑनलाइन ऑर्डर.'
     })
@@ -497,11 +496,15 @@ def public_store_og_view(request, slug):
     allow_pickup = getattr(store, 'allow_store_pickup', True)
     fulfillment_badge = get_store_fulfillment_badge(allow_delivery, allow_pickup)
 
-    og_title = f"{cat_meta['emoji']} {store_name} | {cat_meta['label']}"
+    og_title = f"{store_name} | {cat_meta['label']} • Online Store"
     if store.description and store.description.strip():
         og_desc = f"{store.description.strip()} • {fulfillment_badge}"
     else:
         og_desc = f"{cat_meta['desc']} {fulfillment_badge}"
+
+    frontend_base = getattr(settings, 'FRONTEND_URL', 'https://www.apanidukan.com').rstrip('/')
+    if 'localhost' in frontend_base or '127.0.0.1' in frontend_base:
+        frontend_base = 'https://www.apanidukan.com'
 
     logo_url = ""
     if store.logo:
@@ -510,9 +513,8 @@ def public_store_og_view(request, slug):
         except Exception:
             logo_url = store.logo.url if hasattr(store.logo, 'url') else str(store.logo)
 
-    frontend_base = getattr(settings, 'FRONTEND_URL', 'https://www.apanidukan.com').rstrip('/')
-    if not logo_url:
-        logo_url = f"{frontend_base}/apanidukan1.png"
+    if not logo_url or 'localhost' in logo_url or '127.0.0.1' in logo_url:
+        logo_url = f"{frontend_base}/store-default-banner.jpg"
 
     store_url = f"{frontend_base}/s/{store.slug}"
 

@@ -60,7 +60,7 @@ class Store(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
-    business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES, default='GENERAL')
+    business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES, default='GENERAL', db_index=True)
     address = models.TextField(blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -68,7 +68,7 @@ class Store(models.Model):
     logo = models.ImageField(upload_to='stores/logos/', null=True, blank=True)
     theme = models.JSONField(default=dict, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_DRAFT)
-    is_published = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=False, db_index=True)
     manage_in_app = models.BooleanField(default=False)
     has_seen_onboarding_tour = models.BooleanField(default=False)
     allow_home_delivery = models.BooleanField(default=True)
@@ -105,7 +105,11 @@ class Store(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        indexes = [models.Index(fields=['slug'])]
+        indexes = [
+            models.Index(fields=['slug']),
+            models.Index(fields=['is_published', 'business_type']),
+            models.Index(fields=['is_published']),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:

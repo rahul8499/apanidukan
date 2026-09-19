@@ -20,14 +20,21 @@ class Product(models.Model):
     stock_quantity = models.IntegerField(default=100)
     digital_file = models.FileField(upload_to='products/files/private/', null=True, blank=True)
     file_size = models.BigIntegerField(null=True, blank=True)
-    is_published = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=False, db_index=True)
     views_count = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['store', 'slug'], name='unique_product_slug_per_store')]
-        indexes = [models.Index(fields=['store', 'slug']), models.Index(fields=['is_published']), models.Index(fields=['category'])]
+        indexes = [
+            models.Index(fields=['store', 'slug']),
+            models.Index(fields=['store', 'is_published', '-created_at']),
+            models.Index(fields=['store', 'category', 'is_published']),
+            models.Index(fields=['is_published']),
+            models.Index(fields=['category']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def save(self, *args, **kwargs):
         if self.digital_file and not self.file_size:

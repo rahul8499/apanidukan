@@ -33,9 +33,17 @@ class Order(models.Model):
     discount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     currency = models.CharField(max_length=10, default='USD')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
-    created_at = models.DateTimeField(default=timezone.now)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['store', '-created_at']),
+            models.Index(fields=['customer', '-created_at']),
+            models.Index(fields=['status']),
+        ]
 
     def __str__(self):
         return f"Order {self.order_number} ({self.customer.email})"
@@ -97,11 +105,11 @@ class WhatsAppOrder(models.Model):
     ]
 
     store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='whatsapp_orders')
-    reference = models.CharField(max_length=16, unique=True, default=generate_order_number, editable=False)
-    tracking_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, null=True, blank=True)
+    reference = models.CharField(max_length=16, unique=True, default=generate_order_number, editable=False, db_index=True)
+    tracking_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, null=True, blank=True, db_index=True)
     order_type = models.CharField(max_length=30, choices=ORDER_TYPE_CHOICES, default='HOME_DELIVERY')
     customer_name = models.CharField(max_length=150, blank=True)
-    customer_phone = models.CharField(max_length=40, blank=True)
+    customer_phone = models.CharField(max_length=40, blank=True, db_index=True)
     payment_type = models.CharField(max_length=20, blank=True)
     utr_number = models.CharField(max_length=64, blank=True, default='')
     payment_gateway_ref = models.CharField(max_length=128, blank=True, default='')
@@ -118,14 +126,21 @@ class WhatsAppOrder(models.Model):
     items = models.JSONField(default=list)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     currency = models.CharField(max_length=10, default='INR')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW, db_index=True)
     cancellation_reason = models.CharField(max_length=255, blank=True, default='')
     cancelled_by = models.CharField(max_length=50, blank=True, default='')
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['store', '-created_at']),
+            models.Index(fields=['store', 'status']),
+            models.Index(fields=['customer_phone', '-created_at']),
+            models.Index(fields=['status']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return f'WA-{self.reference} ({self.store.name})'

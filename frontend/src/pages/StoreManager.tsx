@@ -458,7 +458,7 @@ export default function StoreManager() {
 
   const whatsappShareUrl = useMemo(() => {
     if (!store?.name || !store?.slug) return ''
-    return getStoreWhatsAppShareLink(store)
+    return getStoreWhatsAppShareLink(store, { forceLocalUrl: true })
   }, [store])
 
   async function load() {
@@ -815,10 +815,10 @@ export default function StoreManager() {
   function downloadSampleCsv() {
     const currentBType = getBusinessType(store?.business_type)
     const header = 'Category,Product Name,Price,Stock,Unit,Description,Image URL\n'
-    
+
     let rows = ''
     if (currentBType.sampleProducts && currentBType.sampleProducts.length > 0) {
-      rows = currentBType.sampleProducts.map(sp => 
+      rows = currentBType.sampleProducts.map(sp =>
         `"${sp.category}","${sp.name}",${sp.price},${sp.stock},"${sp.unit}","Quality ${sp.name} for your store","${sp.image || ''}"`
       ).join('\n')
     } else {
@@ -2020,16 +2020,15 @@ export default function StoreManager() {
                   <span
                     key={item.id}
                     onClick={() => toggleSelectCat(item.id)}
-                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer select-none ${
-                      isSelected
+                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer select-none ${isSelected
                         ? 'bg-rose-50 border-rose-300 text-rose-900 shadow-xs ring-1 ring-rose-200'
                         : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     <input
                       type="checkbox"
                       checked={isSelected}
-                      onChange={() => {}}
+                      onChange={() => { }}
                       className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-3.5 w-3.5 cursor-pointer pointer-events-none"
                     />
                     <span>📁 {item.name}</span>
@@ -2437,22 +2436,20 @@ export default function StoreManager() {
                   <button
                     type="button"
                     onClick={() => setDemoCsvViewMode('table')}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                      demoCsvViewMode === 'table'
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${demoCsvViewMode === 'table'
                         ? 'bg-white text-indigo-700 shadow-xs border border-indigo-100'
                         : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                      }`}
                   >
                     📊 Visual Excel Table
                   </button>
                   <button
                     type="button"
                     onClick={() => setDemoCsvViewMode('raw')}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                      demoCsvViewMode === 'raw'
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${demoCsvViewMode === 'raw'
                         ? 'bg-white text-indigo-700 shadow-xs border border-indigo-100'
                         : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                      }`}
                   >
                     📝 Raw CSV Code
                   </button>
@@ -2531,7 +2528,7 @@ export default function StoreManager() {
                     const header = 'Category,Product Name,Price,Stock,Unit,Description,Image URL\n'
                     let rows = ''
                     if (sampleProds && sampleProds.length > 0) {
-                      rows = sampleProds.map(sp => 
+                      rows = sampleProds.map(sp =>
                         `"${sp.category}","${sp.name}",${sp.price},${sp.stock},"${sp.unit}","Quality ${sp.name}","${sp.image || ''}"`
                       ).join('\n')
                     } else {
@@ -2551,7 +2548,7 @@ export default function StoreManager() {
               >
                 <span>📥 Download CSV File</span>
               </button>
-              
+
               <button
                 type="button"
                 onClick={() => {
@@ -2679,16 +2676,15 @@ export default function StoreManager() {
               <X className="h-4 w-4" />
             </button>
 
-            <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl shadow-md ${
-              confirmModal.variant === 'danger' ? 'bg-rose-100 text-rose-600' :
-              confirmModal.variant === 'warning' ? 'bg-amber-100 text-amber-600' :
-              confirmModal.variant === 'success' ? 'bg-emerald-100 text-emerald-600' :
-              'bg-indigo-100 text-indigo-600'
-            }`}>
+            <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl shadow-md ${confirmModal.variant === 'danger' ? 'bg-rose-100 text-rose-600' :
+                confirmModal.variant === 'warning' ? 'bg-amber-100 text-amber-600' :
+                  confirmModal.variant === 'success' ? 'bg-emerald-100 text-emerald-600' :
+                    'bg-indigo-100 text-indigo-600'
+              }`}>
               {confirmModal.variant === 'danger' ? <Trash2 className="h-7 w-7" /> :
-               confirmModal.variant === 'success' ? <span className="text-2xl">🚀</span> :
-               confirmModal.variant === 'warning' ? <span className="text-2xl">⚡</span> :
-               <span className="text-2xl">⚙️</span>}
+                confirmModal.variant === 'success' ? <span className="text-2xl">🚀</span> :
+                  confirmModal.variant === 'warning' ? <span className="text-2xl">⚡</span> :
+                    <span className="text-2xl">⚙️</span>}
             </div>
 
             <div className="space-y-1">
@@ -2715,12 +2711,11 @@ export default function StoreManager() {
                   setConfirmModal(null)
                   await action()
                 }}
-                className={`flex-1 rounded-xl py-2.5 text-xs font-bold shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  confirmModal.variant === 'danger' ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-500 hover:to-red-500' :
-                  confirmModal.variant === 'success' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500' :
-                  confirmModal.variant === 'warning' ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black hover:brightness-110' :
-                  'bg-indigo-600 text-white hover:bg-indigo-700'
-                }`}
+                className={`flex-1 rounded-xl py-2.5 text-xs font-bold shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${confirmModal.variant === 'danger' ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-500 hover:to-red-500' :
+                    confirmModal.variant === 'success' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500' :
+                      confirmModal.variant === 'warning' ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black hover:brightness-110' :
+                        'bg-indigo-600 text-white hover:bg-indigo-700'
+                  }`}
               >
                 {confirmModal.confirmText || 'Confirm'}
               </button>

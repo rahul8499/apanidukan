@@ -123,6 +123,7 @@ async def websocket_application(scope, receive, send):
     # Expected path: ['ws', 'order', '<reference>'] or ['ws', 'store', '<store_id>']
     if len(parts) >= 3 and parts[0] == 'ws':
         topic_type = parts[1]
+        topic_id = parts[2]
         if topic_type == 'order':
             token = query.get('token', [''])[0]
             if not await _can_access_order_topic(topic_id, token):

@@ -482,46 +482,51 @@ def get_store_fulfillment_badge(allow_delivery: bool, allow_pickup: bool) -> str
 
 def public_store_og_view(request, slug):
     store = Store.objects.filter(models.Q(slug=slug) | models.Q(custom_domain=slug)).first()
-    if not store:
-        return HttpResponse("Store not found", status=404)
-
-    store_name = (store.name or "Online Store").strip()
-    b_type = (store.business_type or 'GENERAL').upper()
-    cat_meta = CATEGORY_OG_METADATA.get(b_type, {
-        'label': 'Official Online Store',
-        'desc': 'संपूर्ण प्रॉडक्ट कॅटलॉग, ऑफर्स व थेट ऑनलाइन ऑर्डर.'
-    })
-
-    allow_delivery = getattr(store, 'allow_home_delivery', True)
-    allow_pickup = getattr(store, 'allow_store_pickup', True)
-    fulfillment_badge = get_store_fulfillment_badge(allow_delivery, allow_pickup)
-
-    label = cat_meta['label']
-    og_title = f"{store_name} | {label}" if 'Online Store' in label else f"{store_name} | {label} • Online Store"
-    if store.description and store.description.strip():
-        og_desc = f"{store.description.strip()} • {fulfillment_badge}"
-    else:
-        og_desc = f"{cat_meta['desc']} {fulfillment_badge}"
 
     frontend_base = getattr(settings, 'FRONTEND_URL', 'https://www.apanidukan.com').rstrip('/')
     if 'localhost' in frontend_base or '127.0.0.1' in frontend_base:
         frontend_base = 'https://www.apanidukan.com'
 
-    logo_url = ""
-    if store.logo:
-        try:
-            logo_url = request.build_absolute_uri(store.logo.url)
-        except Exception:
-            logo_url = store.logo.url if hasattr(store.logo, 'url') else str(store.logo)
-
-    if not logo_url or 'localhost' in logo_url or '127.0.0.1' in logo_url:
+    if not store:
+        display_name = slug.replace('-', ' ').replace('_', ' ').strip().title()
+        safe_title = html.escape(f"{display_name} | Official Online Store", quote=True)
+        safe_desc = html.escape(f"Shop online directly from {display_name}. Browse products, offers & order easily on WhatsApp.", quote=True)
+        safe_store_name = html.escape(display_name, quote=True)
         logo_url = f"{frontend_base}/store-default-banner.jpg"
+        store_url = f"{frontend_base}/s/{slug}"
+    else:
+        store_name = (store.name or "Online Store").strip()
+        b_type = (store.business_type or 'GENERAL').upper()
+        cat_meta = CATEGORY_OG_METADATA.get(b_type, {
+            'label': 'Official Online Store',
+            'desc': 'संपूर्ण प्रॉडक्ट कॅटलॉग, ऑफर्स व थेट ऑनलाइन ऑर्डर.'
+        })
 
-    store_url = f"{frontend_base}/s/{store.slug}"
+        allow_delivery = getattr(store, 'allow_home_delivery', True)
+        allow_pickup = getattr(store, 'allow_store_pickup', True)
+        fulfillment_badge = get_store_fulfillment_badge(allow_delivery, allow_pickup)
 
-    safe_title = html.escape(og_title, quote=True)
-    safe_desc = html.escape(og_desc, quote=True)
-    safe_store_name = html.escape(store_name, quote=True)
+        label = cat_meta['label']
+        og_title = f"{store_name} | {label}" if 'Online Store' in label else f"{store_name} | {label} • Online Store"
+        if store.description and store.description.strip():
+            og_desc = f"{store.description.strip()} • {fulfillment_badge}"
+        else:
+            og_desc = f"{cat_meta['desc']} {fulfillment_badge}"
+
+        logo_url = ""
+        if store.logo:
+            try:
+                logo_url = request.build_absolute_uri(store.logo.url)
+            except Exception:
+                logo_url = store.logo.url if hasattr(store.logo, 'url') else str(store.logo)
+
+        if not logo_url or 'localhost' in logo_url or '127.0.0.1' in logo_url:
+            logo_url = f"{frontend_base}/store-default-banner.jpg"
+
+        store_url = f"{frontend_base}/s/{store.slug}"
+        safe_title = html.escape(og_title, quote=True)
+        safe_desc = html.escape(og_desc, quote=True)
+        safe_store_name = html.escape(store_name, quote=True)
 
     html_content = f"""<!doctype html>
 <html lang="en">

@@ -19,6 +19,7 @@ import { setupCustomerStorePwa } from '../pwa/pwaManager'
 import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
 import { formatUnitDisplay, getCartLabels, getProductAddButtonLabel } from '../utils/businessTypes'
+import { useCustomerFavorites } from '../utils/customerFavorites'
 
 export default function StoreHome() {
   const { storeSlug } = useParams()
@@ -28,6 +29,7 @@ export default function StoreHome() {
 
 function Storefront() {
   const { storeSlug } = useParams()
+  const { isFavorite, toggleFavorite } = useCustomerFavorites()
   const location = useLocation()
   const navigate = useNavigate()
   const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
@@ -679,6 +681,22 @@ function Storefront() {
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <InstallAppButton storeSlug={storeSlug} />
                 <NotificationBellHeader />
+
+                {store && (
+                  <button
+                    type="button"
+                    onClick={() => toggleFavorite(store)}
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all cursor-pointer shadow-xs ${
+                      isFavorite(store.id)
+                        ? 'bg-amber-400/20 border-amber-400/50 text-amber-400'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-amber-400/40 hover:text-amber-400'
+                    }`}
+                    title={isFavorite(store.id) ? 'Favorites se hatayein' : 'Favorites me jodein'}
+                    aria-label="Favorite store"
+                  >
+                    <Star className={`h-4.5 w-4.5 ${isFavorite(store.id) ? 'fill-amber-400 text-amber-400' : ''}`} />
+                  </button>
+                )}
 
                 <Link
                   to={`/store/${storeSlug}/cart`}

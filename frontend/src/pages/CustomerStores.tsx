@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LocateFixed, MapPin, Search, Store as StoreIcon } from 'lucide-react'
+import { LocateFixed, MapPin, Search, Star, Store as StoreIcon } from 'lucide-react'
 import api from '../services/api'
 import CustomerAppBottomNav from '../components/CustomerAppBottomNav'
 import CustomerAppHeader from '../components/CustomerAppHeader'
 import { BUSINESS_TYPES, getBusinessTypeTitle } from '../utils/businessTypes'
+import { useCustomerFavorites } from '../utils/customerFavorites'
 import i18n from '../i18n'
 
 type BrowseMode = 'nearby' | 'all'
@@ -20,6 +21,8 @@ export default function CustomerStores() {
   const [loading, setLoading] = useState(true)
   const [locating, setLocating] = useState(false)
   const [error, setError] = useState('')
+  const { favorites, isFavorite, toggleFavorite } = useCustomerFavorites()
+  const [onlyFavorites, setOnlyFavorites] = useState(false)
 
   async function loadStores(nextMode: BrowseMode, nextLocation: typeof location, nextCategory: string) {
     setLoading(true)
@@ -94,7 +97,6 @@ export default function CustomerStores() {
 
   const visibleStores = useMemo(() => {
     const query = search.trim().toLowerCase()
-    if (!query) return stores
     return stores.filter((store) => {
       const matchesQuery = !query ||
         store.name?.toLowerCase().includes(query) ||
@@ -104,9 +106,10 @@ export default function CustomerStores() {
       const matchesFulfilment = fulfilment === 'all' ||
         (fulfilment === 'delivery' && store.allow_home_delivery) ||
         (fulfilment === 'pickup' && !store.allow_home_delivery)
-      return matchesQuery && matchesFulfilment
+      const matchesFavorites = !onlyFavorites || isFavorite(store.id)
+      return matchesQuery && matchesFulfilment && matchesFavorites
     })
-  }, [fulfilment, search, stores])
+  }, [fulfilment, search, stores, onlyFavorites, isFavorite])
 
   return (
     <main className="min-h-screen bg-[#f7f8fc] pb-24 text-slate-950">
@@ -127,12 +130,31 @@ export default function CustomerStores() {
 
         <section className="mt-5"><div className="mb-2 flex items-center justify-between"><h2 className="text-sm font-black">Categories</h2><span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Swipe</span></div><div className="flex gap-2 overflow-x-auto pb-2">{[{ id: '', label: 'All', icon: '▦' }, ...BUSINESS_TYPES.map((type) => ({ id: type.id, label: getBusinessTypeTitle(type, i18n.language), icon: type.icon }))].map((item) => <button key={item.id} type="button" onClick={() => selectCategory(item.id)} className={`shrink-0 rounded-full px-3 py-2 text-[10px] font-black ${category === item.id ? 'bg-orange-500 text-white shadow-sm' : 'border border-slate-100 bg-white text-slate-700'}`}>{item.icon} {item.label}</button>)}</div></section>
 
-        <section className="mt-3 flex gap-2 overflow-x-auto pb-1">{([{ id: 'all', label: 'All options' }, { id: 'delivery', label: 'Home delivery' }, { id: 'pickup', label: 'Store pickup' }] as { id: FulfilmentFilter; label: string }[]).map((item) => <button key={item.id} type="button" onClick={() => setFulfilment(item.id)} className={`shrink-0 rounded-xl border px-3 py-2 text-[10px] font-black ${fulfilment === item.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600'}`}>{item.label}</button>)}</section>
+        <section className="mt-3 flex gap-2 overflow-x-auto pb-1 items-center">
+          <button
+            type="button"
+            onClick={() => setOnlyFavorites((prev) => !prev)}
+            className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-black transition-all cursor-pointer ${
+              onlyFavorites
+                ? 'border-amber-500 bg-amber-500 text-white shadow-xs'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-600'
+            }`}
+          >
+            <Star className={`h-3.5 w-3.5 ${onlyFavorites ? 'fill-white text-white' : favorites.length > 0 ? 'fill-amber-400 text-amber-500' : 'text-slate-400'}`} />
+            <span>Favorites</span>
+            {favorites.length > 0 && (
+              <span className={`rounded-full px-1.5 py-0.2 text-[9px] font-black ${onlyFavorites ? 'bg-white/30 text-white' : 'bg-amber-100 text-amber-800'}`}>
+                {favorites.length}
+              </span>
+            )}
+          </button>
+          {([{ id: 'all', label: 'All options' }, { id: 'delivery', label: 'Home delivery' }, { id: 'pickup', label: 'Store pickup' }] as { id: FulfilmentFilter; label: string }[]).map((item) => <button key={item.id} type="button" onClick={() => setFulfilment(item.id)} className={`shrink-0 rounded-xl border px-3 py-2 text-[10px] font-black ${fulfilment === item.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600'}`}>{item.label}</button>)}
+        </section>
 
         <section className="mt-5">
-          <div className="mb-3 flex items-end justify-between"><div><h2 className="text-lg font-black">{mode === 'nearby' ? 'Stores near you' : 'All Stores'}</h2><p className="text-[10px] font-semibold text-slate-500">{visibleStores.length} verified stores found</p></div></div>
+          <div className="mb-3 flex items-end justify-between"><div><h2 className="text-lg font-black">{onlyFavorites ? 'Favorite Stores' : mode === 'nearby' ? 'Stores near you' : 'All Stores'}</h2><p className="text-[10px] font-semibold text-slate-500">{visibleStores.length} verified stores found</p></div></div>
           {error && <div className="mb-3 rounded-2xl bg-rose-50 p-3 text-xs font-bold text-rose-700">{error}</div>}
-          {loading ? <div className="grid gap-3 sm:grid-cols-2">{[1, 2, 3, 4].map((item) => <div key={item} className="h-28 animate-pulse rounded-2xl bg-white shadow-sm" />)}</div> : visibleStores.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center"><StoreIcon className="mx-auto h-8 w-8 text-slate-300" /><p className="mt-3 text-sm font-black text-slate-600">No stores found</p><p className="mt-1 text-xs text-slate-400">Search ya category change karke dekhein.</p></div> : <div className="grid gap-3 sm:grid-cols-2">{visibleStores.map((store) => <Link key={store.id} to={`/s/${store.slug}`} state={{ returnTo: '/customer-stores' }} className="overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-sm transition active:scale-[0.99]"><div className="flex gap-3"><div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100">{store.logo ? <img src={store.logo} alt="" className="h-full w-full object-cover" /> : <StoreIcon className="h-7 w-7 text-slate-400" />}</div><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><h3 className="truncate text-sm font-black">{store.name}</h3><p className="truncate text-[9px] font-black uppercase text-orange-500">{store.business_type || 'Local store'}</p></div>{store.distance_km !== undefined && <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[9px] font-black text-blue-700">{store.distance_km} km</span>}</div><p className="mt-2 flex items-center gap-1 truncate text-[10px] font-semibold text-slate-500"><MapPin className="h-3 w-3 shrink-0" />{store.address || 'Local store'}</p><p className="mt-1 text-[10px] font-black text-emerald-600">● Open now</p></div></div><div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2"><span className="text-[10px] font-bold text-slate-500">{store.allow_home_delivery ? 'Delivery available' : 'Pickup available'}</span><span className="rounded-lg bg-blue-600 px-3 py-1.5 text-[10px] font-black text-white">Open Store</span></div></Link>)}</div>}
+          {loading ? <div className="grid gap-3 sm:grid-cols-2">{[1, 2, 3, 4].map((item) => <div key={item} className="h-28 animate-pulse rounded-2xl bg-white shadow-sm" />)}</div> : visibleStores.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center"><StoreIcon className="mx-auto h-8 w-8 text-slate-300" /><p className="mt-3 text-sm font-black text-slate-600">{onlyFavorites ? 'Koi favorite store nahi mila' : 'No stores found'}</p><p className="mt-1 text-xs text-slate-400">{onlyFavorites ? 'Kisi store card par star icon dabakar favorite karein.' : 'Search ya category change karke dekhein.'}</p></div> : <div className="grid gap-3 sm:grid-cols-2">{visibleStores.map((store) => <Link key={store.id} to={`/s/${store.slug}`} state={{ returnTo: '/customer-stores' }} className="group overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-sm transition hover:shadow-md active:scale-[0.99]"><div className="flex gap-3"><div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100">{store.logo ? <img src={store.logo} alt="" className="h-full w-full object-cover" /> : <StoreIcon className="h-7 w-7 text-slate-400" />}</div><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><h3 className="truncate text-sm font-black">{store.name}</h3><p className="truncate text-[9px] font-black uppercase text-orange-500">{store.business_type || 'Local store'}</p></div><div className="flex items-center gap-1.5 shrink-0">{store.distance_km !== undefined && <span className="rounded-full bg-blue-50 px-2 py-1 text-[9px] font-black text-blue-700">{store.distance_km} km</span>}<button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(store); }} className={`flex h-7 w-7 items-center justify-center rounded-lg transition-all cursor-pointer ${isFavorite(store.id) ? 'bg-amber-50 text-amber-500 ring-1 ring-amber-200' : 'bg-slate-100/70 text-slate-400 hover:bg-amber-50 hover:text-amber-500'}`} title={isFavorite(store.id) ? 'Favorites se hatayein' : 'Favorites me jodein'} aria-label="Toggle favorite"><Star className={`h-3.5 w-3.5 ${isFavorite(store.id) ? 'fill-amber-400 text-amber-500' : 'text-slate-400'}`} /></button></div></div><p className="mt-2 flex items-center gap-1 truncate text-[10px] font-semibold text-slate-500"><MapPin className="h-3 w-3 shrink-0" />{store.address || 'Local store'}</p><p className="mt-1 text-[10px] font-black text-emerald-600">● Open now</p></div></div><div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2"><span className="text-[10px] font-bold text-slate-500">{store.allow_home_delivery ? 'Delivery available' : 'Pickup available'}</span><span className="rounded-lg bg-blue-600 px-3 py-1.5 text-[10px] font-black text-white group-hover:bg-blue-700 transition-colors">Visit Store →</span></div></Link>)}</div>}
         </section>
       </div>
       <CustomerAppBottomNav active="stores" />

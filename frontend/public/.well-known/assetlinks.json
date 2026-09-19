@@ -1,0 +1,22 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.apanidukan.seller",
+      "sha256_cert_fingerprints": [
+        "09:72:47:B2:49:BF:69:F0:DE:AD:05:F9:45:F9:EF:3D:0E:BE:CA:4E:AE:2B:B5:59:6D:5C:0F:05:56:FF:C0:69"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.apanidukan.customer",
+      "sha256_cert_fingerprints": [
+        "64:4B:D0:C2:5E:AC:E9:36:16:4D:82:F8:EF:3A:18:A8:4F:10:7F:71:C6:8E:4F:EF:69:AA:C8:42:1C:53:68:96"
+      ]
+    }
+  }
+]

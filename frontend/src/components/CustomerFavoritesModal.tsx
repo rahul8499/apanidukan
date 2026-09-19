@@ -56,7 +56,7 @@ export default function CustomerFavoritesModal({ isOpen, onClose }: CustomerFavo
               <Link
                 to="/customer-stores"
                 onClick={onClose}
-                className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700 shadow-sm transition"
+                className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-white hover:bg-orange-600 shadow-sm shadow-orange-500/20 transition cursor-pointer"
               >
                 <StoreIcon className="h-3.5 w-3.5" />
                 Stores Explore Karein →
@@ -107,7 +107,7 @@ export default function CustomerFavoritesModal({ isOpen, onClose }: CustomerFavo
                   <Link
                     to={`/s/${store.slug}`}
                     onClick={onClose}
-                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-black text-white hover:bg-blue-700 shadow-xs active:scale-95 transition"
+                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 rounded-xl bg-orange-500 px-3.5 py-1.5 text-xs font-black text-white hover:bg-orange-600 shadow-xs shadow-orange-500/20 active:scale-95 transition"
                   >
                     Visit Store
                     <ExternalLink className="h-3 w-3" />

@@ -1,5 +1,5 @@
 from datetime import timedelta
-from django.db import models
+from django.db import models, IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.core import signing
@@ -25,11 +25,35 @@ class CreateOrderView(generics.CreateAPIView):
     serializer_class = OrderSerializer
 
     def create(self, request, *args, **kwargs):
-        data = request.data.copy()
+        idempotency_key = request.headers.get('X-Idempotency-Key') or request.data.get('idempotency_key')
+        if idempotency_key:
+            idempotency_key = str(idempotency_key).strip()[:64]
+            if idempotency_key:
+                existing_order = Order.objects.filter(
+                    idempotency_key=idempotency_key,
+                    customer=request.user
+                ).first()
+                if existing_order:
+                    return Response({'success': True, 'order_id': existing_order.id, 'idempotent_replay': True}, status=status.HTTP_200_OK)
+
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
         data['customer'] = request.user.id
+        if idempotency_key:
+            data['idempotency_key'] = idempotency_key
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        order = serializer.save(customer=request.user)
+        try:
+            order = serializer.save(customer=request.user)
+        except IntegrityError:
+            if idempotency_key:
+                existing_order = Order.objects.filter(
+                    idempotency_key=idempotency_key,
+                    customer=request.user
+                ).first()
+                if existing_order:
+                    return Response({'success': True, 'order_id': existing_order.id, 'idempotent_replay': True}, status=status.HTTP_200_OK)
+            raise
+
         try:
             broadcast_order_event_sync(f"store_{order.store.id}", {
                 "type": "new_order",
@@ -132,9 +156,41 @@ class PublicWhatsAppOrderView(APIView):
 
     def post(self, request, slug):
         store = get_object_or_404(Store, slug=slug, is_published=True)
-        serializer = WhatsAppOrderCreateSerializer(data=request.data, context={'store': store})
+
+        # 1. Idempotency Check: Prevent duplicate orders from network retries or rapid double-clicks
+        idempotency_key = request.headers.get('X-Idempotency-Key') or request.data.get('idempotency_key')
+        if idempotency_key:
+            idempotency_key = str(idempotency_key).strip()[:64]
+            if idempotency_key:
+                existing_order = WhatsAppOrder.objects.filter(
+                    idempotency_key=idempotency_key,
+                    store=store
+                ).first()
+                if existing_order:
+                    req_phone = normalize_phone(request.data.get('customer_phone', ''))
+                    if req_phone and existing_order.customer_phone and existing_order.customer_phone != req_phone:
+                        return Response({'detail': 'Invalid order request.'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(WhatsAppOrderSerializer(existing_order).data, status=status.HTTP_200_OK)
+
+        data = request.data
+        if idempotency_key and isinstance(data, dict) and not data.get('idempotency_key'):
+            data = {**data, 'idempotency_key': idempotency_key}
+
+        serializer = WhatsAppOrderCreateSerializer(data=data, context={'store': store})
         serializer.is_valid(raise_exception=True)
-        order = serializer.save()
+
+        try:
+            order = serializer.save()
+        except IntegrityError:
+            if idempotency_key:
+                existing_order = WhatsAppOrder.objects.filter(
+                    idempotency_key=idempotency_key,
+                    store=store
+                ).first()
+                if existing_order:
+                    return Response(WhatsAppOrderSerializer(existing_order).data, status=status.HTTP_200_OK)
+            raise
+
         order_data = WhatsAppOrderSerializer(order).data
         
         from stores.models import SellerNotification

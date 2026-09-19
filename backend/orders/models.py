@@ -28,6 +28,7 @@ class Order(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
     store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='orders')
     order_number = models.CharField(max_length=50, unique=True, default=generate_order_number)
+    idempotency_key = models.CharField(max_length=64, blank=True, null=True, unique=True, db_index=True)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     tax = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     discount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
@@ -106,6 +107,7 @@ class WhatsAppOrder(models.Model):
 
     store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='whatsapp_orders')
     reference = models.CharField(max_length=16, unique=True, default=generate_order_number, editable=False, db_index=True)
+    idempotency_key = models.CharField(max_length=64, blank=True, null=True, unique=True, db_index=True)
     tracking_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, null=True, blank=True, db_index=True)
     order_type = models.CharField(max_length=30, choices=ORDER_TYPE_CHOICES, default='HOME_DELIVERY')
     customer_name = models.CharField(max_length=150, blank=True)

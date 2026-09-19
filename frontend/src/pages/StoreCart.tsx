@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { StoreCartProvider, useStoreCart } from '../context/StoreCartContext'
 import api from '../services/api'
@@ -55,6 +55,8 @@ function CartContent() {
   const [utrInput, setUtrInput] = useState('')
   const [showOnlineQrModal, setShowOnlineQrModal] = useState(false)
   const [copiedUpi, setCopiedUpi] = useState(false)
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const idempotencyKeyRef = useRef<string>('')
   
   let cartLabels = getCartLabels(store?.business_type)
   
@@ -339,6 +341,8 @@ function CartContent() {
   }
 
   async function handlePlaceOrder(openWhatsApp: boolean = true) {
+    if (isPlacingOrder) return
+
     const trimmedName = customerName.trim()
     const trimmedPhone = customerPhone.trim()
     const number = String(store?.phone_number || '').replace(/\D/g, '')
@@ -351,6 +355,17 @@ function CartContent() {
       setError('Verify your phone number with OTP before placing the order.')
       return
     }
+
+    setIsPlacingOrder(true)
+    setError('')
+
+    // Generate or retrieve session idempotency key
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID().replace(/-/g, '')
+        : 'idk_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
+    }
+    const currentIdempotencyKey = idempotencyKeyRef.current
 
     try {
       localStorage.setItem('qs_chat_name', trimmedName)
@@ -380,6 +395,11 @@ function CartContent() {
         location_url: locationUrl,
         coupon_code: appliedCodes,
         discount_amount: totalDiscountAmt,
+        idempotency_key: currentIdempotencyKey,
+      }, {
+        headers: {
+          'X-Idempotency-Key': currentIdempotencyKey
+        }
       })
       const order = result.data
       if (trimmedPhone) {
@@ -428,11 +448,14 @@ function CartContent() {
         window.open(`https://wa.me/${number}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer')
       }
 
+      idempotencyKeyRef.current = ''
       cart.clear()
       navigate(`/store/${storeSlug}/order/${order.reference}?token=${order.tracking_token}`)
 
     } catch (requestError: any) {
       setError(requestError?.response?.data?.detail || 'Order could not be created. Please try again.')
+    } finally {
+      setIsPlacingOrder(false)
     }
   }
 
@@ -1223,19 +1246,26 @@ function CartContent() {
 
                 {/* Option 1: WhatsApp Order */}
                 <button
+                  disabled={isPlacingOrder}
                   onClick={() => handlePlaceOrder(true)}
-                  className="w-full flex items-center justify-between gap-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 p-3 text-white shadow-md transition-all cursor-pointer border border-emerald-400/50 active:scale-98"
+                  className={`w-full flex items-center justify-between gap-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 p-3 text-white shadow-md transition-all border border-emerald-400/50 active:scale-98 ${
+                    isPlacingOrder ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
                 >
                   <div className="flex items-center gap-2.5 text-left min-w-0">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 text-lg shadow-inner">
-                      💬
+                      {isPlacingOrder ? '⏳' : '💬'}
                     </div>
                     <div className="min-w-0">
                       <h4 className="font-black text-xs text-white truncate">
-                        {cartLabels.addButton === 'BOOK' ? 'Book' : cartLabels.addButton === 'ENQUIRE' ? 'Inquire' : 'Order'} via WhatsApp (व्हॉट्सॲप {cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'})
+                        {isPlacingOrder
+                          ? 'Placing Order... / ऑर्डर नोंदवत आहे...'
+                          : `${cartLabels.addButton === 'BOOK' ? 'Book' : cartLabels.addButton === 'ENQUIRE' ? 'Inquire' : 'Order'} via WhatsApp (व्हॉट्सॲप ${cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'})`}
                       </h4>
                       <p className="text-[9.5px] text-emerald-100 font-medium truncate">
-                        {cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'} मेसेज दुकानदाराच्या व्हॉट्सॲपवर पाठवा
+                        {isPlacingOrder
+                          ? 'Please wait / कृपया प्रतीक्षा करा...'
+                          : `${cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'} मेसेज दुकानदाराच्या व्हॉट्सॲपवर पाठवा`}
                       </p>
                     </div>
                   </div>
@@ -1246,18 +1276,27 @@ function CartContent() {
 
                 {/* Option 2: Direct Web Order */}
                 <button
+                  disabled={isPlacingOrder}
                   onClick={() => handlePlaceOrder(false)}
-                  className="w-full flex items-center justify-between gap-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 p-3 text-white shadow-md transition-all cursor-pointer border border-indigo-400/50 active:scale-98"
+                  className={`w-full flex items-center justify-between gap-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 p-3 text-white shadow-md transition-all border border-indigo-400/50 active:scale-98 ${
+                    isPlacingOrder ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
                 >
                   <div className="flex items-center gap-2.5 text-left min-w-0">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 text-lg shadow-inner">
-                      💳
+                      {isPlacingOrder ? '⏳' : '💳'}
                     </div>
                     <div className="min-w-0">
                       <h4 className="font-black text-xs text-white truncate">
-                        Direct Web {cartLabels.addButton === 'BOOK' ? 'Booking' : cartLabels.addButton === 'ENQUIRE' ? 'Inquiry' : 'Order'} (डायरेक्ट ऑनलाईन {cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'})
+                        {isPlacingOrder
+                          ? 'Placing Order... / ऑर्डर नोंदवत आहे...'
+                          : `Direct Web ${cartLabels.addButton === 'BOOK' ? 'Booking' : cartLabels.addButton === 'ENQUIRE' ? 'Inquiry' : 'Order'} (डायरेक्ट ऑनलाईन ${cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'})`}
                       </h4>
-                      <p className="text-[9.5px] text-indigo-100 font-medium truncate">व्हॉट्सॲपशिवाय थेट साईटवरूनच {cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'} करा</p>
+                      <p className="text-[9.5px] text-indigo-100 font-medium truncate">
+                        {isPlacingOrder
+                          ? 'Please wait / कृपया प्रतीक्षा करा...'
+                          : `व्हॉट्सॲपशिवाय थेट साईटवरूनच ${cartLabels.addButton === 'BOOK' ? 'बुकिंग' : cartLabels.addButton === 'ENQUIRE' ? 'चौकशी' : 'ऑर्डर'} करा`}
+                      </p>
                     </div>
                   </div>
                   <span className="shrink-0 text-[11px] font-black bg-white/20 px-2 py-1 rounded-lg">
@@ -1307,18 +1346,24 @@ function CartContent() {
 
             <div className="flex items-center gap-1.5 shrink-0">
               <button
+                disabled={isPlacingOrder}
                 onClick={() => handlePlaceOrder(true)}
-                className="flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/40 px-2 py-1 text-[9.5px] font-black text-white cursor-pointer active:scale-95"
+                className={`flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/40 px-2 py-1 text-[9.5px] font-black text-white active:scale-95 ${
+                  isPlacingOrder ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                }`}
                 title={`${cartLabels.addButton === 'BOOK' ? 'Book' : cartLabels.addButton === 'ENQUIRE' ? 'Inquire' : 'Order'} via WhatsApp`}
               >
-                <span>💬 WhatsApp</span>
+                <span>{isPlacingOrder ? '⏳ Wait...' : '💬 WhatsApp'}</span>
               </button>
               <button
+                disabled={isPlacingOrder}
                 onClick={() => handlePlaceOrder(false)}
-                className="flex items-center gap-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 px-2 py-1 text-[9.5px] font-black text-white cursor-pointer active:scale-95"
+                className={`flex items-center gap-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 px-2 py-1 text-[9.5px] font-black text-white active:scale-95 ${
+                  isPlacingOrder ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                }`}
                 title={`Direct Web ${cartLabels.addButton === 'BOOK' ? 'Booking' : cartLabels.addButton === 'ENQUIRE' ? 'Inquiry' : 'Order'}`}
               >
-                <span>💳 Web {cartLabels.addButton === 'BOOK' ? 'Book' : cartLabels.addButton === 'ENQUIRE' ? 'Inquire' : 'Order'}</span>
+                <span>{isPlacingOrder ? '⏳ Wait...' : `💳 Web ${cartLabels.addButton === 'BOOK' ? 'Book' : cartLabels.addButton === 'ENQUIRE' ? 'Inquire' : 'Order'}`}</span>
               </button>
             </div>
           </div>

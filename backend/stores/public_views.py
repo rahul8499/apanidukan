@@ -496,7 +496,8 @@ def public_store_og_view(request, slug):
     allow_pickup = getattr(store, 'allow_store_pickup', True)
     fulfillment_badge = get_store_fulfillment_badge(allow_delivery, allow_pickup)
 
-    og_title = f"{store_name} | {cat_meta['label']} • Online Store"
+    label = cat_meta['label']
+    og_title = f"{store_name} | {label}" if 'Online Store' in label else f"{store_name} | {label} • Online Store"
     if store.description and store.description.strip():
         og_desc = f"{store.description.strip()} • {fulfillment_badge}"
     else:

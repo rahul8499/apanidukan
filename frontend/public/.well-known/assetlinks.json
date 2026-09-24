@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.apanidukan.seller",
       "sha256_cert_fingerprints": [
-        "09:72:47:B2:49:BF:69:F0:DE:AD:05:F9:45:F9:EF:3D:0E:BE:CA:4E:AE:2B:B5:59:6D:5C:0F:05:56:FF:C0:69"
+        "09:72:47:B2:49:BF:69:F0:DE:AD:05:F9:45:F9:EF:3D:0E:BE:CA:4E:AE:2B:B5:59:6D:5C:0F:05:56:FF:C0:69",
+        "85:03:5B:4D:37:7A:40:B5:98:E0:F3:E0:7D:1F:C7:30:B9:9D:65:7F:EB:6E:9B:65:CF:75:E8:00:66:3B:70:01"
       ]
     }
   },
@@ -15,7 +16,8 @@
       "namespace": "android_app",
       "package_name": "com.apanidukan.customer",
       "sha256_cert_fingerprints": [
-        "64:4B:D0:C2:5E:AC:E9:36:16:4D:82:F8:EF:3A:18:A8:4F:10:7F:71:C6:8E:4F:EF:69:AA:C8:42:1C:53:68:96"
+        "64:4B:D0:C2:5E:AC:E9:36:16:4D:82:F8:EF:3A:18:A8:4F:10:7F:71:C6:8E:4F:EF:69:AA:C8:42:1C:53:68:96",
+        "DE:A7:E5:88:3B:87:9F:07:38:53:60:7F:BC:68:38:E4:0F:8F:62:C8:A2:59:E8:4B:BD:27:EE:46:2E:E6:94:07"
       ]
     }
   }

@@ -396,10 +396,6 @@ function CartContent() {
         coupon_code: appliedCodes,
         discount_amount: totalDiscountAmt,
         idempotency_key: currentIdempotencyKey,
-      }, {
-        headers: {
-          'X-Idempotency-Key': currentIdempotencyKey
-        }
       })
       const order = result.data
       if (trimmedPhone) {

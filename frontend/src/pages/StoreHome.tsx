@@ -33,6 +33,11 @@ function Storefront() {
   const location = useLocation()
   const navigate = useNavigate()
   const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
+  const returnPathKey = `qs_store_return_to_${storeSlug}`
+  const savedReturnTo = (() => {
+    try { return sessionStorage.getItem(returnPathKey) || '' } catch { return '' }
+  })()
+  const customerReturnTo = returnTo || savedReturnTo || '/'
   const [store, setStore] = useState<any>(null)
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -53,6 +58,11 @@ function Storefront() {
   const [reportContact, setReportContact] = useState('')
   const [reportSubmitting, setReportSubmitting] = useState(false)
   const [reportMessage, setReportMessage] = useState('')
+
+  useEffect(() => {
+    if (!returnTo) return
+    try { sessionStorage.setItem(returnPathKey, returnTo) } catch { }
+  }, [returnPathKey, returnTo])
 
   // Flipkart / Amazon style Delivery Location State
   const [userLocation, setUserLocation] = useState(() => localStorage.getItem('multistore_user_delivery_address') || '')
@@ -592,17 +602,15 @@ function Storefront() {
 
               {/* Left Group: Menu + Store info */}
               <div className="flex items-center gap-2 min-w-0">
-                {returnTo && (
-                  <button
-                    type="button"
-                    onClick={() => navigate(returnTo)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-white hover:bg-slate-700 transition-all cursor-pointer"
-                    title="Back to customer app"
-                    aria-label="Back to customer app"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => navigate(customerReturnTo)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 text-white hover:bg-slate-700 transition-all cursor-pointer"
+                  title="Back to customer home"
+                  aria-label="Back to customer home"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(true)}

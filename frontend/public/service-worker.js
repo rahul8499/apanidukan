@@ -1,6 +1,6 @@
 // Bump this whenever the app shell or authentication flow changes.  Installed
 // PWAs can otherwise keep executing an old JavaScript bundle after deployment.
-const CACHE_NAME = 'apanidukan-v9';
+const CACHE_NAME = 'apanidukan-v10';
 const APP_SHELL = ['/'];
 
 self.addEventListener('install', (event) => {

@@ -283,7 +283,7 @@ export default function CustomerHome() {
                 <Link
                   key={fav.id}
                   to={`/s/${fav.slug}`}
-                  state={{ returnTo: '/customer-home' }}
+                  state={{ returnTo: '/' }}
                   className="group flex w-60 shrink-0 items-center gap-3 rounded-2xl border border-amber-200/80 bg-gradient-to-br from-white to-amber-50/40 p-3 shadow-xs hover:border-amber-400 hover:shadow-md transition-all active:scale-98"
                 >
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-amber-50 border border-amber-100 shadow-xs">
@@ -374,7 +374,7 @@ export default function CustomerHome() {
               <Link
                 key={store.id}
                 to={`/s/${store.slug}`}
-                state={{ returnTo: '/customer-home' }}
+                state={{ returnTo: '/' }}
                 className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs transition-all hover:border-orange-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99]"
               >
                 <div>

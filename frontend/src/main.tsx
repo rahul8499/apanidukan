@@ -7,8 +7,8 @@ import App from './App'
 
 const appRole = (import.meta as any).env?.VITE_APP_ROLE || 'customer'
 const manifestPath = appRole === 'seller'
-  ? '/manifest-seller.webmanifest?v=3'
-  : '/manifest-customer.webmanifest?v=2'
+  ? '/manifest-seller.webmanifest?v=4'
+  : '/manifest-customer.webmanifest?v=3'
 const manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null
 if (manifestLink) manifestLink.href = manifestPath
 

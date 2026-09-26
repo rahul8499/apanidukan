@@ -4,7 +4,7 @@
   "short_name": "Apani Dukan Seller",
   "description": "Manage your Apani Dukan store, products and orders.",
   "start_url": "/seller",
-  "scope": "/seller",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f8fafc",

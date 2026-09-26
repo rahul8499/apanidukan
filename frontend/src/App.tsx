@@ -137,7 +137,7 @@ function AppContent() {
     window.matchMedia('(display-mode: standalone)').matches ||
     new URLSearchParams(location.search).get('source') === 'customer-app'
   )
-  const hideHeader = isCustomerAppLaunch ||
+  const hideHeader = location.pathname === '/' || isCustomerAppLaunch ||
     location.pathname.startsWith('/store/') ||
     location.pathname.startsWith('/s/') ||
     location.pathname.startsWith('/stores/') ||

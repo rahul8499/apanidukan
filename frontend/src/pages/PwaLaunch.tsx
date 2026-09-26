@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import api from '../services/api'
 import SellerSplashLoader from '../components/SellerSplashLoader'
+import CustomerHome from './CustomerHome'
 
 /**
  * Multi-Tenant PWA & Desktop Web Route Controller:
@@ -117,7 +118,8 @@ export default function PwaLaunch() {
       }
       return <Navigate to="/dashboard" replace />
     }
-    return <Navigate to="/customer-home" replace />
+    // Keep the shared customer app on the canonical apanidukan.com root URL.
+    return <CustomerHome />
   }
 
   // 2. Normal Web Browser Navigation:
@@ -126,6 +128,6 @@ export default function PwaLaunch() {
     return <Navigate to="/dashboard" replace />
   }
 
-  // 3. General Visitors always land on /start (Never auto-redirect to unverified customer store!)
-  return <Navigate to="/start" replace />
+  // 3. apanidukan.com is the canonical customer home. Seller onboarding stays at /start.
+  return <CustomerHome />
 }

@@ -12,12 +12,10 @@ import CustomerHome from './CustomerHome'
  * 4. General Visitors in Browser -> Opens Platform Home / Create Store (/start)
  */
 export default function PwaLaunch() {
-  const token = localStorage.getItem('access_token')
   const installType = localStorage.getItem('multistore-installed-type')
   const queryStore = new URLSearchParams(window.location.search).get('store')
   const pendingStore = localStorage.getItem('pending-customer-store')
   const customerStore = queryStore || pendingStore || localStorage.getItem('multistore-installed-store')
-  const sellerStoreId = localStorage.getItem('multistore-installed-seller-id')
 
   if (queryStore) {
     localStorage.setItem('multistore-installed-store', queryStore)
@@ -110,24 +108,8 @@ export default function PwaLaunch() {
     return <Navigate to={targetRoute} replace />
   }
 
-  // 1. Installed Mobile PWA Standalone App Launch
-  if (isStandalone) {
-    if (installType === 'seller') {
-      if (sellerStoreId) {
-        return <Navigate to={`/stores/${sellerStoreId}/orders`} replace />
-      }
-      return <Navigate to="/dashboard" replace />
-    }
-    // Keep the shared customer app on the canonical apanidukan.com root URL.
-    return <CustomerHome />
-  }
-
-  // 2. Normal Web Browser Navigation:
-  // If seller is logged in, redirect directly to Dashboard
-  if (token) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  // 3. apanidukan.com is the canonical customer home. Seller onboarding stays at /start.
+  // The root URL belongs exclusively to the customer experience. Customer and
+  // seller PWAs share origin storage, so seller tokens/install flags must never
+  // decide what opens here. The seller app has its own /seller launch route.
   return <CustomerHome />
 }

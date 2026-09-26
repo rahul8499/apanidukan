@@ -31,7 +31,9 @@ export default function PwaLaunch() {
     new URLSearchParams(window.location.search).get('source') === 'customer-app'
 
   const [verifying, setVerifying] = useState<boolean>(() => {
-    return Boolean(isStandalone && installType === 'customer' && customerStore)
+    // The shared customer app root must open the all-stores home. Only an
+    // explicit install/deep link (?store=slug) may auto-open one store.
+    return Boolean(isStandalone && queryStore)
   })
   const [targetRoute, setTargetRoute] = useState<string | null>(null)
 

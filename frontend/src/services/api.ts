@@ -27,11 +27,37 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
+const isPublicApiRequest = (url?: string) => {
+  if (!url) return false
+  try {
+    const pathname = new URL(url, API_BASE).pathname
+    return pathname.includes('/api/v1/public/') || pathname.startsWith('/public/')
+  } catch {
+    return url.startsWith('/public/')
+  }
+}
+
 // attach token if present
 const token = localStorage.getItem('access_token')
 if(token){
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`
 }
+
+// Customer endpoints are intentionally anonymous. Customer and seller PWAs
+// share origin storage, so never attach a saved seller JWT to public requests;
+// an expired JWT would make DRF reject an otherwise AllowAny order request.
+api.interceptors.request.use((config) => {
+  if (isPublicApiRequest(config.url)) {
+    if (typeof (config.headers as any)?.delete === 'function') {
+      ;(config.headers as any).delete('Authorization')
+    }
+    if (config.headers) {
+      delete (config.headers as any).Authorization
+      delete (config.headers as any).authorization
+    }
+  }
+  return config
+})
 
 let isRefreshing = false;
 let failedQueue: any[] = [];
@@ -52,6 +78,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // A public customer call must never enter the seller token refresh/logout
+    // flow. Surface its real API error to the customer page instead.
+    if (isPublicApiRequest(originalRequest?.url)) {
+      return Promise.reject(error);
+    }
 
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {

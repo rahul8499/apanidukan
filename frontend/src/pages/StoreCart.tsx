@@ -453,7 +453,18 @@ function CartContent() {
       navigate(`/store/${storeSlug}/order/${order.reference}?token=${order.tracking_token}`)
 
     } catch (requestError: any) {
-      setError(requestError?.response?.data?.detail || 'Order could not be created. Please try again.')
+      const responseData = requestError?.response?.data
+      const validationMessage = responseData && typeof responseData === 'object'
+        ? Object.values(responseData).flat().find(value => typeof value === 'string')
+        : null
+      setError(
+        responseData?.detail ||
+        responseData?.message ||
+        (typeof validationMessage === 'string' ? validationMessage : '') ||
+        (requestError?.request && !requestError?.response
+          ? 'Could not connect to the order server. Check your internet and try again.'
+          : 'Order could not be created. Please try again.')
+      )
     } finally {
       setIsPlacingOrder(false)
     }

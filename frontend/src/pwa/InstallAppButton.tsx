@@ -4,13 +4,14 @@ import { Smartphone, Download, X, Share2, PlusSquare, CheckCircle2 } from 'lucid
 interface InstallAppProps {
   storeSlug?: string
   variant?: 'header_pill' | 'button' | 'banner' | 'drawer_item'
+  customerApp?: boolean
 }
 
 /**
  * Universal PWA Install Component
  * Clean Crisp White Theme with high-contrast text and icons.
  */
-export default function InstallAppButton({ storeSlug, variant = 'header_pill' }: InstallAppProps) {
+export default function InstallAppButton({ storeSlug, variant = 'header_pill', customerApp = false }: InstallAppProps) {
   const [installPrompt, setInstallPrompt] = useState<any>(() => (window as any).deferredInstallPrompt || null)
   const [isStandalone, setIsStandalone] = useState(false)
   const [showGuideModal, setShowGuideModal] = useState(false)
@@ -52,7 +53,9 @@ export default function InstallAppButton({ storeSlug, variant = 'header_pill' }:
   }, [])
 
   const handleInstallClick = async () => {
-    if (storeSlug) {
+    if (customerApp) {
+      localStorage.setItem('multistore-installed-type', 'customer')
+    } else if (storeSlug) {
       localStorage.setItem('multistore-installed-store', storeSlug)
       localStorage.setItem('multistore-installed-type', 'customer')
     }

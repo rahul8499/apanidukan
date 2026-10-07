@@ -146,14 +146,16 @@ export function resetGenericPlatformPwa() {
   updateDynamicManifest({
     name: isSellerApp ? 'Apani Dukan Seller' : 'Apani Dukan',
     shortName: isSellerApp ? 'Apani Dukan Seller' : 'Apani Dukan',
-    description: 'Create and launch your online store in seconds.',
-    startUrl: '/start',
+    description: isSellerApp
+      ? 'Create and launch your online store in seconds.'
+      : 'Shop from local stores with one customer app.',
+    startUrl: isSellerApp ? '/start' : '/?source=customer-app',
     themeColor: '#f8fafc',
     backgroundColor: '#f8fafc',
     // Keep the seller branding unchanged; only the customer build gets its
     // dedicated launcher icon.
     iconUrl: isSellerApp ? '/seller-icon-512.png' : '/customer-icon-512.png',
     icon192Url: isSellerApp ? '/seller-icon-192.png' : '/customer-icon-192.png',
-    id: 'platform-generic',
+    id: isSellerApp ? 'platform-generic' : '/',
   })
 }

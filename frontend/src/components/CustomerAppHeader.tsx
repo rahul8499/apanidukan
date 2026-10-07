@@ -4,8 +4,15 @@ import { ClipboardList, Star } from 'lucide-react'
 import NotificationBellHeader from './NotificationBellHeader'
 import CustomerFavoritesModal from './CustomerFavoritesModal'
 import { useCustomerFavorites } from '../utils/customerFavorites'
+import InstallAppButton from '../pwa/InstallAppButton'
 
-export default function CustomerAppHeader({ subtitle = 'Shop near you' }: { subtitle?: string }) {
+export default function CustomerAppHeader({
+  subtitle = 'Shop near you',
+  showInstall = false,
+}: {
+  subtitle?: string
+  showInstall?: boolean
+}) {
   const [showFavoritesModal, setShowFavoritesModal] = useState(false)
   const { count } = useCustomerFavorites()
 
@@ -21,6 +28,8 @@ export default function CustomerAppHeader({ subtitle = 'Shop near you' }: { subt
             />
           </Link>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            {showInstall && <InstallAppButton customerApp variant="header_pill" />}
+
             {/* Favorite Stores Button */}
             <button
               type="button"

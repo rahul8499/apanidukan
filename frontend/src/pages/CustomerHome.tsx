@@ -130,7 +130,7 @@ export default function CustomerHome() {
 
   return (
     <main className="min-h-screen w-full bg-[#f8fafc] pt-16 sm:pt-18 pb-24 text-slate-950">
-      <CustomerAppHeader subtitle="Shop near you" />
+      <CustomerAppHeader subtitle="Shop near you" showInstall />
 
       <div className="mx-auto max-w-6xl px-3.5 py-3 sm:px-6 sm:py-4">
         {/* Instant Search Bar */}

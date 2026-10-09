@@ -3,6 +3,7 @@ import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth, AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { resetGenericPlatformPwa } from './pwa/pwaManager'
+import { isStandaloneMode } from './utils/browser'
 import StoreHome from './pages/StoreHome'
 import ProductPage from './pages/ProductPage'
 import Login from './pages/Login'
@@ -38,6 +39,8 @@ import CustomerAccount from './pages/CustomerAccount'
 import CustomerStores from './pages/CustomerStores'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import DeleteAccount from './pages/DeleteAccount'
+import SellerDeliveryTeam from './pages/SellerDeliveryTeam'
+import DeliveryDashboard from './pages/DeliveryDashboard'
 
 class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
   constructor(props: any) {
@@ -131,16 +134,17 @@ function AdminRoute({ children }: { children: React.ReactElement }) {
 function AppContent() {
   const auth = useAuth()
   const location = useLocation()
-  const isAndroidAppLaunch = typeof document !== 'undefined' && document.referrer.startsWith('android-app://')
+  const isAndroidAppLaunch = typeof document !== 'undefined' && !!document.referrer && document.referrer.startsWith('android-app://')
   const isCustomerAppLaunch = location.pathname === '/' && (
     isAndroidAppLaunch ||
-    window.matchMedia('(display-mode: standalone)').matches ||
+    isStandaloneMode() ||
     new URLSearchParams(location.search).get('source') === 'customer-app'
   )
   const hideHeader = location.pathname === '/' || isCustomerAppLaunch ||
     location.pathname.startsWith('/store/') ||
     location.pathname.startsWith('/s/') ||
     location.pathname.startsWith('/stores/') ||
+    location.pathname.startsWith('/delivery/') ||
     location.pathname.startsWith('/reset-password') ||
     location.pathname === '/dashboard' ||
     location.pathname === '/customer-home' ||
@@ -209,6 +213,8 @@ function AppContent() {
           <Route path="/stores/:storeId/analytics" element={<ProtectedRoute><SellerAnalytics /></ProtectedRoute>} />
           <Route path="/stores/:storeId/subscription" element={<ProtectedRoute><SellerSubscription /></ProtectedRoute>} />
           <Route path="/stores/:storeId/coupons" element={<ProtectedRoute><SellerCoupons /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/delivery-team" element={<ProtectedRoute><SellerDeliveryTeam /></ProtectedRoute>} />
+          <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
           <Route path="/start" element={<StartStore />} />
           <Route path="/platform" element={<AdminRoute><PlatformDashboard /></AdminRoute>} />
           <Route path="/admin" element={<AdminRoute><PlatformDashboard /></AdminRoute>} />

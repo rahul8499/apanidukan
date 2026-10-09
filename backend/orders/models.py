@@ -305,3 +305,24 @@ class OutboundNotification(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['order', 'event_key', 'recipient'], name='unique_order_notification_event')]
+
+
+class DeliveryAssignment(models.Model):
+    STATUS_ASSIGNED = 'ASSIGNED'
+    STATUS_ACCEPTED = 'ACCEPTED'
+    STATUS_PICKED_UP = 'PICKED_UP'
+    STATUS_OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY'
+    STATUS_DELIVERED = 'DELIVERED'
+    STATUS_FAILED = 'FAILED'
+    STATUS_CHOICES = [(value, value.replace('_',' ').title()) for value in (STATUS_ASSIGNED, STATUS_ACCEPTED, STATUS_PICKED_UP, STATUS_OUT_FOR_DELIVERY, STATUS_DELIVERED, STATUS_FAILED)]
+    order = models.OneToOneField(WhatsAppOrder, on_delete=models.CASCADE, related_name='delivery_assignment')
+    agent = models.ForeignKey('stores.DeliveryAgent', on_delete=models.PROTECT, related_name='assignments')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_ASSIGNED, db_index=True)
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='delivery_assignments_created')
+    seller_instruction = models.TextField(blank=True, default='')
+    failure_reason = models.TextField(blank=True, default='')
+    assigned_at = models.DateTimeField(default=timezone.now)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    picked_up_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)

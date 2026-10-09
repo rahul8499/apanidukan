@@ -80,6 +80,18 @@ class OrderSerializer(serializers.ModelSerializer):
         return order
 
 
+class RoundedCoordinateField(serializers.DecimalField):
+    """Accept raw browser GPS precision and normalize it before DRF precision validation."""
+    def to_internal_value(self, data):
+        if data in (None, ''):
+            return super().to_internal_value(data)
+        try:
+            data = Decimal(str(data)).quantize(Decimal('0.000001'))
+        except Exception:
+            pass
+        return super().to_internal_value(data)
+
+
 class WhatsAppOrderCreateSerializer(serializers.Serializer):
     items = serializers.ListField(child=serializers.DictField(), min_length=1)
     customer_name = serializers.CharField(max_length=150, required=True, allow_blank=False, trim_whitespace=True)
@@ -91,8 +103,8 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
     delivery_address = serializers.CharField(required=False, allow_blank=True, max_length=1000)
     delivery_fee = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=Decimal('0.00'))
     delivery_distance_km = serializers.DecimalField(max_digits=6, decimal_places=2, required=False, allow_null=True)
-    delivery_latitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
-    delivery_longitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    delivery_latitude = RoundedCoordinateField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    delivery_longitude = RoundedCoordinateField(max_digits=9, decimal_places=6, required=False, allow_null=True)
     location_url = serializers.URLField(required=False, allow_blank=True, max_length=1000)
     coupon_code = serializers.CharField(required=False, allow_blank=True, max_length=50)
     discount_amount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, default=Decimal('0.00'))

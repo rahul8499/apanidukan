@@ -15,6 +15,7 @@ import {
 import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
 import { getBusinessType, formatUnitDisplay, getCartLabels } from '../utils/businessTypes'
+import { isStandaloneMode } from '../utils/browser'
 
 export default function StoreCart() {
   const { storeSlug } = useParams()
@@ -34,11 +35,7 @@ function CartContent() {
   const [error, setError] = useState('')
   const [storeOffline, setStoreOffline] = useState(false)
 
-  const isStandalone = typeof window !== 'undefined' && (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as any).standalone === true ||
-    localStorage.getItem('multistore-installed-type') === 'customer'
-  )
+  const isStandalone = isStandaloneMode() || localStorage.getItem('multistore-installed-type') === 'customer'
 
   const [customerName, setCustomerName] = useState(() => localStorage.getItem('qs_chat_name') || '')
   const [customerPhone, setCustomerPhone] = useState(() => localStorage.getItem('qs_chat_phone') || '')
@@ -440,8 +437,10 @@ function CartContent() {
         utr_number: utrInput.trim(),
         delivery_address: finalDeliveryAddress,
         location_url: locationUrl,
-        delivery_latitude: deliveryCoordinates?.latitude ?? null,
-        delivery_longitude: deliveryCoordinates?.longitude ?? null,
+        // Browser GPS returns 10-15 decimal places, while the API stores a
+        // stable 6-decimal coordinate (~11 cm precision).
+        delivery_latitude: deliveryCoordinates ? Number(deliveryCoordinates.latitude.toFixed(6)) : null,
+        delivery_longitude: deliveryCoordinates ? Number(deliveryCoordinates.longitude.toFixed(6)) : null,
         coupon_code: appliedCodes,
         discount_amount: totalDiscountAmt,
         customer_note: customNote.trim(),

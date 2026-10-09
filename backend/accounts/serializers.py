@@ -22,7 +22,21 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+    delivery_agent = serializers.SerializerMethodField()
+
+    def get_role(self, obj):
+        return 'DELIVERY_AGENT' if hasattr(obj, 'delivery_agent_profile') else ('ADMIN' if obj.is_staff else 'SELLER')
+
+    def get_delivery_agent(self, obj):
+        agent = getattr(obj, 'delivery_agent_profile', None)
+        if not agent:
+            return None
+        return {'id': agent.id, 'agent_code': agent.agent_code, 'full_name': agent.full_name,
+                'store_id': agent.store_id, 'store_name': agent.store.name,
+                'must_change_password': agent.must_change_password, 'is_active': agent.is_active}
+
     class Meta:
         model = User
-        fields = ('id', 'email', 'phone_number', 'first_name', 'last_name', 'is_active', 'is_staff', 'created_at')
+        fields = ('id', 'email', 'phone_number', 'first_name', 'last_name', 'is_active', 'is_staff', 'role', 'delivery_agent', 'created_at')
         read_only_fields = ('id', 'is_staff', 'is_active', 'created_at')

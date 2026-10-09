@@ -8,6 +8,8 @@ export type User = {
   first_name?: string;
   last_name?: string;
   is_staff?: boolean
+  role?: 'SELLER' | 'DELIVERY_AGENT' | 'ADMIN'
+  delivery_agent?: any
 }
 
 type AuthContextType = {

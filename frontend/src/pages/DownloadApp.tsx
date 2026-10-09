@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { isStandaloneMode } from '../utils/browser'
 
 const customerPlayStoreUrl = (import.meta as any).env?.VITE_CUSTOMER_PLAY_STORE_URL || ''
 
@@ -9,10 +10,7 @@ export default function DownloadApp() {
   const [isStandalone, setIsStandalone] = useState(false)
 
   useEffect(() => {
-    setIsStandalone(
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true
-    )
+    setIsStandalone(isStandaloneMode())
 
     if (storeSlug) {
       localStorage.setItem('pending-customer-store', storeSlug)

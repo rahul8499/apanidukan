@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import api from '../services/api'
 import SellerSplashLoader from '../components/SellerSplashLoader'
 import CustomerHome from './CustomerHome'
+import { isStandaloneMode } from '../utils/browser'
 
 /**
  * Multi-Tenant PWA & Desktop Web Route Controller:
@@ -25,9 +26,7 @@ export default function PwaLaunch() {
   }
 
   const isStandalone =
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as any).standalone === true ||
-    document.referrer.startsWith('android-app://') ||
+    isStandaloneMode() ||
     new URLSearchParams(window.location.search).get('source') === 'customer-app'
 
   const [verifying, setVerifying] = useState<boolean>(() => {

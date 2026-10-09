@@ -44,6 +44,8 @@ export default function Login() {
       const user = await auth.login(email, password)
       if (user.is_staff) {
         navigate('/admin', { replace: true })
+      } else if (user.role === 'DELIVERY_AGENT') {
+        navigate('/delivery/dashboard', { replace: true })
       } else {
         navigate(requestedPath, { replace: true })
       }

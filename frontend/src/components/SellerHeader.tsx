@@ -1047,6 +1047,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               </span>
               <span className="text-slate-400 group-hover:text-emerald-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
+            <Link to={`/stores/${store.id}/delivery-team`} onClick={() => setIsSettingsOpen(false)} className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all shadow-2xs">
+              <span className="flex items-center gap-3"><Truck className="h-4.5 w-4.5 text-emerald-600"/><span>Delivery Team & Login</span></span><span>➔</span>
+            </Link>
           </div>
 
           {/* 6. 👑 PRO ENTERPRISE SUITE (GOLD VIP) */}

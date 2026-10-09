@@ -15,6 +15,7 @@ import {
 import { getStoreTheme } from '../utils/storeTheme'
 import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
+import { isStandaloneMode } from '../utils/browser'
 
 const mediaUrl = (url: string) => {
   if (!url) return ''
@@ -86,11 +87,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
   const [storeOffline, setStoreOffline] = useState(false)
   const [cancelOrderTarget, setCancelOrderTarget] = useState<any>(null)
 
-  const isStandalone = typeof window !== 'undefined' && (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as any).standalone === true ||
-    document.referrer.includes('android-app://')
-  )
+  const isStandalone = isStandaloneMode()
 
   const fetchDynamicOrders = async (tokenToQuery?: string) => {
     const activeToken = tokenToQuery || customerToken

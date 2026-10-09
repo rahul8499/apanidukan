@@ -159,6 +159,27 @@ class SellerNotification(models.Model):
         return f"{self.notification_type} - {self.store.name}"
 
 
+class DeliveryAgent(models.Model):
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='delivery_agents')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='delivery_agent_profile')
+    agent_code = models.CharField(max_length=30, unique=True, db_index=True)
+    full_name = models.CharField(max_length=150)
+    phone_number = models.CharField(max_length=20, db_index=True)
+    vehicle_type = models.CharField(max_length=50, blank=True, default='')
+    vehicle_number = models.CharField(max_length=40, blank=True, default='')
+    serviceable_pincodes = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    must_change_password = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['store', 'phone_number'], name='unique_delivery_agent_phone_per_store')]
+
+    def __str__(self):
+        return f'{self.agent_code} - {self.full_name}'
+
+
 class CustomerNotification(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='customer_notifications')
     customer_id = models.CharField(max_length=150, db_index=True)

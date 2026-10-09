@@ -6,8 +6,19 @@ from .views import (
     SellerResendWhatsAppInvoiceView, PublicOrderIssueRequestView, SellerOrderIssueRequestView,
     SellerDeliveryOTPView, SellerExchangeCompletionOTPView
 )
+from .delivery_views import (
+    SellerDeliveryAgentsView, SellerDeliveryAgentDetailView, SellerAssignDeliveryAgentView,
+    DeliveryChangePasswordView, DeliveryOrdersView, DeliveryOrderStatusView, DeliveryOrderOTPView,
+)
 
 urlpatterns = [
+    path('delivery/change-password/', DeliveryChangePasswordView.as_view()),
+    path('delivery/orders/', DeliveryOrdersView.as_view()),
+    path('delivery/orders/<int:order_id>/status/', DeliveryOrderStatusView.as_view()),
+    path('delivery/orders/<int:order_id>/delivery-otp/', DeliveryOrderOTPView.as_view()),
+    path('seller/stores/<int:store_id>/delivery-agents/', SellerDeliveryAgentsView.as_view()),
+    path('seller/stores/<int:store_id>/delivery-agents/<int:agent_id>/', SellerDeliveryAgentDetailView.as_view()),
+    path('seller/stores/<int:store_id>/whatsapp-orders/<int:order_id>/assign-agent/', SellerAssignDeliveryAgentView.as_view()),
     path('orders/', CreateOrderView.as_view(), name='create-order'),
     path('orders/list/', ListOrdersView.as_view(), name='list-orders'),
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),

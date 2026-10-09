@@ -15,6 +15,22 @@ import { SlidersHorizontal, X, Printer, QrCode } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const statuses = ['NEW', 'CONFIRMED', 'PACKED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'PAID', 'DELIVERED', 'CANCELLED']
+const nextStatuses: Record<string, string[]> = {
+  NEW: ['CONFIRMED', 'CANCELLED'], CONFIRMED: ['PACKED', 'PAID', 'CANCELLED'],
+  PACKED: ['READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'CANCELLED'],
+  READY_FOR_PICKUP: ['PAID', 'DELIVERED'], OUT_FOR_DELIVERY: ['PAID', 'DELIVERED'],
+  PAID: ['PACKED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED'], DELIVERED: [], CANCELLED: [],
+}
+
+function apiErrorMessage(err: any) {
+  const data = err?.response?.data
+  if (typeof data?.detail === 'string') return data.detail
+  if (data && typeof data === 'object') {
+    const first: any = Object.entries(data)[0]
+    if (first) return `${String(first[0]).replaceAll('_', ' ')}: ${Array.isArray(first[1]) ? first[1][0] : first[1]}`
+  }
+  return 'Could not update status. Please try again.'
+}
 
 export default function SellerOrders() {
   const { t } = useTranslation()
@@ -23,6 +39,7 @@ export default function SellerOrders() {
   const [orders, setOrders] = useState<any[]>([])
   const [wsConnected, setWsConnected] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'highest_price'>('latest')
@@ -37,6 +54,7 @@ export default function SellerOrders() {
   const [deliveryOtpMessage, setDeliveryOtpMessage] = useState('')
   const [deliveryOtpLoading, setDeliveryOtpLoading] = useState(false)
   const [deliveryProof, setDeliveryProof] = useState<File | null>(null)
+  const [deliveryAgents, setDeliveryAgents] = useState<any[]>([])
   const auth = useAuth()
   const navigate = useNavigate()
 
@@ -65,6 +83,7 @@ export default function SellerOrders() {
       const response = await api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
       const orderList = Array.isArray(response.data) ? response.data : (response.data?.results || [])
       setOrders(orderList)
+      api.get(`/seller/stores/${storeId}/delivery-agents/`).then(r => setDeliveryAgents(r.data.filter((a:any)=>a.is_active))).catch(()=>{})
     } catch {
       navigate('/login')
     }
@@ -149,6 +168,7 @@ export default function SellerOrders() {
 
   async function updateStatus(id: number, status: string) {
     setErrorMsg('')
+    setSuccessMsg('')
     if (status === 'DELIVERED') {
       const target = orders.find(order => order.id === id)
       setDeliveryOtpOrder(target || null)
@@ -166,8 +186,9 @@ export default function SellerOrders() {
         payload.expected_dispatch_at = new Date(Date.now() + minutes * 60000).toISOString()
       }
       if (status === 'OUT_FOR_DELIVERY') {
-        const agentName = window.prompt('Delivery agent name:')?.trim()
-        const agentPhone = window.prompt('Delivery agent 10-digit mobile number:')?.replace(/\D/g, '').slice(-10)
+        const assignedOrder = orders.find(order => order.id === id)
+        const agentName = assignedOrder?.delivery_agent_name || window.prompt('Delivery agent name:')?.trim()
+        const agentPhone = assignedOrder?.delivery_agent_phone || window.prompt('Delivery agent 10-digit mobile number:')?.replace(/\D/g, '').slice(-10)
         if (!agentName || agentPhone?.length !== 10) { setErrorMsg('Valid delivery agent name and phone are required.'); return }
         payload.delivery_agent_name = agentName
         payload.delivery_agent_phone = agentPhone
@@ -180,10 +201,7 @@ export default function SellerOrders() {
         current.map((order) => (order.id === id ? response.data : order))
       )
     } catch (err: any) {
-      setErrorMsg(
-        err?.response?.data?.detail ||
-          'Could not update status. Check Store Setup settings.'
-      )
+      setErrorMsg(apiErrorMessage(err))
     }
   }
 
@@ -239,6 +257,18 @@ export default function SellerOrders() {
       const detail = err?.response?.data?.detail || 'Failed to start live chat.'
       setErrorMsg(detail)
     }
+  }
+
+  async function assignDeliveryAgent(order: any) {
+    if (!deliveryAgents.length) { navigate(`/stores/${storeId}/delivery-team`); return }
+    const choices = deliveryAgents.map(a => `${a.id}: ${a.full_name} (${a.agent_code})`).join('\n')
+    const selected = window.prompt(`Enter delivery agent number:\n${choices}`)?.trim()
+    if (!selected) return
+    try {
+      await api.post(`/seller/stores/${storeId}/whatsapp-orders/${order.id}/assign-agent/`, { agent_id: Number(selected) })
+      setSuccessMsg('Delivery agent assigned successfully. Customer tracking updated live.')
+      load()
+    } catch (err:any) { setErrorMsg(apiErrorMessage(err)) }
   }
 
   const copyRefToClipboard = async (refStr: string) => {
@@ -525,6 +555,7 @@ export default function SellerOrders() {
             <button onClick={() => setErrorMsg('')} className="text-rose-500 hover:text-rose-800 font-extrabold">✕</button>
           </div>
         )}
+        {successMsg && <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-bold text-emerald-900 flex justify-between"><span>✅ {successMsg}</span><button onClick={()=>setSuccessMsg('')}>✕</button></div>}
 
         {/* Manage in App OFF Alert Banner */}
         {!isManageInAppOn && (
@@ -596,7 +627,11 @@ export default function SellerOrders() {
                         onChange={(e) => updateStatus(order.id, e.target.value)}
                         className="rounded-md sm:rounded-lg border border-slate-300 bg-slate-900 px-1 sm:px-1.5 py-0.2 sm:py-0.5 text-[9px] sm:text-[11px] font-bold text-white shadow-xs focus:ring-1 focus:ring-teal-500 focus:outline-none cursor-pointer"
                       >
-                        {statuses.map((status) => (
+                        {[order.status, ...(nextStatuses[currentStatusUpper] || []).filter(status => {
+                          if (status === 'READY_FOR_PICKUP') return order.order_type === 'STORE_PICKUP'
+                          if (status === 'OUT_FOR_DELIVERY') return order.order_type === 'HOME_DELIVERY'
+                          return true
+                        })].map((status) => (
                           <option key={status} value={status} className="bg-white text-slate-900 font-bold">
                             {status}
                           </option>
@@ -611,6 +646,9 @@ export default function SellerOrders() {
                 </div>
 
                 {/* 2. Compact Customer & Payment Row */}
+                {order.order_type === 'HOME_DELIVERY' && !['DELIVERED','CANCELLED'].includes(currentStatusUpper) && (
+                  <div className="flex justify-end gap-2"><Link to={`/stores/${storeId}/delivery-team`} className="text-[10px] font-bold text-slate-500">Manage team</Link><button onClick={()=>assignDeliveryAgent(order)} className="rounded-lg bg-emerald-600 px-3 py-1 text-[10px] font-black text-white">🚚 Assign delivery person</button></div>
+                )}
                 <div className="flex items-center justify-between gap-1 text-xs">
                   <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
                     <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-[8px] sm:text-[9px] shrink-0">

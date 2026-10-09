@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Smartphone, Download, X, Share2, PlusSquare, CheckCircle2 } from 'lucide-react'
+import { isStandaloneMode } from '../utils/browser'
 
 interface InstallAppProps {
   storeSlug?: string
@@ -20,9 +21,7 @@ export default function InstallAppButton({ storeSlug, variant = 'header_pill', c
 
   useEffect(() => {
     // Check if already installed / running in standalone PWA mode
-    const standalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true
+    const standalone = isStandaloneMode()
 
     setIsStandalone(Boolean(standalone))
 

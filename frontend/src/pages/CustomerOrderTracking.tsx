@@ -428,6 +428,32 @@ function CustomerOrderTrackingContent() {
                 </span>
               </div>
 
+              {/* Appears immediately through the order WebSocket when seller assigns/reassigns a rider. */}
+              {order.order_type === 'HOME_DELIVERY' && order.delivery_agent_name && (
+                <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-3.5 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-lg font-black text-white">
+                        {String(order.delivery_agent_name).trim().charAt(0).toUpperCase() || '🚚'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-black uppercase tracking-wider text-emerald-700">Your delivery person</p>
+                        <p className="truncate text-sm font-black text-slate-950">{order.delivery_agent_name}</p>
+                        {order.delivery_agent_phone && <p className="text-xs font-bold text-slate-600">📱 {order.delivery_agent_phone}</p>}
+                      </div>
+                    </div>
+                    {order.delivery_agent_phone && (
+                      <a href={`tel:${String(order.delivery_agent_phone).replace(/[^0-9+]/g, '')}`} className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white shadow-sm hover:bg-emerald-700">
+                        📞 Call
+                      </a>
+                    )}
+                  </div>
+                  <p className="mt-2 border-t border-emerald-200 pt-2 text-[10px] font-semibold text-emerald-800">
+                    {order.status === 'OUT_FOR_DELIVERY' ? 'Rider aapka order lekar raste mein hai.' : 'Seller ne is delivery person ko aapke order ke liye assign kiya hai.'}
+                  </p>
+                </div>
+              )}
+
               {isCancelled ? (
                 <div className="rounded-2xl border border-rose-300 dark:border-rose-900 bg-rose-50/90 dark:bg-rose-950/40 p-4 text-rose-900 dark:text-rose-200 space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-2">

@@ -78,6 +78,13 @@ function CustomerOrderTrackingContent() {
   const [reordering, setReordering] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showIssueModal, setShowIssueModal] = useState(false)
+  const [issueType, setIssueType] = useState('EXCHANGE')
+  const [issueItem, setIssueItem] = useState(0)
+  const [requestedSize, setRequestedSize] = useState('')
+  const [issueReason, setIssueReason] = useState('')
+  const [exchangeEvidence, setExchangeEvidence] = useState<File[]>([])
+  const [issueSubmitting, setIssueSubmitting] = useState(false)
   const trackingToken = new URLSearchParams(window.location.search).get('token') || ''
 
   const fetchOrder = async () => {
@@ -224,20 +231,11 @@ function CustomerOrderTrackingContent() {
     setError('')
     try {
       const response = await api.post(`/public/stores/${storeSlug}/orders/${reference}/quick-reorder/`, { tracking_token: trackingToken })
-      const newOrder = response.data
-      const number = String(order?.store_phone || '').replace(/\D/g, '')
-      if (number) {
-        const lines = [
-          `Quick Reorder #${newOrder.reference}`,
-          `Customer: ${newOrder.customer_name || 'Not provided'}`,
-          ...(newOrder.customer_phone ? [`Phone: ${newOrder.customer_phone}`] : []),
-          `Items: ${newOrder.items.map((item: any) => `${item.name} × ${item.quantity}`).join(', ')}`,
-          `Total: ₹${newOrder.total}`,
-          ...(newOrder.delivery_address ? [`Delivery Address: ${newOrder.delivery_address}`] : []),
-        ]
-        window.open(`https://wa.me/${number}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer')
-      }
-      navigate(`/store/${storeSlug}/order/${newOrder.reference}?token=${newOrder.tracking_token}`)
+      const reorderData = response.data
+      localStorage.setItem(`multistore-cart-${storeSlug}`, JSON.stringify(reorderData.cart_items || []))
+      if (reorderData.customer_name) localStorage.setItem('qs_chat_name', reorderData.customer_name)
+      if (reorderData.customer_phone) localStorage.setItem('qs_chat_phone', reorderData.customer_phone)
+      navigate(`/store/${storeSlug}/cart`)
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Some items are no longer available. Please add them from store again.')
     } finally {
@@ -250,6 +248,33 @@ function CustomerOrderTrackingContent() {
     navigator.clipboard.writeText(url)
     setCopiedLink(true)
     setTimeout(() => setCopiedLink(false), 2500)
+  }
+
+  const submitIssue = async () => {
+    const item = order?.items?.[issueItem]
+    if (!item || issueReason.trim().length < 5) return setError('Please select an item and enter a clear reason.')
+    setIssueSubmitting(true)
+    setError('')
+    try {
+      const form = new FormData()
+      form.append('tracking_token', trackingToken)
+      form.append('request_type', issueType)
+      form.append('product_id', String(item.product_id || item.id))
+      form.append('selected_size', item.selected_size || '')
+      form.append('requested_size', issueType === 'EXCHANGE' ? requestedSize : '')
+      form.append('quantity', '1')
+      form.append('reason', issueReason.trim())
+      exchangeEvidence.forEach(file => form.append('evidence', file))
+      await api.post(`/public/stores/${storeSlug}/orders/${reference}/issues/`, form)
+      setShowIssueModal(false)
+      setIssueReason('')
+      setExchangeEvidence([])
+      alert(`${issueType.toLowerCase()} request sent to the seller.`)
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || Object.values(err?.response?.data || {})?.[0] as string || 'Request could not be submitted.')
+    } finally {
+      setIssueSubmitting(false)
+    }
   }
 
   if (loading) {
@@ -306,6 +331,8 @@ function CustomerOrderTrackingContent() {
   const storeTheme = getStoreTheme(store)
   const isCancelled = order.status === 'CANCELLED'
   const currentStepIndex = ORDER_STEPS.findIndex((s) => s.key === order.status)
+  const exchangeDeadline = new Date(new Date(order.updated_at).getTime() + Number(store?.exchange_window_days || 7) * 86400000)
+  const exchangeEligible = order.status === 'DELIVERED' && store?.exchange_enabled && exchangeDeadline.getTime() >= Date.now()
 
   return (
     <div className={`mx-auto min-h-screen w-full ${storeTheme.page_bg_class} pb-36 text-xs sm:text-sm font-sans transition-colors duration-300`}>
@@ -637,7 +664,7 @@ function CustomerOrderTrackingContent() {
                   <span>{reordering ? 'Creating Quick Reorder…' : 'Quick Reorder Same Items'}</span>
                 </button>
 
-                {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
+                {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && order.status !== 'PAID' && !order.payment_verified && (
                   <button
                     type="button"
                     onClick={() => setShowCancelModal(true)}
@@ -647,8 +674,42 @@ function CustomerOrderTrackingContent() {
                     <span>Cancel Order</span>
                   </button>
                 )}
+                {exchangeEligible && (
+                  <button type="button" onClick={() => setShowIssueModal(true)} className="flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 py-2.5 px-4 text-xs font-black text-amber-900">
+                    Exchange Size · Within {store.exchange_window_days || 7} Days
+                  </button>
+                )}
+                {order.status === 'DELIVERED' && store?.exchange_enabled && !exchangeEligible && <p className="rounded-xl bg-slate-100 p-3 text-center text-[11px] font-bold text-slate-600">Exchange window expired on {exchangeDeadline.toLocaleDateString()}.</p>}
               </div>
             </div>
+
+            {/* ORDER ITEMS & PRICE BREAKDOWN */}
+            {order.delivery_fallback_code && (
+              <div className="rounded-2xl border-2 border-indigo-300 bg-indigo-50 p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-indigo-700" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-indigo-950">Delivery Confirmation Code</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-indigo-800">SMS OTP na mile to delivery ke waqt seller/delivery person ko ye code batayein. Delivery receive karne se pehle code share na karein.</p>
+                    <div className="mt-3 rounded-xl border border-indigo-300 bg-white px-4 py-3 text-center font-mono text-2xl font-black tracking-[0.35em] text-indigo-950">{order.delivery_fallback_code}</div>
+                    {order.delivery_fallback_expires_at && <p className="mt-1.5 text-center text-[9px] font-bold text-indigo-600">Valid until {new Date(order.delivery_fallback_expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+            {Array.isArray(order.exchange_fallback_codes) && order.exchange_fallback_codes.map((entry: any) => (
+              <div key={entry.issue_id} className="rounded-2xl border-2 border-violet-300 bg-violet-50 p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 text-violet-700" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-violet-950">Exchange Handover Confirmation Code</p>
+                    <p className="mt-1 text-[11px] text-violet-800">Replacement size {entry.requested_size || ''} receive karte waqt SMS OTP na mile to seller ko ye code batayein. Item handover se pehle share na karein.</p>
+                    <div className="mt-3 rounded-xl border border-violet-300 bg-white px-4 py-3 text-center font-mono text-2xl font-black tracking-[0.35em] text-violet-950">{entry.code}</div>
+                    <p className="mt-1.5 text-center text-[9px] font-bold text-violet-600">Valid until {new Date(entry.expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
 
             {/* ORDER ITEMS & PRICE BREAKDOWN */}
             <div className={`rounded-2xl border ${storeTheme.card_bg_class} p-4 sm:p-5 shadow-xs space-y-3`}>
@@ -684,7 +745,7 @@ function CustomerOrderTrackingContent() {
                               {item.name || item.product_name}
                             </p>
                             <p className="text-[10px] text-slate-500 font-semibold">
-                              Qty: {item.quantity || 1} × ₹{Number(item.price || 0).toFixed(2)}
+                              {item.selected_size ? `Size: ${item.selected_size} • ` : ''}Qty: {item.quantity || 1} × ₹{Number(item.price || 0).toFixed(2)}
                             </p>
                           </div>
                         </div>
@@ -795,6 +856,26 @@ function CustomerOrderTrackingContent() {
           setOrder(updated)
         }}
       />
+      {showIssueModal && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/60 p-3 sm:items-center">
+          <div className="w-full max-w-md space-y-3 rounded-2xl bg-white p-5 shadow-2xl">
+            <div className="flex items-center justify-between"><h2 className="font-black text-slate-900">Return / Exchange Request</h2><button onClick={() => setShowIssueModal(false)}>✕</button></div>
+            <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs text-violet-950"><b>Exchange available within {store?.exchange_window_days || 7} days after delivery.</b><p className="mt-1">{store?.exchange_policy}</p></div>
+            <select value={issueItem} onChange={e => { setIssueItem(Number(e.target.value)); setRequestedSize('') }} className="w-full rounded-xl border p-3 text-sm">
+              {(order.items || []).map((item: any, idx: number) => <option key={idx} value={idx}>{item.name || item.product_name} {item.selected_size ? `(Size ${item.selected_size})` : ''}</option>)}
+            </select>
+            {issueType === 'EXCHANGE' && (
+              <select value={requestedSize} onChange={e => setRequestedSize(e.target.value)} className="w-full rounded-xl border p-3 text-sm" required>
+                <option value="">Select replacement size</option>
+                {((productMap[(order.items || [])[issueItem]?.product_id]?.available_sizes) || []).filter((s: string) => s !== (order.items || [])[issueItem]?.selected_size).map((s: string) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            )}
+            <select value={issueReason} onChange={e => setIssueReason(e.target.value)} className="w-full rounded-xl border p-3 text-sm" required><option value="">Select exchange reason</option>{(store?.exchange_allowed_reasons || []).map((reason: string) => <option key={reason} value={reason}>{reason}</option>)}</select>
+            <label className="block rounded-xl border border-dashed p-3 text-xs font-bold text-slate-700">Evidence photos {store?.exchange_evidence_required ? '(Required)' : '(Optional)'}<input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e => setExchangeEvidence(Array.from(e.target.files || []).slice(0, 3))} className="mt-2 block w-full text-xs"/><span className="mt-1 block text-[10px] font-medium text-slate-500">Maximum 3 photos, 5 MB each.</span></label>
+            <button disabled={issueSubmitting || !requestedSize || !issueReason || (store?.exchange_evidence_required && exchangeEvidence.length === 0)} onClick={submitIssue} className="w-full rounded-xl bg-slate-950 py-3 text-sm font-black text-white disabled:opacity-50">{issueSubmitting ? 'Submitting…' : 'Submit Exchange Request'}</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

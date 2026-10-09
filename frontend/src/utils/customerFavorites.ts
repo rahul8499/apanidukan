@@ -62,7 +62,7 @@ export function toggleFavoriteStore(store: any): boolean {
       name: store.name || 'Store',
       slug: store.slug,
       logo: store.logo || null,
-      business_type: store.business_type || 'GENERAL',
+      business_type: store.business_type || 'GARMENTS',
       address: store.address || null,
       allow_home_delivery: store.allow_home_delivery !== false,
       allow_store_pickup: store.allow_store_pickup !== false,

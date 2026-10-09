@@ -35,32 +35,14 @@ class Store(models.Model):
     ]
 
     BUSINESS_TYPE_CHOICES = [
-        ('GENERAL', 'General Store / सर्वसाधारण दुकान'),
-        ('KIRANA', 'Kirana & Grocery / किराणा व धान्य'),
-        ('PHOTO_STUDIO', 'Photo Studio & Services / फोटो स्टुडिओ व सर्व्हिसेस'),
-        ('RESTAURANT', 'Hotel & Restaurant / हॉटेल व रेस्टॉरंट'),
-        ('BAKERY_SWEETS', 'Bakery, Cakes & Sweets / बेकरी, केक्स व मिठाई'),
-        ('HOTEL_RESTAURANT', 'Hotel & Restaurant / हॉटेल व खानावळ (Legacy)'),
         ('GARMENTS', 'Clothing & Garments / कपडे व फॅशन'),
-        ('HARDWARE_PLUMBING', 'Hardware, Plumbing & Tools / हार्डवेअर, प्लंबिंग व टूल्स'),
-        ('BUILDING_MATERIAL', 'Building Materials & Cement / बांधकाम साहित्य व सिमेंट'),
-        ('HARDWARE', 'Hardware & Plumbing / हार्डवेअर व प्लंबिंग (Legacy)'),
-        ('ELECTRONICS', 'Electronics & Mobiles / इलेक्ट्रॉनिक्स व मोबाईल'),
-        ('AUTO_DEALER', '2-Wheeler / 4-Wheeler Showroom / २/४-व्हीलर शोरूम'),
-        ('AUTO_SPARES', 'Spare Parts & Servicing / स्पेयर पार्ट्स व सर्व्हिसिंग'),
-        ('AUTOMOBILE', 'Automobile, Bikes & Cars / २-व्हीलर/४-व्हीलर (Legacy)'),
-        ('PHARMACY', 'Medical & Pharmacy / मेडिकल व फार्मसी'),
-        ('GIFT_TOYS', 'Gift Shop & Toys / गिफ्ट शॉप व खेळणी'),
-        ('DAIRY_SWEETS', 'Dairy & Sweet Mart / डेअरी व मिठाई'),
-        ('STATIONERY', 'Books & Stationery / पुस्तके व स्टेशनरी'),
-        ('BEAUTY_JEWELLERY', 'Jewellery & Beauty / दागिने व ब्यूटी'),
     ]
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='stores')
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
-    business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES, default='GENERAL', db_index=True)
+    business_type = models.CharField(max_length=50, choices=BUSINESS_TYPE_CHOICES, default='GARMENTS', db_index=True)
     address = models.TextField(blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -77,12 +59,20 @@ class Store(models.Model):
     # Fulfillment & Delivery Configuration
     min_delivery_order = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     delivery_radius_km = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('10.00'))
+    serviceable_pincodes = models.JSONField(default=list, blank=True)
     delivery_charge_type = models.CharField(max_length=20, choices=DELIVERY_TYPE_CHOICES, default='FIXED')
     delivery_flat_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     delivery_per_km_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     free_delivery_above = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     delivery_estimated_time = models.CharField(max_length=100, default='30-45 mins', blank=True)
     pickup_instructions = models.TextField(blank=True, default='')
+
+    # Garments exchange policy shown to customers and enforced by the API.
+    exchange_enabled = models.BooleanField(default=False)
+    exchange_window_days = models.PositiveSmallIntegerField(default=7)
+    exchange_evidence_required = models.BooleanField(default=True)
+    exchange_allowed_reasons = models.JSONField(default=list, blank=True)
+    exchange_policy = models.TextField(blank=True, default='Item must be unused, unwashed and have original tags attached.')
 
     # Dynamic Customer Loyalty & Cashback Wallet Configuration
     enable_loyalty_cashback = models.BooleanField(default=True)

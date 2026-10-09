@@ -102,6 +102,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [showPosterModal, setShowPosterModal] = useState(false)
   const [showScratchModal, setShowScratchModal] = useState(false)
   const [showDeliveryModal, setShowDeliveryModal] = useState(false)
+  const [deliveryModalSection, setDeliveryModalSection] = useState<'general' | 'exchange'>('general')
   const [showThemeModal, setShowThemeModal] = useState(false)
   const [showCustomDomainModal, setShowCustomDomainModal] = useState(false)
   const [showOnboardingModal, setShowOnboardingModal] = useState(false)
@@ -110,7 +111,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   const [storeDescription, setStoreDescription] = useState(store?.description || '')
   const [storeAddress, setStoreAddress] = useState(store?.address || '')
   const [phoneNumber, setPhoneNumber] = useState(store?.phone_number || store?.whatsapp_phone || '')
-  const [businessType, setBusinessType] = useState(store?.business_type || 'GENERAL')
+  const [businessType, setBusinessType] = useState('GARMENTS')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(store?.logo || null)
   const [isSavingProfile, setIsSavingProfile] = useState(false)
@@ -342,7 +343,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       setStoreDescription(store.description || '')
       setStoreAddress(store.address || '')
       setPhoneNumber(store.phone_number || store.whatsapp_phone || '')
-      setBusinessType(store.business_type || 'GENERAL')
+      setBusinessType('GARMENTS')
       if (store.logo) {
         setLogoPreview(store.logo)
       }
@@ -751,17 +752,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
                 <div>
                   <label className="text-[10px] font-bold text-slate-700">Business Category</label>
-                  <select
-                    value={businessType}
-                    onChange={e => setBusinessType(e.target.value)}
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-indigo-500 focus:outline-none"
-                  >
-                    {BUSINESS_TYPES.map(b => (
-                      <option key={b.id} value={b.id}>
-                        {b.icon} {b.name} ({b.nameMr})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-900">
+                    {BUSINESS_TYPES[0].icon} {BUSINESS_TYPES[0].name} ({BUSINESS_TYPES[0].nameMr})
+                  </div>
                 </div>
 
                 <button
@@ -863,7 +856,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 )}
                 <button
                   type="button"
-                  onClick={() => setShowDeliveryModal(true)}
+                  onClick={() => { setDeliveryModalSection('general'); setShowDeliveryModal(true) }}
                   className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-600 text-white text-[9px] font-black hover:bg-indigo-700 transition-all cursor-pointer shadow-xs"
                 >
                   <SlidersHorizontal className="h-2.5 w-2.5" />
@@ -903,7 +896,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setShowDeliveryModal(true)}
+                      onClick={() => { setDeliveryModalSection('general'); setShowDeliveryModal(true) }}
                       title="Edit Delivery Pricing & Radius"
                       className="text-[9px] font-black text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-lg transition-all"
                     >
@@ -996,6 +989,19 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* 5. 🚀 SELLER NAVIGATION & MARKETING TOOLS */}
+          <div className="rounded-2xl border-2 border-violet-300 bg-gradient-to-br from-violet-50 to-white p-3.5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-wider text-violet-600">Garments After-Sales</p>
+                <h4 className="mt-1 text-xs font-black text-slate-950">🔄 Exchange Settings</h4>
+                <p className="mt-1 text-[10px] font-medium text-slate-600">Toggle, days, evidence, reasons and customer policy</p>
+                <span className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[9px] font-black ${store?.exchange_enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>{store?.exchange_enabled ? `ON · ${store?.exchange_window_days || 7} days` : 'OFF'}</span>
+              </div>
+              <button type="button" onClick={() => { setDeliveryModalSection('exchange'); setShowDeliveryModal(true) }} className="shrink-0 rounded-xl bg-violet-600 px-3 py-2 text-[10px] font-black text-white shadow-sm hover:bg-violet-700">Configure Exchange</button>
             </div>
           </div>
 
@@ -1513,6 +1519,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       {showDeliveryModal && store && (
         <SellerDeliveryConfigModal
           store={store}
+          initialSection={deliveryModalSection}
           onSaveSuccess={() => {
             if (onStoreUpdate) onStoreUpdate()
           }}

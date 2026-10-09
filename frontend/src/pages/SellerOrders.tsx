@@ -14,7 +14,7 @@ import { openWhatsAppInvoice, openWhatsAppStatusUpdate } from '../utils/whatsapp
 import { SlidersHorizontal, X, Printer, QrCode } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-const statuses = ['NEW', 'CONFIRMED', 'PAID', 'DELIVERED', 'CANCELLED']
+const statuses = ['NEW', 'CONFIRMED', 'PACKED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'PAID', 'DELIVERED', 'CANCELLED']
 
 export default function SellerOrders() {
   const { t } = useTranslation()
@@ -31,6 +31,12 @@ export default function SellerOrders() {
   const [showFilterModal, setShowFilterModal] = useState(false)
   const [selectedOrderForReceipt, setSelectedOrderForReceipt] = useState<any | null>(null)
   const [showStandeeModal, setShowStandeeModal] = useState(false)
+  const [deliveryOtpOrder, setDeliveryOtpOrder] = useState<any | null>(null)
+  const [deliveryOtp, setDeliveryOtp] = useState('')
+  const [deliveryOtpSent, setDeliveryOtpSent] = useState(false)
+  const [deliveryOtpMessage, setDeliveryOtpMessage] = useState('')
+  const [deliveryOtpLoading, setDeliveryOtpLoading] = useState(false)
+  const [deliveryProof, setDeliveryProof] = useState<File | null>(null)
   const auth = useAuth()
   const navigate = useNavigate()
 
@@ -143,10 +149,32 @@ export default function SellerOrders() {
 
   async function updateStatus(id: number, status: string) {
     setErrorMsg('')
+    if (status === 'DELIVERED') {
+      const target = orders.find(order => order.id === id)
+      setDeliveryOtpOrder(target || null)
+      setDeliveryOtp('')
+      setDeliveryOtpSent(false)
+      setDeliveryOtpMessage('')
+      setDeliveryProof(null)
+      return
+    }
     try {
+      const payload: any = { status }
+      if (status === 'CONFIRMED') {
+        const minutes = Number(window.prompt('Expected packing/dispatch time in minutes:', '30'))
+        if (!minutes || minutes < 1) return
+        payload.expected_dispatch_at = new Date(Date.now() + minutes * 60000).toISOString()
+      }
+      if (status === 'OUT_FOR_DELIVERY') {
+        const agentName = window.prompt('Delivery agent name:')?.trim()
+        const agentPhone = window.prompt('Delivery agent 10-digit mobile number:')?.replace(/\D/g, '').slice(-10)
+        if (!agentName || agentPhone?.length !== 10) { setErrorMsg('Valid delivery agent name and phone are required.'); return }
+        payload.delivery_agent_name = agentName
+        payload.delivery_agent_phone = agentPhone
+      }
       const response = await api.patch(
         `/seller/stores/${storeId}/whatsapp-orders/${id}/`,
-        { status }
+        payload
       )
       setOrders((current) =>
         current.map((order) => (order.id === id ? response.data : order))
@@ -156,6 +184,40 @@ export default function SellerOrders() {
         err?.response?.data?.detail ||
           'Could not update status. Check Store Setup settings.'
       )
+    }
+  }
+
+  async function sendDeliveryOtp() {
+    if (!deliveryOtpOrder) return
+    setDeliveryOtpLoading(true)
+    setDeliveryOtpMessage('')
+    try {
+      const res = await api.post(`/seller/stores/${storeId}/whatsapp-orders/${deliveryOtpOrder.id}/delivery-otp/`)
+      setDeliveryOtpSent(true)
+      setDeliveryOtpMessage(res.data.message || 'OTP sent to the customer.')
+    } catch (err: any) {
+      setDeliveryOtpMessage(err?.response?.data?.detail || 'OTP could not be sent.')
+    } finally {
+      setDeliveryOtpLoading(false)
+    }
+  }
+
+  async function verifyDeliveryOtp() {
+    if (!deliveryOtpOrder || deliveryOtp.length !== 6) return
+    setDeliveryOtpLoading(true)
+    setDeliveryOtpMessage('')
+    try {
+      const form = new FormData()
+      form.append('otp', deliveryOtp)
+      if (deliveryProof) form.append('delivery_proof', deliveryProof)
+      const res = await api.patch(`/seller/stores/${storeId}/whatsapp-orders/${deliveryOtpOrder.id}/delivery-otp/`, form)
+      setOrders(current => current.map(order => order.id === deliveryOtpOrder.id ? res.data.order : order))
+      setDeliveryOtpOrder(null)
+      setDeliveryOtp('')
+    } catch (err: any) {
+      setDeliveryOtpMessage(err?.response?.data?.detail || 'OTP verification failed.')
+    } finally {
+      setDeliveryOtpLoading(false)
     }
   }
 
@@ -594,6 +656,10 @@ export default function SellerOrders() {
                   </p>
                 ) : null}
 
+                {order.customer_note && (
+                  <p className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[9px] sm:text-[11px] font-semibold text-indigo-900">📝 Customer note: {order.customer_note}</p>
+                )}
+
                 {/* UTR Payment Verification Badge */}
                 {order.utr_number && (
                   <div className="flex items-center justify-between bg-emerald-50/90 border border-emerald-200 px-2 py-1 rounded-md text-[9px] sm:text-[11px] text-emerald-950 font-bold">
@@ -619,7 +685,7 @@ export default function SellerOrders() {
                   {Array.isArray(order.items) &&
                     order.items.map((item: any, idx: number) => (
                       <div key={idx} className="flex justify-between items-center text-slate-800 text-[9px] sm:text-[11px]">
-                        <span className="font-semibold truncate">• {item.name || item.product_name || 'Product'}</span>
+                        <span className="font-semibold truncate">• {item.name || item.product_name || 'Product'}{item.selected_size ? ` — Size: ${item.selected_size}` : ''}</span>
                         <span className="font-black shrink-0 ml-1.5">×{item.quantity} (₹{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(0)})</span>
                       </div>
                     ))}
@@ -831,6 +897,22 @@ export default function SellerOrders() {
           publicUrl={`${window.location.origin}/s/${store.slug}`}
           onClose={() => setShowStandeeModal(false)}
         />
+      )}
+
+      {deliveryOtpOrder && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/65 p-4">
+          <div className="w-full max-w-sm space-y-4 rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between"><div><p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Secure fulfilment</p><h2 className="mt-1 text-base font-black text-slate-950">Confirm Delivery with OTP</h2></div><button onClick={() => setDeliveryOtpOrder(null)} className="rounded-full bg-slate-100 px-2 py-1 font-bold">✕</button></div>
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-950"><p className="font-bold">Order #{deliveryOtpOrder.reference}</p><p className="mt-1 text-[11px]">OTP will be sent only to the customer number saved with this order. The number cannot be changed here.</p></div>
+            {!deliveryOtpSent ? <button disabled={deliveryOtpLoading} onClick={sendDeliveryOtp} className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Sending…' : 'Send Delivery OTP'}</button> : <>
+              <label className="block text-xs font-bold text-slate-700">Enter OTP told by customer<input autoFocus value={deliveryOtp} onChange={e => setDeliveryOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" placeholder="6-digit OTP" className="mt-1.5 w-full rounded-xl border p-3 text-center text-xl font-black tracking-[0.4em]"/></label>
+              {deliveryOtpOrder.order_type === 'HOME_DELIVERY' && <label className="block rounded-xl border border-dashed p-3 text-xs font-bold">Delivery proof photo (Required)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setDeliveryProof(e.target.files?.[0] || null)} className="mt-2 block w-full text-xs"/></label>}
+              <button disabled={deliveryOtpLoading || deliveryOtp.length !== 6 || (deliveryOtpOrder.order_type === 'HOME_DELIVERY' && !deliveryProof)} onClick={verifyDeliveryOtp} className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Verifying…' : 'Verify OTP & Mark Delivered'}</button>
+              <button disabled={deliveryOtpLoading} onClick={sendDeliveryOtp} className="w-full text-xs font-bold text-indigo-700">Resend OTP</button>
+            </>}
+            {deliveryOtpMessage && <p className={`rounded-xl p-3 text-xs font-bold ${deliveryOtpMessage.toLowerCase().includes('sent') ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-700'}`}>{deliveryOtpMessage}</p>}
+          </div>
+        </div>
       )}
     </main>
   )

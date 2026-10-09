@@ -17,6 +17,8 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     currency = models.CharField(max_length=10, default='USD')
     unit = models.CharField(max_length=50, default='Pc', blank=True)
+    available_sizes = models.JSONField(default=list, blank=True)
+    size_stock = models.JSONField(default=dict, blank=True)
     stock_quantity = models.IntegerField(default=100)
     digital_file = models.FileField(upload_to='products/files/private/', null=True, blank=True)
     file_size = models.BigIntegerField(null=True, blank=True)
@@ -46,6 +48,28 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.store.slug})"
+
+
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    size = models.CharField(max_length=30, blank=True, default='')
+    color = models.CharField(max_length=50, blank=True, default='')
+    sku = models.CharField(max_length=100, blank=True, default='', db_index=True)
+    stock_quantity = models.PositiveIntegerField(default=0)
+    price_override = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['product', 'size', 'color'], name='unique_product_size_color')
+        ]
+        indexes = [models.Index(fields=['product', 'is_active'])]
+
+    def __str__(self):
+        label = ' / '.join(value for value in (self.size, self.color) if value) or 'Default'
+        return f'{self.product.name} - {label}'
 
 
 class ProductImage(models.Model):

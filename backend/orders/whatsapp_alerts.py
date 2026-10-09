@@ -24,7 +24,9 @@ def format_order_invoice_text(order) -> str:
         name = it.get('name') or it.get('product_name') or 'Item'
         qty = it.get('quantity', 1)
         price = it.get('price', 0)
-        items_text.append(f"• *{name}* × {qty} — ₹{price}")
+        size = it.get('selected_size')
+        variant = f" — Size {size}" if size else ''
+        items_text.append(f"• *{name}*{variant} × {qty} — ₹{price}")
 
     lines = [
         f"🧾 *ORDER INVOICE / बिल* 🧾",
@@ -43,6 +45,7 @@ def format_order_invoice_text(order) -> str:
         f"Payment: *{order.payment_type}*",
         f"Fulfillment: *{order.order_type}*",
         *( [f"📍 Address: {order.delivery_address}"] if order.delivery_address else [] ),
+        *( [f"📝 Customer note: {order.customer_note}"] if order.customer_note else [] ),
         "",
         f"📍 *Live Order Tracking:*",
         f"{tracking_url}",
@@ -147,9 +150,10 @@ def send_whatsapp_message(to_phone: str, message: str) -> bool:
         except Exception as e:
             logger.warning(f"[MSG91 WhatsApp] Delivery failed: {e}")
 
-    # If no automated gateway is configured yet, log the ready-to-send payload
+    # Logging is not delivery. Keep the outbox pending/failed until a real
+    # provider accepts the message.
     logger.info(f"[WhatsApp Alert Logger] Message ready for {formatted_phone}:\n{message}")
-    return True
+    return False
 
 
 def send_automated_order_whatsapp_alerts(order) -> dict:

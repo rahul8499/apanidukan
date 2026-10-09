@@ -56,3 +56,11 @@ class ScratchCouponSecurityTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(Coupon.objects.filter(store=self.store, code='ATTACKER100').exists())
 
+    def test_active_scratch_reward_is_listed_as_store_wide_coupon(self):
+        response = self.client.get('/api/v1/public/stores/secure-store/coupons/')
+        self.assertEqual(response.status_code, 200)
+        scratch = next(item for item in response.data if item['code'] == 'SAFE5')
+        self.assertTrue(scratch['is_scratch'])
+        self.assertIsNone(scratch['product_id'])
+        self.assertEqual(scratch['discount_type'], 'FLAT')
+        self.assertEqual(scratch['discount_value'], 5.0)

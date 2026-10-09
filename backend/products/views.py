@@ -10,7 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from stores.models import Store
-from .models import Product, ProductImage
+from .models import Product, ProductImage, ProductVariant
 from .serializers import ProductSerializer, ProductImageSerializer
 
 import uuid
@@ -242,6 +242,39 @@ class ProductViewSet(viewsets.ModelViewSet):
                     stock_val = 100
 
                 raw_unit = (item.get('unit') or item.get('ordering_unit') or item.get('sales_unit') or '').strip()
+                raw_sizes = item.get('available_sizes') or item.get('sizes') or item.get('size') or []
+                if isinstance(raw_sizes, str):
+                    raw_sizes = [part.strip().upper() for part in raw_sizes.replace('|', ',').split(',') if part.strip()]
+                elif isinstance(raw_sizes, list):
+                    raw_sizes = [str(part).strip().upper() for part in raw_sizes if str(part).strip()]
+                else:
+                    raw_sizes = []
+                available_sizes = list(dict.fromkeys(raw_sizes))[:30]
+                raw_size_stock = item.get('size_stock') or item.get('variant_stock') or {}
+                if isinstance(raw_size_stock, str):
+                    parsed_stock = {}
+                    for entry in raw_size_stock.replace(',', '|').split('|'):
+                        if ':' not in entry:
+                            continue
+                        size, quantity = entry.split(':', 1)
+                        try:
+                            parsed_stock[size.strip().upper()] = max(0, int(quantity.strip()))
+                        except (TypeError, ValueError):
+                            continue
+                    raw_size_stock = parsed_stock
+                if not isinstance(raw_size_stock, dict):
+                    raw_size_stock = {}
+                size_stock = {}
+                for size in available_sizes:
+                    try:
+                        size_stock[size] = max(0, int(raw_size_stock.get(size, raw_size_stock.get(size.lower(), 0))))
+                    except (TypeError, ValueError):
+                        size_stock[size] = 0
+                if available_sizes and not raw_size_stock:
+                    base, remainder = divmod(max(0, stock_val), len(available_sizes))
+                    size_stock = {size: base + (1 if index < remainder else 0) for index, size in enumerate(available_sizes)}
+                if available_sizes:
+                    stock_val = sum(size_stock.values())
 
                 product_obj = Product(
                     store=store,
@@ -251,6 +284,8 @@ class ProductViewSet(viewsets.ModelViewSet):
                     price=price_val,
                     currency='INR',
                     unit=raw_unit if raw_unit else ('Plate' if store.business_type == 'HOTEL_RESTAURANT' else ('Kg' if store.business_type in ['KIRANA', 'DAIRY_SWEETS'] else ('Strip' if store.business_type == 'PHARMACY' else 'Pc'))),
+                    available_sizes=available_sizes,
+                    size_stock=size_stock,
                     stock_quantity=stock_val,
                     description=item.get('description', ''),
                     is_published=True
@@ -296,6 +331,15 @@ class ProductViewSet(viewsets.ModelViewSet):
             if created_objs:
                 for p, img_urls, extra_files in created_objs:
                     p.save()
+                    for size, quantity in (p.size_stock or {}).items():
+                        ProductVariant.objects.create(
+                            product=p,
+                            size=size,
+                            color='',
+                            sku=f'{p.id}-{size}'.replace(' ', '-').upper(),
+                            stock_quantity=max(0, int(quantity)),
+                            is_active=True,
+                        )
                     # Process extra local binary files into ProductImage gallery
                     for extra_f in extra_files:
                         ProductImage.objects.create(product=p, image=extra_f)

@@ -13,6 +13,7 @@ export default function SellerRequests() {
   const { t } = useTranslation()
   const [store, setStore] = useState<any>(() => getCachedStore(storeId))
   const [productRequests, setProductRequests] = useState<any[]>([])
+  const [orderIssues, setOrderIssues] = useState<any[]>([])
   const [errorMsg, setErrorMsg] = useState('')
   const [isRefreshingData, setIsRefreshingData] = useState(false)
   const navigate = useNavigate()
@@ -25,8 +26,12 @@ export default function SellerRequests() {
       setCachedStore(found)
       setStore(found)
 
-      const reqs = await api.get(`/stores/${found.id}/requests/`)
+      const [reqs, issues] = await Promise.all([
+        api.get(`/stores/${found.id}/requests/`),
+        api.get(`/seller/stores/${found.id}/order-issues/`),
+      ])
       setProductRequests(reqs.data || [])
+      setOrderIssues(issues.data || [])
     } catch {
       navigate('/login')
     }
@@ -82,6 +87,38 @@ export default function SellerRequests() {
     }
   }
 
+  const updateIssue = async (issue: any, status: string) => {
+    const provider_refund_id = status === 'COMPLETED' && issue.request_type === 'REFUND'
+      ? window.prompt('Enter real bank/UPI refund transaction reference:') || '' : ''
+    if (status === 'COMPLETED' && issue.request_type === 'REFUND' && !provider_refund_id) return
+    try {
+      const res = await api.patch(`/seller/stores/${storeId}/order-issues/${issue.id}/`, { status, provider_refund_id })
+      setOrderIssues(current => current.map(item => item.id === issue.id ? res.data : item))
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.detail || 'Request status could not be updated.')
+    }
+  }
+
+  const completeExchange = async (issue: any) => {
+    const picker = document.createElement('input')
+    picker.type = 'file'; picker.accept = 'image/jpeg,image/png,image/webp'
+    picker.onchange = async () => {
+      const proof = picker.files?.[0]
+      if (!proof) return
+      try {
+        const sent = await api.post(`/seller/stores/${storeId}/order-issues/${issue.id}/completion-otp/`)
+        const otp = window.prompt(`${sent.data.message}\nEnter the 6-digit OTP told by customer:`)?.trim()
+        if (!otp) return
+        const form = new FormData(); form.append('otp', otp); form.append('completion_proof', proof)
+        await api.patch(`/seller/stores/${storeId}/order-issues/${issue.id}/completion-otp/`, form)
+        await updateIssue(issue, 'COMPLETED')
+      } catch (err: any) {
+        setErrorMsg(err?.response?.data?.detail || 'Exchange completion verification failed.')
+      }
+    }
+    picker.click()
+  }
+
   if (!store) return <div className="p-6">Loading product requests...</div>
 
   return (
@@ -114,6 +151,24 @@ export default function SellerRequests() {
         </div>
 
         {errorMsg && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-900">{errorMsg}</div>}
+
+        <section className="space-y-3">
+          <h2 className="text-sm font-black text-slate-900">Returns, Exchanges & Refunds ({orderIssues.length})</h2>
+          {orderIssues.length === 0 ? <div className="rounded-2xl border border-dashed p-5 text-center text-xs text-slate-500">No order issue requests.</div> : orderIssues.map(issue => (
+            <div key={issue.id} className="rounded-2xl border border-amber-200 bg-white p-4 shadow-xs space-y-2">
+              <div className="flex justify-between"><b className="text-sm">{issue.request_type} · Order #{issue.order}</b><span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-black text-amber-800">{issue.status}</span></div>
+              <p className="text-xs text-slate-700">Size {issue.selected_size || 'N/A'}{issue.requested_size ? ` → ${issue.requested_size}` : ''} · Qty {issue.quantity}</p>
+              <p className="rounded-lg bg-slate-50 p-2 text-xs text-slate-700">{issue.reason}</p>
+              {issue.evidence?.length > 0 && <div className="flex gap-2 overflow-x-auto">{issue.evidence.map((src: string, index: number) => <a key={src} href={src} target="_blank" rel="noreferrer"><img src={src} alt={`Exchange evidence ${index + 1}`} className="h-20 w-20 rounded-lg border object-cover"/></a>)}</div>}
+              <div className="flex flex-wrap gap-2">
+                {issue.status === 'REQUESTED' && <><button onClick={() => updateIssue(issue, 'APPROVED')} className="rounded-lg bg-emerald-600 px-3 py-2 text-[11px] font-black text-white">Approve</button><button onClick={() => updateIssue(issue, 'REJECTED')} className="rounded-lg bg-rose-100 px-3 py-2 text-[11px] font-black text-rose-800">Reject</button></>}
+                {issue.status === 'APPROVED' && <button onClick={() => updateIssue(issue, 'PROCESSING')} className="rounded-lg bg-indigo-600 px-3 py-2 text-[11px] font-black text-white">Start Processing</button>}
+                {issue.status === 'PROCESSING' && <><button onClick={() => issue.request_type === 'EXCHANGE' ? completeExchange(issue) : updateIssue(issue, 'COMPLETED')} className="rounded-lg bg-slate-950 px-3 py-2 text-[11px] font-black text-white">{issue.request_type === 'EXCHANGE' ? 'OTP + Proof & Complete' : 'Complete'}</button><button onClick={() => updateIssue(issue, 'FAILED')} className="rounded-lg bg-slate-200 px-3 py-2 text-[11px] font-black">Mark Failed</button></>}
+                {issue.provider_refund_id && <span className="text-[10px] font-mono text-slate-600">Refund ref: {issue.provider_refund_id}</span>}
+              </div>
+            </div>
+          ))}
+        </section>
 
         <div className="space-y-3">
           {productRequests.length === 0 ? (

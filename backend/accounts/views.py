@@ -470,7 +470,7 @@ class OTPRegisterCompleteView(APIView):
         last_name = request.data.get('last_name', '').strip()
         store_name = request.data.get('store_name', '').strip()
         category = request.data.get('category', '').strip()
-        business_type = request.data.get('business_type', 'GENERAL').strip().upper()
+        business_type = 'GARMENTS'
         address = request.data.get('address', '').strip()
         latitude = request.data.get('latitude')
         longitude = request.data.get('longitude')
@@ -542,7 +542,7 @@ class OTPRegisterCompleteView(APIView):
                 owner=user,
                 name=store_name,
                 description=f"Store category: {category}" if category else "",
-                business_type=business_type if business_type else 'GENERAL',
+                business_type=business_type,
                 address=address,
                 latitude=latitude or None,
                 longitude=longitude or None,
@@ -716,7 +716,7 @@ class AdminExportStoresCSVView(APIView):
             writer.writerow([
                 st.id,
                 st.name,
-                st.business_type or 'GENERAL',
+                st.business_type or 'GARMENTS',
                 'LIVE' if st.is_published else 'DRAFT',
                 f"{st.owner.first_name} {st.owner.last_name}".strip() if st.owner else 'N/A',
                 st.owner.email if st.owner else 'N/A',

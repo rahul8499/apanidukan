@@ -1120,7 +1120,8 @@ function Storefront() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-3">
                 {visibleProducts.map((p) => {
                   const isOutOfStock = p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) <= 0
-                  const cartItem = cart.items.find((item: any) => item.id === p.id)
+                  const hasSizes = Array.isArray(p.available_sizes) && p.available_sizes.length > 0
+                  const cartItem = !hasSizes ? cart.items.find((item: any) => item.id === p.id) : undefined
 
                   const productCoupons = storeCoupons.filter((c: any) => {
                     if (!c) return false
@@ -1249,6 +1250,15 @@ function Storefront() {
                             ) : null}
                           </div>
 
+                          {hasSizes && (
+                            <div className="flex flex-wrap gap-1 pt-1" aria-label="Available sizes">
+                              {p.available_sizes.slice(0, 5).map((size: string) => (
+                                <span key={size} className={`rounded border px-1.5 py-0.5 text-[8.5px] font-black ${Number(p.size_stock?.[size] || 0) > 0 ? 'border-slate-300 bg-white/90 text-slate-700' : 'border-slate-200 bg-slate-100 text-slate-400 line-through'}`}>{size}</span>
+                              ))}
+                              {p.available_sizes.length > 5 && <span className="text-[9px] font-bold text-slate-500">+{p.available_sizes.length - 5}</span>}
+                            </div>
+                          )}
+
                           {p.stock_quantity !== undefined && p.stock_quantity !== null && Number(p.stock_quantity) > 0 && Number(p.stock_quantity) <= 5 && (
                             <div className="flex items-center gap-1 pt-0.5">
                               <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
@@ -1289,7 +1299,9 @@ function Storefront() {
                         ) : (
                           <button
                             disabled={isOutOfStock}
-                            onClick={() => cart.add({ id: p.id, slug: p.slug, name: p.name, price: p.price, image: p.image, unit: p.unit })}
+                            onClick={() => hasSizes
+                              ? navigate(`/store/${storeSlug}/product/${p.slug}`)
+                              : cart.add({ id: p.id, slug: p.slug, name: p.name, price: p.price, image: p.image, unit: p.unit })}
                             className={`flex w-full items-center justify-center gap-1 rounded-xl py-1.5 text-xs font-black text-white shadow-sm disabled:opacity-40 transition-all cursor-pointer active:scale-95 bg-gradient-to-r ${storeTheme.btn_gradient}`}
                           >
                             <Plus className="h-3.5 w-3.5" />

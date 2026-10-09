@@ -112,6 +112,10 @@ class PublicStoreProductsView(generics.ListAPIView):
         slug = self.kwargs.get('slug')
         store = get_public_store_or_404(self.request, slug)
         qs = Product.objects.filter(store=store).select_related('store', 'category').prefetch_related('images')
+        raw_ids = self.request.query_params.get('ids', '')
+        if raw_ids:
+            product_ids = [int(value) for value in raw_ids.split(',') if value.strip().isdigit()][:100]
+            qs = qs.filter(id__in=product_ids)
         if not (self.request.user and self.request.user.is_authenticated and store.owner == self.request.user):
             qs = qs.filter(is_published=True)
         category = self.request.query_params.get('category')
@@ -205,7 +209,30 @@ class PublicStoreCouponsView(generics.ListAPIView):
             'max_discount_amount': float(c.max_discount_amount) if c.max_discount_amount else None,
             'product_id': c.product_id,
             'product_name': c.product.name if c.product else None,
+            'is_scratch': False,
         } for c in coupons]
+        # Scratch & Win rewards are seller-configured store-wide coupons. They
+        # must be visible anywhere normal coupons are listed, not only in cart.
+        try:
+            scratch = store.scratch_config
+        except StoreScratchConfig.DoesNotExist:
+            scratch = None
+        if scratch and scratch.enabled:
+            scratch_code = scratch.coupon_code.strip().upper()
+            if scratch_code and not any(str(item['code']).upper() == scratch_code for item in data):
+                data.append({
+                    'id': f'scratch-{scratch.id}',
+                    'code': scratch_code,
+                    'discount_type': 'PERCENTAGE' if scratch.discount_type.lower() == 'percentage' else 'FLAT',
+                    'discount_value': float(scratch.discount_value),
+                    'min_order_amount': float(scratch.min_order),
+                    'max_discount_amount': None,
+                    'product_id': None,
+                    'product_name': None,
+                    'is_scratch': True,
+                    'offer_name': scratch.title,
+                    'reward_text': scratch.reward_text,
+                })
         return Response(data)
 
 
@@ -271,16 +298,21 @@ class PublicValidateCouponView(generics.GenericAPIView):
             }, status=400)
 
         discount = 0.0
+        discount_base = subtotal
+        matching_item = None
+        if coupon.product:
+            matching_item = next((it for it in items if isinstance(it, dict) and int(it.get('id', 0) or 0) == coupon.product.id), None)
+            matching_qty = max(1, int(matching_item.get('quantity', 1))) if matching_item else 0
+            discount_base = float(coupon.product.price) * matching_qty
         bogo_message = ''
         if coupon.discount_type == 'PERCENTAGE':
-            discount = (subtotal * float(coupon.discount_value)) / 100.0
+            discount = (discount_base * float(coupon.discount_value)) / 100.0
             if coupon.max_discount_amount:
                 discount = min(discount, float(coupon.max_discount_amount))
         elif coupon.discount_type == 'BOGO':
             # Buy 1 Get 1 Free calculation logic:
             # Requires at least 2 quantity total (or 2 of specific product) to get 1 free item.
             if coupon.product:
-                matching_item = next((it for it in items if isinstance(it, dict) and it.get('id') == coupon.product.id), None)
                 qty = matching_item.get('quantity', 1) if matching_item else 1
                 price = float(coupon.product.price)
             else:
@@ -299,7 +331,7 @@ class PublicValidateCouponView(generics.GenericAPIView):
         elif coupon.discount_type == 'FREE_DELIVERY':
             discount = float(coupon.discount_value) if float(coupon.discount_value) > 0 else 0.0
         else:
-            discount = float(coupon.discount_value)
+            discount = min(float(coupon.discount_value), discount_base)
 
         discount = min(discount, subtotal)
         final_total = max(0.0, subtotal - discount)
@@ -496,7 +528,7 @@ def public_store_og_view(request, slug):
         store_url = f"{frontend_base}/s/{slug}"
     else:
         store_name = (store.name or "Online Store").strip()
-        b_type = (store.business_type or 'GENERAL').upper()
+        b_type = (store.business_type or 'GARMENTS').upper()
         cat_meta = CATEGORY_OG_METADATA.get(b_type, {
             'label': 'Official Online Store',
             'desc': 'संपूर्ण प्रॉडक्ट कॅटलॉग, ऑफर्स व थेट ऑनलाइन ऑर्डर.'
@@ -566,4 +598,3 @@ def public_store_og_view(request, slug):
 </body>
 </html>"""
     return HttpResponse(html_content, content_type="text/html; charset=utf-8")
-

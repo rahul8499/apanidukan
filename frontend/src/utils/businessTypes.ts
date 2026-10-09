@@ -11,10 +11,10 @@ export interface BusinessTypeConfig {
   sampleCategoriesEn?: string[]
   sampleCategoriesHi?: string[]
   sampleCategoriesMr?: string[]
-  sampleProducts?: { name: string; category: string; price: number; stock: number; unit: string; image?: string }[]
-  sampleProductsEn?: { name: string; category: string; price: number; stock: number; unit: string; image?: string }[]
-  sampleProductsHi?: { name: string; category: string; price: number; stock: number; unit: string; image?: string }[]
-  sampleProductsMr?: { name: string; category: string; price: number; stock: number; unit: string; image?: string }[]
+  sampleProducts?: { name: string; category: string; price: number; stock: number; unit: string; sizes?: string[]; image?: string }[]
+  sampleProductsEn?: { name: string; category: string; price: number; stock: number; unit: string; sizes?: string[]; image?: string }[]
+  sampleProductsHi?: { name: string; category: string; price: number; stock: number; unit: string; sizes?: string[]; image?: string }[]
+  sampleProductsMr?: { name: string; category: string; price: number; stock: number; unit: string; sizes?: string[]; image?: string }[]
   checkoutHint: string
   checkoutHintEn?: string
   checkoutHintHi?: string
@@ -23,7 +23,7 @@ export interface BusinessTypeConfig {
   customFieldPlaceholder?: string
 }
 
-export const BUSINESS_TYPES: BusinessTypeConfig[] = [
+const ALL_BUSINESS_TYPES: BusinessTypeConfig[] = [
   {
     id: 'GENERAL',
     name: 'General Store / Multi-Product',
@@ -90,13 +90,68 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
   {
     id: 'GARMENTS',
     name: 'Clothing, Garments & Fashion',
+    nameEn: 'Clothing, Garments & Fashion',
+    nameHi: 'कपड़े, गारमेंट्स एवं फैशन',
     nameMr: 'कपडे, फॅशन व गारमेंट्स',
     icon: '👗',
     defaultUnit: 'Pc',
-    units: ['Pc', 'Pair', 'Set', 'Size S', 'Size M', 'Size L', 'Size XL', 'Size XXL'],
-    sampleCategories: ['पुरुषांचे कपडे (शर्ट, पॅन्ट, जीन्स)', 'महिलांचे कपडे (साडी, ड्रेस, कुर्ती)', 'लहान मुलांचे कपडे', 'चप्पल, बूट आणि शूज', 'परफ्यूम, बेल्ट व इतर ॲक्सेसरीज'],
-    sampleProducts: [],
+    // Size and colour are product variants, not ordering units.
+    units: ['Pc', 'Pair', 'Set', 'Pack'],
+    sampleCategories: [
+      'Men - Shirts, T-Shirts & Topwear',
+      'Men - Jeans, Trousers & Bottomwear',
+      'Women - Sarees & Ethnic Wear',
+      'Women - Kurtis, Dresses & Western Wear',
+      'Kids & Baby Clothing',
+      'Innerwear, Loungewear & Nightwear',
+      'Footwear',
+      'Fashion Accessories',
+      'Winter & Seasonal Wear'
+    ],
+    sampleCategoriesEn: [
+      'Men - Shirts, T-Shirts & Topwear',
+      'Men - Jeans, Trousers & Bottomwear',
+      'Women - Sarees & Ethnic Wear',
+      'Women - Kurtis, Dresses & Western Wear',
+      'Kids & Baby Clothing',
+      'Innerwear, Loungewear & Nightwear',
+      'Footwear',
+      'Fashion Accessories',
+      'Winter & Seasonal Wear'
+    ],
+    sampleCategoriesHi: [
+      'पुरुष - शर्ट, टी-शर्ट एवं टॉपवियर',
+      'पुरुष - जींस, ट्राउजर एवं बॉटमवियर',
+      'महिलाएं - साड़ी एवं एथनिक वियर',
+      'महिलाएं - कुर्ती, ड्रेस एवं वेस्टर्न वियर',
+      'बच्चों एवं शिशुओं के कपड़े',
+      'इनरवियर, लाउंजवियर एवं नाइटवियर',
+      'फुटवियर',
+      'फैशन एक्सेसरीज़',
+      'विंटर एवं सीज़नल वियर'
+    ],
+    sampleCategoriesMr: [
+      'पुरुष - शर्ट, टी-शर्ट व टॉपवेअर',
+      'पुरुष - जीन्स, ट्राउझर्स व बॉटमवेअर',
+      'महिला - साड्या व पारंपरिक पोशाख',
+      'महिला - कुर्ती, ड्रेस व वेस्टर्न वेअर',
+      'लहान मुले व बाळांचे कपडे',
+      'इनरवेअर, लाउंजवेअर व नाइटवेअर',
+      'फुटवेअर',
+      'फॅशन ॲक्सेसरीज',
+      'हिवाळी व हंगामी कपडे'
+    ],
+    sampleProducts: [
+      { name: 'Classic Cotton Shirt', category: 'Men - Shirts, T-Shirts & Topwear', price: 799, stock: 40, unit: 'Pc', sizes: ['S', 'M', 'L', 'XL', 'XXL'] },
+      { name: 'Slim Fit Jeans', category: 'Men - Jeans, Trousers & Bottomwear', price: 1299, stock: 30, unit: 'Pc', sizes: ['28', '30', '32', '34', '36', '38'] },
+      { name: 'Women Printed Kurti', category: 'Women - Kurtis, Dresses & Western Wear', price: 899, stock: 35, unit: 'Pc', sizes: ['S', 'M', 'L', 'XL', 'XXL'] },
+      { name: 'Traditional Saree', category: 'Women - Sarees & Ethnic Wear', price: 1499, stock: 20, unit: 'Pc', sizes: ['FREE SIZE'] },
+      { name: 'Running Shoes', category: 'Footwear', price: 1799, stock: 24, unit: 'Pair', sizes: ['38', '40', '42', '44'] }
+    ],
     checkoutHint: 'Select Size, Color & Delivery Address',
+    checkoutHintEn: 'Confirm size and colour, then enter the delivery address',
+    checkoutHintHi: 'साइज़ और रंग की पुष्टि करें, फिर डिलीवरी पता दर्ज करें',
+    checkoutHintMr: 'साइज व रंग निश्चित करा, त्यानंतर डिलिव्हरी पत्ता भरा',
     customFieldLabel: 'Size & Color Confirmation',
     customFieldPlaceholder: 'e.g. Size L, Blue color preferred',
   },
@@ -263,6 +318,12 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
   },
 ]
 
+// Apani Dukan currently supports one focused storefront vertical. Keep this
+// exported collection as the single source used by onboarding and settings.
+export const BUSINESS_TYPES: BusinessTypeConfig[] = ALL_BUSINESS_TYPES.filter(
+  businessType => businessType.id === 'GARMENTS'
+)
+
 export const UNIT_LABEL_MAP: Record<string, { label: string; hint: string }> = {
   Kg: { label: 'Kg (किलो)', hint: 'धान्य, साखर, डाळी, मिठाई (किलो)' },
   'Half Kg': { label: 'Half Kg (अर्धा किलो)', hint: 'अर्धा किलो (500 Gm)' },
@@ -397,6 +458,7 @@ export function getUnitHint(unit: string, businessTypeId?: string): string {
       case 'Pieces': return 'टी-शर्ट, शर्ट, ड्रेस, जीन्स, साडी (नग)'
       case 'Pair': return 'शूज, सॉक्स, चप्पल, सँडल (जोडी)'
       case 'Set': return 'कपड्यांचा सेट / मॅचिंग सुट'
+      case 'Pack': return 'इनरवेअर, सॉक्स किंवा मल्टी-पीस पॅक'
       case 'Box': return 'गिफ्ट बॉक्स / शूज बॉक्स'
       case 'Meter': return 'कापड मीटर'
     }
@@ -513,7 +575,7 @@ export function getCartLabels(businessTypeId?: string): {
   ordersTitle: string;
   addedButton: string;
 } {
-  const type = businessTypeId?.toUpperCase() || 'GENERAL'
+  const type = businessTypeId?.toUpperCase() || 'GARMENTS'
 
   if (type === 'PHOTO_STUDIO' || type === 'SERVICES' || type === 'CONSULTING') {
     return { addButton: 'BOOK', addedButton: 'BOOKED', cartTitle: 'Booking Cart', ordersTitle: 'My Bookings' }
@@ -529,7 +591,7 @@ export function getCartLabels(businessTypeId?: string): {
 }
 
 export function getProductAddButtonLabel(businessTypeId?: string, unit?: string): string {
-  const type = businessTypeId?.toUpperCase() || 'GENERAL'
+  const type = businessTypeId?.toUpperCase() || 'GARMENTS'
   const cartLabels = getCartLabels(businessTypeId)
 
   if (type === 'PHOTO_STUDIO') {

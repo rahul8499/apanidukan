@@ -34,12 +34,16 @@ function ProductContent() {
   const [store, setStore] = useState<any>(null)
   const [otherProducts, setOtherProducts] = useState<any[]>([])
   const [coupons, setCoupons] = useState<any[]>([])
+  const [couponsLoading, setCouponsLoading] = useState(true)
+  const [couponLoadError, setCouponLoadError] = useState(false)
   const [selectedImgIndex, setSelectedImgIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [storeOffline, setStoreOffline] = useState(false)
 
   // Interactive UI States
   const [quantity, setQuantity] = useState(1)
+  const [selectedSize, setSelectedSize] = useState('')
+  const [sizeError, setSizeError] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [copiedToast, setCopiedToast] = useState(false)
@@ -58,6 +62,8 @@ function ProductContent() {
       .then((res) => {
         setProduct(res.data)
         setSelectedImgIndex(0)
+        setSelectedSize('')
+        setSizeError(false)
         if (res.data?.id) {
           const savedWishlist = localStorage.getItem(`multistore_wishlist_${res.data.id}`)
           setIsWishlisted(savedWishlist === 'true')
@@ -91,13 +97,15 @@ function ProductContent() {
       .catch(() => { })
 
     // Fetch Store Coupons
+    setCouponsLoading(true)
+    setCouponLoadError(false)
     api.get(`/public/stores/${storeSlug}/coupons/`)
       .then((res) => {
-        if (Array.isArray(res.data)) {
-          setCoupons(res.data)
-        }
+        const list = Array.isArray(res.data) ? res.data : (res.data?.results || res.data?.data || [])
+        setCoupons(Array.isArray(list) ? list : [])
       })
-      .catch(() => { })
+      .catch(() => { setCoupons([]); setCouponLoadError(true) })
+      .finally(() => setCouponsLoading(false))
   }, [storeSlug, productSlug])
 
   if (loading) {
@@ -162,11 +170,34 @@ function ProductContent() {
   }
 
   const currentImage = allImages[selectedImgIndex] || null
-  const applicableCoupons = (coupons || []).filter((c: any) => c && (c.product_id === product?.id || !c.product_id))
+  const numPrice = Number(product.price) || 0
+  const lineSubtotal = numPrice * quantity
+  const couponEstimate = (coupon: any) => {
+    const minimum = Number(coupon.min_order_amount || 0)
+    const eligible = lineSubtotal >= minimum && (coupon.discount_type !== 'BOGO' || quantity >= 2)
+    let saving = 0
+    let benefit = ''
+    if (coupon.discount_type === 'PERCENTAGE') {
+      saving = lineSubtotal * Number(coupon.discount_value || 0) / 100
+      if (coupon.max_discount_amount) saving = Math.min(saving, Number(coupon.max_discount_amount))
+      benefit = `${Number(coupon.discount_value)}% off${coupon.max_discount_amount ? `, up to ₹${Number(coupon.max_discount_amount).toFixed(0)}` : ''}`
+    } else if (coupon.discount_type === 'FLAT') {
+      saving = Math.min(lineSubtotal, Number(coupon.discount_value || 0))
+      benefit = `Flat ₹${Number(coupon.discount_value || 0).toFixed(0)} off`
+    } else if (coupon.discount_type === 'BOGO') {
+      saving = Math.floor(quantity / 2) * numPrice
+      benefit = 'Buy 1 Get 1 Free'
+    } else if (coupon.discount_type === 'FREE_DELIVERY') {
+      benefit = 'Free delivery at checkout'
+    }
+    return { eligible, saving: eligible ? saving : 0, benefit, shortfall: Math.max(0, minimum - lineSubtotal) }
+  }
+  const applicableCoupons = (coupons || [])
+    .filter((c: any) => c && (Number(c.product_id) === Number(product?.id) || !c.product_id))
+    .sort((a: any, b: any) => Number(Boolean(b.product_id)) - Number(Boolean(a.product_id)))
   const activeCoupon = applicableCoupons[0] || null
   const isOutOfStock = product.stock_quantity !== undefined && product.stock_quantity !== null && Number(product.stock_quantity) <= 0
 
-  const numPrice = Number(product.price) || 0
   const actualMRP = product.mrp && Number(product.mrp) > numPrice ? Number(product.mrp) : null
   const savings = actualMRP ? Math.max(0, actualMRP - numPrice) : 0
   const discountPercent = actualMRP ? Math.round((savings / actualMRP) * 100) : 0
@@ -197,13 +228,23 @@ function ProductContent() {
 
   const handleAddToCart = () => {
     if (isOutOfStock || !product) return
+    if (product.available_sizes?.length && !selectedSize) {
+      setSizeError(true)
+      return
+    }
+    if (selectedSize && Number(product.size_stock?.[selectedSize] || 0) < quantity) {
+      setSizeError(true)
+      return
+    }
     cart.add({
       id: product.id,
       slug: product.slug,
       name: product.name,
       price: product.price,
       image: currentImage || product.image,
-      unit: product.unit
+      unit: product.unit,
+      selectedSize,
+      selectedSizeStock: selectedSize ? Number(product.size_stock?.[selectedSize] || 0) : undefined
     }, quantity)
     setAddedToast(true)
     setTimeout(() => setAddedToast(false), 2200)
@@ -211,13 +252,23 @@ function ProductContent() {
 
   const handleBuyNow = () => {
     if (isOutOfStock || !product) return
+    if (product.available_sizes?.length && !selectedSize) {
+      setSizeError(true)
+      return
+    }
+    if (selectedSize && Number(product.size_stock?.[selectedSize] || 0) < quantity) {
+      setSizeError(true)
+      return
+    }
     cart.add({
       id: product.id,
       slug: product.slug,
       name: product.name,
       price: product.price,
       image: currentImage || product.image,
-      unit: product.unit
+      unit: product.unit,
+      selectedSize,
+      selectedSizeStock: selectedSize ? Number(product.size_stock?.[selectedSize] || 0) : undefined
     }, quantity)
     navigate(`/store/${storeSlug}/cart`)
   }
@@ -380,7 +431,7 @@ function ProductContent() {
               <Sparkles className="h-3.5 w-3.5 shrink-0 text-slate-950 animate-bounce" />
               <span className="truncate">
                 OFFER: Use code <strong className="font-mono bg-slate-950 text-amber-300 px-1 py-0.5 rounded text-[9px]">{activeCoupon.code}</strong> for{' '}
-                {activeCoupon.discount_type === 'PERCENTAGE' ? `${activeCoupon.discount_value}% OFF` : `FLAT ₹${activeCoupon.discount_value} OFF`}!
+                {couponEstimate(activeCoupon).benefit}!
               </span>
             </div>
             <button
@@ -576,18 +627,23 @@ function ProductContent() {
               </div>
 
               {/* Coupons Section (Display All Applicable Coupons) */}
-              {applicableCoupons.length > 0 && (
-                <div className="space-y-2 pt-0.5">
+              <div className="space-y-2 pt-0.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                   <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                     <Tag className="h-3 w-3 text-emerald-600" />
                     <span>Available Offers & Coupons ({applicableCoupons.length})</span>
                   </p>
+                  {couponsLoading && <div className="rounded-lg bg-white p-3 text-center text-[10px] font-bold text-slate-500">Checking available offers…</div>}
+                  {!couponsLoading && couponLoadError && <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-[10px] font-bold text-rose-700">Offers could not be loaded. Please refresh once.</div>}
+                  {!couponsLoading && !couponLoadError && applicableCoupons.length === 0 && <div className="rounded-lg border border-slate-200 bg-white p-3 text-center"><p className="text-[11px] font-bold text-slate-700">No active coupon for this product right now.</p><p className="mt-1 text-[9px] text-slate-500">Store-wide and product-specific offers will appear here automatically.</p></div>}
+                  {applicableCoupons.length > 0 && (
                   <div className="space-y-2">
-                    {applicableCoupons.map((c: any) => (
-                      <div key={c.id || c.code} className="rounded-xl bg-emerald-50/80 border border-emerald-200/90 p-2.5 space-y-1 relative shadow-2xs">
+                    {applicableCoupons.map((c: any) => {
+                      const estimate = couponEstimate(c)
+                      return (
+                      <div key={c.id || c.code} className={`rounded-xl border p-3 space-y-2 relative shadow-2xs ${estimate.eligible ? 'bg-emerald-50/80 border-emerald-200/90' : 'bg-amber-50/70 border-amber-200'}`}>
                         <div className="flex items-center justify-between gap-1.5">
-                          <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white uppercase tracking-wider">
-                            {c.product_id ? 'Item Offer' : 'Store Coupon'}
+                          <span className={`rounded px-1.5 py-0.5 text-[9px] font-black text-white uppercase tracking-wider ${c.product_id ? 'bg-violet-600' : 'bg-emerald-600'}`}>
+                            {c.product_id ? 'Only for this product' : c.is_scratch ? 'Scratch reward · Store-wide' : 'Store-wide coupon'}
                           </span>
                           <button
                             type="button"
@@ -597,15 +653,16 @@ function ProductContent() {
                             <Copy className="h-2.5 w-2.5" /> Copy Code
                           </button>
                         </div>
-                        <p className="text-[11px] font-bold text-emerald-950 break-words">
-                          Get {c.discount_type === 'PERCENTAGE' ? `${c.discount_value}% OFF` : `FLAT ₹${c.discount_value} OFF`} using <span className="font-mono bg-white border border-emerald-300 px-1 py-0.5 rounded text-emerald-900 text-[10px] font-black">{c.code}</span>
-                          {Number(c.min_order_amount) > 0 && ` (Min order ₹${c.min_order_amount})`}.
-                        </p>
+                        <div className="flex items-end justify-between gap-3">
+                          <div>{c.offer_name && <p className="text-[10px] font-bold text-amber-700">{c.offer_name}</p>}<p className="text-xs font-black text-slate-950">{c.reward_text || estimate.benefit}</p><p className="mt-0.5 text-[10px] font-medium text-slate-600">Use code <span className="font-mono rounded border bg-white px-1 py-0.5 font-black text-slate-900">{c.code}</span>{Number(c.min_order_amount) > 0 ? ` · Minimum ₹${Number(c.min_order_amount).toFixed(0)}` : ''}</p></div>
+                          {estimate.eligible && estimate.saving > 0 && <div className="shrink-0 text-right"><p className="text-[9px] font-bold uppercase text-emerald-700">Est. saving</p><p className="text-base font-black text-emerald-700">₹{estimate.saving.toFixed(0)}</p></div>}
+                        </div>
+                        {estimate.eligible ? <div className="rounded-lg border border-emerald-200 bg-white/80 px-2.5 py-1.5 text-[10px] font-bold text-emerald-900">On this selection: ₹{lineSubtotal.toFixed(0)} − ₹{estimate.saving.toFixed(0)} = <strong>₹{Math.max(0, lineSubtotal - estimate.saving).toFixed(0)}</strong>{c.discount_type === 'FREE_DELIVERY' ? ' + free delivery benefit' : ''}. Final benefit is verified in cart.</div> : <div className="rounded-lg border border-amber-200 bg-white/80 px-2.5 py-1.5 text-[10px] font-bold text-amber-900">{c.discount_type === 'BOGO' && quantity < 2 ? 'Select quantity 2 or more to unlock Buy 1 Get 1.' : `Add ₹${estimate.shortfall.toFixed(0)} more to unlock this coupon.`}</div>}
                       </div>
-                    ))}
+                    )})}
                   </div>
+                  )}
                 </div>
-              )}
 
               {/* Delivery & Pincode */}
               <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-2">
@@ -643,7 +700,7 @@ function ProductContent() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-3 gap-1.5 pt-0.5 text-center text-[10px]">
+              <div className="grid grid-cols-3 gap-1.5 pt-0.5 text-center text-[10px]">
                   <div className="rounded-lg bg-white p-2 border border-slate-200/80 space-y-0.5">
                     <Truck className="h-3.5 w-3.5 text-indigo-600 mx-auto" />
                     <p className="font-bold text-slate-800">Fast Shipping</p>
@@ -659,6 +716,32 @@ function ProductContent() {
                 </div>
               </div>
 
+              {product.available_sizes?.length > 0 && (
+                <div className={`rounded-xl border p-3 ${sizeError && !selectedSize ? 'border-rose-400 bg-rose-50' : 'border-indigo-200 bg-indigo-50/60'}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-black text-slate-900">Select Size <span className="text-rose-600">*</span></span>
+                    <span className="text-[10px] font-semibold text-slate-500">Available sizes</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {product.available_sizes.map((size: string) => {
+                      const sizeQuantity = Number(product.size_stock?.[size] || 0)
+                      return (
+                      <button
+                        key={size}
+                        type="button"
+                        disabled={sizeQuantity <= 0}
+                        aria-pressed={selectedSize === size}
+                        onClick={() => { setSelectedSize(size); setSizeError(false) }}
+                        className={`min-w-11 rounded-lg border px-3 py-2 text-xs font-black transition-all disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:line-through ${selectedSize === size ? 'border-slate-950 bg-slate-950 text-white ring-2 ring-indigo-300' : 'border-slate-300 bg-white text-slate-800 hover:border-indigo-500'}`}
+                      >
+                        {size}<span className="ml-1 text-[8px] opacity-70">({sizeQuantity})</span>
+                      </button>
+                    )})}
+                  </div>
+                  {sizeError && !selectedSize && <p className="mt-2 text-[11px] font-bold text-rose-600">Please select a size before adding this item.</p>}
+                </div>
+              )}
+
               {/* Quantity Counter */}
               <div className="flex items-center justify-between pt-1 border-t border-slate-100">
                 <span className="text-[11px] font-bold uppercase text-slate-500">Qty:</span>
@@ -673,7 +756,8 @@ function ProductContent() {
                   <span className="font-black text-sm w-5 text-center">{quantity}</span>
                   <button
                     onClick={() => setQuantity(q => q + 1)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 font-bold"
+                    disabled={selectedSize ? quantity >= Number(product.size_stock?.[selectedSize] || 0) : quantity >= Number(product.stock_quantity || 0)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100 font-bold disabled:opacity-40"
                   >
                     <Plus className="h-3 w-3" />
                   </button>
@@ -750,13 +834,52 @@ function ProductContent() {
 
               <div className="pt-1 text-xs leading-relaxed text-slate-700">
                 {activeTab === 'description' && (
-                  <p className="whitespace-pre-line break-words bg-slate-50/80 p-3 rounded-xl border border-slate-100 leading-relaxed font-medium text-slate-800">
-                    {product.description || product.short_description || 'No detailed description provided.'}
-                  </p>
+                  <div className="space-y-3">
+                    <div className="whitespace-pre-line break-words bg-slate-50/80 p-3 rounded-xl border border-slate-100 leading-relaxed font-medium text-slate-800">
+                      {product.description || product.short_description || 'Product description has not been added by the seller.'}
+                    </div>
+                    <div className={`rounded-xl border p-3.5 ${store?.exchange_enabled ? 'border-emerald-200 bg-emerald-50/70' : 'border-slate-200 bg-slate-50'}`}>
+                      <div className="flex items-start gap-2.5">
+                        <RotateCcw className={`mt-0.5 h-4 w-4 shrink-0 ${store?.exchange_enabled ? 'text-emerald-700' : 'text-slate-400'}`} />
+                        <div className="space-y-1.5">
+                          <h4 className="font-black text-slate-950">Exchange Policy</h4>
+                          {store?.exchange_enabled ? <>
+                            <p className="font-bold text-emerald-800">Size exchange available within {store.exchange_window_days || 7} days after delivery.</p>
+                            <p className="text-[11px] leading-relaxed text-slate-700">{store.exchange_policy || 'The item must be unused, unwashed and returned with its original tags and packaging.'}</p>
+                            <ul className="space-y-1 pt-1 text-[10px] font-medium text-slate-600">
+                              <li>• Replacement is subject to the requested size being in stock.</li>
+                              <li>• {store.exchange_evidence_required ? 'Photo evidence is required while submitting the request.' : 'Photo evidence is optional.'}</li>
+                              <li>• Exchange request becomes available from the delivered-order tracking page.</li>
+                            </ul>
+                          </> : <p className="text-[11px] font-semibold text-slate-600">This store does not currently offer product exchange.</p>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 {activeTab === 'highlights' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className={`rounded-xl p-2.5 border flex items-center justify-between ${store?.exchange_enabled ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                      <span className="text-slate-500 font-medium">Size Exchange</span>
+                      <span className={`font-bold ${store?.exchange_enabled ? 'text-emerald-800' : 'text-slate-600'}`}>{store?.exchange_enabled ? `${store.exchange_window_days || 7} days` : 'Not available'}</span>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-200/80 flex items-center justify-between">
+                      <span className="text-slate-500 font-medium">Ordering Unit</span>
+                      <span className="font-bold text-slate-900">{formatUnitDisplay(product.unit || 'Pc')}</span>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-200/80 flex items-center justify-between gap-3">
+                      <span className="text-slate-500 font-medium">Available Sizes</span>
+                      <span className="font-bold text-right text-slate-900">{product.available_sizes?.length ? product.available_sizes.join(', ') : 'Standard size'}</span>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-200/80 flex items-center justify-between">
+                      <span className="text-slate-500 font-medium">Evidence</span>
+                      <span className="font-bold text-slate-900">{store?.exchange_enabled ? (store.exchange_evidence_required ? 'Photo required' : 'Optional') : 'Not applicable'}</span>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-200/80 flex items-center justify-between">
+                      <span className="text-slate-500 font-medium">Fulfilment</span>
+                      <span className="font-bold text-slate-900">{store?.allow_home_delivery && store?.allow_store_pickup !== false ? 'Delivery & Store Pickup' : store?.allow_home_delivery ? 'Home Delivery' : 'Store Pickup'}</span>
+                    </div>
                     <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-200/80 flex items-center justify-between">
                       <span className="text-slate-500 font-medium">Category</span>
                       <span className="font-bold text-slate-900 truncate max-w-[130px]">{product.category?.name || 'General'}</span>

@@ -17,6 +17,9 @@ import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeC
 import { getStoreShareUrl, getStoreWhatsAppShareLink } from '../utils/storeShareMessage'
 import { X, Trash2 } from 'lucide-react'
 
+const GARMENT_SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '28', '30', '32', '34', '36', '38', '40', '42', '44', '46', 'FREE SIZE']
+const parseSizeList = (value?: string) => (value || '').split(/[|,]/).map(size => size.trim().toUpperCase()).filter(Boolean)
+
 const errorMessage = (error: any) =>
   error?.response?.data?.detail || Object.values(error?.response?.data || {}).flat().join(' ') || 'Please check the form and try again.'
 
@@ -71,25 +74,29 @@ export default function StoreManager() {
   // Dedicated Bulk Product Creator State
   const [bulkCategory, setBulkCategory] = useState('')
   const [bulkMode, setBulkMode] = useState<'matrix' | 'text' | 'csv'>('csv')
-  const [bulkRows, setBulkRows] = useState<{ name: string; price: string; stock: string; image_files?: File[]; image_preview_urls?: string[] }[]>([
-    { name: '', price: '', stock: '100' },
-    { name: '', price: '', stock: '100' },
-    { name: '', price: '', stock: '100' },
-    { name: '', price: '', stock: '100' },
+  const [bulkRows, setBulkRows] = useState<{ name: string; price: string; stock: string; unit: string; sizes: string; size_stock: string; image_files?: File[]; image_preview_urls?: string[] }[]>([
+    { name: '', price: '', stock: '100', unit: 'Pc', sizes: '', size_stock: '' },
+    { name: '', price: '', stock: '100', unit: 'Pc', sizes: '', size_stock: '' },
+    { name: '', price: '', stock: '100', unit: 'Pc', sizes: '', size_stock: '' },
+    { name: '', price: '', stock: '100', unit: 'Pc', sizes: '', size_stock: '' },
   ])
   const [bulkRawText, setBulkRawText] = useState('')
   const [textDefaultStock, setTextDefaultStock] = useState('100')
 
   // CSV Import & Collapsible Feature State
   const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [csvPreview, setCsvPreview] = useState<{ category_name: string; name: string; price: string; description: string; stock?: string; image_url?: string; image_file?: File; image_preview_url?: string }[]>([])
+  const [csvPreview, setCsvPreview] = useState<{ category_name: string; name: string; price: string; description: string; stock?: string; unit?: string; sizes?: string; size_stock?: string; image_url?: string; image_file?: File; image_preview_url?: string }[]>([])
   const [isImporting, setIsImporting] = useState(false)
   const [isKillerFeatureOpen, setIsKillerFeatureOpen] = useState(false)
   const [guideModalType, setGuideModalType] = useState<'csv' | 'text' | 'matrix' | null>(null)
 
   // Product Edit Modal & Sidebar Drawer State
   const [productUnit, setProductUnit] = useState('')
+  const [productSizes, setProductSizes] = useState<string[]>([])
+  const [productSizeStock, setProductSizeStock] = useState<Record<string, number>>({})
   const [editUnit, setEditUnit] = useState('')
+  const [editSizes, setEditSizes] = useState<string[]>([])
+  const [editSizeStock, setEditSizeStock] = useState<Record<string, number>>({})
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<any | null>(null)
   const [editName, setEditName] = useState('')
@@ -148,20 +155,6 @@ export default function StoreManager() {
     })
   }
 
-  function requestUpdateBusinessType(newType: string) {
-    if (!store || newType === store.business_type) return
-    const bTitle = getBusinessTypeTitle(getBusinessType(newType), i18n.language || 'mr')
-    setConfirmModal({
-      isOpen: true,
-      title: 'Business Category Badlaychi?',
-      message: `तुम्हाला दुकानाची श्रेणी "${bTitle}" मध्ये बदलावायची आहे का? यामुळे चेकाऊट नियम आणि युनिट्स अपडेट होतील.`,
-      confirmText: '⚙️ Yes, Change',
-      cancelText: 'Cancel',
-      variant: 'primary',
-      onConfirm: () => handleUpdateBusinessType(newType)
-    })
-  }
-
   function requestBulkDeleteCategories() {
     if (selectedCatIds.length === 0) return
     setConfirmModal({
@@ -182,6 +175,8 @@ export default function StoreManager() {
     setEditStock(String(prod.stock_quantity ?? 100))
     setEditCategory(prod.category ? String(prod.category) : '')
     setEditUnit(prod.unit || getBusinessType(store?.business_type).defaultUnit)
+    setEditSizes(Array.isArray(prod.available_sizes) ? prod.available_sizes : [])
+    setEditSizeStock(prod.size_stock && typeof prod.size_stock === 'object' ? prod.size_stock : {})
   }
 
   async function handleSaveProductEdit(e: React.FormEvent) {
@@ -194,7 +189,9 @@ export default function StoreManager() {
         price: editPrice,
         stock_quantity: parseInt(editStock || '0', 10),
         category: editCategory ? parseInt(editCategory, 10) : null,
-        unit: editUnit || 'Pc'
+        unit: editUnit || 'Pc',
+        available_sizes: editSizes,
+        size_stock: editSizes.reduce((result, size) => ({ ...result, [size]: Math.max(0, Number(editSizeStock[size] || 0)) }), {})
       })
       toast.success(`✏️ '${editName}' updated successfully!`)
       setEditingProduct(null)
@@ -203,19 +200,6 @@ export default function StoreManager() {
       toast.error(errorMessage(err))
     } finally {
       setIsUpdatingProduct(false)
-    }
-  }
-
-  async function handleUpdateBusinessType(newType: string) {
-    if (!store) return
-    const loadingId = toast.loading('Updating business category...')
-    try {
-      const res = await api.patch(`/stores/${store.id}/`, { business_type: newType })
-      setStore(res.data)
-      setCachedStore(res.data)
-      toast.success(`🎉 Business Category set to ${getBusinessType(newType).name}!`, { id: loadingId })
-    } catch (err) {
-      toast.error(errorMessage(err), { id: loadingId })
     }
   }
 
@@ -626,6 +610,8 @@ export default function StoreManager() {
       data.append('currency', 'INR')
       data.append('is_published', 'true')
       data.append('unit', productUnit || getBusinessType(store?.business_type).defaultUnit)
+      data.append('available_sizes', JSON.stringify(productSizes))
+      data.append('size_stock', JSON.stringify(productSizes.reduce((result, size) => ({ ...result, [size]: Math.max(0, Number(productSizeStock[size] || 0)) }), {})))
       if (category) data.append('category', category)
       if (file) {
         data.append('digital_file', file)
@@ -647,7 +633,7 @@ export default function StoreManager() {
 
       await api.post('/products/', data, { headers: { 'Content-Type': 'multipart/form-data' } })
       const addedName = productName
-      setProductName(''); setPrice('0'); setStockQuantity('100'); setCategory(''); setFile(null); setProductImages([]); setProductPrimaryIndex(0)
+      setProductName(''); setPrice('0'); setStockQuantity('100'); setCategory(''); setFile(null); setProductImages([]); setProductPrimaryIndex(0); setProductSizes([]); setProductSizeStock({})
       toast.success(`🎉 SUCCESS: Product '${addedName}' published to store with ${productImages.length || 1} photo(s)!`, { id: toastId })
       load()
     } catch (error) {
@@ -660,10 +646,10 @@ export default function StoreManager() {
 
   // Bulk Product Handlers
   function handleAddBulkRow() {
-    setBulkRows(prev => [...prev, { name: '', price: '', stock: '100' }])
+    setBulkRows(prev => [...prev, { name: '', price: '', stock: '100', unit: 'Pc', sizes: '', size_stock: '' }])
   }
 
-  function handleRowChange(index: number, field: 'name' | 'price' | 'stock', value: string) {
+  function handleRowChange(index: number, field: 'name' | 'price' | 'stock' | 'unit' | 'sizes' | 'size_stock', value: string) {
     setBulkRows(prev => {
       const updated = [...prev]
       updated[index][field] = value
@@ -709,15 +695,19 @@ export default function StoreManager() {
     if (!bulkRawText.trim()) return
     const lines = bulkRawText.split('\n').map(l => l.trim()).filter(Boolean)
     const parsed = lines.map(line => {
+      const garmentParts = line.split(/\s+-\s+/)
+      if (garmentParts.length >= 5) {
+        return { name: garmentParts.slice(0, -4).join(' - '), price: garmentParts.at(-4) || '0', stock: garmentParts.at(-3) || '100', unit: garmentParts.at(-2) || 'Pc', sizes: garmentParts.at(-1) || '', size_stock: '' }
+      }
       const matchWithStock = line.match(/^(.+?)(?:[-:=]|\s+₹?|\s+INR\s+)?\s*₹?\s*(\d+(?:\.\d{1,2})?)\s*(?:[-:=,]|stock[:=]?|qty[:=]?|\s+)?\s*(\d+)?$/i)
       if (matchWithStock && matchWithStock[3]) {
-        return { name: matchWithStock[1].trim(), price: matchWithStock[2].trim(), stock: matchWithStock[3].trim() }
+        return { name: matchWithStock[1].trim(), price: matchWithStock[2].trim(), stock: matchWithStock[3].trim(), unit: 'Pc', sizes: '', size_stock: '' }
       }
       const match = line.match(/^(.+?)(?:[-:=]|\s+₹?|\s+INR\s+)?\s*₹?\s*(\d+(?:\.\d{1,2})?)$/i)
       if (match) {
-        return { name: match[1].trim(), price: match[2].trim(), stock: textDefaultStock || '100' }
+        return { name: match[1].trim(), price: match[2].trim(), stock: textDefaultStock || '100', unit: 'Pc', sizes: '', size_stock: '' }
       }
-      return { name: line, price: '0', stock: textDefaultStock || '100' }
+      return { name: line, price: '0', stock: textDefaultStock || '100', unit: 'Pc', sizes: '', size_stock: '' }
     })
     setBulkRows(parsed)
     setBulkMode('matrix')
@@ -728,15 +718,19 @@ export default function StoreManager() {
     if (!store || !bulkRawText.trim()) return
     const lines = bulkRawText.split('\n').map(l => l.trim()).filter(Boolean)
     const items = lines.map(line => {
+      const garmentParts = line.split(/\s+-\s+/)
+      if (garmentParts.length >= 5) {
+        return { name: garmentParts.slice(0, -4).join(' - '), price: garmentParts.at(-4) || '0', stock: garmentParts.at(-3) || '100', unit: garmentParts.at(-2) || 'Pc', available_sizes: parseSizeList(garmentParts.at(-1)) }
+      }
       const matchWithStock = line.match(/^(.+?)(?:[-:=]|\s+₹?|\s+INR\s+)?\s*₹?\s*(\d+(?:\.\d{1,2})?)\s*(?:[-:=,]|stock[:=]?|qty[:=]?|\s+)?\s*(\d+)?$/i)
       if (matchWithStock && matchWithStock[3]) {
-        return { name: matchWithStock[1].trim(), price: matchWithStock[2].trim(), stock: matchWithStock[3].trim() }
+        return { name: matchWithStock[1].trim(), price: matchWithStock[2].trim(), stock: matchWithStock[3].trim(), unit: 'Pc', available_sizes: [] }
       }
       const match = line.match(/^(.+?)(?:[-:=]|\s+₹?|\s+INR\s+)?\s*₹?\s*(\d+(?:\.\d{1,2})?)$/i)
       if (match) {
-        return { name: match[1].trim(), price: match[2].trim(), stock: textDefaultStock || '100' }
+        return { name: match[1].trim(), price: match[2].trim(), stock: textDefaultStock || '100', unit: 'Pc', available_sizes: [] }
       }
-      return { name: line, price: '0', stock: textDefaultStock || '100' }
+      return { name: line, price: '0', stock: textDefaultStock || '100', unit: 'Pc', available_sizes: [] }
     }).filter(i => i.name.trim() !== '')
 
     if (items.length === 0) {
@@ -778,7 +772,10 @@ export default function StoreManager() {
         const payloadItem: any = {
           name: item.name,
           price: item.price || '0',
-          stock: item.stock || '100'
+          stock: item.stock || '100',
+          unit: item.unit || 'Pc',
+          available_sizes: parseSizeList(item.sizes),
+          size_stock: item.size_stock
         }
         if (item.image_files && item.image_files.length > 0) {
           const keys: string[] = []
@@ -799,10 +796,10 @@ export default function StoreManager() {
       })
       toast.success(`🚀 ${res.data.created_count} products added with stock & images in 1-Click!`, { id: toastId })
       setBulkRows([
-        { name: '', price: '', stock: '100' },
-        { name: '', price: '', stock: '100' },
-        { name: '', price: '', stock: '100' },
-        { name: '', price: '', stock: '100' }
+        { name: '', price: '', stock: '100', unit: 'Pc', sizes: '', size_stock: '' },
+        { name: '', price: '', stock: '100', unit: 'Pc', sizes: '', size_stock: '' },
+        { name: '', price: '', stock: '100', unit: 'Pc', sizes: '', size_stock: '' },
+        { name: '', price: '', stock: '100', unit: 'Pc', sizes: '', size_stock: '' }
       ])
       setBulkRawText('')
       load()
@@ -814,15 +811,15 @@ export default function StoreManager() {
   // CSV Import Handlers
   function downloadSampleCsv() {
     const currentBType = getBusinessType(store?.business_type)
-    const header = 'Category,Product Name,Price,Stock,Unit,Description,Image URL\n'
+    const header = 'Category,Product Name,Price,Stock,Unit,Available Sizes,Size Stock,Description,Image URL\n'
 
     let rows = ''
     if (currentBType.sampleProducts && currentBType.sampleProducts.length > 0) {
       rows = currentBType.sampleProducts.map(sp =>
-        `"${sp.category}","${sp.name}",${sp.price},${sp.stock},"${sp.unit}","Quality ${sp.name} for your store","${sp.image || ''}"`
+        `"${sp.category}","${sp.name}",${sp.price},${sp.stock},"${sp.unit}","${(sp.sizes || []).join('|')}","${(sp.sizes || []).map((size, index, sizes) => `${size}:${Math.floor(sp.stock / sizes.length) + (index < sp.stock % sizes.length ? 1 : 0)}`).join('|')}","Quality ${sp.name} for your store","${sp.image || ''}"`
       ).join('\n')
     } else {
-      rows = `General Products,Sample Item 1,199,50,Pc,Sample description,"sample1.jpg, sample2.jpg"`
+      rows = `Men - Shirts, T-Shirts & Topwear,Classic Cotton Shirt,799,40,Pc,"S|M|L|XL|XXL","S:8|M:8|L:8|XL:8|XXL:8",Premium cotton shirt,"shirt-front.jpg, shirt-back.jpg"`
     }
 
     const csvContent = header + rows
@@ -840,9 +837,9 @@ export default function StoreManager() {
     const currentBType = getBusinessType(store?.business_type)
     let textContent = ''
     if (currentBType.sampleProducts && currentBType.sampleProducts.length > 0) {
-      textContent = currentBType.sampleProducts.map(sp => `${sp.name} - ${sp.price} - ${sp.stock} - ${sp.unit}`).join('\n')
+      textContent = currentBType.sampleProducts.map(sp => `${sp.name} - ${sp.price} - ${sp.stock} - ${sp.unit} - ${(sp.sizes || []).join('|')}`).join('\n')
     } else {
-      textContent = `Full Face Riding Helmet - 1850 - 50 - Pc\nEngine Oil 1L - 450 - 20 - Litre\nSugar - 42 - 100 - Kg`
+      textContent = `Classic Cotton Shirt - 799 - 40 - Pc - S|M|L|XL|XXL\nSlim Fit Jeans - 1299 - 30 - Pc - 28|30|32|34|36\nTraditional Saree - 1499 - 20 - Pc - FREE SIZE`
     }
     const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -907,6 +904,9 @@ export default function StoreManager() {
       let priceIdx = headers.findIndex(h => h.includes('price') || h.includes('cost') || h.includes('rate') || h.includes('amt') || h.includes('amount'))
       let stockIdx = headers.findIndex(h => h.includes('stock') || h.includes('qty') || h.includes('quantity') || h.includes('count'))
       let unitIdx = headers.findIndex(h => h.includes('unit') || h.includes('measure') || h.includes('pkg'))
+      let sizesIdx = headers.findIndex(h => h.includes('size') || h.includes('variant'))
+      let sizeStockIdx = headers.findIndex(h => (h.includes('size') || h.includes('variant')) && h.includes('stock'))
+      if (sizeStockIdx === sizesIdx) sizesIdx = headers.findIndex((h, index) => index !== sizeStockIdx && (h.includes('size') || h.includes('variant')))
       let descIdx = headers.findIndex(h => h.includes('desc') || h.includes('details') || h.includes('note'))
       let imgIdx = headers.findIndex(h => h.includes('img') || h.includes('image') || h.includes('photo') || h.includes('pic') || h.includes('url'))
 
@@ -915,7 +915,7 @@ export default function StoreManager() {
       if (nameIdx === -1 && rawHeaders.length >= 3) nameIdx = 1
       if (priceIdx === -1 && rawHeaders.length >= 3) priceIdx = 2
 
-      const parsedItems: { category_name: string; name: string; price: string; description: string; stock?: string; unit?: string; image_url?: string }[] = []
+      const parsedItems: { category_name: string; name: string; price: string; description: string; stock?: string; unit?: string; sizes?: string; size_stock?: string; image_url?: string }[] = []
 
       for (let i = 1; i < lines.length; i++) {
         const cols = parseCSVLine(lines[i], delimiter)
@@ -927,6 +927,8 @@ export default function StoreManager() {
         const prodPrice = rawPriceStr.replace(/[^\d.]/g, '')
         const prodStock = stockIdx >= 0 && cols[stockIdx] ? cols[stockIdx].replace(/[^\d]/g, '') : '100'
         const prodUnit = unitIdx >= 0 && cols[unitIdx] ? cols[unitIdx] : ''
+        const prodSizes = sizesIdx >= 0 && cols[sizesIdx] ? cols[sizesIdx] : ''
+        const prodSizeStock = sizeStockIdx >= 0 && cols[sizeStockIdx] ? cols[sizeStockIdx] : ''
         const prodDesc = descIdx >= 0 && cols[descIdx] ? cols[descIdx] : ''
         const prodImg = imgIdx >= 0 && cols[imgIdx] ? cols[imgIdx] : ''
 
@@ -937,6 +939,8 @@ export default function StoreManager() {
             price: prodPrice || '0',
             stock: prodStock || '100',
             unit: prodUnit,
+            sizes: prodSizes,
+            size_stock: prodSizeStock,
             description: prodDesc,
             image_url: prodImg
           })
@@ -1006,6 +1010,9 @@ export default function StoreManager() {
           name: item.name,
           price: item.price,
           stock: item.stock || '100',
+          unit: item.unit || 'Pc',
+          available_sizes: parseSizeList(item.sizes),
+          size_stock: item.size_stock,
           description: item.description,
           image_url: item.image_url
         }
@@ -1028,6 +1035,35 @@ export default function StoreManager() {
       await load()
     } catch (error) {
       toast.error(errorMessage(error))
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
+  async function handleDemoCsvImport() {
+    if (!store || isImporting) return
+    const sampleProducts = getBusinessTypeProducts(getBusinessType(store.business_type), i18n.language)
+    if (!sampleProducts.length) return
+    setIsImporting(true)
+    const toastId = toast.loading('Importing demo garments with sizes...')
+    try {
+      const res = await api.post('/products/bulk-create/', {
+        store_id: store.id,
+        products: sampleProducts.map(item => ({
+          category_name: item.category,
+          name: item.name,
+          price: item.price,
+          stock: item.stock,
+          unit: item.unit,
+          available_sizes: item.sizes || [],
+          description: `Quality ${item.name}`
+        }))
+      })
+      toast.success(`${res.data.created_count} demo garments imported with sizes.`, { id: toastId })
+      setShowDemoCsvModal(false)
+      await load()
+    } catch (error) {
+      toast.error(errorMessage(error), { id: toastId })
     } finally {
       setIsImporting(false)
     }
@@ -1503,7 +1539,7 @@ export default function StoreManager() {
                       <span>📊 CSV Columns Supported:</span>
                       <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Multi-Image Active</span>
                     </p>
-                    <p className="text-[11px] font-mono text-slate-600 mt-0.5">Category, Product Name, Price, Stock, Unit, Description, Image URL</p>
+                    <p className="text-[11px] font-mono text-slate-600 mt-0.5">Category, Product Name, Price, Stock, Unit, Available Sizes, Size Stock, Description, Image URL</p>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -1585,6 +1621,8 @@ export default function StoreManager() {
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {item.category_name && <span className="text-[10px] bg-indigo-50 font-bold text-indigo-600 px-1.5 py-0.5 rounded">{item.category_name}</span>}
                                 <span className="text-[10px] bg-slate-100 font-bold text-slate-700 px-1.5 py-0.5 rounded">Stock: {item.stock || '100'}</span>
+                                {item.sizes && <span className="text-[10px] bg-indigo-100 font-bold text-indigo-700 px-1.5 py-0.5 rounded">Sizes: {parseSizeList(item.sizes).join(', ') || '—'}</span>}
+                                {item.size_stock && <span className="text-[10px] bg-amber-100 font-bold text-amber-800 px-1.5 py-0.5 rounded">Size stock: {item.size_stock}</span>}
                                 {item.image_file && <span className="text-[10px] bg-emerald-50 font-bold text-emerald-600 px-1 py-0.5 rounded">Local File attached</span>}
                               </div>
                             </div>
@@ -1624,7 +1662,7 @@ export default function StoreManager() {
                       <span>✨ Text Product Import:</span>
                       <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Paste & Import</span>
                     </p>
-                    <p className="text-[11px] font-mono text-slate-600 mt-0.5">Format: Product Name - Price - Stock Quantity</p>
+                    <p className="text-[11px] font-mono text-slate-600 mt-0.5">Format: Product Name - Price - Stock - Unit - Sizes (S|M|L|XL)</p>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
@@ -1675,13 +1713,13 @@ export default function StoreManager() {
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-slate-200">Paste product list (1 item per line):</label>
-                    <span className="text-[10px] font-bold text-indigo-300 bg-white/10 px-2 py-0.5 rounded border border-white/10">Format: Name - Price - Stock</span>
+                    <span className="text-[10px] font-bold text-indigo-300 bg-white/10 px-2 py-0.5 rounded border border-white/10">Name - Price - Stock - Unit - Sizes</span>
                   </div>
                   <textarea
                     rows={5}
                     value={bulkRawText}
                     onChange={e => setBulkRawText(e.target.value)}
-                    placeholder={`Example:\nFull Face Riding Helmet - 1850 - 50\nEngine Oil 1L - 450 - 20\nChain Lube - 250 - 100\nBike Polish - 180 - 15`}
+                    placeholder={`Example:\nClassic Cotton Shirt - 799 - 40 - Pc - S|M|L|XL|XXL\nSlim Fit Jeans - 1299 - 30 - Pc - 28|30|32|34|36\nTraditional Saree - 1499 - 20 - Pc - FREE SIZE`}
                     className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none"
                   />
                 </div>
@@ -1777,6 +1815,30 @@ export default function StoreManager() {
                           className="w-full rounded-lg border border-slate-200 p-1.5 text-xs font-bold text-slate-800 focus:outline-indigo-500 text-center"
                         />
                       </div>
+                      <select
+                        value={row.unit}
+                        onChange={e => handleRowChange(idx, 'unit', e.target.value)}
+                        title="Ordering Unit"
+                        className="w-16 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800"
+                      >
+                        {getBusinessType(store?.business_type).units.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Sizes: S|M|L"
+                        title="Available Sizes separated by | or comma"
+                        value={row.sizes}
+                        onChange={e => handleRowChange(idx, 'sizes', e.target.value)}
+                        className="w-28 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-indigo-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="S:5|M:8|L:4"
+                        title="Stock for each selected size"
+                        value={row.size_stock}
+                        onChange={e => handleRowChange(idx, 'size_stock', e.target.value)}
+                        className="w-32 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-indigo-500"
+                      />
                       <div className="flex items-center gap-1 shrink-0">
                         {row.image_preview_urls && row.image_preview_urls.length > 0 ? (
                           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
@@ -1880,18 +1942,10 @@ export default function StoreManager() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
-              <label className="text-[9.5px] font-extrabold text-indigo-300 uppercase tracking-wider block">Change Category:</label>
-              <select
-                value={store.business_type || 'GENERAL'}
-                onChange={e => requestUpdateBusinessType(e.target.value)}
-                className="mt-0.5 w-full rounded-lg border border-indigo-700 bg-slate-900 px-2 py-1 text-xs font-bold text-white focus:border-amber-400 focus:outline-none"
-              >
-                {BUSINESS_TYPES.map(b => (
-                  <option key={b.id} value={b.id}>
-                    {b.icon} {getBusinessTypeTitle(b, i18n.language)}
-                  </option>
-                ))}
-              </select>
+              <label className="text-[9.5px] font-extrabold text-indigo-300 uppercase tracking-wider block">Store Category:</label>
+              <div className="mt-0.5 w-full rounded-lg border border-indigo-700 bg-slate-900 px-2 py-1 text-xs font-bold text-white">
+                {BUSINESS_TYPES[0].icon} {getBusinessTypeTitle(BUSINESS_TYPES[0], i18n.language)}
+              </div>
             </div>
 
             <div className="rounded-lg bg-white/5 p-2 border border-white/10 space-y-0.5">
@@ -2096,9 +2150,50 @@ export default function StoreManager() {
                 <span><strong>{formatUnitDisplay(productUnit || getBusinessType(store?.business_type).defaultUnit)}:</strong> {getUnitHint(productUnit || getBusinessType(store?.business_type).defaultUnit, store?.business_type)}</span>
               </p>
             </div>
+            <div className="col-span-full lg:col-span-3 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-1">
+                <label className="text-[11px] sm:text-xs font-black text-slate-800">Available Sizes (multiple select)</label>
+                <span className="text-[10px] font-semibold text-slate-500">Optional for Free Size / non-sized items</span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {GARMENT_SIZE_OPTIONS.map(size => {
+                  const selected = productSizes.includes(size)
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => {
+                        setProductSizes(current => selected ? current.filter(item => item !== size) : [...current, size])
+                        setProductSizeStock(current => {
+                          const next = { ...current }
+                          if (selected) delete next[size]
+                          else next[size] = 0
+                          return next
+                        })
+                      }}
+                      className={`rounded-lg border px-3 py-1.5 text-xs font-black transition-all ${selected ? 'border-indigo-700 bg-indigo-700 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-400'}`}
+                    >
+                      {selected ? '✓ ' : ''}{size}
+                    </button>
+                  )
+                })}
+              </div>
+              {productSizes.length > 0 && <p className="mt-2 text-[10px] font-bold text-indigo-700">Selected: {productSizes.join(', ')}</p>}
+              {productSizes.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-indigo-200 pt-3">
+                  {productSizes.map(size => (
+                    <label key={size} className="text-[10px] font-black text-slate-700">
+                      {size} Stock
+                      <input type="number" min="0" required value={productSizeStock[size] ?? 0} onChange={event => setProductSizeStock(current => ({ ...current, [size]: Math.max(0, Number(event.target.value)) }))} className="mt-1 w-full rounded-lg border border-indigo-200 bg-white p-2 text-xs font-bold" />
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
             <div>
               <label className="text-[11px] sm:text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language, productUnit || getBusinessType(store?.business_type).defaultUnit)}</label>
-              <input value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" placeholder="Default 100" className="premium-input mt-0.5 p-2 text-xs" />
+              <input value={productSizes.length ? String(Object.values(productSizeStock).reduce((sum, quantity) => sum + Number(quantity || 0), 0)) : stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" disabled={productSizes.length > 0} placeholder="Default 100" className="premium-input mt-0.5 p-2 text-xs disabled:bg-slate-100" />
             </div>
             <div>
               <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('category')} <span className="text-rose-500 font-extrabold">*</span></label>
@@ -2250,6 +2345,34 @@ export default function StoreManager() {
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-3">
+                <label className="text-xs font-black text-slate-800">Available Sizes (multiple select)</label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {GARMENT_SIZE_OPTIONS.map(size => {
+                    const selected = editSizes.includes(size)
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => {
+                          setEditSizes(current => selected ? current.filter(item => item !== size) : [...current, size])
+                          setEditSizeStock(current => {
+                            const next = { ...current }
+                            if (selected) delete next[size]
+                            else next[size] = 0
+                            return next
+                          })
+                        }}
+                        className={`rounded-lg border px-2.5 py-1 text-[11px] font-black ${selected ? 'border-indigo-700 bg-indigo-700 text-white' : 'border-slate-300 bg-white text-slate-700'}`}
+                      >
+                        {selected ? '✓ ' : ''}{size}
+                      </button>
+                    )
+                  })}
+                </div>
+                {editSizes.length > 0 && <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">{editSizes.map(size => <label key={size} className="text-[10px] font-black text-slate-700">{size} Stock<input type="number" min="0" required value={editSizeStock[size] ?? 0} onChange={event => setEditSizeStock(current => ({ ...current, [size]: Math.max(0, Number(event.target.value)) }))} className="premium-input mt-1" /></label>)}</div>}
+              </div>
               <div className="flex gap-2 pt-2 border-t border-slate-100">
                 <button type="button" onClick={() => setEditingProduct(null)} className="flex-1 rounded-xl bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200">Cancel</button>
                 <button type="submit" disabled={isUpdatingProduct} className="flex-1 rounded-xl bg-amber-600 py-2.5 text-xs font-black text-white shadow-md shadow-amber-200 hover:bg-amber-700 disabled:opacity-50">
@@ -2308,6 +2431,9 @@ export default function StoreManager() {
                   <p className="font-bold text-teal-950">
                     ⭐ Pehli Photo <u>Card Profile Main Image</u> banegi, aur baaki saari photos product ki <u>Gallery</u> mein attach hongi!
                   </p>
+                  <p className="font-bold text-indigo-900">
+                    👕 <code>Available Sizes</code> column mein sizes ko pipe se likhein: <code>S|M|L|XL|XXL</code>. Free-size item ke liye <code>FREE SIZE</code> likhein.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -2333,19 +2459,18 @@ export default function StoreManager() {
                     <span>✨ How Text Import Works</span>
                   </p>
                   <p className="font-medium leading-relaxed">
-                    Aap bas multiple products ki list ko 1 line per product type karke copy-paste kar sakte hain. Format: <code>Product Name - Price - Stock</code>.
+                    Aap multiple products ko 1 line per product paste kar sakte hain. Format: <code>Product Name - Price - Stock - Unit - Sizes</code>.
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <h4 className="font-extrabold text-slate-900 text-xs">Copyable Text Example:</h4>
                   <div className="bg-slate-900 text-emerald-300 p-3.5 rounded-xl font-mono text-[11px] leading-relaxed border border-slate-800 select-all">
-                    Full Face Riding Helmet - 1850 - 50<br />
-                    Engine Oil 1L - 450 - 20<br />
-                    Chain Lube & Cleaner Spray - 399 - 100<br />
-                    Waterproof Bike Cover - 499 - 35
+                    Classic Cotton Shirt - 799 - 40 - Pc - S|M|L|XL|XXL<br />
+                    Slim Fit Jeans - 1299 - 30 - Pc - 28|30|32|34|36<br />
+                    Traditional Saree - 1499 - 20 - Pc - FREE SIZE
                   </div>
-                  <p className="text-[11px] text-slate-500">Tip: Stock quantity optional hai, nahi denge toh default stock 100 auto-apply ho jayega.</p>
+                  <p className="text-[11px] text-slate-500">Tip: Multiple sizes ko <b>|</b> se separate karein. Non-sized product ke liye last value blank rakh sakte hain.</p>
                 </div>
               </div>
             ) : (
@@ -2355,7 +2480,7 @@ export default function StoreManager() {
                     <span>📝 How Multi-Row Form Grid Works</span>
                   </p>
                   <p className="font-medium leading-relaxed">
-                    Form grid mein aap <code>+ Add Row</code> button se multiple products add kar sakte hain, har row ke liye custom price & stock quantity set kar sakte hain aur camera icon (📷) se individual photo attach kar sakte hain!
+                    Form grid mein har product ka price, stock, ordering unit, available sizes aur photos ek hi row mein set kar sakte hain.
                   </p>
                 </div>
 
@@ -2363,6 +2488,7 @@ export default function StoreManager() {
                   <h4 className="font-extrabold text-slate-900 text-xs">Features Included:</h4>
                   <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600 font-medium">
                     <li>Multi-Row instant addition</li>
+                    <li>Ordering unit and multiple available sizes per product</li>
                     <li>Instant photo file picker per product row</li>
                     <li>1-Click Save all products together</li>
                   </ul>
@@ -2426,7 +2552,7 @@ export default function StoreManager() {
                   <span>💡 ही खरीखुरी CSV फाईल अपलोड केल्यावर काय घडते त्याचा डेमो आहे!</span>
                 </p>
                 <p className="font-medium text-[11px] leading-relaxed text-teal-800">
-                  खालील तक्त्यात दाखवल्याप्रमाणे <b>Category, Product Name, Price, Stock, Unit, Description, Image URL</b> हे ७ कॉलम असतात. <b>"🚀 1-Click Auto-Import This Demo CSV"</b> वर क्लिक करताच हे सर्व प्रॉडक्ट्स अचूक युनिट्ससह १ सेकंदात तयार होतात!
+                  खालील तक्त्यात दाखवल्याप्रमाणे <b>Category, Product Name, Price, Stock, Unit, Available Sizes, Description, Image URL</b> हे कॉलम असतात. <b>"🚀 1-Click Auto-Import This Demo CSV"</b> वर क्लिक करताच प्रॉडक्ट्स त्यांच्या अचूक युनिट्स आणि साइजसह तयार होतात.
                 </p>
               </div>
 
@@ -2471,6 +2597,7 @@ export default function StoreManager() {
                         <th className="p-2.5 border-b border-slate-800 text-right">Price</th>
                         <th className="p-2.5 border-b border-slate-800 text-center">Stock</th>
                         <th className="p-2.5 border-b border-slate-800 text-center">Unit</th>
+                        <th className="p-2.5 border-b border-slate-800">Available Sizes</th>
                         <th className="p-2.5 border-b border-slate-800">Image URL / Files</th>
                       </tr>
                     </thead>
@@ -2481,7 +2608,7 @@ export default function StoreManager() {
                         if (items.length === 0) {
                           return (
                             <tr>
-                              <td colSpan={6} className="p-4 text-center text-slate-400">No sample items found</td>
+                              <td colSpan={7} className="p-4 text-center text-slate-400">No sample items found</td>
                             </tr>
                           )
                         }
@@ -2504,6 +2631,12 @@ export default function StoreManager() {
                                 {sp.unit}
                               </span>
                             </td>
+                            <td className="p-2.5 whitespace-nowrap">
+                              <div className="flex flex-wrap gap-1 min-w-[120px]">
+                                {(sp.sizes || []).map(size => <span key={size} className="rounded border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black text-indigo-700">{size}</span>)}
+                                {!sp.sizes?.length && <span className="text-slate-400">—</span>}
+                              </div>
+                            </td>
                             <td className="p-2.5 text-slate-500 font-mono text-[10px] max-w-[150px] truncate" title={sp.image || 'None'}>
                               {sp.image ? (
                                 <span className="text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 font-sans font-bold flex items-center gap-1 w-fit">
@@ -2525,14 +2658,14 @@ export default function StoreManager() {
                   {(() => {
                     const currentBType = getBusinessType(store.business_type)
                     const sampleProds = getBusinessTypeProducts(currentBType, i18n.language)
-                    const header = 'Category,Product Name,Price,Stock,Unit,Description,Image URL\n'
+                    const header = 'Category,Product Name,Price,Stock,Unit,Available Sizes,Description,Image URL\n'
                     let rows = ''
                     if (sampleProds && sampleProds.length > 0) {
                       rows = sampleProds.map(sp =>
-                        `"${sp.category}","${sp.name}",${sp.price},${sp.stock},"${sp.unit}","Quality ${sp.name}","${sp.image || ''}"`
+                        `"${sp.category}","${sp.name}",${sp.price},${sp.stock},"${sp.unit}","${(sp.sizes || []).join('|')}","Quality ${sp.name}","${sp.image || ''}"`
                       ).join('\n')
                     } else {
-                      rows = `General Products,Sample Item 1,199,50,Pc,Sample description,"sample.jpg"`
+                      rows = `Men - Shirts, T-Shirts & Topwear,Classic Cotton Shirt,799,40,Pc,"S|M|L|XL|XXL",Premium cotton shirt,"shirt.jpg"`
                     }
                     return header + rows
                   })()}
@@ -2551,13 +2684,11 @@ export default function StoreManager() {
 
               <button
                 type="button"
-                onClick={() => {
-                  setShowDemoCsvModal(false)
-                  requestAutoCreateSampleCategories()
-                }}
+                onClick={handleDemoCsvImport}
+                disabled={isImporting}
                 className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2.5 text-xs font-black text-white shadow-lg hover:from-emerald-500 hover:to-teal-500 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>🚀 1-Click Auto-Import Demo CSV Data</span>
+                <span>{isImporting ? '⏳ Importing Demo...' : '🚀 1-Click Auto-Import Demo CSV Data'}</span>
               </button>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Truck,
   Store as StoreIcon,
@@ -19,13 +19,20 @@ interface SellerDeliveryConfigModalProps {
   store: any
   onSaveSuccess?: () => void
   onClose: () => void
+  initialSection?: 'general' | 'exchange'
 }
 
 export default function SellerDeliveryConfigModal({
   store,
   onSaveSuccess,
-  onClose
+  onClose,
+  initialSection = 'general'
 }: SellerDeliveryConfigModalProps) {
+  useEffect(() => {
+    if (initialSection === 'exchange') {
+      window.setTimeout(() => document.getElementById('exchange-policy-settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+    }
+  }, [initialSection])
   const [allowHomeDelivery, setAllowHomeDelivery] = useState<boolean>(store?.allow_home_delivery ?? true)
   const [allowStorePickup, setAllowStorePickup] = useState<boolean>(store?.allow_store_pickup ?? true)
 
@@ -35,6 +42,7 @@ export default function SellerDeliveryConfigModal({
   const [deliveryRadiusKm, setDeliveryRadiusKm] = useState<number | string>(
     store?.delivery_radius_km ?? 10
   )
+  const [serviceablePincodes, setServiceablePincodes] = useState<string>((store?.serviceable_pincodes || []).join(', '))
   const [deliveryChargeType, setDeliveryChargeType] = useState<string>(
     store?.delivery_charge_type || 'FIXED'
   )
@@ -53,6 +61,11 @@ export default function SellerDeliveryConfigModal({
   const [pickupInstructions, setPickupInstructions] = useState<string>(
     store?.pickup_instructions || 'Collect at store counter • 10:00 AM to 09:00 PM'
   )
+  const [exchangeEnabled, setExchangeEnabled] = useState<boolean>(store?.exchange_enabled ?? false)
+  const [exchangeWindowDays, setExchangeWindowDays] = useState<number | string>(store?.exchange_window_days ?? 7)
+  const [exchangeEvidenceRequired, setExchangeEvidenceRequired] = useState<boolean>(store?.exchange_evidence_required ?? true)
+  const [exchangeReasons, setExchangeReasons] = useState<string>((store?.exchange_allowed_reasons || ['Size does not fit', 'Wrong item received', 'Damaged or defective item', 'Colour differs from listing']).join('\n'))
+  const [exchangePolicy, setExchangePolicy] = useState<string>(store?.exchange_policy || 'Item must be unused, unwashed and have original tags attached.')
 
   // Dynamic Customer Loyalty & Cashback Wallet Configuration
   const [enableLoyaltyCashback, setEnableLoyaltyCashback] = useState<boolean>(store?.enable_loyalty_cashback ?? true)
@@ -88,6 +101,16 @@ export default function SellerDeliveryConfigModal({
         return
       }
     }
+    const exchangeDays = Number(exchangeWindowDays) || 0
+    const cleanedReasons = exchangeReasons.split('\n').map(value => value.trim()).filter(Boolean)
+    if (exchangeEnabled && (exchangeDays < 1 || exchangeDays > 30)) {
+      setErrorMsg('Exchange window must be between 1 and 30 days.')
+      return
+    }
+    if (exchangeEnabled && cleanedReasons.length === 0) {
+      setErrorMsg('Add at least one customer exchange reason.')
+      return
+    }
 
     try {
       setSaving(true)
@@ -96,12 +119,18 @@ export default function SellerDeliveryConfigModal({
         allow_store_pickup: allowStorePickup,
         min_delivery_order: minOrder,
         delivery_radius_km: radius,
+        serviceable_pincodes: serviceablePincodes.split(/[\s,]+/).map(value => value.trim()).filter(value => /^\d{6}$/.test(value)),
         delivery_charge_type: deliveryChargeType,
         delivery_flat_fee: flatFee,
         delivery_per_km_fee: perKmFee,
         free_delivery_above: freeAbove,
         delivery_estimated_time: deliveryEstimatedTime.trim() || '30-45 mins',
         pickup_instructions: pickupInstructions.trim(),
+        exchange_enabled: exchangeEnabled,
+        exchange_window_days: exchangeDays || 7,
+        exchange_evidence_required: exchangeEvidenceRequired,
+        exchange_allowed_reasons: cleanedReasons,
+        exchange_policy: exchangePolicy.trim(),
         enable_loyalty_cashback: enableLoyaltyCashback,
         loyalty_cashback_percent: Number(loyaltyCashbackPercent) || 0,
         loyalty_min_order_amount: Number(loyaltyMinOrderAmount) || 0,
@@ -194,6 +223,18 @@ export default function SellerDeliveryConfigModal({
               <div className="flex items-center gap-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 text-base shadow-inner">
                   🚚
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700">Serviceable Pincodes</label>
+                  <input
+                    type="text"
+                    value={serviceablePincodes}
+                    onChange={(e) => setServiceablePincodes(e.target.value)}
+                    placeholder="411001, 411002, 411003"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none"
+                  />
+                  <p className="mt-1 text-[10px] font-medium text-slate-500">Comma-separated 6-digit pincodes. Leave blank to use GPS radius only.</p>
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-slate-900">Home Delivery Mode</h4>
@@ -463,6 +504,23 @@ export default function SellerDeliveryConfigModal({
                 />
               </div>
             )}
+          </div>
+
+          {/* SECTION 3: GARMENTS EXCHANGE POLICY */}
+          <div id="exchange-policy-settings" className="scroll-mt-24 rounded-2xl border-2 border-violet-300 bg-white p-4 sm:p-5 space-y-4 shadow-md">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div><h4 className="text-sm font-black text-slate-900">🔄 Customer Exchange Facility</h4><p className="text-[11px] text-slate-500">Control whether delivered garments can be exchanged.</p></div>
+              <label className="relative inline-flex cursor-pointer items-center"><input type="checkbox" checked={exchangeEnabled} onChange={e => setExchangeEnabled(e.target.checked)} className="sr-only peer"/><div className="h-6 w-11 rounded-full bg-slate-200 peer peer-checked:bg-violet-600 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:bg-white after:transition-all peer-checked:after:translate-x-full" /></label>
+            </div>
+            {exchangeEnabled && <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-xs font-bold text-slate-700">Request window after delivery (days)<input type="number" min="1" max="30" value={exchangeWindowDays} onChange={e => setExchangeWindowDays(e.target.value)} className="mt-1.5 w-full rounded-xl border p-2.5"/></label>
+                <label className="flex items-center justify-between rounded-xl border bg-slate-50 p-3 text-xs font-bold"><span>Photo evidence required</span><input type="checkbox" checked={exchangeEvidenceRequired} onChange={e => setExchangeEvidenceRequired(e.target.checked)} className="h-4 w-4"/></label>
+              </div>
+              <label className="block text-xs font-bold text-slate-700">Allowed reasons (one per line)<textarea value={exchangeReasons} onChange={e => setExchangeReasons(e.target.value)} className="mt-1.5 min-h-28 w-full rounded-xl border p-3 font-medium"/></label>
+              <label className="block text-xs font-bold text-slate-700">Customer policy and item condition<textarea value={exchangePolicy} onChange={e => setExchangePolicy(e.target.value)} className="mt-1.5 min-h-20 w-full rounded-xl border p-3 font-medium" placeholder="Unused, unwashed, original tags required..."/></label>
+              <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-[11px] text-violet-900">Customers will see exchange only after delivery and only for {exchangeWindowDays || 7} days. Backend applies these rules even if someone bypasses the UI.</div>
+            </div>}
           </div>
 
           {/* LIVE SUMMARY / CUSTOMER PREVIEW CARD */}

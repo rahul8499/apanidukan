@@ -46,6 +46,7 @@ function CartContent() {
   const [orderType, setOrderType] = useState<'HOME_DELIVERY' | 'STORE_PICKUP'>('HOME_DELIVERY')
   const [deliveryAddress, setDeliveryAddress] = useState(() => localStorage.getItem('multistore_user_delivery_address') || '')
   const [locationUrl, setLocationUrl] = useState('')
+  const [deliveryCoordinates, setDeliveryCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationLoading, setLocationLoading] = useState(false)
   const [checkoutOtp, setCheckoutOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
@@ -147,6 +148,38 @@ function CartContent() {
         }
       })
       .catch(() => setAvailableCoupons([]))
+
+    const cartProductIds = cart.items.map(item => item.id).join(',')
+    api.get(`/public/stores/${storeSlug}/products/?ids=${encodeURIComponent(cartProductIds)}&page_size=100`)
+      .then(res => {
+        const products = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+        const productMap = new Map(products.map((product: any) => [Number(product.id), product]))
+        const issues: string[] = []
+        const refreshed = cart.items.flatMap(item => {
+          const product: any = productMap.get(Number(item.id))
+          if (!product) {
+            issues.push(`${item.name} is no longer available.`)
+            return []
+          }
+          const currentPrice = String(product.price)
+          if (Number(currentPrice) !== Number(item.price)) issues.push(`${item.name} price changed to ₹${currentPrice}.`)
+          let maxStock = Number(product.stock_quantity || 0)
+          if (item.selectedSize) {
+            maxStock = Number(product.size_stock?.[item.selectedSize] || 0)
+            if (!product.available_sizes?.includes(item.selectedSize) || maxStock <= 0) {
+              issues.push(`${item.name} size ${item.selectedSize} is unavailable. Please select another size.`)
+              return []
+            }
+          }
+          const safeQuantity = Math.min(item.quantity, maxStock)
+          if (safeQuantity < item.quantity) issues.push(`${item.name} quantity updated to ${safeQuantity}.`)
+          if (safeQuantity < 1) return []
+          return [{ ...item, price: currentPrice, unit: product.unit, quantity: safeQuantity, selectedSizeStock: item.selectedSize ? maxStock : undefined }]
+        })
+        cart.sync(refreshed)
+        if (issues.length) setError(issues.join(' '))
+      })
+      .catch(() => setError('Cart availability could not be refreshed. Please try again.'))
   }, [storeSlug])
 
   const [flashSale, setFlashSale] = useState<any>(() => {
@@ -241,7 +274,7 @@ function CartContent() {
       const res = await api.post(`/public/stores/${storeSlug}/validate-coupon/`, {
         code,
         subtotal: cart.total,
-        items: cart.items.map(item => ({ id: item.id, quantity: item.quantity }))
+        items: cart.items.map(item => ({ id: item.id, quantity: item.quantity, selected_size: item.selectedSize || '' }))
       })
 
       if (res.data?.valid) {
@@ -251,8 +284,8 @@ function CartContent() {
           code: res.data.code || code,
           discount_amount: discAmt
         }
-        setAppliedCoupons(prev => [...prev.filter(c => c.code?.toUpperCase() !== code), newCoupon])
-        setCouponSuccess(`Coupon ${newCoupon.code} applied! Saved ₹${newCoupon.discount_amount.toFixed(2)}`)
+        setAppliedCoupons([newCoupon])
+        setCouponSuccess(`Coupon ${newCoupon.code} applied! Saved ₹${newCoupon.discount_amount.toFixed(2)}. This replaced any previous coupon.`)
         setCouponInput('')
       } else {
         setCouponError(res.data?.detail || `Invalid or expired coupon code ${code}.`)
@@ -298,6 +331,7 @@ function CartContent() {
         const { latitude, longitude } = coords
         const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
         setLocationUrl(mapsUrl)
+        setDeliveryCoordinates({ latitude, longitude })
         try {
           const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
           const place = await response.json()
@@ -351,6 +385,18 @@ function CartContent() {
       setError('Mobile phone number is required to place your order.')
       return
     }
+    if (!trimmedName) {
+      setError('Customer name is required to place your order.')
+      return
+    }
+    if (orderType === 'HOME_DELIVERY' && deliveryAddress.trim().length < 10) {
+      setError('Enter a complete delivery address.')
+      return
+    }
+    if (orderType === 'HOME_DELIVERY' && store?.latitude != null && store?.longitude != null && !deliveryCoordinates) {
+      setError('Use current GPS location so delivery availability can be verified.')
+      return
+    }
     if (!checkoutVerificationToken) {
       setError('Verify your phone number with OTP before placing the order.')
       return
@@ -385,16 +431,20 @@ function CartContent() {
         : deliveryAddress
 
       const result = await api.post(`/public/stores/${storeSlug}/whatsapp-orders/`, {
-        items: cart.items.map(item => ({ id: item.id, quantity: item.quantity })),
+        items: cart.items.map(item => ({ id: item.id, quantity: item.quantity, selected_size: item.selectedSize || '' })),
         customer_name: trimmedName,
         customer_phone: trimmedPhone,
         checkout_verification_token: checkoutVerificationToken,
         payment_type: paymentType,
+        order_type: orderType,
         utr_number: utrInput.trim(),
         delivery_address: finalDeliveryAddress,
         location_url: locationUrl,
+        delivery_latitude: deliveryCoordinates?.latitude ?? null,
+        delivery_longitude: deliveryCoordinates?.longitude ?? null,
         coupon_code: appliedCodes,
         discount_amount: totalDiscountAmt,
+        customer_note: customNote.trim(),
         idempotency_key: currentIdempotencyKey,
       })
       const order = result.data
@@ -409,7 +459,7 @@ function CartContent() {
         const itemLines = order.items.map((item: any) => {
           const unitPrice = Number(item.price || 0)
           const quantity = Number(item.quantity || 1)
-          return `• ${item.name || 'Item'} × ${quantity} ${formatUnitDisplay(item.unit) || ''} — ₹${(unitPrice * quantity).toFixed(2)}`
+          return `• ${item.name || 'Item'}${(item.selectedSize || item.selected_size) ? ` (Size: ${item.selectedSize || item.selected_size})` : ''} × ${quantity} ${formatUnitDisplay(item.unit) || ''} — ₹${(unitPrice * quantity).toFixed(2)}`
         })
         const itemSubtotal = order.items.reduce((total: number, item: any) => total + (Number(item.price || 0) * Number(item.quantity || 1)), 0)
 
@@ -629,7 +679,7 @@ function CartContent() {
 
               <div className="divide-y divide-slate-100">
                 {cart.items.map((item) => (
-                  <div key={item.id} className="p-3 sm:p-4 flex gap-3 items-center hover:bg-slate-50/50 transition-colors">
+                  <div key={`${item.id}-${item.selectedSize || 'default'}`} className="p-3 sm:p-4 flex gap-3 items-center hover:bg-slate-50/50 transition-colors">
 
                     {/* Item Thumbnail */}
                     <div className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-50 border border-slate-200/80">
@@ -649,6 +699,12 @@ function CartContent() {
                       <h3 className="truncate font-bold text-xs sm:text-sm text-slate-900 leading-tight">
                         {item.name}
                       </h3>
+
+                      {item.selectedSize && (
+                        <span className="inline-flex rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-black text-indigo-700">
+                          Size: {item.selectedSize}
+                        </span>
+                      )}
 
                       <div className="flex items-baseline gap-1.5 flex-wrap">
                         <span className="font-black text-sm text-slate-950">
@@ -676,7 +732,7 @@ function CartContent() {
                         <div className="flex items-center gap-1.5 rounded-lg bg-slate-100 p-0.5 border border-slate-200">
                           <button
                             type="button"
-                            onClick={() => cart.change(item.id, item.quantity - 1)}
+                            onClick={() => cart.change(item.id, item.quantity - 1, item.selectedSize)}
                             className="flex h-6 w-6 items-center justify-center rounded-md bg-white font-bold text-slate-800 hover:bg-slate-200 shadow-2xs active:scale-95 cursor-pointer"
                           >
                             <Minus className="h-3 w-3" />
@@ -687,8 +743,9 @@ function CartContent() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => cart.change(item.id, item.quantity + 1)}
-                            className="flex h-6 w-6 items-center justify-center rounded-md bg-white font-bold text-slate-800 hover:bg-slate-200 shadow-2xs active:scale-95 cursor-pointer"
+                            onClick={() => cart.change(item.id, item.quantity + 1, item.selectedSize)}
+                            disabled={item.selectedSizeStock !== undefined && item.quantity >= item.selectedSizeStock}
+                            className="flex h-6 w-6 items-center justify-center rounded-md bg-white font-bold text-slate-800 hover:bg-slate-200 shadow-2xs active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             <Plus className="h-3 w-3" />
                           </button>
@@ -696,7 +753,7 @@ function CartContent() {
 
                         <button
                           type="button"
-                          onClick={() => cart.change(item.id, 0)}
+                          onClick={() => cart.change(item.id, 0, item.selectedSize)}
                           className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
                           title="Remove item"
                         >
@@ -789,14 +846,10 @@ function CartContent() {
 
                 <div>
                   <label className="text-[11px] font-bold text-slate-700">Payment Preference</label>
-                  <select
-                    className="w-full mt-1 rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none"
-                    value={paymentType}
-                    onChange={(e) => setPaymentType(e.target.value)}
-                  >
-                    <option value="COD">💵 Cash on Delivery / Pay at Shop</option>
-                    <option value="ONLINE">💳 Online Payment (UPI / Card / NetBanking)</option>
-                  </select>
+                  <div className="w-full mt-1 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs font-bold text-emerald-900">
+                    💵 Cash on Delivery / Pay at Shop
+                  </div>
+                  <p className="mt-1 text-[10px] font-semibold text-slate-500">Verified online payment is coming soon. No payment is collected inside the app.</p>
                 </div>
 
                 {paymentType === 'ONLINE' && (

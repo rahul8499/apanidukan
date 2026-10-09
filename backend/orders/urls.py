@@ -3,7 +3,8 @@ from .views import (
     CreateOrderView, ListOrdersView, OrderDetailView, ListAccessesView,
     PublicCheckoutPhoneOTPSendView, PublicCheckoutPhoneOTPVerifyView, PublicWhatsAppOrderView, PublicCustomerOrdersListView, PublicCustomerOrdersVerifyPhoneView, PublicCustomerAllOrdersView, PublicCustomerNotificationsView, PublicWhatsAppOrderDetailView, PublicQuickReorderView,
     SellerWhatsAppOrdersView, SellerWhatsAppOrderCountView, PublicCustomerWalletView, PublicCustomerCancelOrderView,
-    SellerResendWhatsAppInvoiceView
+    SellerResendWhatsAppInvoiceView, PublicOrderIssueRequestView, SellerOrderIssueRequestView,
+    SellerDeliveryOTPView, SellerExchangeCompletionOTPView
 )
 
 urlpatterns = [
@@ -21,10 +22,14 @@ urlpatterns = [
     path('public/stores/<slug:slug>/orders/<str:reference>/', PublicWhatsAppOrderDetailView.as_view(), name='public-whatsapp-order-detail'),
     path('public/stores/<slug:slug>/orders/<str:reference>/cancel/', PublicCustomerCancelOrderView.as_view(), name='public-customer-cancel-order'),
     path('public/stores/<slug:slug>/orders/<str:reference>/quick-reorder/', PublicQuickReorderView.as_view(), name='public-quick-reorder'),
+    path('public/stores/<slug:slug>/orders/<str:reference>/issues/', PublicOrderIssueRequestView.as_view(), name='public-order-issues'),
     path('public/stores/<slug:slug>/wallet/', PublicCustomerWalletView.as_view(), name='public-customer-wallet'),
     path('seller/stores/<int:store_id>/whatsapp-orders/', SellerWhatsAppOrdersView.as_view(), name='seller-whatsapp-orders'),
     path('seller/stores/<int:store_id>/whatsapp-orders/count/', SellerWhatsAppOrderCountView.as_view(), name='seller-whatsapp-order-count'),
     path('seller/stores/<int:store_id>/whatsapp-orders/<int:order_id>/', SellerWhatsAppOrdersView.as_view(), name='seller-whatsapp-order-update'),
     path('seller/stores/<int:store_id>/whatsapp-orders/<int:order_id>/send-invoice/', SellerResendWhatsAppInvoiceView.as_view(), name='seller-whatsapp-order-send-invoice'),
+    path('seller/stores/<int:store_id>/whatsapp-orders/<int:order_id>/delivery-otp/', SellerDeliveryOTPView.as_view(), name='seller-delivery-otp'),
+    path('seller/stores/<int:store_id>/order-issues/', SellerOrderIssueRequestView.as_view(), name='seller-order-issues'),
+    path('seller/stores/<int:store_id>/order-issues/<int:issue_id>/', SellerOrderIssueRequestView.as_view(), name='seller-order-issue-update'),
+    path('seller/stores/<int:store_id>/order-issues/<int:issue_id>/completion-otp/', SellerExchangeCompletionOTPView.as_view(), name='seller-exchange-completion-otp'),
 ]
-

@@ -22,7 +22,7 @@ export default function StartStore() {
   // Common store fields
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [businessType, setBusinessType] = useState('GENERAL')
+  const [businessType] = useState('GARMENTS')
   const [address, setAddress] = useState('')
   const [latitude, setLatitude] = useState<number | null>(null)
   const [longitude, setLongitude] = useState<number | null>(null)
@@ -359,9 +359,9 @@ export default function StartStore() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Aap kya sell karte hain?</label>
-                  <select value={businessType} onChange={e => setBusinessType(e.target.value)} className="premium-input mb-3 w-full">
-                    {BUSINESS_TYPES.map(type => <option key={type.id} value={type.id}>{type.icon} {getBusinessTypeTitle(type, i18n.language)}</option>)}
-                  </select>
+                  <div className="premium-input mb-3 w-full font-semibold" aria-label="Business category">
+                    {BUSINESS_TYPES[0].icon} {getBusinessTypeTitle(BUSINESS_TYPES[0], i18n.language)}
+                  </div>
                   <textarea
                     value={description}
                     onChange={e => setDescription(e.target.value)}
@@ -481,9 +481,9 @@ export default function StartStore() {
                   placeholder="Last name"
                   className="premium-input"
                 />
-                <select value={businessType} onChange={e => setBusinessType(e.target.value)} className="premium-input">
-                  {BUSINESS_TYPES.map(type => <option key={type.id} value={type.id}>{type.icon} {getBusinessTypeTitle(type, i18n.language)}</option>)}
-                </select>
+                <div className="premium-input font-semibold" aria-label="Business category">
+                  {BUSINESS_TYPES[0].icon} {getBusinessTypeTitle(BUSINESS_TYPES[0], i18n.language)}
+                </div>
                 <textarea value={address} onChange={e => setAddress(e.target.value)} required placeholder="Full shop address" className="premium-input min-h-20" />
                 <button type="button" onClick={captureStoreLocation} disabled={locationLoading} className="w-fit rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white">
                   {locationLoading ? 'Locating...' : latitude ? 'Location captured' : 'Use current shop location'}

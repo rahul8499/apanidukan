@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Order, OrderItem, Payment, ProductAccess, WhatsAppOrder
+from .models import Order, OrderItem, Payment, ProductAccess, WhatsAppOrder, OutboundNotification
 
 
 class OrderItemInline(admin.TabularInline):
@@ -43,3 +43,11 @@ class WhatsAppOrderAdmin(admin.ModelAdmin):
                 if field.name not in {'status', 'updated_at'}
             ) + ('updated_at',)
         return ()
+
+
+@admin.register(OutboundNotification)
+class OutboundNotificationAdmin(admin.ModelAdmin):
+    list_display = ('event_key', 'recipient', 'channel', 'status', 'attempts', 'next_attempt_at', 'sent_at')
+    list_filter = ('status', 'channel')
+    search_fields = ('recipient', 'event_key', 'order__reference')
+    readonly_fields = ('order', 'recipient', 'message', 'event_key', 'attempts', 'last_error', 'sent_at', 'created_at', 'updated_at')

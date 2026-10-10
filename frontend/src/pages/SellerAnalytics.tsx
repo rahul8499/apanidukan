@@ -62,8 +62,8 @@ export default function SellerAnalytics() {
       setOrders(ordersRes.data || [])
       const couponList = Array.isArray(couponsRes.data) ? couponsRes.data : (couponsRes.data?.results || [])
       setCoupons(couponList.filter((item: any) => String(item.store) === String(found.id)))
-    } catch {
-      navigate('/login')
+    } catch (error: any) {
+      setMessage(error.response?.data?.detail || 'Analytics could not be refreshed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -837,7 +837,23 @@ export default function SellerAnalytics() {
     printWindow.document.close()
   }
 
-  if (!store) return <div className="p-6 text-xs text-slate-500 font-bold">Loading Executive Analytics...</div>
+  if (!store) return (
+    <div className="grid min-h-screen place-items-center p-6 text-center">
+      <div>
+        <p className="text-sm font-bold text-slate-600">
+          {loading ? 'Loading Executive Analytics...' : message || 'Store analytics could not be loaded.'}
+        </p>
+        {!loading && (
+          <button
+            onClick={() => { setLoading(true); void loadData() }}
+            className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white"
+          >
+            Retry
+          </button>
+        )}
+      </div>
+    </div>
+  )
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50 pb-14 sm:pb-16 lg:max-w-none lg:w-full">

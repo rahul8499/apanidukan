@@ -431,7 +431,7 @@ def exchange_fallback_code(issue, otp_record):
     return f'{int(digest[:12], 16) % 1000000:06d}'
 
 
-def cancel_whatsapp_order(order, cancelled_by='CUSTOMER', reason=''):
+def cancel_whatsapp_order(order, cancelled_by='CUSTOMER', reason='', actor_id=''):
     """Atomic helper to cancel order, restore product stock & revert customer loyalty points."""
     if order.status == WhatsAppOrder.STATUS_CANCELLED:
         return order
@@ -444,7 +444,7 @@ def cancel_whatsapp_order(order, cancelled_by='CUSTOMER', reason=''):
         order.save(update_fields=['status', 'cancellation_reason', 'cancelled_by', 'updated_at'])
         OrderStatusEvent.objects.create(
             order=order, from_status=previous_status, to_status=order.status,
-            actor_type=cancelled_by, note=order.cancellation_reason,
+            actor_type=cancelled_by, actor_id=str(actor_id), note=order.cancellation_reason,
         )
 
         # 1. Restore product stock

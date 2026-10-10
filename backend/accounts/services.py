@@ -51,8 +51,20 @@ def send_msg91_otp(phone_number: str, otp_code: str) -> bool:
 
     try:
         res = requests.get(otp_url, params=params, timeout=8)
-        logger.info("[MSG91] OTP delivery completed with HTTP status %s.", res.status_code)
-        return res.status_code == 200
+        try:
+            response_data = res.json()
+        except ValueError:
+            response_data = {}
+        response_type = str(response_data.get('type', '')).lower() if isinstance(response_data, dict) else ''
+        accepted = res.status_code == 200 and response_type == 'success'
+        if accepted:
+            logger.info("[MSG91] OTP request accepted (HTTP %s).", res.status_code)
+        else:
+            logger.warning(
+                "[MSG91] OTP request rejected (HTTP %s, response type %s).",
+                res.status_code, response_type or 'unknown',
+            )
+        return accepted
     except Exception as e:
         logger.error("[MSG91] OTP delivery failed: %s", type(e).__name__)
         return False

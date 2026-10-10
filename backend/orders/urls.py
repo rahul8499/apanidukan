@@ -9,6 +9,7 @@ from .views import (
 from .delivery_views import (
     SellerDeliveryAgentsView, SellerDeliveryAgentDetailView, SellerAssignDeliveryAgentView,
     DeliveryChangePasswordView, DeliveryOrdersView, DeliveryOrderStatusView, DeliveryOrderOTPView,
+    DeliveryOrderCancellationOTPView,
 )
 
 urlpatterns = [
@@ -16,6 +17,7 @@ urlpatterns = [
     path('delivery/orders/', DeliveryOrdersView.as_view()),
     path('delivery/orders/<int:order_id>/status/', DeliveryOrderStatusView.as_view()),
     path('delivery/orders/<int:order_id>/delivery-otp/', DeliveryOrderOTPView.as_view()),
+    path('delivery/orders/<int:order_id>/cancellation-otp/', DeliveryOrderCancellationOTPView.as_view()),
     path('seller/stores/<int:store_id>/delivery-agents/', SellerDeliveryAgentsView.as_view()),
     path('seller/stores/<int:store_id>/delivery-agents/<int:agent_id>/', SellerDeliveryAgentDetailView.as_view()),
     path('seller/stores/<int:store_id>/whatsapp-orders/<int:order_id>/assign-agent/', SellerAssignDeliveryAgentView.as_view()),

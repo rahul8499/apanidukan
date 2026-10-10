@@ -378,6 +378,7 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                 order_type=order_type,
                 customer_name=c_name,
                 customer_phone=c_phone,
+                customer_phone_verified=True,
                 payment_type=validated_data.get('payment_type', 'COD'),
                 utr_number=validated_data.get('utr_number', '').strip(),
                 payment_gateway_ref=validated_data.get('payment_gateway_ref', '').strip(),

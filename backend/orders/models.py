@@ -125,6 +125,7 @@ class WhatsAppOrder(models.Model):
     order_type = models.CharField(max_length=30, choices=ORDER_TYPE_CHOICES, default='HOME_DELIVERY')
     customer_name = models.CharField(max_length=150, blank=True)
     customer_phone = models.CharField(max_length=40, blank=True, db_index=True)
+    customer_phone_verified = models.BooleanField(default=False)
     payment_type = models.CharField(max_length=20, blank=True)
     utr_number = models.CharField(max_length=64, blank=True, default='')
     payment_gateway_ref = models.CharField(max_length=128, blank=True, default='')
@@ -269,6 +270,16 @@ class OrderDeliveryOTP(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
 
+class OrderCancellationOTP(models.Model):
+    order = models.OneToOneField(WhatsAppOrder, on_delete=models.CASCADE, related_name='cancellation_otp')
+    otp_hash = models.CharField(max_length=255)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    send_count = models.PositiveSmallIntegerField(default=1)
+    last_sent_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
+
+
 class OrderIssueCompletionOTP(models.Model):
     issue = models.OneToOneField(OrderIssueRequest, on_delete=models.CASCADE, related_name='completion_otp')
     otp_hash = models.CharField(max_length=255)
@@ -314,7 +325,8 @@ class DeliveryAssignment(models.Model):
     STATUS_OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY'
     STATUS_DELIVERED = 'DELIVERED'
     STATUS_FAILED = 'FAILED'
-    STATUS_CHOICES = [(value, value.replace('_',' ').title()) for value in (STATUS_ASSIGNED, STATUS_ACCEPTED, STATUS_PICKED_UP, STATUS_OUT_FOR_DELIVERY, STATUS_DELIVERED, STATUS_FAILED)]
+    STATUS_CANCELLED = 'CANCELLED'
+    STATUS_CHOICES = [(value, value.replace('_',' ').title()) for value in (STATUS_ASSIGNED, STATUS_ACCEPTED, STATUS_PICKED_UP, STATUS_OUT_FOR_DELIVERY, STATUS_DELIVERED, STATUS_FAILED, STATUS_CANCELLED)]
     order = models.OneToOneField(WhatsAppOrder, on_delete=models.CASCADE, related_name='delivery_assignment')
     agent = models.ForeignKey('stores.DeliveryAgent', on_delete=models.PROTECT, related_name='assignments')
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default=STATUS_ASSIGNED, db_index=True)

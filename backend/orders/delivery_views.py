@@ -15,7 +15,7 @@ from config.websocket import broadcast_order_event_sync
 
 from accounts.services import normalize_phone, send_msg91_otp
 from stores.models import DeliveryAgent, Store
-from .models import DeliveryAssignment, OrderDeliveryOTP, OrderStatusEvent, WhatsAppOrder
+from .models import DeliveryAssignment, OrderCancellationOTP, OrderDeliveryOTP, OrderStatusEvent, WhatsAppOrder
 from .serializers import WhatsAppOrderSerializer
 
 
@@ -249,4 +249,111 @@ class DeliveryOrderOTPView(DeliveryOrdersView):
         order_data = WhatsAppOrderSerializer(row.order).data
         broadcast_order_event_sync(f'order_{row.order.reference}', {'type': 'order_status_updated', 'order': order_data})
         broadcast_order_event_sync(f'store_{row.order.store_id}', {'type': 'order_status_updated', 'order': order_data})
+        return Response({'success': True, 'order': order_data})
+
+
+class DeliveryOrderCancellationOTPView(DeliveryOrdersView):
+    def post(self, request, order_id):
+        agent = self._agent(request)
+        if not agent:
+            return Response({'detail': 'Delivery-agent account required.'}, status=403)
+        row = get_object_or_404(
+            DeliveryAssignment.objects.select_related('order'), order_id=order_id, agent=agent
+        )
+        if row.status in (DeliveryAssignment.STATUS_DELIVERED, DeliveryAssignment.STATUS_FAILED, DeliveryAssignment.STATUS_CANCELLED) or row.order.status in (WhatsAppOrder.STATUS_DELIVERED, WhatsAppOrder.STATUS_CANCELLED):
+            return Response({'detail': 'This delivery can no longer be cancelled.'}, status=400)
+        phone = normalize_phone(row.order.customer_phone)
+        if len(phone) != 10:
+            return Response({'detail': 'Customer mobile number is invalid.'}, status=400)
+
+        existing = OrderCancellationOTP.objects.filter(order=row.order).first()
+        now = timezone.now()
+        resend_requested = request.data.get('resend') is True
+        if existing and existing.expires_at > now:
+            if existing.attempts >= 5:
+                return Response({'detail': 'Maximum OTP verification attempts reached for this order.'}, status=429)
+            resend_at = existing.last_sent_at + timedelta(seconds=60)
+            if not resend_requested:
+                return Response({
+                    'success': True,
+                    'reused_existing': True,
+                    'message': 'A cancellation OTP is already active. Check the customer phone for the current code.',
+                    'expires_at': existing.expires_at.isoformat(),
+                    'resend_at': resend_at.isoformat(),
+                })
+            if now < resend_at:
+                retry_after = max(1, int((resend_at - now).total_seconds()))
+                return Response({
+                    'detail': 'Please wait before requesting another cancellation OTP.',
+                    'retry_after_seconds': retry_after,
+                }, status=429)
+        elif existing and not resend_requested:
+            return Response({
+                'success': True,
+                'reused_existing': True,
+                'message': 'The previous cancellation OTP has expired. Request a new code to continue.',
+                'expires_at': existing.expires_at.isoformat(),
+                'resend_at': existing.last_sent_at.isoformat(),
+            })
+        if existing and existing.send_count >= 5 and existing.created_at > now - timedelta(hours=24):
+            return Response({'detail': 'Maximum 5 cancellation OTP sends reached for this order today.'}, status=429)
+
+        code = f'{secrets.randbelow(900000) + 100000}'
+        if not send_msg91_otp(phone, code):
+            return Response({'detail': 'Cancellation OTP could not be sent.'}, status=503)
+        expires_at = now + timedelta(minutes=10)
+        resend_at = now + timedelta(seconds=60)
+        if existing:
+            existing.otp_hash = make_password(code)
+            existing.expires_at = expires_at
+            existing.attempts = 0
+            existing.last_sent_at = now
+            existing.send_count += 1
+            existing.save(update_fields=['otp_hash', 'expires_at', 'attempts', 'last_sent_at', 'send_count'])
+        else:
+            OrderCancellationOTP.objects.create(
+                order=row.order, otp_hash=make_password(code), expires_at=expires_at,
+                last_sent_at=now,
+            )
+        return Response({
+            'success': True,
+            'message': f'Cancellation OTP sent to ******{phone[-4:]}.',
+            'expires_at': expires_at.isoformat(),
+            'resend_at': resend_at.isoformat(),
+        })
+
+    @transaction.atomic
+    def patch(self, request, order_id):
+        agent = self._agent(request)
+        if not agent:
+            return Response({'detail': 'Delivery-agent account required.'}, status=403)
+        row = get_object_or_404(
+            DeliveryAssignment.objects.select_for_update().select_related('order'), order_id=order_id, agent=agent
+        )
+        if row.status in (DeliveryAssignment.STATUS_DELIVERED, DeliveryAssignment.STATUS_FAILED, DeliveryAssignment.STATUS_CANCELLED) or row.order.status in (WhatsAppOrder.STATUS_DELIVERED, WhatsAppOrder.STATUS_CANCELLED):
+            return Response({'detail': 'This delivery can no longer be cancelled.'}, status=400)
+        otp = OrderCancellationOTP.objects.select_for_update().filter(order=row.order).first()
+        if not otp:
+            return Response({'detail': 'Request a cancellation OTP first.'}, status=400)
+        if otp.attempts >= 5:
+            return Response({'detail': 'Maximum OTP verification attempts reached for this order.'}, status=429)
+        if otp.expires_at <= timezone.now():
+            return Response({'detail': 'Cancellation OTP has expired. Request a new one.'}, status=400)
+        code = str(request.data.get('otp', '')).strip()
+        if len(code) != 6 or not code.isdigit() or not check_password(code, otp.otp_hash):
+            otp.attempts += 1
+            otp.save(update_fields=['attempts'])
+            return Response({'detail': 'Cancellation OTP is incorrect.'}, status=400)
+        reason = str(request.data.get('reason', '')).strip()
+        if len(reason) < 5:
+            return Response({'detail': 'Enter a cancellation reason of at least 5 characters.'}, status=400)
+
+        from .views import cancel_whatsapp_order
+        cancel_whatsapp_order(row.order, cancelled_by='DELIVERY_AGENT', reason=reason, actor_id=agent.id)
+        row.status = DeliveryAssignment.STATUS_CANCELLED
+        row.save(update_fields=['status', 'updated_at'])
+        order_data = WhatsAppOrderSerializer(row.order).data
+        event = {'type': 'order_status_updated', 'order': order_data}
+        broadcast_order_event_sync(f'order_{row.order.reference}', event)
+        broadcast_order_event_sync(f'store_{row.order.store_id}', event)
         return Response({'success': True, 'order': order_data})

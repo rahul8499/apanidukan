@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from unittest.mock import patch
+from accounts.services import send_msg91_otp
 
 
 class AccountDeletionSecurityTests(APITestCase):
@@ -53,3 +54,24 @@ class AccountDeletionSecurityTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.user.refresh_from_db()
         self.assertTrue(self.user.is_active)
+
+
+class Msg91OtpDeliveryTests(APITestCase):
+    @patch('accounts.services.get_msg91_auth_key', return_value='test-auth-key')
+    @patch('accounts.services.get_msg91_widget_id', return_value='test-widget')
+    @patch('accounts.services.requests.get')
+    def test_http_200_with_error_payload_is_not_reported_as_sent(self, mocked_get, mocked_widget, mocked_auth):
+        mocked_get.return_value.status_code = 200
+        mocked_get.return_value.json.return_value = {'type': 'error', 'message': 'Invalid widget'}
+
+        self.assertFalse(send_msg91_otp('9876543210', '123456'))
+
+    @patch('accounts.services.get_msg91_auth_key', return_value='test-auth-key')
+    @patch('accounts.services.get_msg91_widget_id', return_value='test-widget')
+    @patch('accounts.services.requests.get')
+    def test_msg91_success_payload_is_reported_as_sent(self, mocked_get, mocked_widget, mocked_auth):
+        mocked_get.return_value.status_code = 200
+        mocked_get.return_value.json.return_value = {'type': 'success', 'message': 'OTP sent'}
+
+        self.assertTrue(send_msg91_otp('9876543210', '123456'))
+

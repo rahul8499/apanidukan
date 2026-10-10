@@ -136,6 +136,16 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
   })
 }
 
+export function setupDeliveryPartnerPwa() {
+  localStorage.setItem('multistore-installed-type', 'delivery')
+  updateDynamicManifest({
+    name: 'Apani Dukan Delivery', shortName: 'Delivery Partner',
+    description: 'Assigned deliveries, navigation and secure OTP handover.',
+    startUrl: '/delivery/dashboard', themeColor: '#020617', backgroundColor: '#f1f5f9',
+    iconUrl: '/seller-icon-512.png', icon192Url: '/seller-icon-192.png', id: 'delivery-partner-app',
+  })
+}
+
 /**
  * Reset PWA Manifest to Generic Platform Start
  */

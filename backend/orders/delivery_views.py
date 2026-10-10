@@ -1,5 +1,6 @@
 import secrets
 import string
+import hmac
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -178,6 +179,10 @@ class DeliveryOrderStatusView(DeliveryOrdersView):
         new = str(request.data.get('status', '')).upper()
         if new not in self.transitions.get(row.status, set()):
             return Response({'detail': f'Invalid transition from {row.status} to {new}.'}, status=400)
+        if new == DeliveryAssignment.STATUS_ACCEPTED and row.order.status not in (
+            WhatsAppOrder.STATUS_PACKED, WhatsAppOrder.STATUS_PAID, WhatsAppOrder.STATUS_OUT_FOR_DELIVERY,
+        ):
+            return Response({'detail': 'Seller must mark the order Packed before the rider can accept it.'}, status=400)
         now = timezone.now(); row.status = new
         if new == row.STATUS_ACCEPTED: row.accepted_at = now
         if new == row.STATUS_PICKED_UP: row.picked_up_at = now
@@ -190,7 +195,10 @@ class DeliveryOrderStatusView(DeliveryOrdersView):
             row.order.save(update_fields=['status', 'updated_at'])
             OrderStatusEvent.objects.create(order=row.order, from_status=previous, to_status=row.order.status,
                                             actor_type='DELIVERY_AGENT', actor_id=str(agent.id))
-        return Response({'success': True, 'assignment_status': row.status, 'order': WhatsAppOrderSerializer(row.order).data})
+        order_data = WhatsAppOrderSerializer(row.order).data
+        broadcast_order_event_sync(f'order_{row.order.reference}', {'type': 'order_status_updated', 'order': order_data})
+        broadcast_order_event_sync(f'store_{row.order.store_id}', {'type': 'order_status_updated', 'order': order_data})
+        return Response({'success': True, 'assignment_status': row.status, 'order': order_data})
 
 
 class DeliveryOrderOTPView(DeliveryOrdersView):
@@ -201,13 +209,18 @@ class DeliveryOrderOTPView(DeliveryOrdersView):
         phone = normalize_phone(row.order.customer_phone)
         if len(phone) != 10: return Response({'detail': 'Customer mobile number is invalid.'}, status=400)
         existing = OrderDeliveryOTP.objects.filter(order=row.order).first(); now = timezone.now()
+        if existing and existing.is_verified:
+            return Response({'detail': 'Delivery OTP is already verified.'}, status=400)
         if existing and existing.last_sent_at > now - timedelta(seconds=60):
             return Response({'detail': 'Please wait before resending OTP.'}, status=429)
+        if existing and existing.send_count >= 5 and existing.created_at > now - timedelta(hours=24):
+            return Response({'detail': 'Maximum 5 delivery OTP sends reached for this order today.'}, status=429)
         code = f'{secrets.randbelow(900000) + 100000}'
         if not send_msg91_otp(phone, code): return Response({'detail': 'OTP could not be sent.'}, status=503)
         OrderDeliveryOTP.objects.update_or_create(order=row.order, defaults={'otp_hash': make_password(code),
             'expires_at': now + timedelta(minutes=10), 'attempts': 0, 'is_verified': False, 'verified_at': None,
             'last_sent_at': now, 'send_count': (existing.send_count + 1) if existing else 1})
+        broadcast_order_event_sync(f'order_{row.order.reference}', {'type': 'delivery_otp_sent', 'order_reference': row.order.reference})
         return Response({'success': True, 'message': f'OTP sent to ******{phone[-4:]}.'})
 
     @transaction.atomic
@@ -217,7 +230,11 @@ class DeliveryOrderOTPView(DeliveryOrdersView):
                                 agent=agent, status=DeliveryAssignment.STATUS_OUT_FOR_DELIVERY)
         code = str(request.data.get('otp', '')).strip(); proof = request.FILES.get('delivery_proof')
         otp = OrderDeliveryOTP.objects.select_for_update().filter(order=row.order).first()
-        if not otp or otp.is_verified or otp.expires_at < timezone.now() or not check_password(code, otp.otp_hash):
+        from .views import delivery_fallback_code
+        valid_code = bool(otp and (
+            check_password(code, otp.otp_hash) or hmac.compare_digest(code, delivery_fallback_code(row.order, otp))
+        ))
+        if not otp or otp.is_verified or otp.expires_at < timezone.now() or not valid_code:
             if otp and not otp.is_verified: otp.attempts += 1; otp.save(update_fields=['attempts'])
             return Response({'detail': 'OTP is incorrect or expired.'}, status=400)
         if not proof: return Response({'detail': 'Delivery proof photo is required.'}, status=400)
@@ -229,4 +246,7 @@ class DeliveryOrderOTPView(DeliveryOrdersView):
         row.status = DeliveryAssignment.STATUS_DELIVERED; row.completed_at = now; row.save(update_fields=['status','completed_at','updated_at'])
         OrderStatusEvent.objects.create(order=row.order, from_status=previous, to_status=row.order.status,
                                         actor_type='DELIVERY_AGENT', actor_id=str(agent.id), note='Customer OTP and proof verified.')
-        return Response({'success': True, 'order': WhatsAppOrderSerializer(row.order).data})
+        order_data = WhatsAppOrderSerializer(row.order).data
+        broadcast_order_event_sync(f'order_{row.order.reference}', {'type': 'order_status_updated', 'order': order_data})
+        broadcast_order_event_sync(f'store_{row.order.store_id}', {'type': 'order_status_updated', 'order': order_data})
+        return Response({'success': True, 'order': order_data})

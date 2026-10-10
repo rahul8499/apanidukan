@@ -32,6 +32,17 @@ function apiErrorMessage(err: any) {
   return 'Could not update status. Please try again.'
 }
 
+function fulfilmentStatusLabel(status: string, orderType: string) {
+  const pickup = orderType === 'STORE_PICKUP'
+  const labels: Record<string, string> = {
+    NEW: 'Order Placed', CONFIRMED: 'Order Confirmed', PACKED: 'Packed',
+    READY_FOR_PICKUP: 'Ready for Pickup', OUT_FOR_DELIVERY: 'Out for Delivery',
+    PAID: pickup ? 'Paid / Ready at Counter' : 'Payment Confirmed',
+    DELIVERED: pickup ? 'Collected by Customer' : 'Delivered', CANCELLED: 'Cancelled',
+  }
+  return labels[status] || status.replaceAll('_', ' ')
+}
+
 export default function SellerOrders() {
   const { t } = useTranslation()
   const { storeId } = useParams()
@@ -54,6 +65,7 @@ export default function SellerOrders() {
   const [deliveryOtpMessage, setDeliveryOtpMessage] = useState('')
   const [deliveryOtpLoading, setDeliveryOtpLoading] = useState(false)
   const [deliveryProof, setDeliveryProof] = useState<File | null>(null)
+  const [otpResendSeconds, setOtpResendSeconds] = useState(0)
   const [deliveryAgents, setDeliveryAgents] = useState<any[]>([])
   const auth = useAuth()
   const navigate = useNavigate()
@@ -83,6 +95,15 @@ export default function SellerOrders() {
       const response = await api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
       const orderList = Array.isArray(response.data) ? response.data : (response.data?.results || [])
       setOrders(orderList)
+      const savedOtpOrderId = sessionStorage.getItem(`delivery_otp_order_${storeId}`)
+      if (savedOtpOrderId) {
+        const savedOrder = orderList.find((item:any) => String(item.id) === savedOtpOrderId)
+        if (savedOrder && savedOrder.status !== 'DELIVERED') {
+          setDeliveryOtpOrder(savedOrder)
+          setDeliveryOtpSent(Boolean(savedOrder.delivery_otp_pending))
+          if (savedOrder.delivery_otp_resend_at) setOtpResendSeconds(Math.max(0, Math.ceil((new Date(savedOrder.delivery_otp_resend_at).getTime() - Date.now()) / 1000)))
+        } else sessionStorage.removeItem(`delivery_otp_order_${storeId}`)
+      }
       api.get(`/seller/stores/${storeId}/delivery-agents/`).then(r => setDeliveryAgents(r.data.filter((a:any)=>a.is_active))).catch(()=>{})
     } catch {
       navigate('/login')
@@ -99,7 +120,7 @@ export default function SellerOrders() {
 
       try {
         const response = await api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
-        setOrders(response.data)
+        setOrders(Array.isArray(response.data) ? response.data : (response.data?.results || []))
       } catch {}
     }, 120000)
 
@@ -111,13 +132,19 @@ export default function SellerOrders() {
     const handleVisibility = () => {
       if (!document.hidden && storeId) {
         api.get(`/seller/stores/${storeId}/whatsapp-orders/`)
-          .then(res => setOrders(res.data))
+          .then(res => setOrders(Array.isArray(res.data) ? res.data : (res.data?.results || [])))
           .catch(() => {})
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [storeId])
+
+  useEffect(() => {
+    if (otpResendSeconds <= 0) return
+    const timer = window.setInterval(() => setOtpResendSeconds(value => Math.max(0, value - 1)), 1000)
+    return () => window.clearInterval(timer)
+  }, [otpResendSeconds > 0])
 
   // WebSocket Live Updates Connection
   useEffect(() => {
@@ -172,6 +199,7 @@ export default function SellerOrders() {
     if (status === 'DELIVERED') {
       const target = orders.find(order => order.id === id)
       setDeliveryOtpOrder(target || null)
+      sessionStorage.setItem(`delivery_otp_order_${storeId}`, String(id))
       setDeliveryOtp('')
       setDeliveryOtpSent(false)
       setDeliveryOtpMessage('')
@@ -212,6 +240,7 @@ export default function SellerOrders() {
     try {
       const res = await api.post(`/seller/stores/${storeId}/whatsapp-orders/${deliveryOtpOrder.id}/delivery-otp/`)
       setDeliveryOtpSent(true)
+      setOtpResendSeconds(60)
       setDeliveryOtpMessage(res.data.message || 'OTP sent to the customer.')
     } catch (err: any) {
       setDeliveryOtpMessage(err?.response?.data?.detail || 'OTP could not be sent.')
@@ -231,6 +260,7 @@ export default function SellerOrders() {
       const res = await api.patch(`/seller/stores/${storeId}/whatsapp-orders/${deliveryOtpOrder.id}/delivery-otp/`, form)
       setOrders(current => current.map(order => order.id === deliveryOtpOrder.id ? res.data.order : order))
       setDeliveryOtpOrder(null)
+      sessionStorage.removeItem(`delivery_otp_order_${storeId}`)
       setDeliveryOtp('')
     } catch (err: any) {
       setDeliveryOtpMessage(err?.response?.data?.detail || 'OTP verification failed.')
@@ -633,7 +663,7 @@ export default function SellerOrders() {
                           return true
                         })].map((status) => (
                           <option key={status} value={status} className="bg-white text-slate-900 font-bold">
-                            {status}
+                            {fulfilmentStatusLabel(status, order.order_type)}
                           </option>
                         ))}
                       </select>
@@ -940,13 +970,13 @@ export default function SellerOrders() {
       {deliveryOtpOrder && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/65 p-4">
           <div className="w-full max-w-sm space-y-4 rounded-3xl bg-white p-5 shadow-2xl">
-            <div className="flex items-start justify-between"><div><p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Secure fulfilment</p><h2 className="mt-1 text-base font-black text-slate-950">Confirm Delivery with OTP</h2></div><button onClick={() => setDeliveryOtpOrder(null)} className="rounded-full bg-slate-100 px-2 py-1 font-bold">✕</button></div>
+            <div className="flex items-start justify-between"><div><p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Secure fulfilment</p><h2 className="mt-1 text-base font-black text-slate-950">Confirm Delivery with OTP</h2></div><button onClick={() => { setDeliveryOtpOrder(null); sessionStorage.removeItem(`delivery_otp_order_${storeId}`) }} className="rounded-full bg-slate-100 px-2 py-1 font-bold">✕</button></div>
             <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-950"><p className="font-bold">Order #{deliveryOtpOrder.reference}</p><p className="mt-1 text-[11px]">OTP will be sent only to the customer number saved with this order. The number cannot be changed here.</p></div>
             {!deliveryOtpSent ? <button disabled={deliveryOtpLoading} onClick={sendDeliveryOtp} className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Sending…' : 'Send Delivery OTP'}</button> : <>
               <label className="block text-xs font-bold text-slate-700">Enter OTP told by customer<input autoFocus value={deliveryOtp} onChange={e => setDeliveryOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" placeholder="6-digit OTP" className="mt-1.5 w-full rounded-xl border p-3 text-center text-xl font-black tracking-[0.4em]"/></label>
               {deliveryOtpOrder.order_type === 'HOME_DELIVERY' && <label className="block rounded-xl border border-dashed p-3 text-xs font-bold">Delivery proof photo (Required)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setDeliveryProof(e.target.files?.[0] || null)} className="mt-2 block w-full text-xs"/></label>}
               <button disabled={deliveryOtpLoading || deliveryOtp.length !== 6 || (deliveryOtpOrder.order_type === 'HOME_DELIVERY' && !deliveryProof)} onClick={verifyDeliveryOtp} className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Verifying…' : 'Verify OTP & Mark Delivered'}</button>
-              <button disabled={deliveryOtpLoading} onClick={sendDeliveryOtp} className="w-full text-xs font-bold text-indigo-700">Resend OTP</button>
+              <button disabled={deliveryOtpLoading || otpResendSeconds > 0} onClick={sendDeliveryOtp} className="w-full text-xs font-bold text-indigo-700 disabled:text-slate-400">{otpResendSeconds > 0 ? `Resend OTP in ${otpResendSeconds}s` : 'Resend OTP'}</button>
             </>}
             {deliveryOtpMessage && <p className={`rounded-xl p-3 text-xs font-bold ${deliveryOtpMessage.toLowerCase().includes('sent') ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-700'}`}>{deliveryOtpMessage}</p>}
           </div>

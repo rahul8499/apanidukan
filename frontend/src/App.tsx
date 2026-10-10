@@ -64,9 +64,9 @@ class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode },
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 text-3xl border border-rose-500/30">
               ⚠️
             </div>
-            <h2 className="text-lg font-black text-white">Session Refresh Required</h2>
+            <h2 className="text-lg font-black text-white">App Refresh Required</h2>
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
-              Your session timed out or a temporary network issue occurred. Please refresh or log in again to continue.
+              A temporary page error occurred. Refresh once to continue; re-login is needed only if refresh does not recover the page.
             </p>
             <div className="flex flex-col gap-2 pt-2">
               <button

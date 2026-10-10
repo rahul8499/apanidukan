@@ -875,6 +875,7 @@ class SellerDeliveryOTPView(SellerWhatsAppOrdersView):
             'send_count': (existing.send_count + 1) if existing else 1,
         }
         OrderDeliveryOTP.objects.update_or_create(order=order, defaults=defaults)
+        broadcast_order_event_sync(f'order_{order.reference}', {'type': 'delivery_otp_sent', 'order_reference': order.reference})
         return Response({
             'success': True,
             'message': f'Delivery OTP sent to {self.masked_phone(phone)}.',

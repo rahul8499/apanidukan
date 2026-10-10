@@ -5,6 +5,7 @@ from django.db import transaction, models
 from django.utils import timezone
 from accounts.services import normalize_phone
 from decimal import Decimal
+from datetime import timedelta
 from math import asin, cos, radians, sin, sqrt
 import re
 
@@ -402,6 +403,35 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
 
 
 class WhatsAppOrderSerializer(serializers.ModelSerializer):
+    delivery_assignment_status = serializers.SerializerMethodField()
+    delivery_otp_pending = serializers.SerializerMethodField()
+    delivery_otp_expires_at = serializers.SerializerMethodField()
+    delivery_otp_resend_at = serializers.SerializerMethodField()
+
+    def get_delivery_assignment_status(self, obj):
+        try:
+            return obj.delivery_assignment.status
+        except Exception:
+            return None
+
+    def _delivery_otp(self, obj):
+        try:
+            return obj.delivery_otp
+        except Exception:
+            return None
+
+    def get_delivery_otp_pending(self, obj):
+        otp = self._delivery_otp(obj)
+        return bool(otp and not otp.is_verified and otp.expires_at > timezone.now())
+
+    def get_delivery_otp_expires_at(self, obj):
+        otp = self._delivery_otp(obj)
+        return otp.expires_at if otp and not otp.is_verified else None
+
+    def get_delivery_otp_resend_at(self, obj):
+        otp = self._delivery_otp(obj)
+        return otp.last_sent_at + timedelta(seconds=60) if otp and not otp.is_verified else None
+
     class Meta:
         model = WhatsAppOrder
         fields = (
@@ -411,7 +441,8 @@ class WhatsAppOrderSerializer(serializers.ModelSerializer):
             'location_url', 'coupon_code', 'discount_amount', 'wallet_points_redeemed',
             'wallet_cashback_earned', 'items', 'total',
             'currency', 'status', 'customer_note', 'expected_dispatch_at', 'delivery_agent_name',
-            'delivery_agent_phone', 'delivery_proof', 'delivered_at', 'cancellation_reason', 'cancelled_by', 'created_at', 'updated_at'
+            'delivery_agent_phone', 'delivery_assignment_status', 'delivery_otp_pending', 'delivery_otp_expires_at',
+            'delivery_otp_resend_at', 'delivery_proof', 'delivered_at', 'cancellation_reason', 'cancelled_by', 'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'reference', 'idempotency_key', 'tracking_token', 'items', 'total', 'currency', 'created_at', 'updated_at')
 

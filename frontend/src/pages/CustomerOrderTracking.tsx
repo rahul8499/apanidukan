@@ -16,13 +16,6 @@ import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
 import { generateOrderInvoiceWhatsAppMessage } from '../utils/whatsappInvoice'
 
-const ORDER_STEPS = [
-  { key: 'NEW', label: 'Order Placed', desc: 'Received by store' },
-  { key: 'CONFIRMED', label: 'Confirmed', desc: 'Store is preparing your order' },
-  { key: 'PAID', label: 'Payment Verified', desc: 'Payment received successfully' },
-  { key: 'DELIVERED', label: 'Delivered', desc: 'Order delivered successfully!' },
-]
-
 const mediaUrl = (url: string) => {
   if (!url) return ''
   if (url.startsWith('http')) return url
@@ -190,6 +183,11 @@ function CustomerOrderTrackingContent() {
                 new Notification(`📦 ${statusLabel}`, { body: `Your order #${data.order.reference} status: ${data.order.status}`, icon: '/icons/multistore-icon.svg' })
               }
             }
+          } else if (data.type === 'delivery_otp_sent') {
+            // Fetch through the token-protected public endpoint; never place the
+            // fallback code itself inside a broadcast payload.
+            playOrderUpdateChime()
+            void fetchOrder()
           }
         } catch (e) {
           console.error('Error parsing WS message:', e)
@@ -330,7 +328,6 @@ function CustomerOrderTrackingContent() {
 
   const storeTheme = getStoreTheme(store)
   const isCancelled = order.status === 'CANCELLED'
-  const currentStepIndex = ORDER_STEPS.findIndex((s) => s.key === order.status)
   const exchangeDeadline = new Date(new Date(order.updated_at).getTime() + Number(store?.exchange_window_days || 7) * 86400000)
   const exchangeEligible = order.status === 'DELIVERED' && store?.exchange_enabled && exchangeDeadline.getTime() >= Date.now()
 
@@ -480,21 +477,33 @@ function CustomerOrderTrackingContent() {
                 <div className="pt-2 space-y-6">
                   {(() => {
                     const isPickup = order?.order_type === 'STORE_PICKUP'
+                    const orderStatus = String(order.status || '')
+                    const assignmentStatus = String(order.delivery_assignment_status || '')
+                    const orderAt = (...values: string[]) => values.includes(orderStatus)
+                    const assignmentAt = (...values: string[]) => values.includes(assignmentStatus)
                     const stepsToUse = isPickup ? [
-                      { key: 'NEW', label: 'Order Placed', desc: 'Received by store' },
-                      { key: 'CONFIRMED', label: 'Preparing Order', desc: 'Store is packing your items' },
-                      { key: 'PAID', label: 'Ready for Pickup', desc: 'Ready! Collect at store counter' },
-                      { key: 'DELIVERED', label: 'Collected', desc: 'Order collected successfully!' },
+                      { key: 'NEW', label: 'Walk-in Order Placed', desc: 'Store received your pickup order', done: true },
+                      { key: 'CONFIRMED', label: 'Pickup Order Confirmed', desc: 'Store accepted and is preparing it', done: orderAt('CONFIRMED','PACKED','READY_FOR_PICKUP','PAID','DELIVERED') },
+                      { key: 'PACKED', label: 'Order Packed', desc: 'Your items have been packed', done: orderAt('PACKED','READY_FOR_PICKUP','PAID','DELIVERED') },
+                      { key: 'READY_FOR_PICKUP', label: 'Ready for Pickup', desc: 'Please collect it from the store counter', done: orderAt('READY_FOR_PICKUP','PAID','DELIVERED') },
+                      { key: 'DELIVERED', label: 'Collected from Store', desc: 'Pickup OTP verified and order handed over', done: orderAt('DELIVERED') },
                     ] : [
-                      { key: 'NEW', label: 'Order Placed', desc: 'Received by store' },
-                      { key: 'CONFIRMED', label: 'Confirmed & Packing', desc: 'Store is packing your items' },
-                      { key: 'PAID', label: 'Out for Delivery', desc: 'Rider is on the way to you' },
-                      { key: 'DELIVERED', label: 'Delivered', desc: 'Delivered to your doorstep!' },
+                      { key: 'NEW', label: 'Order Placed', desc: 'Received by store', done: true },
+                      { key: 'CONFIRMED', label: 'Order Confirmed', desc: 'Store accepted your order', done: orderAt('CONFIRMED','PACKED','OUT_FOR_DELIVERY','PAID','DELIVERED') },
+                      { key: 'PACKED', label: 'Packed', desc: 'Store packed your items', done: orderAt('PACKED','OUT_FOR_DELIVERY','DELIVERED') },
+                      { key: 'ASSIGNED', label: 'Delivery Person Assigned', desc: order.delivery_agent_name ? `${order.delivery_agent_name} is assigned` : 'Waiting for rider assignment', done: Boolean(assignmentStatus) },
+                      { key: 'ACCEPTED', label: 'Delivery Accepted', desc: 'Rider accepted this delivery', done: assignmentAt('ACCEPTED','PICKED_UP','OUT_FOR_DELIVERY','DELIVERED') },
+                      { key: 'PICKED_UP', label: 'Order Picked Up', desc: 'Rider collected the parcel from store', done: assignmentAt('PICKED_UP','OUT_FOR_DELIVERY','DELIVERED') },
+                      { key: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', desc: 'Rider is on the way to you', done: assignmentAt('OUT_FOR_DELIVERY','DELIVERED') || orderAt('OUT_FOR_DELIVERY','DELIVERED') },
+                      { key: 'DELIVERED', label: 'Delivered', desc: 'OTP and delivery proof verified', done: orderAt('DELIVERED') },
                     ]
 
+                    const completedIndexes = stepsToUse.map((step, index) => step.done ? index : -1).filter(index => index >= 0)
+                    const activeIndex = completedIndexes.length ? completedIndexes[completedIndexes.length - 1] : 0
+
                     return stepsToUse.map((step, idx) => {
-                      const isDone = currentStepIndex >= idx
-                      const isCurrent = currentStepIndex === idx
+                      const isDone = step.done
+                      const isCurrent = activeIndex === idx && !orderAt('DELIVERED')
 
                       return (
                         <div key={step.key} className="flex gap-3.5 relative">
@@ -502,7 +511,7 @@ function CustomerOrderTrackingContent() {
                           {idx < stepsToUse.length - 1 && (
                             <div
                               className={`absolute left-4 top-7 -bottom-6 w-0.5 ${
-                                currentStepIndex > idx ? 'bg-emerald-500' : 'bg-slate-200'
+                                step.done && stepsToUse[idx + 1]?.done ? 'bg-emerald-500' : 'bg-slate-200'
                               }`}
                             />
                           )}

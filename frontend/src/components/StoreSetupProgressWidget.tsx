@@ -102,8 +102,8 @@ export default function StoreSetupProgressWidget({
               </span>
               <span className="rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-extrabold text-slate-200 sm:text-[10px]">1-Min Setup</span>
             </div>
-            <h2 className="max-w-3xl text-base font-black leading-tight text-white sm:text-xl">{launchTitle}</h2>
-            <p className="mt-1 max-w-3xl text-[10px] font-medium leading-relaxed text-slate-300 sm:text-xs">{launchSubtext}</p>
+            <h2 className="line-clamp-2 max-w-3xl text-sm font-black leading-tight text-white sm:text-xl">{launchTitle}</h2>
+            <p className="mt-1 line-clamp-2 max-w-3xl text-[9px] font-medium leading-snug text-slate-300 sm:text-xs sm:leading-relaxed">{launchSubtext}</p>
           </div>
           {onOpenOnboardingTour && (
             <button type="button" onClick={onOpenOnboardingTour} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-2.5 py-2 text-[10px] font-extrabold text-white transition hover:bg-white/15 sm:px-3 sm:text-xs">
@@ -112,29 +112,27 @@ export default function StoreSetupProgressWidget({
           )}
         </div>
 
-        <div className="mt-4 min-w-0 rounded-2xl border border-white/10 bg-black/15 p-2.5 sm:p-4">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <div>
-              <p className="text-[9px] font-black uppercase text-slate-400 sm:text-[10px]">Store launch progress</p>
-              <p className="mt-0.5 text-xs font-extrabold text-white sm:text-sm">
+        <div className="mt-3 min-w-0 rounded-2xl border border-white/10 bg-black/15 p-2.5 sm:mt-4 sm:p-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full p-[4px] shadow-[0_0_16px_rgba(45,212,191,0.15)] sm:h-[4.5rem] sm:w-[4.5rem] sm:p-[5px]"
+              style={{ background: `conic-gradient(${setupPercent === 100 ? '#34d399' : '#fbbf24'} ${setupPercent}%, rgba(255,255,255,0.14) ${setupPercent}% 100%)` }}
+              role="progressbar"
+              aria-label="Store setup progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={setupPercent}
+            >
+              <div className="grid h-full w-full place-items-center rounded-full bg-slate-950 text-center">
+                <span className={`text-xs font-black leading-none sm:text-sm ${setupPercent === 100 ? 'text-emerald-300' : 'text-amber-200'}`}>{setupPercent}%</span>
+              </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] font-black uppercase tracking-wide text-slate-400 sm:text-[10px]">Store launch progress</p>
+              <p className="mt-0.5 text-xs font-extrabold leading-snug text-white sm:text-sm">
                 {setupPercent === 100 ? '🎉 Store setup is ready' : `${completedCount} of ${totalTasks} launch steps complete`}
               </p>
-            </div>
-            <span className={`rounded-xl px-2.5 py-1.5 text-sm font-black sm:px-3 sm:text-base ${setupPercent === 100 ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/10 text-white'}`}>
-              {setupPercent}%
-            </span>
-          </div>
-
-          <div
-            className="relative h-4 overflow-hidden rounded-full border border-white/15 bg-slate-700/80 p-[2px] shadow-inner sm:h-5 sm:p-[3px]"
-            role="progressbar"
-            aria-label="Store setup progress"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={setupPercent}
-          >
-            <div className={`relative h-full rounded-full transition-[width] duration-700 ease-out ${setupPercent === 100 ? 'bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.55)]' : 'bg-gradient-to-r from-orange-400 via-amber-300 to-teal-300 shadow-[0_0_10px_rgba(251,191,36,0.35)]'}`} style={{ width: `${setupPercent}%` }}>
-              {setupPercent > 0 && <span className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 border-white/90 bg-white shadow-sm sm:h-3 sm:w-3" />}
+              <p className="mt-1 text-[9px] font-medium text-slate-400 sm:text-[10px]">{setupPercent === 100 ? 'Your store is ready to receive orders.' : 'Complete the steps below to start receiving orders.'}</p>
             </div>
           </div>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
@@ -9,9 +9,11 @@ import SellerBottomNav from '../components/SellerBottomNav'
 import api from '../services/api'
 import { getWebSocketUrl } from '../utils/websocket'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
+import { captureAccurateLocation } from '../utils/accurateLocation'
 import StoreQrStandeeModal from '../components/StoreQrStandeeModal'
 import SellerOnboardingGuideModal from '../components/SellerOnboardingGuideModal'
 import StoreSetupProgressWidget from '../components/StoreSetupProgressWidget'
+import CustomerLocationPrompt from '../components/CustomerLocationPrompt'
 import { useTranslation } from 'react-i18next'
 import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeCategories, getBusinessTypeProducts, getBusinessTypeCheckoutHint, getUnitDisplayLabel, getUnitHint, formatUnitDisplay, UNIT_LABEL_MAP, getStockLabel, getStockHint } from '../utils/businessTypes'
 import { getStoreShareUrl, getStoreWhatsAppShareLink } from '../utils/storeShareMessage'
@@ -70,6 +72,12 @@ export default function StoreManager() {
   const [isSavingPaymentSetup, setIsSavingPaymentSetup] = useState(false)
   const [productRequests, setProductRequests] = useState<any[]>([])
   const [message, setMessage] = useState('')
+  const [isGeocodingAddress, setIsGeocodingAddress] = useState(false)
+  const [showSellerLocationPrompt, setShowSellerLocationPrompt] = useState(false)
+  const [isCapturingShopLocation, setIsCapturingShopLocation] = useState(false)
+  const [shopGpsAccuracy, setShopGpsAccuracy] = useState<number | null>(null)
+  const [shopGpsStatus, setShopGpsStatus] = useState('')
+  const locationPromptShown = useRef(false)
 
   // Dedicated Bulk Product Creator State
   const [bulkCategory, setBulkCategory] = useState('')
@@ -204,7 +212,7 @@ export default function StoreManager() {
   }
 
   async function saveStoreLocation(latitude?: number, longitude?: number, addressOverride?: string) {
-    if (!store) return
+    if (!store) return false
     try {
       const response = await api.patch(`/stores/${store.id}/`, {
         address: addressOverride ?? store.address ?? '',
@@ -214,8 +222,29 @@ export default function StoreManager() {
       setStore(response.data)
       setCachedStore(response.data)
       toast.success('Store address and location saved.')
+      return true
     } catch (err) {
       toast.error(errorMessage(err))
+      return false
+    }
+  }
+
+  async function geocodeAndSaveStoreAddress() {
+    if (!store?.address?.trim()) {
+      toast.error('Pehle poora shop address likhein.')
+      return
+    }
+    setIsGeocodingAddress(true)
+    try {
+      const response = await api.post(`/stores/${store.id}/geocode-address/`, { address: store.address })
+      const { latitude, longitude, display_name } = response.data
+      setStore((previous: any) => ({ ...previous, address: display_name, latitude, longitude }))
+      await saveStoreLocation(latitude, longitude, display_name)
+      toast.success('Address se GPS location verify karke save kar di gayi.')
+    } catch (err) {
+      toast.error(errorMessage(err))
+    } finally {
+      setIsGeocodingAddress(false)
     }
   }
 
@@ -224,25 +253,50 @@ export default function StoreManager() {
       toast.error('Location is not supported on this device.')
       return
     }
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
+    setIsCapturingShopLocation(true)
+    setShopGpsAccuracy(null)
+    setShopGpsStatus('GPS reading le rahe hain; ±50 m ya usse behtar accuracy ka wait karein.')
+    void captureAccurateLocation(accuracy => {
+      setShopGpsAccuracy(accuracy)
+      setShopGpsStatus(accuracy <= 50
+        ? `Accurate GPS reading: ±${Math.round(accuracy)} m. Saving location...`
+        : `GPS reading ±${Math.round(accuracy)} m; ±50 m ya behtar ke liye retry ho raha hai...`)
+    }).then(async ({ coords }) => {
         const latitude = Number(coords.latitude.toFixed(6))
         const longitude = Number(coords.longitude.toFixed(6))
         let detectedAddress = store?.address || ''
         try {
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
-          const data = await response.json()
-          detectedAddress = data.display_name || `GPS location: ${latitude}, ${longitude}`
+          const response = await api.post(`/stores/${store.id}/reverse-geocode/`, { latitude, longitude })
+          detectedAddress = response.data.display_name || `GPS location: ${latitude}, ${longitude}`
         } catch {
           detectedAddress = `GPS location: ${latitude}, ${longitude}`
         }
+        const saved = await saveStoreLocation(latitude, longitude, detectedAddress)
+        if (!saved) {
+          setShopGpsStatus(`GPS accuracy ±${Math.round(coords.accuracy)} m mili, lekin location save nahi hui. Dobara try karein.`)
+          return
+        }
         setStore((previous: any) => ({ ...previous, address: detectedAddress, latitude, longitude }))
-        await saveStoreLocation(latitude, longitude, detectedAddress)
-      },
-      () => toast.error('Location permission denied. Address manually save karein.'),
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
+        setShopGpsAccuracy(coords.accuracy)
+        setShopGpsStatus(`Location saved with GPS accuracy ±${Math.round(coords.accuracy)} m.`)
+        toast.success(`Exact GPS location saved (±${Math.round(coords.accuracy)} m).`)
+      }).catch((error: any) => {
+        if (Number.isFinite(error?.bestAccuracy)) {
+          setShopGpsAccuracy(error.bestAccuracy)
+          setShopGpsStatus(`Location save nahi hui. Best GPS accuracy ±${Math.round(error.bestAccuracy)} m thi; ±50 m ya behtar reading ke liye open area mein retry karein.`)
+        } else {
+          setShopGpsStatus(error?.message || 'GPS unavailable. Location save nahi hui.')
+        }
+        toast.error(error?.message || 'Location permission denied ya GPS unavailable hai.')
+      }).finally(() => setIsCapturingShopLocation(false))
   }
+
+  useEffect(() => {
+    if (store?.id && !store.latitude && !store.longitude && !locationPromptShown.current) {
+      locationPromptShown.current = true
+      setShowSellerLocationPrompt(true)
+    }
+  }, [store?.id, store?.latitude, store?.longitude])
 
   async function handleAutoCreateSampleCategories() {
     if (!store) return
@@ -1970,7 +2024,7 @@ export default function StoreManager() {
         <section className="rounded-xl sm:rounded-2xl border border-teal-200 bg-white p-3.5 sm:p-5 shadow-xs">
           <div className="mb-3">
             <h2 className="text-sm font-black text-slate-900">Store address and customer location</h2>
-            <p className="mt-1 text-xs font-medium text-slate-500">Save the shop address and GPS location so customers can find this store within 10 km.</p>
+            <p className="mt-1 text-xs font-medium text-slate-500">Customers ko nearby list mein dikhane ke liye full address aur verified GPS location save karein.</p>
           </div>
           <label className="mb-1.5 block text-xs font-black text-slate-700">Full shop address</label>
           <textarea
@@ -1982,8 +2036,10 @@ export default function StoreManager() {
           />
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => saveStoreLocation()} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white">Save address</button>
-            <button type="button" onClick={captureStoreLocation} className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-black text-white">Use current shop location</button>
-            {store.latitude && store.longitude && <span className="text-xs font-bold text-emerald-700">Location saved</span>}
+            <button type="button" disabled={isGeocodingAddress} onClick={geocodeAndSaveStoreAddress} className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white disabled:opacity-60">{isGeocodingAddress ? 'Address verify ho raha hai...' : 'Address se exact location nikalein'}</button>
+            <button type="button" disabled={isCapturingShopLocation} onClick={captureStoreLocation} className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-black text-white disabled:opacity-60">{isCapturingShopLocation ? 'Accurate GPS le rahe hain...' : 'Use current shop location'}</button>
+            {shopGpsStatus && <span role="status" className={`w-full text-xs font-bold ${isCapturingShopLocation ? 'text-amber-700' : shopGpsStatus.includes('saved') ? 'text-emerald-700' : 'text-rose-700'}`}>{shopGpsStatus}{shopGpsAccuracy !== null ? ` (best ±${Math.round(shopGpsAccuracy)} m)` : ''}</span>}
+            {store.latitude && store.longitude && <span className="text-xs font-bold text-emerald-700">GPS saved: {Number(store.latitude).toFixed(6)}, {Number(store.longitude).toFixed(6)}</span>}
           </div>
         </section>
       )}
@@ -2875,6 +2931,14 @@ export default function StoreManager() {
           onClose={() => setShowQrModal(false)}
         />
       )}
+
+      <CustomerLocationPrompt
+        open={showSellerLocationPrompt}
+        onAllow={() => { setShowSellerLocationPrompt(false); captureStoreLocation() }}
+        onClose={() => setShowSellerLocationPrompt(false)}
+        title="Apni shop ki exact location save karein"
+        description="GPS location se customers ko aapki shop sahi distance par dikhegi. Agar shop par nahi hain, full address likhkar ‘Address se exact location nikalein’ use karein."
+      />
 
     </div>
     {/* Unified Seller Bottom Navigation Bar */}

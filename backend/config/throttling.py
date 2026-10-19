@@ -6,7 +6,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 def get_client_ip(request):
-    """Utility to reliably extract client IP through Render, Cloudflare, or Nginx reverse proxies."""
+    """Return a forwarded client IP only when the immediate peer is trusted.
+
+    Client supplied X-Forwarded-For must never be trusted on a directly
+    reachable application server: otherwise an attacker can choose a new IP
+    for every request and defeat throttles.
+    """
+    remote_addr = request.META.get('REMOTE_ADDR', '').strip()
+    trusted_proxies = set(getattr(settings, 'TRUSTED_PROXY_IPS', ()))
+    if remote_addr not in trusted_proxies:
+        return remote_addr
     # 1. Cloudflare IP header
     cf_ip = request.META.get('HTTP_CF_CONNECTING_IP')
     if cf_ip:
@@ -23,7 +32,7 @@ def get_client_ip(request):
         return x_real_ip.strip()
 
     # 4. Standard remote address fallback
-    return request.META.get('REMOTE_ADDR', '').strip()
+    return remote_addr
 
 def is_ip_whitelisted(request):
     """Check if request client IP or authenticated superuser is whitelisted to bypass rate limits."""

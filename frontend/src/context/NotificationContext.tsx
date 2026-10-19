@@ -621,17 +621,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     if (notif.type === 'product' || !currentIsSeller) {
       setCustomerNotifications(prev => [newN, ...prev])
-      if (effectiveStoreId) {
-        const token = trackingToken || customerIdentity;
-        api.post(`/public/stores/id/${effectiveStoreId}/notifications/`, {
-          action: 'create',
-          token,
-          type: notif.type,
-          title: notif.title,
-          body: notif.body,
-          link: notif.link || ''
-        }).catch(() => {})
-      }
     } else {
       setSellerNotifications(prev => [newN, ...prev])
     }

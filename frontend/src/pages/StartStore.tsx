@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import { BUSINESS_TYPES, getBusinessTypeTitle } from '../utils/businessTypes'
+import { captureAccurateLocation } from '../utils/accurateLocation'
 import i18n from '../i18n'
 
 const errorMessage = (error: any) => {
@@ -27,6 +28,8 @@ export default function StartStore() {
   const [latitude, setLatitude] = useState<number | null>(null)
   const [longitude, setLongitude] = useState<number | null>(null)
   const [locationLoading, setLocationLoading] = useState(false)
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
+  const [gpsStatus, setGpsStatus] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
 
@@ -46,20 +49,32 @@ export default function StartStore() {
   const [loading, setLoading] = useState(false)
 
   function captureStoreLocation() {
-    if (!navigator.geolocation) { setError('Location is not supported on this device.'); return }
+    if (!navigator.geolocation) { setError('Location is not supported on this device.'); setGpsStatus('GPS is not supported on this device.'); return }
+    setError('')
     setLocationLoading(true)
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
+    setGpsAccuracy(null)
+    setGpsStatus('GPS reading le rahe hain; ±50 m ya usse behtar accuracy ka wait karein.')
+    void captureAccurateLocation(accuracy => {
+      setGpsAccuracy(accuracy)
+      setGpsStatus(accuracy <= 50
+        ? `Accurate GPS reading: ±${Math.round(accuracy)} m mil gayi.`
+        : `GPS reading ±${Math.round(accuracy)} m; ±50 m ya behtar ke liye retry ho raha hai...`)
+    }).then(({ coords }) => {
         const roundedLatitude = Number(coords.latitude.toFixed(6))
         const roundedLongitude = Number(coords.longitude.toFixed(6))
         setLatitude(roundedLatitude)
         setLongitude(roundedLongitude)
-        setLocationLoading(false)
+        setGpsAccuracy(coords.accuracy)
+        setGpsStatus(`Accurate shop GPS captured: ±${Math.round(coords.accuracy)} m.`)
         if (!address) setAddress(`Location: ${roundedLatitude.toFixed(6)}, ${roundedLongitude.toFixed(6)}`)
-      },
-      () => { setLocationLoading(false); setError('Location permission denied. Address manually enter karein.') },
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
+      }).catch((locationError: any) => {
+        const accuracyText = Number.isFinite(locationError?.bestAccuracy)
+          ? ` Best reading ±${Math.round(locationError.bestAccuracy)} m thi; ±50 m ya behtar accuracy ke liye open area mein try karein.`
+          : ''
+        const message = `${locationError?.message || 'Location permission denied ya GPS unavailable hai.'}${accuracyText} Full address enter kar sakte hain.`
+        setGpsStatus(message)
+        setError(message)
+      }).finally(() => setLocationLoading(false))
   }
 
   useEffect(() => {
@@ -375,6 +390,7 @@ export default function StartStore() {
                     <button type="button" onClick={captureStoreLocation} disabled={locationLoading} className="mt-2 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white">
                       {locationLoading ? 'Locating...' : latitude ? 'Location captured' : 'Use current shop location'}
                     </button>
+                    {gpsStatus && <p role="status" className={`mt-2 text-xs font-semibold ${locationLoading ? 'text-amber-700' : latitude ? 'text-emerald-700' : 'text-rose-700'}`}>{gpsStatus}{gpsAccuracy !== null ? ` (best ±${Math.round(gpsAccuracy)} m)` : ''}</p>}
                   </div>
               </div>
             </section>
@@ -488,6 +504,7 @@ export default function StartStore() {
                 <button type="button" onClick={captureStoreLocation} disabled={locationLoading} className="w-fit rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white">
                   {locationLoading ? 'Locating...' : latitude ? 'Location captured' : 'Use current shop location'}
                 </button>
+                {gpsStatus && <p role="status" className={`text-xs font-semibold ${locationLoading ? 'text-amber-700' : latitude ? 'text-emerald-700' : 'text-rose-700'}`}>{gpsStatus}{gpsAccuracy !== null ? ` (best ±${Math.round(gpsAccuracy)} m)` : ''}</p>}
               </div>
               <div className="mt-3 grid gap-3">
                 <input

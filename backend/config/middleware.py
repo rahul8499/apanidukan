@@ -27,3 +27,21 @@ class HideApiFromBrowserMiddleware:
                 status=403,
             )
         return self.get_response(request)
+
+
+class SecurityHeadersMiddleware:
+    """Add browser protections which do not alter API or SPA behaviour."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        # Do not override stricter headers set by the app or hosting layer.
+        response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        response.headers.setdefault('Referrer-Policy', 'same-origin')
+        # Location is an intentional storefront/delivery feature, so do not
+        # disable it here. Camera/microphone are not used by the web client.
+        response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=()')
+        response.headers.setdefault('Cross-Origin-Opener-Policy', 'same-origin')
+        return response

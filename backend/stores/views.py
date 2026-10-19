@@ -3,6 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import StoreSerializer, StoreScratchConfigSerializer, SellerNotificationSerializer
 from .models import Store, StoreScratchConfig, SellerNotification
+from django.conf import settings
+from django.core.cache import cache
+import requests
 
 
 class IsOwner(permissions.BasePermission):
@@ -21,6 +24,83 @@ class StoreViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @action(detail=True, methods=['post'], url_path='geocode-address')
+    def geocode_address(self, request, pk=None):
+        """Geocode a seller-confirmed shop address with strict public-OSM limits.
+
+        This is deliberately not autocomplete. Nominatim permits modest,
+        user-triggered searches only, at no more than one request/second.
+        """
+        store = self.get_object()
+        address = ' '.join(str(request.data.get('address', '')).split())
+        if len(address) < 10 or len(address) > 500:
+            return Response({'detail': 'Enter a complete shop address (10–500 characters).'}, status=status.HTTP_400_BAD_REQUEST)
+
+        cache_key = f'nominatim:address:{address.lower()}'
+        cached = cache.get(cache_key)
+        if cached:
+            return Response({**cached, 'cached': True})
+        # A global one-second gate protects the public shared OSM service.
+        if not cache.add('nominatim:global-rate-gate', '1', timeout=1):
+            return Response({'detail': 'Please wait a moment and try the address lookup again.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        try:
+            response = requests.get(
+                f'{settings.NOMINATIM_BASE_URL}/search',
+                params={'q': address, 'format': 'jsonv2', 'limit': 1, 'addressdetails': 1},
+                headers={'User-Agent': settings.NOMINATIM_USER_AGENT, 'Accept-Language': 'en'},
+                timeout=8,
+            )
+            response.raise_for_status()
+            matches = response.json()
+        except requests.RequestException:
+            return Response({'detail': 'Address lookup is temporarily unavailable. Use current shop location instead.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        if not isinstance(matches, list) or not matches:
+            return Response({'detail': 'Address not found. Add area, city, state and PIN code, or use current shop location.'}, status=status.HTTP_404_NOT_FOUND)
+        match = matches[0]
+        try:
+            result = {
+                'latitude': round(float(match['lat']), 6),
+                'longitude': round(float(match['lon']), 6),
+                'display_name': str(match.get('display_name', address))[:500],
+                'source': 'openstreetmap',
+            }
+        except (KeyError, TypeError, ValueError):
+            return Response({'detail': 'Address lookup returned an invalid location. Use current shop location instead.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        cache.set(cache_key, result, timeout=60 * 60 * 24 * 30)
+        return Response(result)
+
+    @action(detail=True, methods=['post'], url_path='reverse-geocode')
+    def reverse_geocode(self, request, pk=None):
+        """Resolve a seller-confirmed GPS point through the same OSM proxy."""
+        self.get_object()
+        try:
+            latitude = round(float(request.data.get('latitude')), 6)
+            longitude = round(float(request.data.get('longitude')), 6)
+            if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+                raise ValueError
+        except (TypeError, ValueError):
+            return Response({'detail': 'Invalid GPS coordinates.'}, status=status.HTTP_400_BAD_REQUEST)
+        cache_key = f'nominatim:reverse:{latitude}:{longitude}'
+        cached = cache.get(cache_key)
+        if cached:
+            return Response({**cached, 'cached': True})
+        if not cache.add('nominatim:global-rate-gate', '1', timeout=1):
+            return Response({'detail': 'Please wait a moment and try again.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        try:
+            response = requests.get(
+                f'{settings.NOMINATIM_BASE_URL}/reverse',
+                params={'lat': latitude, 'lon': longitude, 'format': 'jsonv2'},
+                headers={'User-Agent': settings.NOMINATIM_USER_AGENT, 'Accept-Language': 'en'},
+                timeout=8,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            result = {'display_name': str(payload.get('display_name', ''))[:500], 'source': 'openstreetmap'}
+        except (requests.RequestException, ValueError):
+            return Response({'detail': 'Address lookup is temporarily unavailable.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        cache.set(cache_key, result, timeout=60 * 60 * 24 * 30)
+        return Response(result)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)

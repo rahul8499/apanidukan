@@ -24,12 +24,22 @@ from config.pagination import StandardResultsSetPagination
 class PresignedUploadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
-        filename = request.data.get('filename') or request.data.get('name') or f"image_{uuid.uuid4().hex[:8]}.jpg"
-        content_type = request.data.get('content_type') or request.data.get('file_type') or 'image/jpeg'
-        folder = request.data.get('folder', 'products/images').strip('/')
+    ALLOWED_CONTENT_TYPES = {'image/jpeg', 'image/png', 'image/webp'}
+    ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
+    ALLOWED_FOLDERS = {'products/images'}
 
-        ext = os.path.splitext(filename)[1] or '.jpg'
+    def post(self, request):
+        filename = str(request.data.get('filename') or request.data.get('name') or f"image_{uuid.uuid4().hex[:8]}.jpg")
+        content_type = str(request.data.get('content_type') or request.data.get('file_type') or 'image/jpeg').lower().strip()
+        folder = str(request.data.get('folder', 'products/images')).strip('/')
+        if folder not in self.ALLOWED_FOLDERS:
+            raise ValidationError({'folder': 'Unsupported upload destination.'})
+        if content_type not in self.ALLOWED_CONTENT_TYPES:
+            raise ValidationError({'content_type': 'Only JPEG, PNG, and WebP images are allowed.'})
+
+        ext = os.path.splitext(filename)[1].lower() or '.jpg'
+        if ext not in self.ALLOWED_EXTENSIONS:
+            raise ValidationError({'filename': 'Only JPEG, PNG, and WebP image files are allowed.'})
         unique_name = f"{folder}/{uuid.uuid4().hex}{ext}"
 
         storage = get_storage()

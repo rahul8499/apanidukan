@@ -380,43 +380,45 @@ class PublicCustomerNotificationsView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = CustomerNotificationSerializer
 
-    def get_queryset(self):
-        slug = self.kwargs.get('slug')
+    def get_store(self):
         store_id = self.kwargs.get('store_id')
         if store_id:
-            from django.shortcuts import get_object_or_404
-            store = get_object_or_404(Store, id=store_id)
-        else:
-            store = get_public_store_or_404(self.request, slug)
-        token = self.request.query_params.get('token')
+            return get_object_or_404(Store, id=store_id, is_published=True)
+        return get_public_store_or_404(self.request, self.kwargs.get('slug'))
+
+    def get_tracking_token(self):
+        """A customer notification feed is an order-private resource.
+
+        A browser-generated visitor id is not proof of customer ownership.
+        Restrict this legacy per-store feed to the unguessable order tracking
+        token already required by the rest of the customer order APIs.
+        """
+        token = str(self.request.query_params.get('token') or self.request.data.get('token') or '').strip()
+        if not token:
+            return None
+        from orders.models import WhatsAppOrder
+        if WhatsAppOrder.objects.filter(store=self.get_store(), tracking_token=token).exists():
+            return token
+        return None
+
+    def get_queryset(self):
+        store = self.get_store()
+        token = self.get_tracking_token()
         if not token:
             return CustomerNotification.objects.none()
         return CustomerNotification.objects.filter(store=store, customer_id=token)[:50]
 
     def post(self, request, *args, **kwargs):
-        slug = self.kwargs.get('slug')
-        store_id = self.kwargs.get('store_id')
-        if store_id:
-            from django.shortcuts import get_object_or_404
-            store = get_object_or_404(Store, id=store_id)
-        else:
-            store = get_public_store_or_404(self.request, slug)
-        token = request.data.get('token') or request.query_params.get('token')
+        store = self.get_store()
+        token = self.get_tracking_token()
         if not token:
-            return Response({'success': False})
-        
-        action = request.data.get('action')
-        if action == 'create':
-            notif = CustomerNotification.objects.create(
-                store=store,
-                customer_id=token,
-                notification_type=request.data.get('type', 'system'),
-                title=request.data.get('title', ''),
-                body=request.data.get('body', ''),
-                link=request.data.get('link', '')
-            )
-            return Response({'success': True, 'id': notif.id})
-            
+            return Response({'detail': 'A valid order tracking token is required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Notifications are created only by trusted server-side order flows.
+        # This endpoint is intentionally limited to marking this customer's
+        # own feed as read.
+        if request.data.get('action') == 'create':
+            return Response({'detail': 'Customer notifications cannot be created from a public client.'}, status=status.HTTP_403_FORBIDDEN)
         notif_id = request.data.get('id')
         if notif_id:
             CustomerNotification.objects.filter(store=store, customer_id=token, id=notif_id).update(is_read=True)

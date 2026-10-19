@@ -23,3 +23,8 @@ npm-debug.log*
 # Python cache
 __pycache__/
 *.py[cod]
+
+# Runtime/customer data must never be committed. Use encrypted backups and
+# object storage/database access controls instead.
+backend/db.sqlite3
+backend/media/

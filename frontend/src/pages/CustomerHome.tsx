@@ -16,34 +16,35 @@ import {
 import api from '../services/api'
 import CustomerAppBottomNav from '../components/CustomerAppBottomNav'
 import CustomerAppHeader from '../components/CustomerAppHeader'
+import CustomerLocationPrompt from '../components/CustomerLocationPrompt'
 import { BUSINESS_TYPES, getBusinessTypeTitle } from '../utils/businessTypes'
 import { useCustomerFavorites, FavoriteStoreItem } from '../utils/customerFavorites'
 import i18n from '../i18n'
-
-type BrowseMode = 'nearby' | 'all'
 
 export default function CustomerHome() {
   const [stores, setStores] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
-  const [mode, setMode] = useState<BrowseMode>('all')
+  const [radius, setRadius] = useState(10)
+  const [customRadius, setCustomRadius] = useState('')
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationLabel, setLocationLabel] = useState('Location select karein')
   const [loading, setLoading] = useState(true)
   const [locating, setLocating] = useState(false)
   const [error, setError] = useState('')
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false)
   const { favorites, isFavorite, toggleFavorite } = useCustomerFavorites()
 
-  async function loadStores(nextMode: BrowseMode, nextLocation: typeof location, nextCategory: string) {
+  async function loadStores(nextLocation: typeof location, nextCategory: string, nextRadius = radius) {
     setLoading(true)
     setError('')
     try {
       const params: Record<string, string> = {}
       if (nextCategory) params.category = nextCategory
-      if (nextMode === 'nearby' && nextLocation) {
+      if (nextLocation) {
         params.lat = String(nextLocation.latitude)
         params.lng = String(nextLocation.longitude)
-        params.radius_km = '10'
+        params.radius_km = String(nextRadius)
       }
       const response = await api.get('/public/stores/', { params })
       setStores(Array.isArray(response.data) ? response.data : response.data.results || [])
@@ -56,9 +57,7 @@ export default function CustomerHome() {
 
   function selectLocation() {
     if (!navigator.geolocation) {
-      setError('Location support nahi mila. All Stores mode use karein.')
-      setMode('all')
-      loadStores('all', null, category)
+      setError('Is device par location support nahi hai. Nearby stores dikhane ke liye location on karein.')
       return
     }
     setLocating(true)
@@ -67,50 +66,58 @@ export default function CustomerHome() {
         const nextLocation = { latitude: Number(coords.latitude.toFixed(6)), longitude: Number(coords.longitude.toFixed(6)) }
         setLocation(nextLocation)
         localStorage.setItem('customer-location', JSON.stringify(nextLocation))
-        setLocationLabel('Near me: 10 km')
-        setMode('nearby')
+        setLocationLabel(`Near me: ${radius} km`)
         setLocating(false)
-        loadStores('nearby', nextLocation, category)
+        setShowLocationPrompt(false)
+        loadStores(nextLocation, category)
       },
       () => {
         setLocating(false)
-        setError('Location permission nahi mili. All Stores mode use karein.')
-        setMode('all')
-        loadStores('all', null, category)
+        setError('Location permission nahi mili. Browser settings se location allow karke phir try karein.')
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )
   }
 
   useEffect(() => {
+    const storedRadius = Number(localStorage.getItem('customer-search-radius-km'))
+    const initialRadius = Number.isFinite(storedRadius) && storedRadius >= 1 && storedRadius <= 100 ? storedRadius : 10
+    if (initialRadius !== 10) setRadius(initialRadius)
     const saved = localStorage.getItem('customer-location')
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
         setLocation(parsed)
-        setLocationLabel('Near me: 10 km')
-        setMode('nearby')
-        loadStores('nearby', parsed, '')
+        setLocationLabel(`Near me: ${initialRadius} km`)
+        loadStores(parsed, '', initialRadius)
         return
       } catch {
         localStorage.removeItem('customer-location')
       }
     }
-    loadStores('all', null, '')
+    setLoading(false)
+    setShowLocationPrompt(true)
   }, [])
 
-  function chooseMode(nextMode: BrowseMode) {
-    if (nextMode === 'nearby' && !location) {
-      selectLocation()
+  function chooseRadius(nextRadius: number) {
+    setRadius(nextRadius)
+    localStorage.setItem('customer-search-radius-km', String(nextRadius))
+    setLocationLabel(`Near me: ${nextRadius} km`)
+    if (location) loadStores(location, category, nextRadius)
+  }
+
+  function applyCustomRadius() {
+    const value = Number(customRadius)
+    if (!Number.isFinite(value) || value < 1 || value > 100) {
+      setError('Custom distance 1 se 100 km ke beech rakhein.')
       return
     }
-    setMode(nextMode)
-    loadStores(nextMode, nextMode === 'nearby' ? location : null, category)
+    chooseRadius(Math.round(value * 10) / 10)
   }
 
   function chooseCategory(nextCategory: string) {
     setCategory(nextCategory)
-    loadStores(mode, mode === 'nearby' ? location : null, nextCategory)
+    if (location) loadStores(location, nextCategory)
   }
 
   const visibleStores = useMemo(() => {
@@ -174,25 +181,10 @@ export default function CustomerHome() {
             <span className="text-[10px] font-bold text-orange-600 shrink-0">Change</span>
           </button>
 
-          <div className="flex rounded-xl bg-slate-100 p-0.5 text-[11px] font-black shrink-0">
-            <button
-              type="button"
-              onClick={() => chooseMode('nearby')}
-              className={`px-2.5 py-1.5 rounded-lg transition-all cursor-pointer ${
-                mode === 'nearby' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Near me
-            </button>
-            <button
-              type="button"
-              onClick={() => chooseMode('all')}
-              className={`px-2.5 py-1.5 rounded-lg transition-all cursor-pointer ${
-                mode === 'all' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              All Stores
-            </button>
+          <div className="flex items-center rounded-xl bg-slate-100 p-0.5 text-[11px] font-black shrink-0">
+            {[2, 5, 10, 20].map((value) => <button key={value} type="button" onClick={() => chooseRadius(value)} className={`px-2 py-1.5 rounded-lg transition-all ${radius === value ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600'}`}>{value} km</button>)}
+            <input aria-label="Custom distance in km" type="number" min="1" max="100" step="0.5" value={customRadius} onChange={(event) => setCustomRadius(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && applyCustomRadius()} placeholder="km" className="ml-1 w-10 rounded-lg bg-white px-1 py-1.5 text-center text-[10px] text-slate-700 outline-none" />
+            <button type="button" onClick={applyCustomRadius} className="px-1.5 text-[10px] text-orange-600">Set</button>
           </div>
         </div>
 
@@ -318,7 +310,7 @@ export default function CustomerHome() {
           <div className="mb-3 flex items-end justify-between gap-2">
             <div>
               <h2 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
-                {mode === 'nearby' ? 'Stores near you' : 'All Verified Stores'}
+                Stores near you
               </h2>
               <p className="text-[11px] font-semibold text-slate-500">
                 {visibleStores.length} stores ready to deliver in your area
@@ -328,7 +320,7 @@ export default function CustomerHome() {
               to="/customer-stores"
               className="flex shrink-0 items-center gap-1 text-xs font-black text-orange-600 hover:text-orange-700 transition"
             >
-              Explore all ({stores.length}) <ChevronRight className="h-3.5 w-3.5" />
+              View nearby ({stores.length}) <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
@@ -350,20 +342,16 @@ export default function CustomerHome() {
             <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center shadow-xs">
               <StoreIcon className="mx-auto h-10 w-10 text-slate-300" />
               <p className="mt-3 text-sm font-black text-slate-700">
-                {mode === 'nearby'
-                  ? 'Is 10 km area me abhi koi store nahi mila.'
-                  : 'Koi store match nahi hua.'}
+                {location ? `Is ${radius} km area me abhi koi store nahi mila.` : 'Location allow karke nearby stores dekhein.'}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                Aap All Stores mode dekh sakte hain ya category filter clear karein.
+                Radius badhayein ya category filter clear karein.
               </p>
-              {mode === 'nearby' && (
-                <button
-                  type="button"
-                  onClick={() => chooseMode('all')}
+              {!location && (
+                <button type="button" onClick={selectLocation}
                   className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-white hover:bg-orange-600 shadow-sm shadow-orange-500/20 transition cursor-pointer"
                 >
-                  <StoreIcon className="h-3.5 w-3.5" /> All Stores Dekhein
+                  <LocateFixed className="h-3.5 w-3.5" /> Location on karein
                 </button>
               )}
             </div>
@@ -468,6 +456,7 @@ export default function CustomerHome() {
       </div>
 
       <CustomerAppBottomNav active="home" />
+      <CustomerLocationPrompt open={showLocationPrompt} loading={locating} onAllow={selectLocation} onClose={() => setShowLocationPrompt(false)} />
     </main>
   )
 }

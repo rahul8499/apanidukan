@@ -4,6 +4,7 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 import django.template.context as dtc
+from django.core.exceptions import ImproperlyConfigured
 
 # Hotfix for Python 3.14 super().__copy__() compatibility bug in Django templates
 def _safe_context_copy(self):
@@ -33,6 +34,12 @@ RAZORPAY_WEBHOOK_SECRET = (os.environ.get('RAZORPAY_WEBHOOK_SECRET') or '').stri
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret')
 DEBUG = os.environ.get('DEBUG', '0') == '1'
 
+# Only these *immediate* reverse-proxy addresses may supply forwarded client
+# IP headers.  Set this explicitly to your Render/Nginx/Cloudflare proxy IPs
+# in production; do not use 0.0.0.0/0 or an untrusted public address.
+_trusted_proxy_env = os.environ.get('TRUSTED_PROXY_IPS', '127.0.0.1,::1')
+TRUSTED_PROXY_IPS = tuple(ip.strip() for ip in _trusted_proxy_env.split(',') if ip.strip())
+
 _allowed_hosts = os.environ.get('ALLOWED_HOSTS')
 if _allowed_hosts:
     ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts.split(',') if host.strip()]
@@ -54,6 +61,8 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+    SECURE_REFERRER_POLICY = 'same-origin'
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -85,6 +94,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'config.middleware.HideApiFromBrowserMiddleware',
+    'config.middleware.SecurityHeadersMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -313,4 +323,7 @@ OLLAMA_CONTEXT_WINDOW = int(os.environ.get('OLLAMA_CONTEXT_WINDOW', '2048'))
 # thinking disabled.  Forty tokens can cut the reply off before its final
 # customer-facing sentence is emitted.
 OLLAMA_TEXT_RESPONSE_TOKENS = int(os.environ.get('OLLAMA_TEXT_RESPONSE_TOKENS', '120'))
+NOMINATIM_BASE_URL = os.environ.get('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org').rstrip('/')
+# Use a real support address in production as required by Nominatim's policy.
+NOMINATIM_USER_AGENT = os.environ.get('NOMINATIM_USER_AGENT', 'ApaniDukan/1.0 (support@apanidukan.com)')
 AI_ASSISTANT_MAX_IMAGE_BYTES = int(os.environ.get('AI_ASSISTANT_MAX_IMAGE_BYTES', str(8 * 1024 * 1024)))

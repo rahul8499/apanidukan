@@ -40,15 +40,6 @@ export default function StoreSetupProgressWidget({
       icon: '📲'
     },
     {
-      id: 'payment',
-      title: 'Payment UPI',
-      isCompleted: Boolean(store?.upi_id),
-      optional: true,
-      completedLabel: 'Added',
-      pendingLabel: 'Optional',
-      icon: '💳'
-    },
-    {
       id: 'category',
       title: 'Category',
       isCompleted: hasCategory,
@@ -77,9 +68,8 @@ export default function StoreSetupProgressWidget({
     }
   ]
 
-  const requiredTasks = tasks.filter(t => !t.optional)
-  const completedCount = requiredTasks.filter(t => t.isCompleted).length
-  const totalTasks = requiredTasks.length
+  const completedCount = tasks.filter(t => t.isCompleted).length
+  const totalTasks = tasks.length
   const setupPercent = Math.round((completedCount / totalTasks) * 100)
 
   const scrollToElement = (id: string) => {
@@ -136,16 +126,14 @@ export default function StoreSetupProgressWidget({
             </div>
           </div>
 
-          <div className="mt-3 grid min-w-0 grid-cols-2 gap-1.5 sm:grid-cols-5 sm:gap-2">
+          <div className="mt-3 grid min-w-0 grid-cols-2 gap-1.5 sm:grid-cols-4 sm:gap-2">
         {tasks.map((task) => (
           <div
             key={task.id}
             className={`flex min-h-12 min-w-0 items-center justify-between gap-1 rounded-xl border px-1.5 py-2 transition-all sm:min-h-14 sm:gap-1.5 sm:px-2.5 ${
               task.isCompleted
                 ? 'border-emerald-300/20 bg-emerald-400/10'
-                : task.optional
-                  ? 'border-white/10 bg-white/5'
-                  : 'border-amber-300/20 bg-amber-300/10'
+                : 'border-amber-300/20 bg-amber-300/10'
             }`}
           >
             <div className="flex min-w-0 items-center gap-1 sm:gap-1.5">
@@ -155,8 +143,6 @@ export default function StoreSetupProgressWidget({
 
             {task.isCompleted ? (
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
-            ) : task.optional ? (
-              <span className="shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-bold text-slate-300">Optional</span>
             ) : (
               <button
                 type="button"

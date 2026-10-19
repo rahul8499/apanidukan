@@ -11,7 +11,7 @@ from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from config.websocket import broadcast_order_event_sync
+from config.websocket import broadcast_delivery_agent_event_sync, broadcast_order_event_sync
 
 from accounts.services import normalize_phone, send_msg91_otp
 from stores.models import DeliveryAgent, Store
@@ -120,6 +120,7 @@ class SellerAssignDeliveryAgentView(APIView):
             if order.status == WhatsAppOrder.STATUS_OUT_FOR_DELIVERY
             else DeliveryAssignment.STATUS_ASSIGNED
         )
+        previous_assignment = DeliveryAssignment.objects.select_related('agent').filter(order=order).first()
         assignment, _ = DeliveryAssignment.objects.update_or_create(
             order=order, defaults={'agent': agent, 'assigned_by': request.user, 'status': assignment_status,
                                    'seller_instruction': str(request.data.get('seller_instruction', '')).strip()}
@@ -127,6 +128,19 @@ class SellerAssignDeliveryAgentView(APIView):
         order.delivery_agent_name = agent.full_name; order.delivery_agent_phone = agent.phone_number
         order.save(update_fields=['delivery_agent_name', 'delivery_agent_phone', 'updated_at'])
         order_data = WhatsAppOrderSerializer(order).data
+        if previous_assignment and previous_assignment.agent_id != agent.id:
+            broadcast_delivery_agent_event_sync(previous_assignment.agent_id, {
+                'type': 'delivery_assignment_removed', 'order_id': order.id, 'reference': order.reference,
+            })
+        broadcast_delivery_agent_event_sync(agent.id, {
+            'type': 'delivery_assignment_updated',
+            'assignment': {
+                'assignment_id': assignment.id,
+                'assignment_status': assignment.status,
+                'seller_instruction': assignment.seller_instruction,
+                'order': order_data,
+            },
+        })
         broadcast_order_event_sync(f'order_{order.reference}', {'type': 'order_status_updated', 'order': order_data})
         broadcast_order_event_sync(f'store_{store.id}', {'type': 'order_status_updated', 'order': order_data})
         return Response({'success': True, 'assignment': {'id': assignment.id, 'status': assignment.status, 'agent': _agent_data(agent)}})
@@ -196,6 +210,15 @@ class DeliveryOrderStatusView(DeliveryOrdersView):
             OrderStatusEvent.objects.create(order=row.order, from_status=previous, to_status=row.order.status,
                                             actor_type='DELIVERY_AGENT', actor_id=str(agent.id))
         order_data = WhatsAppOrderSerializer(row.order).data
+        broadcast_delivery_agent_event_sync(agent.id, {
+            'type': 'delivery_assignment_updated',
+            'assignment': {
+                'assignment_id': row.id,
+                'assignment_status': row.status,
+                'seller_instruction': row.seller_instruction,
+                'order': order_data,
+            },
+        })
         broadcast_order_event_sync(f'order_{row.order.reference}', {'type': 'order_status_updated', 'order': order_data})
         broadcast_order_event_sync(f'store_{row.order.store_id}', {'type': 'order_status_updated', 'order': order_data})
         return Response({'success': True, 'assignment_status': row.status, 'order': order_data})
@@ -247,6 +270,9 @@ class DeliveryOrderOTPView(DeliveryOrdersView):
         OrderStatusEvent.objects.create(order=row.order, from_status=previous, to_status=row.order.status,
                                         actor_type='DELIVERY_AGENT', actor_id=str(agent.id), note='Customer OTP and proof verified.')
         order_data = WhatsAppOrderSerializer(row.order).data
+        broadcast_delivery_agent_event_sync(agent.id, {
+            'type': 'delivery_assignment_removed', 'order_id': row.order_id, 'reference': row.order.reference,
+        })
         broadcast_order_event_sync(f'order_{row.order.reference}', {'type': 'order_status_updated', 'order': order_data})
         broadcast_order_event_sync(f'store_{row.order.store_id}', {'type': 'order_status_updated', 'order': order_data})
         return Response({'success': True, 'order': order_data})
@@ -353,6 +379,9 @@ class DeliveryOrderCancellationOTPView(DeliveryOrdersView):
         row.status = DeliveryAssignment.STATUS_CANCELLED
         row.save(update_fields=['status', 'updated_at'])
         order_data = WhatsAppOrderSerializer(row.order).data
+        broadcast_delivery_agent_event_sync(agent.id, {
+            'type': 'delivery_assignment_removed', 'order_id': row.order_id, 'reference': row.order.reference,
+        })
         event = {'type': 'order_status_updated', 'order': order_data}
         broadcast_order_event_sync(f'order_{row.order.reference}', event)
         broadcast_order_event_sync(f'store_{row.order.store_id}', event)

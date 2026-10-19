@@ -7,9 +7,10 @@ from asgiref.sync import sync_to_async
 logger = logging.getLogger(__name__)
 
 # Active WebSocket connections grouped by topic
-# Topic examples: "order_<reference>", "store_<store_id>"
+# Topic examples: "order_<reference>", "store_<store_id>", "delivery_agent_<id>"
 _topic_subscribers = {}
 _subscriber_lock = asyncio.Lock()
+_websocket_loop = None
 
 
 @sync_to_async
@@ -22,6 +23,23 @@ def _can_access_seller_topic(raw_token: str, store_id: str) -> bool:
         validated_token = auth.get_validated_token(raw_token)
         user = auth.get_user(validated_token)
         return bool(user.is_active and (user.is_staff or Store.objects.filter(id=store_id, owner=user).exists()))
+    except Exception:
+        return False
+
+
+@sync_to_async
+def _can_access_delivery_agent_topic(raw_token: str, agent_id: str) -> bool:
+    """Only the active agent's own JWT may subscribe to their private topic."""
+    try:
+        from rest_framework_simplejwt.authentication import JWTAuthentication
+        from stores.models import DeliveryAgent
+        auth = JWTAuthentication()
+        validated_token = auth.get_validated_token(raw_token)
+        user = auth.get_user(validated_token)
+        return bool(
+            user.is_active
+            and DeliveryAgent.objects.filter(id=agent_id, user=user, is_active=True).exists()
+        )
     except Exception:
         return False
 
@@ -94,19 +112,29 @@ async def broadcast_to_topic(topic: str, data: dict):
 
 
 def broadcast_order_event_sync(topic: str, data: dict):
-    """Synchronous helper called from Django sync views to push WS updates."""
+    """Schedule a view-originated event on the ASGI loop that owns subscribers."""
+    loop = _websocket_loop
+    if loop is None or not loop.is_running():
+        logger.debug("Skipping WebSocket broadcast for %s: no active WebSocket loop", topic)
+        return
+
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.create_task(broadcast_to_topic(topic, data))
-        else:
-            loop.run_until_complete(broadcast_to_topic(topic, data))
-    except Exception:
-        # If no running event loop in current thread, schedule on new loop in thread pool
-        try:
-            asyncio.run(broadcast_to_topic(topic, data))
-        except Exception as err:
-            logger.error(f"Error broadcasting WS event: {err}")
+        running_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        running_loop = None
+
+    if running_loop is loop:
+        loop.create_task(broadcast_to_topic(topic, data))
+    else:
+        future = asyncio.run_coroutine_threadsafe(broadcast_to_topic(topic, data), loop)
+        future.add_done_callback(
+            lambda completed: logger.error("WebSocket broadcast failed for %s: %s", topic, completed.exception())
+            if completed.exception() else None
+        )
+
+
+def broadcast_delivery_agent_event_sync(agent_id: int, data: dict):
+    broadcast_order_event_sync(f'delivery_agent_{agent_id}', data)
 
 
 async def websocket_application(scope, receive, send):
@@ -114,13 +142,17 @@ async def websocket_application(scope, receive, send):
     ASGI WebSocket Application endpoint.
     Handles:
       ws://<host>/ws/order/<reference>/
-      ws://<host>/ws/store/<store_id>/
+    ws://<host>/ws/store/<store_id>/
+    ws://<host>/ws/delivery-agent/<agent_id>/?token=<access-jwt>
     """
+    global _websocket_loop
+    _websocket_loop = asyncio.get_running_loop()
     path = scope.get('path', '')
     parts = [p for p in path.strip('/').split('/') if p]
     query = parse_qs(scope.get('query_string', b'').decode('utf-8', errors='ignore'))
 
-    # Expected path: ['ws', 'order', '<reference>'] or ['ws', 'store', '<store_id>']
+    # Expected path: ['ws', 'order', '<reference>'], ['ws', 'store', '<id>'],
+    # or ['ws', 'delivery-agent', '<agent_id>'].
     if len(parts) >= 3 and parts[0] == 'ws':
         topic_type = parts[1]
         topic_id = parts[2]
@@ -129,9 +161,14 @@ async def websocket_application(scope, receive, send):
             if not await _can_access_order_topic(topic_id, token):
                 await send({'type': 'websocket.close', 'code': 4403})
                 return
-        if topic_type in {'store', 'store_chats'}:
+        elif topic_type in {'store', 'store_chats'}:
             token = query.get('token', [''])[0]
             if not await _can_access_seller_topic(token, topic_id):
+                await send({'type': 'websocket.close', 'code': 4403})
+                return
+        elif topic_type == 'delivery-agent':
+            token = query.get('token', [''])[0]
+            if not await _can_access_delivery_agent_topic(token, topic_id):
                 await send({'type': 'websocket.close', 'code': 4403})
                 return
         elif topic_type == 'chat':
@@ -142,7 +179,8 @@ async def websocket_application(scope, receive, send):
         else:
             await send({'type': 'websocket.close', 'code': 4403})
             return
-        topic = f"{topic_type}_{topic_id}"
+        topic_name = 'delivery_agent' if topic_type == 'delivery-agent' else topic_type
+        topic = f"{topic_name}_{topic_id}"
     else:
         await send({'type': 'websocket.close', 'code': 4403})
         return

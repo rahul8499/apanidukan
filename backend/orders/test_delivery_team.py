@@ -2,8 +2,11 @@ from django.contrib.auth import get_user_model
 from datetime import timedelta
 from unittest.mock import patch
 from django.utils import timezone
+from asgiref.sync import async_to_sync
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import AccessToken
 
+from config.websocket import _can_access_delivery_agent_topic
 from stores.models import DeliveryAgent, Store
 from .models import DeliveryAssignment, OrderCancellationOTP, WhatsAppOrder
 
@@ -44,11 +47,48 @@ class DeliveryTeamFlowTests(APITestCase):
         self.assertEqual(assigned.status_code, 200)
         self.assertEqual(assigned.data['assignment']['status'], 'ASSIGNED')
 
+    @patch('orders.delivery_views.broadcast_delivery_agent_event_sync')
+    def test_reassignment_notifies_old_and_new_delivery_agents(self, broadcast_agent):
+        first = self.create_agent()
+        second = self.client.post(f'/api/v1/seller/stores/{self.store.id}/delivery-agents/', {
+            'full_name': 'Neha Rider', 'email': 'neha.rider@example.com', 'phone_number': '9876543211',
+            'vehicle_type': 'Bike', 'vehicle_number': 'MH12CD5678',
+        }, format='json')
+        self.assertEqual(second.status_code, 201)
+        order = WhatsAppOrder.objects.create(
+            store=self.store, customer_name='Customer', customer_phone='9999999999',
+            order_type='HOME_DELIVERY', delivery_address='Pune', total='499.00', items=[], status=WhatsAppOrder.STATUS_NEW,
+        )
+        assignment_url = f'/api/v1/seller/stores/{self.store.id}/whatsapp-orders/{order.id}/assign-agent/'
+        first_assignment = self.client.post(assignment_url, {'agent_id': first['id']}, format='json')
+        self.assertEqual(first_assignment.status_code, 200, first_assignment.data)
+        broadcast_agent.reset_mock()
+
+        reassigned = self.client.post(assignment_url, {'agent_id': second.data['id']}, format='json')
+
+        self.assertEqual(reassigned.status_code, 200, reassigned.data)
+        self.assertEqual(broadcast_agent.call_count, 2)
+        self.assertEqual(broadcast_agent.call_args_list[0].args[0], first['id'])
+        self.assertEqual(broadcast_agent.call_args_list[0].args[1]['type'], 'delivery_assignment_removed')
+        self.assertEqual(broadcast_agent.call_args_list[0].args[1]['order_id'], order.id)
+        self.assertEqual(broadcast_agent.call_args_list[1].args[0], second.data['id'])
+        self.assertEqual(broadcast_agent.call_args_list[1].args[1]['type'], 'delivery_assignment_updated')
+        self.assertEqual(broadcast_agent.call_args_list[1].args[1]['assignment']['order']['id'], order.id)
+
     def test_other_store_owner_cannot_read_team(self):
         self.create_agent()
         self.client.force_authenticate(self.other)
         response = self.client.get(f'/api/v1/seller/stores/{self.store.id}/delivery-agents/')
         self.assertEqual(response.status_code, 404)
+
+    def test_private_delivery_websocket_requires_the_agents_own_jwt(self):
+        self.create_agent()
+        agent = DeliveryAgent.objects.get(phone_number='9876543210')
+        agent_token = str(AccessToken.for_user(agent.user))
+        seller_token = str(AccessToken.for_user(self.owner))
+
+        self.assertTrue(async_to_sync(_can_access_delivery_agent_topic)(agent_token, str(agent.id)))
+        self.assertFalse(async_to_sync(_can_access_delivery_agent_topic)(seller_token, str(agent.id)))
 
     @patch('orders.delivery_views.send_msg91_otp', return_value=True)
     @patch('orders.delivery_views.secrets.randbelow', return_value=234567)

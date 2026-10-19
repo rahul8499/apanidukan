@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
 import { getWebSocketUrl } from '../utils/websocket'
@@ -68,6 +68,7 @@ function CustomerOrderTrackingContent() {
   const [error, setError] = useState('')
   const [storeOffline, setStoreOffline] = useState(false)
   const [wsConnected, setWsConnected] = useState(false)
+  const wsConnectedRef = useRef(false)
   const [reordering, setReordering] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -134,6 +135,7 @@ function CustomerOrderTrackingContent() {
       socket = new WebSocket(wsUrl)
 
       socket.onopen = () => {
+        wsConnectedRef.current = true
         setWsConnected(true)
       }
 
@@ -195,9 +197,11 @@ function CustomerOrderTrackingContent() {
       }
 
       socket.onclose = () => {
+        wsConnectedRef.current = false
         setWsConnected(false)
       }
       socket.onerror = () => {
+        wsConnectedRef.current = false
         setWsConnected(false)
       }
     } catch (e) {
@@ -206,7 +210,7 @@ function CustomerOrderTrackingContent() {
 
     // Adaptive fallback: Only polls if WebSocket is disconnected AND user is on the tab
     const interval = setInterval(() => {
-      if (!document.hidden && !wsConnected) {
+      if (!document.hidden && !wsConnectedRef.current) {
         fetchOrder()
       }
     }, 45000)
@@ -221,7 +225,7 @@ function CustomerOrderTrackingContent() {
       clearInterval(interval)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [reference, trackingToken, wsConnected])
+  }, [reference, trackingToken])
 
   const quickReorder = async () => {
     if (!storeSlug || !reference || reordering) return

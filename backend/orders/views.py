@@ -12,13 +12,13 @@ from django.core import signing
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from config.websocket import broadcast_order_event_sync
+from config.websocket import broadcast_delivery_agent_event_sync, broadcast_order_event_sync
 from config.pagination import StandardResultsSetPagination
 from config.throttling import PhoneRateThrottle, WhitelistedScopedRateThrottle
 from downloads.models import DownloadToken
 from stores.models import Store
 from .models import (
-    Order, ProductAccess, WhatsAppOrder, CheckoutPhoneVerification,
+    Order, ProductAccess, WhatsAppOrder, CheckoutPhoneVerification, DeliveryAssignment,
     OrderIssueRequest, OrderStatusEvent, OrderIssueEvidence, OrderDeliveryOTP, OrderIssueCompletionOTP,
 )
 from accounts.services import normalize_phone, verify_msg91_widget_token, send_msg91_otp
@@ -549,6 +549,13 @@ class PublicCustomerCancelOrderView(APIView):
             "type": "order_status_updated",
             "order": order_data
         })
+        assignment = DeliveryAssignment.objects.filter(order=updated_order).first()
+        if assignment:
+            broadcast_delivery_agent_event_sync(assignment.agent_id, {
+                'type': 'delivery_assignment_removed',
+                'order_id': updated_order.id,
+                'reference': updated_order.reference,
+            })
 
         return Response({
             'success': True,
@@ -624,6 +631,26 @@ class SellerWhatsAppOrdersView(APIView):
             "type": "order_status_updated",
             "order": order_data
         })
+
+        assignment = DeliveryAssignment.objects.filter(order=updated_order).first()
+        if assignment:
+            if updated_order.status == WhatsAppOrder.STATUS_CANCELLED:
+                agent_event = {
+                    'type': 'delivery_assignment_removed',
+                    'order_id': updated_order.id,
+                    'reference': updated_order.reference,
+                }
+            else:
+                agent_event = {
+                    'type': 'delivery_assignment_updated',
+                    'assignment': {
+                        'assignment_id': assignment.id,
+                        'assignment_status': assignment.status,
+                        'seller_instruction': assignment.seller_instruction,
+                        'order': order_data,
+                    },
+                }
+            broadcast_delivery_agent_event_sync(assignment.agent_id, agent_event)
 
         return Response(order_data)
 

@@ -4,6 +4,7 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import InstallAppButton from '../pwa/InstallAppButton'
 import { setupDeliveryPartnerPwa } from '../pwa/pwaManager'
+import { getWebSocketUrl } from '../utils/websocket'
 import { Bike, CheckCircle2, LogOut, RefreshCw, Route, ShieldCheck, Wifi } from 'lucide-react'
 
 export default function DeliveryDashboard() {
@@ -16,6 +17,37 @@ export default function DeliveryDashboard() {
   const load=async()=>{try{setRows((await api.get('/delivery/orders/')).data)}catch{navigate('/login',{replace:true})}}
 
   useEffect(()=>{if(auth.loading)return;if(auth.user?.role!=='DELIVERY_AGENT')return navigate('/login',{replace:true});setAgent(auth.user.delivery_agent||{});setupDeliveryPartnerPwa();void load()},[auth.loading,auth.user?.role])
+  useEffect(()=>{
+    const agentId=auth.user?.delivery_agent?.id
+    if(auth.loading||auth.user?.role!=='DELIVERY_AGENT'||!agentId)return
+    let socket:WebSocket|null=null, retryTimer:number|undefined, retryDelay=1000, closed=false
+    const connect=()=>{
+      const token=localStorage.getItem('access_token')
+      if(!token||closed)return
+      try{
+        socket=new WebSocket(getWebSocketUrl(`/ws/delivery-agent/${agentId}/?token=${encodeURIComponent(token)}`))
+        socket.onopen=()=>{retryDelay=1000;void load()}
+        socket.onmessage=event=>{
+          try{
+            const data=JSON.parse(event.data)
+            if(data.type==='delivery_assignment_updated'&&data.assignment){
+              setRows(previous=>[data.assignment,...previous.filter(row=>String(row.order?.id)!==String(data.assignment.order?.id))])
+            }else if(data.type==='delivery_assignment_removed'){
+              setRows(previous=>previous.filter(row=>String(row.order?.id)!==String(data.order_id)))
+            }
+          }catch{}
+        }
+        socket.onclose=()=>{
+          if(!closed){retryTimer=window.setTimeout(connect,retryDelay);retryDelay=Math.min(retryDelay*2,30000)}
+        }
+        socket.onerror=()=>socket?.close()
+      }catch{
+        if(!closed){retryTimer=window.setTimeout(connect,retryDelay);retryDelay=Math.min(retryDelay*2,30000)}
+      }
+    }
+    connect()
+    return()=>{closed=true;if(retryTimer)window.clearTimeout(retryTimer);socket?.close()}
+  },[auth.loading,auth.user?.role,auth.user?.delivery_agent?.id])
   useEffect(()=>{const timer=window.setInterval(()=>setClock(Date.now()),1000);return()=>window.clearInterval(timer)},[])
   useEffect(()=>{const timer=window.setInterval(()=>{if(!document.hidden)void load()},30000);const visible=()=>{if(!document.hidden)void load()};document.addEventListener('visibilitychange',visible);return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',visible)}},[])
   const activeRows=useMemo(()=>rows.filter(r=>!['DELIVERED','FAILED','CANCELLED'].includes(r.assignment_status)),[rows])

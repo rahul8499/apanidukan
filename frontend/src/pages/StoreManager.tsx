@@ -1392,8 +1392,8 @@ export default function StoreManager() {
         </div>
       </section>
 
-      {/* ONLINE PAYMENT CREDENTIALS & MERCHANT UPI SETUP CARD */}
-      <section id="payment-setup" className="rounded-xl sm:rounded-2xl border border-indigo-200 bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/20 p-3.5 sm:p-5 shadow-xs space-y-3.5">
+      {/* Seller-side payment setup is temporarily hidden; customer payment flows remain unchanged. */}
+      {false && <section id="payment-setup" className="rounded-xl sm:rounded-2xl border border-indigo-200 bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/20 p-3.5 sm:p-5 shadow-xs space-y-3.5">
         <div className="flex items-center justify-between border-b border-indigo-100 pb-2.5">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-600 text-white text-xs font-black shadow-xs">
@@ -1505,7 +1505,7 @@ export default function StoreManager() {
             </button>
           </div>
         </form>
-      </section>
+      </section>}
 
       {/* DEDICATED STANDALONE SECTION: Ultra-Premium Collapsible 1-Click Bulk & CSV Product Import */}
       <section id="bulk-import" className="relative overflow-hidden rounded-xl sm:rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-3.5 sm:p-6 text-white shadow-md sm:shadow-2xl transition-all backdrop-blur-xl group hover:border-amber-400/50">

@@ -17,7 +17,7 @@ import CustomerLocationPrompt from '../components/CustomerLocationPrompt'
 import { useTranslation } from 'react-i18next'
 import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeCategories, getBusinessTypeProducts, getBusinessTypeCheckoutHint, getUnitDisplayLabel, getUnitHint, formatUnitDisplay, UNIT_LABEL_MAP, getStockLabel, getStockHint } from '../utils/businessTypes'
 import { getStoreShareUrl, getStoreWhatsAppShareLink } from '../utils/storeShareMessage'
-import { X, Trash2 } from 'lucide-react'
+import { X, Trash2, MapPin, LocateFixed, CheckCircle2, AlertTriangle } from 'lucide-react'
 
 const GARMENT_SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '28', '30', '32', '34', '36', '38', '40', '42', '44', '46', 'FREE SIZE']
 const parseSizeList = (value?: string) => (value || '').split(/[|,]/).map(size => size.trim().toUpperCase()).filter(Boolean)
@@ -242,6 +242,10 @@ export default function StoreManager() {
 
   async function saveStoreLocation(latitude?: number, longitude?: number, addressOverride?: string) {
     if (!store) return false
+    if (!(addressOverride ?? store.address ?? '').trim()) {
+      toast.error('Pehle poora shop address likhein.')
+      return false
+    }
     try {
       const response = await api.patch(`/stores/${store.id}/`, {
         address: addressOverride ?? store.address ?? '',
@@ -264,12 +268,19 @@ export default function StoreManager() {
       return
     }
     setIsGeocodingAddress(true)
+    setShopGpsAccuracy(null)
+    setShopGpsStatus('Address ko map par locate karke save kar rahe hain...')
     try {
       const response = await api.post(`/stores/${store.id}/geocode-address/`, { address: store.address })
       const { latitude, longitude, display_name } = response.data
+      const saved = await saveStoreLocation(latitude, longitude, display_name)
+      if (!saved) {
+        setShopGpsStatus('Address location could not be saved. Please retry.')
+        return
+      }
       setStore((previous: any) => ({ ...previous, address: display_name, latitude, longitude }))
-      await saveStoreLocation(latitude, longitude, display_name)
-      toast.success('Address se GPS location verify karke save kar di gayi.')
+      setShopGpsStatus('Address-based map location saved. GPS accuracy reading is not available for this method.')
+      toast.success('Address se map location find karke save kar di gayi.')
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
@@ -2050,25 +2061,54 @@ export default function StoreManager() {
       )}
 
       {store && (
-        <section className="rounded-xl sm:rounded-2xl border border-teal-200 bg-white p-3.5 sm:p-5 shadow-xs">
-          <div className="mb-3">
-            <h2 className="text-sm font-black text-slate-900">Store address and customer location</h2>
-            <p className="mt-1 text-xs font-medium text-slate-500">Customers ko nearby list mein dikhane ke liye full address aur verified GPS location save karein.</p>
+        <section className="overflow-hidden rounded-xl border border-teal-200 bg-white shadow-xs sm:rounded-2xl">
+          <div className="flex items-start gap-3 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-white p-3.5 sm:p-5">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal-100 text-teal-700"><MapPin className="h-4.5 w-4.5" /></span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-sm font-black text-slate-900">Store address & location</h2>
+                {store.latitude != null && store.longitude != null
+                  ? <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800"><CheckCircle2 className="h-3 w-3" /> Location saved{shopGpsAccuracy !== null ? ` · ±${Math.round(shopGpsAccuracy)} m` : ''}</span>
+                  : <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800"><AlertTriangle className="h-3 w-3" /> Location not set</span>}
+              </div>
+              <p className="mt-1 text-xs font-medium leading-relaxed text-slate-600">Customers ko nearby results mein dikhane ke liye shop ka complete address aur map location save karein.</p>
+            </div>
           </div>
-          <label className="mb-1.5 block text-xs font-black text-slate-700">Full shop address</label>
-          <textarea
-            rows={3}
-            value={store.address || ''}
-            onChange={event => setStore((previous: any) => ({ ...previous, address: event.target.value }))}
-            placeholder="Shop number, street, area, city, Maharashtra"
-            className="min-h-24 w-full rounded-xl border-2 border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-          />
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => saveStoreLocation()} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white">Save address</button>
-            <button type="button" disabled={isGeocodingAddress} onClick={geocodeAndSaveStoreAddress} className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white disabled:opacity-60">{isGeocodingAddress ? 'Address verify ho raha hai...' : 'Address se exact location nikalein'}</button>
-            <button type="button" disabled={isCapturingShopLocation} onClick={captureStoreLocation} className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-black text-white disabled:opacity-60">{isCapturingShopLocation ? 'Accurate GPS le rahe hain...' : 'Use current shop location'}</button>
-            {shopGpsStatus && <span role="status" className={`w-full text-xs font-bold ${isCapturingShopLocation ? 'text-amber-700' : shopGpsStatus.includes('saved') ? 'text-emerald-700' : 'text-rose-700'}`}>{shopGpsStatus}{shopGpsAccuracy !== null ? ` (best ±${Math.round(shopGpsAccuracy)} m)` : ''}</span>}
-            {store.latitude && store.longitude && <span className="text-xs font-bold text-emerald-700">GPS saved: {Number(store.latitude).toFixed(6)}, {Number(store.longitude).toFixed(6)}</span>}
+
+          <div className="space-y-3.5 p-3.5 sm:p-5">
+            <div>
+              <label htmlFor="store-full-address" className="mb-1.5 block text-xs font-black text-slate-800">Full shop address</label>
+              <textarea
+                id="store-full-address"
+                rows={3}
+                value={store.address || ''}
+                onChange={event => setStore((previous: any) => ({ ...previous, address: event.target.value }))}
+                placeholder="Shop number, street, area, city, Maharashtra"
+                className="min-h-24 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              />
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">Address mein shop number, area, city aur pincode add karein.</p>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              <button type="button" onClick={() => void saveStoreLocation()} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-700">
+                Save address
+              </button>
+              <button type="button" disabled={isGeocodingAddress || !store.address?.trim()} onClick={geocodeAndSaveStoreAddress} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-800 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50">
+                {isGeocodingAddress ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-800" /> Finding address location…</> : <><MapPin className="h-3.5 w-3.5" /> Find location from address</>}
+              </button>
+              <button type="button" disabled={isCapturingShopLocation} onClick={captureStoreLocation} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-black text-teal-800 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-50">
+                {isCapturingShopLocation ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal-300 border-t-teal-800" /> Waiting for accurate GPS…</> : <><LocateFixed className="h-3.5 w-3.5" /> Use current shop GPS</>}
+              </button>
+            </div>
+
+            {shopGpsStatus && <p role="status" className={`rounded-xl border px-3 py-2 text-xs font-semibold leading-relaxed ${isCapturingShopLocation ? 'border-amber-200 bg-amber-50 text-amber-900' : shopGpsStatus.includes('saved') ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>{shopGpsStatus}{shopGpsAccuracy !== null ? ` Best reading: ±${Math.round(shopGpsAccuracy)} m.` : ''}</p>}
+
+            {store.latitude != null && store.longitude != null && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2">
+                <span className="text-[11px] font-black text-emerald-900">Saved map coordinates</span>
+                <code className="rounded-md bg-white px-2 py-1 text-[11px] font-bold text-slate-700">{Number(store.latitude).toFixed(6)}, {Number(store.longitude).toFixed(6)}</code>
+              </div>
+            )}
           </div>
         </section>
       )}

@@ -51,6 +51,7 @@ export default function StoreManager() {
   const navigate = useNavigate()
   const [store, setStore] = useState<any>(() => getCachedStore(storeId))
   const [categories, setCategories] = useState<any[]>([])
+  const categorySetupPromises = useRef<Map<number, Promise<any[]>>>(new Map())
   const [categoryToDelete, setCategoryToDelete] = useState<{ id: number; name: string } | null>(null)
   const [isDeletingCategory, setIsDeletingCategory] = useState(false)
   const [productToDelete, setProductToDelete] = useState<{ id: number; name: string } | null>(null)
@@ -161,6 +162,34 @@ export default function StoreManager() {
       variant: 'warning',
       onConfirm: handleAutoCreateSampleCategories
     })
+  }
+
+  function ensureGarmentCategories(storeId: number, existingCategories: any[]) {
+    const currentPromise = categorySetupPromises.current.get(storeId)
+    if (currentPromise) return currentPromise
+
+    const setupPromise = (async () => {
+      const garmentType = getBusinessType('GARMENTS')
+      const localizedLists = ['en', 'hi', 'mr'].map(language => getBusinessTypeCategories(garmentType, language))
+      const currentNames = getBusinessTypeCategories(garmentType, i18n.language || 'mr')
+      const normalizedExisting = new Set(existingCategories.map(category => String(category.name || '').trim().toLocaleLowerCase()))
+      const missingNames = currentNames.filter((name, index) => {
+        const aliases = localizedLists.map(list => list[index]).filter(Boolean)
+        return !aliases.some(alias => normalizedExisting.has(alias.trim().toLocaleLowerCase()))
+      })
+      const createdCategories: any[] = []
+      for (const name of missingNames) {
+        const response = await api.post(`/stores/${storeId}/categories/`, { name })
+        createdCategories.push(response.data)
+      }
+      return [...existingCategories, ...createdCategories]
+    })()
+    const trackedPromise = setupPromise.catch(error => {
+      categorySetupPromises.current.delete(storeId)
+      throw error
+    })
+    categorySetupPromises.current.set(storeId, trackedPromise)
+    return trackedPromise
   }
 
   function requestBulkDeleteCategories() {
@@ -300,23 +329,15 @@ export default function StoreManager() {
 
   async function handleAutoCreateSampleCategories() {
     if (!store) return
-    const currentBType = getBusinessType(store.business_type)
-    const activeLang = i18n.language || 'mr'
-    const sampleCats = getBusinessTypeCategories(currentBType, activeLang)
-    const bTitle = getBusinessTypeTitle(currentBType, activeLang)
+    const garmentType = getBusinessType('GARMENTS')
+    const bTitle = getBusinessTypeTitle(garmentType, i18n.language || 'mr')
 
     const loadingId = toast.loading(`Creating preset categories for ${bTitle}...`)
     try {
-      let createdCats = 0
-      for (const catName of sampleCats) {
-        if (!categories.some(c => c.name.toLowerCase() === catName.toLowerCase())) {
-          await api.post(`/stores/${store.id}/categories/`, { name: catName })
-          createdCats++
-        }
-      }
-
+      const updatedCategories = await ensureGarmentCategories(store.id, categories)
+      const createdCats = updatedCategories.length - categories.length
+      setCategories(updatedCategories)
       toast.success(`✨ ${createdCats > 0 ? `${createdCats} new categories` : 'Categories already exist'} added for ${bTitle}!`, { id: loadingId })
-      load()
     } catch (err) {
       toast.error(errorMessage(err), { id: loadingId })
     }
@@ -535,7 +556,15 @@ export default function StoreManager() {
         const [categoryResult, productResult] = await Promise.all([
           api.get(`/stores/${found.id}/categories/`), api.get('/products/')
         ])
-        const catList = Array.isArray(categoryResult.data) ? categoryResult.data : (categoryResult.data?.results || [])
+        const existingCategories = Array.isArray(categoryResult.data) ? categoryResult.data : (categoryResult.data?.results || [])
+        let catList = existingCategories
+        if (String(found.business_type || 'GARMENTS').toUpperCase() === 'GARMENTS') {
+          try {
+            catList = await ensureGarmentCategories(found.id, existingCategories)
+          } catch (error) {
+            toast.error(`Default clothing categories could not be created: ${errorMessage(error)}`)
+          }
+        }
         const prodList = Array.isArray(productResult.data) ? productResult.data : (productResult.data?.results || [])
         setCategories(catList)
         setProducts(prodList.filter((item: any) => item.store === found.id))
@@ -1998,7 +2027,7 @@ export default function StoreManager() {
             <div>
               <label className="text-[9.5px] font-extrabold text-indigo-300 uppercase tracking-wider block">Store Category:</label>
               <div className="mt-0.5 w-full rounded-lg border border-indigo-700 bg-slate-900 px-2 py-1 text-xs font-bold text-white">
-                {BUSINESS_TYPES[0].icon} {getBusinessTypeTitle(BUSINESS_TYPES[0], i18n.language)}
+                {getBusinessType('GARMENTS').icon} {getBusinessTypeTitle(getBusinessType('GARMENTS'), i18n.language)}
               </div>
             </div>
 

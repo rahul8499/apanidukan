@@ -1277,59 +1277,15 @@ export default function StoreManager() {
 
     <div className="space-y-3 sm:space-y-5 p-2.5 sm:p-6">
 
-      {/* Enterprise Store Status Banner — Compact & Powerful Mobile Express Launcher */}
-      <div className="relative overflow-hidden rounded-xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3 sm:p-6 text-white shadow-md sm:shadow-2xl border border-indigo-500/30 backdrop-blur-xl">
-        {/* Glow & Sparkle Accents */}
-        <div className="absolute -top-20 -right-20 h-36 sm:h-56 w-36 sm:w-56 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-20 h-36 sm:h-56 w-36 sm:w-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[8px] sm:text-[10px] font-black uppercase text-emerald-300 border border-emerald-400/40 tracking-wider shadow-xs">
-                {t('expressLauncher')}
-              </span>
-              <span className="text-[9px] sm:text-xs font-extrabold text-amber-300">
-                1-Min Setup
-              </span>
-            </div>
-
-            {/* Mobile vs Desktop Title */}
-            <h1 className="text-sm sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-200 tracking-tight leading-tight">
-              {t('expressSetupTitle')}
-            </h1>
-
-            {/* Mobile vs Desktop Sub-text */}
-            <p className="text-[10px] sm:text-xs text-slate-300 font-medium max-w-xl leading-snug sm:leading-relaxed">
-              {t('expressSetupSubtext')}
-            </p>
-          </div>
-
-          <div className="flex items-center sm:flex-col sm:items-end justify-between gap-1.5 sm:gap-2.5 shrink-0 border-t border-white/10 sm:border-t-0 pt-2 sm:pt-0">
-            <button
-              type="button"
-              onClick={requestPublish}
-              title={store.is_published ? "Store is LIVE (Click to set Draft)" : "Click to Make Store LIVE"}
-              className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 py-1 text-[9px] sm:text-xs font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${store.is_published
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30'
-                : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border border-emerald-300 hover:from-emerald-600 hover:to-teal-700 animate-pulse'
-                }`}
-            >
-              <span className={`h-1.5 sm:h-2 w-1.5 sm:w-2 rounded-full ${store.is_published ? 'bg-emerald-400 animate-ping' : 'bg-white'}`} />
-              <span>{store.is_published ? t('liveStore') : t('makeStoreLive')}</span>
-            </button>
-            <span className="text-[9px] sm:text-[11px] font-extrabold text-indigo-300">
-              {t('orderLinkReady')}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* Store Setup Checklist & Progress Tracker */}
       <StoreSetupProgressWidget
         store={store}
         categoriesCount={categories.length}
         productsCount={products.length}
+        launcherLabel={t('expressLauncher')}
+        launchTitle={t('expressSetupTitle')}
+        launchSubtext={t('expressSetupSubtext')}
+        orderLinkLabel={t('orderLinkReady')}
         onRequestPublish={requestPublish}
         onOpenOnboardingTour={() => setShowOnboardingModal(true)}
       />

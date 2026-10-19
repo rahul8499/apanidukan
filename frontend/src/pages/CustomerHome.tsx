@@ -27,6 +27,7 @@ export default function CustomerHome() {
   const [category, setCategory] = useState('')
   const [radius, setRadius] = useState(10)
   const [customRadius, setCustomRadius] = useState('')
+  const [showCustomRadius, setShowCustomRadius] = useState(false)
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationLabel, setLocationLabel] = useState('Location select karein')
   const [loading, setLoading] = useState(true)
@@ -162,7 +163,7 @@ export default function CustomerHome() {
         </div>
 
         {/* Compact Delivery Location & Mode Bar */}
-        <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl bg-white p-2 sm:p-2.5 shadow-xs border border-slate-200/80">
+        <div className="relative mb-3 flex items-center justify-between gap-2 rounded-2xl bg-white p-2 sm:p-2.5 shadow-xs border border-slate-200/80">
           <button
             type="button"
             onClick={selectLocation}
@@ -181,11 +182,11 @@ export default function CustomerHome() {
             <span className="text-[10px] font-bold text-orange-600 shrink-0">Change</span>
           </button>
 
-          <div className="flex items-center rounded-xl bg-slate-100 p-0.5 text-[11px] font-black shrink-0">
-            {[2, 5, 10, 20].map((value) => <button key={value} type="button" onClick={() => chooseRadius(value)} className={`px-2 py-1.5 rounded-lg transition-all ${radius === value ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600'}`}>{value} km</button>)}
-            <input aria-label="Custom distance in km" type="number" min="1" max="100" step="0.5" value={customRadius} onChange={(event) => setCustomRadius(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && applyCustomRadius()} placeholder="km" className="ml-1 w-10 rounded-lg bg-white px-1 py-1.5 text-center text-[10px] text-slate-700 outline-none" />
-            <button type="button" onClick={applyCustomRadius} className="px-1.5 text-[10px] text-orange-600">Set</button>
+          <div className="flex shrink-0 items-center rounded-xl bg-slate-100 p-0.5 text-[10px] font-black sm:text-[11px]">
+            {[2, 5, 10, 20].map((value) => <button key={value} type="button" aria-pressed={radius === value} onClick={() => chooseRadius(value)} className={`rounded-lg px-1.5 py-1.5 transition-all sm:px-2 ${radius === value ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-orange-600'}`}>{value} km</button>)}
+            <button type="button" aria-expanded={showCustomRadius} onClick={() => setShowCustomRadius(value => !value)} className={`ml-0.5 rounded-lg px-2 py-1.5 text-[10px] font-black transition-colors ${showCustomRadius ? 'bg-orange-500 text-white' : 'text-orange-600 hover:bg-white'}`}>Custom</button>
           </div>
+          {showCustomRadius && <div className="absolute right-2 top-full z-40 mt-2 w-60 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl" role="group" aria-label="Set custom search radius"><label htmlFor="home-custom-radius" className="mb-1.5 block text-xs font-black text-slate-800">Custom search distance</label><div className="flex items-center gap-2"><input id="home-custom-radius" autoFocus aria-label="Custom distance in kilometres" type="number" min="1" max="100" step="0.5" inputMode="decimal" value={customRadius} onChange={(event) => setCustomRadius(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && applyCustomRadius()} placeholder="1–100" className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 px-3 text-sm font-bold text-slate-900 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" /><span className="text-xs font-bold text-slate-500">km</span><button type="button" onClick={() => { applyCustomRadius(); if (Number(customRadius) >= 1 && Number(customRadius) <= 100) setShowCustomRadius(false) }} className="h-10 rounded-xl bg-slate-900 px-3 text-xs font-black text-white">Apply</button></div><p className="mt-1.5 text-[10px] font-medium text-slate-500">Choose 1–100 km</p></div>}
         </div>
 
         {/* Compact Hero Banner */}

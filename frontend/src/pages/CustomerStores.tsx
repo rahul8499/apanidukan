@@ -26,6 +26,7 @@ export default function CustomerStores() {
   const [category, setCategory] = useState('')
   const [radius, setRadius] = useState(10)
   const [customRadius, setCustomRadius] = useState('')
+  const [showCustomRadius, setShowCustomRadius] = useState(false)
   const [fulfilment, setFulfilment] = useState<FulfilmentFilter>('all')
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -156,7 +157,7 @@ export default function CustomerStores() {
         </div>
 
         {/* Nearby distance selector */}
-        <div className="mb-3 rounded-2xl bg-white p-1.5 shadow-xs border border-slate-200/80">
+        <div className="relative mb-3 rounded-2xl bg-white p-1.5 shadow-xs border border-slate-200/80">
           <button
             type="button"
             onClick={selectNearby}
@@ -166,7 +167,11 @@ export default function CustomerStores() {
             <LocateFixed className="h-4 w-4" />
             {locating ? 'Locating...' : 'Change location'}
           </button>
-          <div className="mt-1 flex gap-1 rounded-xl bg-slate-100 p-0.5">{[2, 5, 10, 20].map((value) => <button key={value} type="button" onClick={() => chooseRadius(value)} className={`flex-1 rounded-lg py-1.5 text-[11px] font-black ${radius === value ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600'}`}>{value} km</button>)}<input aria-label="Custom distance in km" type="number" min="1" max="100" step="0.5" value={customRadius} onChange={(event) => setCustomRadius(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && applyCustomRadius()} placeholder="km" className="w-11 rounded-lg bg-white px-1 text-center text-[10px] text-slate-700 outline-none" /><button type="button" onClick={applyCustomRadius} className="px-1 text-[10px] font-black text-orange-600">Set</button></div>
+          <div className="relative mt-1 flex items-center gap-1 rounded-xl bg-slate-100 p-0.5">
+            {[2, 5, 10, 20].map((value) => <button key={value} type="button" aria-pressed={radius === value} onClick={() => chooseRadius(value)} className={`min-w-0 flex-1 rounded-lg px-1 py-1.5 text-[10px] font-black transition sm:text-[11px] ${radius === value ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-orange-600'}`}>{value} km</button>)}
+            <button type="button" aria-expanded={showCustomRadius} onClick={() => setShowCustomRadius(value => !value)} className={`shrink-0 rounded-lg px-2 py-1.5 text-[10px] font-black transition-colors ${showCustomRadius ? 'bg-orange-500 text-white' : 'text-orange-600 hover:bg-white'}`}>Custom</button>
+            {showCustomRadius && <div className="absolute right-0 top-full z-40 mt-2 w-60 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl" role="group" aria-label="Set custom search radius"><label htmlFor="stores-custom-radius" className="mb-1.5 block text-xs font-black text-slate-800">Custom search distance</label><div className="flex items-center gap-2"><input id="stores-custom-radius" autoFocus aria-label="Custom distance in kilometres" type="number" min="1" max="100" step="0.5" inputMode="decimal" value={customRadius} onChange={(event) => setCustomRadius(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && applyCustomRadius()} placeholder="1–100" className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 px-3 text-sm font-bold text-slate-900 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" /><span className="text-xs font-bold text-slate-500">km</span><button type="button" onClick={() => { applyCustomRadius(); if (Number(customRadius) >= 1 && Number(customRadius) <= 100) setShowCustomRadius(false) }} className="h-10 rounded-xl bg-slate-900 px-3 text-xs font-black text-white">Apply</button></div><p className="mt-1.5 text-[10px] font-medium text-slate-500">Choose 1–100 km</p></div>}
+          </div>
         </div>
 
         {/* Categories Bar */}

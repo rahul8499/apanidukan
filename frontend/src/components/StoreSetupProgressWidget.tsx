@@ -90,7 +90,7 @@ export default function StoreSetupProgressWidget({
   }
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-3.5 text-white shadow-lg sm:rounded-3xl sm:p-5">
+    <section className="relative w-full min-w-0 overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-3 text-white shadow-lg sm:rounded-3xl sm:p-5">
       <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-orange-500/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-teal-400/10 blur-3xl" />
       <div className="relative">
@@ -112,7 +112,7 @@ export default function StoreSetupProgressWidget({
           )}
         </div>
 
-        <div className="mt-4 rounded-2xl border border-white/10 bg-black/15 p-3 sm:p-4">
+        <div className="mt-4 min-w-0 rounded-2xl border border-white/10 bg-black/15 p-2.5 sm:p-4">
           <div className="mb-2 flex items-center justify-between gap-2">
             <div>
               <p className="text-[9px] font-black uppercase text-slate-400 sm:text-[10px]">Store launch progress</p>
@@ -126,21 +126,23 @@ export default function StoreSetupProgressWidget({
           </div>
 
           <div
-            className="h-2.5 overflow-hidden rounded-full border border-white/10 bg-white/10 sm:h-3"
+            className="relative h-4 overflow-hidden rounded-full border border-white/15 bg-slate-700/80 p-[2px] shadow-inner sm:h-5 sm:p-[3px]"
             role="progressbar"
             aria-label="Store setup progress"
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={setupPercent}
           >
-            <div className={`h-full rounded-full transition-all duration-700 ease-out ${setupPercent === 100 ? 'bg-gradient-to-r from-emerald-400 to-teal-300' : 'bg-gradient-to-r from-orange-400 via-amber-300 to-teal-300'}`} style={{ width: `${setupPercent}%` }} />
+            <div className={`relative h-full rounded-full transition-[width] duration-700 ease-out ${setupPercent === 100 ? 'bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.55)]' : 'bg-gradient-to-r from-orange-400 via-amber-300 to-teal-300 shadow-[0_0_10px_rgba(251,191,36,0.35)]'}`} style={{ width: `${setupPercent}%` }}>
+              {setupPercent > 0 && <span className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 border-white/90 bg-white shadow-sm sm:h-3 sm:w-3" />}
+            </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <div className="mt-3 grid min-w-0 grid-cols-2 gap-1.5 sm:grid-cols-5 sm:gap-2">
         {tasks.map((task) => (
           <div
             key={task.id}
-            className={`flex min-h-12 items-center justify-between gap-1.5 rounded-xl border px-2 py-2 transition-all sm:min-h-14 sm:px-2.5 ${
+            className={`flex min-h-12 min-w-0 items-center justify-between gap-1 rounded-xl border px-1.5 py-2 transition-all sm:min-h-14 sm:gap-1.5 sm:px-2.5 ${
               task.isCompleted
                 ? 'border-emerald-300/20 bg-emerald-400/10'
                 : task.optional
@@ -148,7 +150,7 @@ export default function StoreSetupProgressWidget({
                   : 'border-amber-300/20 bg-amber-300/10'
             }`}
           >
-            <div className="flex min-w-0 items-center gap-1.5">
+            <div className="flex min-w-0 items-center gap-1 sm:gap-1.5">
               <span className="shrink-0 text-xs sm:text-sm">{task.icon}</span>
               <span className="truncate text-[10px] font-bold text-white sm:text-[11px]">{task.title}</span>
             </div>
@@ -167,7 +169,7 @@ export default function StoreSetupProgressWidget({
                     scrollToElement(task.targetId)
                   }
                 }}
-                className="inline-flex shrink-0 items-center gap-0.5 rounded-lg bg-amber-300 px-1.5 py-1 text-[9px] font-black text-slate-950 transition hover:bg-amber-200 active:scale-95 sm:px-2"
+                className="inline-flex max-w-[5.5rem] shrink-0 items-center gap-0.5 rounded-lg bg-amber-300 px-1.5 py-1 text-[8px] font-black text-slate-950 transition hover:bg-amber-200 active:scale-95 sm:max-w-none sm:px-2 sm:text-[9px]"
               >
                 {task.pendingLabel}
                 <ArrowUpRight className="h-3 w-3" />

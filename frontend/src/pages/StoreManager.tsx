@@ -282,6 +282,10 @@ export default function StoreManager() {
       })
       setStore(response.data)
       setCachedStore(response.data)
+      if (response.data?.id) {
+        try { localStorage.setItem(`qs_seller_loc_prompt_${response.data.id}`, 'true') } catch {}
+      }
+      setShowSellerLocationPrompt(false)
       toast.success('Store address and location saved.')
       return true
     } catch (err) {
@@ -412,7 +416,19 @@ export default function StoreManager() {
   }
 
   useEffect(() => {
-    if (store?.id && !store.latitude && !store.longitude && !locationPromptShown.current) {
+    if (!store?.id) return
+    const hasValidLocation = Boolean(
+      (store.latitude != null && store.longitude != null && (Number(store.latitude) !== 0 || Number(store.longitude) !== 0))
+    )
+    const storageKey = `qs_seller_loc_prompt_${store.id}`
+    if (hasValidLocation) {
+      try { localStorage.setItem(storageKey, 'true') } catch {}
+      setShowSellerLocationPrompt(false)
+      return
+    }
+
+    const alreadyDismissed = localStorage.getItem(storageKey) === 'true'
+    if (!alreadyDismissed && !locationPromptShown.current) {
       locationPromptShown.current = true
       setShowSellerLocationPrompt(true)
     }
@@ -637,6 +653,10 @@ export default function StoreManager() {
         setUpiName(found?.upi_name || '')
         setRazorpayKeyId(found?.razorpay_key_id || '')
         setEnableOnlinePayments(found?.enable_online_payments ?? true)
+        if (found.latitude != null && found.longitude != null && (Number(found.latitude) !== 0 || Number(found.longitude) !== 0)) {
+          try { localStorage.setItem(`qs_seller_loc_prompt_${found.id}`, 'true') } catch {}
+          setShowSellerLocationPrompt(false)
+        }
 
         const hideKey = `qs_hide_seller_tour_${found.id}`
         const hiddenInStorage = localStorage.getItem(hideKey) === 'true'
@@ -3792,8 +3812,19 @@ export default function StoreManager() {
 
       <CustomerLocationPrompt
         open={showSellerLocationPrompt}
-        onAllow={() => { setShowSellerLocationPrompt(false); captureStoreLocation() }}
-        onClose={() => setShowSellerLocationPrompt(false)}
+        onAllow={() => {
+          setShowSellerLocationPrompt(false)
+          if (store?.id) {
+            try { localStorage.setItem(`qs_seller_loc_prompt_${store.id}`, 'true') } catch {}
+          }
+          captureStoreLocation()
+        }}
+        onClose={() => {
+          setShowSellerLocationPrompt(false)
+          if (store?.id) {
+            try { localStorage.setItem(`qs_seller_loc_prompt_${store.id}`, 'true') } catch {}
+          }
+        }}
         title="Apni shop ki exact location save karein"
         description="Current location se customers ko aapki shop sahi distance par dikhegi. Agar shop par nahi hain, full address likhkar ‘Find on Map’ use karein."
       />

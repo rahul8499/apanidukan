@@ -6,6 +6,8 @@ import { BUSINESS_TYPES, getBusinessTypeTitle } from '../utils/businessTypes'
 import { captureAccurateLocation } from '../utils/accurateLocation'
 import i18n from '../i18n'
 
+const DEFAULT_CATEGORY = 'Clothing, Garments & Fashion'
+
 const errorMessage = (error: any) => {
   const data = error?.response?.data
   if (!data) return 'Server se connection nahi hua. Backend running hai ya nahi check karein.'
@@ -22,7 +24,7 @@ export default function StartStore() {
 
   // Common store fields
   const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = useState(DEFAULT_CATEGORY)
   const [businessType] = useState('GARMENTS')
   const [address, setAddress] = useState('')
   const [latitude, setLatitude] = useState<number | null>(null)
@@ -30,8 +32,7 @@ export default function StartStore() {
   const [locationLoading, setLocationLoading] = useState(false)
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
   const [gpsStatus, setGpsStatus] = useState('')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
+  const [fullName, setFullName] = useState('')
 
   // Email mode fields
   const [email, setEmail] = useState('')
@@ -49,32 +50,55 @@ export default function StartStore() {
   const [loading, setLoading] = useState(false)
 
   function captureStoreLocation() {
-    if (!navigator.geolocation) { setError('Location is not supported on this device.'); setGpsStatus('GPS is not supported on this device.'); return }
-    setError('')
+    if (!navigator.geolocation) {
+      setGpsStatus('Device par GPS support nahi hai. Kripya shop address manually type karein.')
+      return
+    }
     setLocationLoading(true)
     setGpsAccuracy(null)
-    setGpsStatus('GPS reading le rahe hain; ±50 m ya usse behtar accuracy ka wait karein.')
-    void captureAccurateLocation(accuracy => {
-      setGpsAccuracy(accuracy)
-      setGpsStatus(accuracy <= 50
-        ? `Accurate GPS reading: ±${Math.round(accuracy)} m mil gayi.`
-        : `GPS reading ±${Math.round(accuracy)} m; ±50 m ya behtar ke liye retry ho raha hai...`)
-    }).then(({ coords }) => {
+    setGpsStatus('📍 Shop location detect kar rahe hain...')
+
+    captureAccurateLocation(
+      accuracy => {
+        setGpsAccuracy(accuracy)
+        if (accuracy <= 100) {
+          setGpsStatus(`Accurate location detect ho rahi hai... (±${Math.round(accuracy)} m)`)
+        }
+      },
+      100,
+      8000
+    )
+      .then(({ coords }) => {
         const roundedLatitude = Number(coords.latitude.toFixed(6))
         const roundedLongitude = Number(coords.longitude.toFixed(6))
         setLatitude(roundedLatitude)
         setLongitude(roundedLongitude)
         setGpsAccuracy(coords.accuracy)
-        setGpsStatus(`Accurate shop GPS captured: ±${Math.round(coords.accuracy)} m.`)
-        if (!address) setAddress(`Location: ${roundedLatitude.toFixed(6)}, ${roundedLongitude.toFixed(6)}`)
-      }).catch((locationError: any) => {
-        const accuracyText = Number.isFinite(locationError?.bestAccuracy)
-          ? ` Best reading ±${Math.round(locationError.bestAccuracy)} m thi; ±50 m ya behtar accuracy ke liye open area mein try karein.`
-          : ''
-        const message = `${locationError?.message || 'Location permission denied ya GPS unavailable hai.'}${accuracyText} Full address enter kar sakte hain.`
-        setGpsStatus(message)
-        setError(message)
-      }).finally(() => setLocationLoading(false))
+        if (coords.accuracy <= 100) {
+          setGpsStatus(`✅ Shop location capture ho gayi (±${Math.round(coords.accuracy)} m)`)
+        } else {
+          setGpsStatus(`✅ Shop location capture ho gayi. Kripya apna address verify karein.`)
+        }
+        if (!address) {
+          setAddress(`Shop Location (${roundedLatitude}, ${roundedLongitude})`)
+        }
+      })
+      .catch((locationError: any) => {
+        // Soft fallback: Never show scary ±362830 m numbers or trigger global error banner
+        if (locationError?.position) {
+          const coords = locationError.position.coords
+          const roundedLatitude = Number(coords.latitude.toFixed(6))
+          const roundedLongitude = Number(coords.longitude.toFixed(6))
+          setLatitude(roundedLatitude)
+          setLongitude(roundedLongitude)
+          setGpsStatus('Approximate location mili hai. Kripya apna poora address manually type karein.')
+        } else if (locationError?.locationErrorCode === 1) {
+          setGpsStatus('Location permission denied hai. Kripya apna shop address manually type karein.')
+        } else {
+          setGpsStatus('GPS signal weak hai (Desktop/Wi-Fi). Kripya apna shop address manually type karein.')
+        }
+      })
+      .finally(() => setLocationLoading(false))
   }
 
   useEffect(() => {
@@ -96,8 +120,8 @@ export default function StartStore() {
     }
 
     if (auth.user) {
-      if (auth.user.first_name && !firstName) setFirstName(auth.user.first_name)
-      if (auth.user.last_name && !lastName) setLastName(auth.user.last_name)
+      const combined = [auth.user.first_name, auth.user.last_name].filter(Boolean).join(' ')
+      if (combined && !fullName) setFullName(combined)
       if (auth.user.email && !email && !auth.user.email.includes('@store.local')) setEmail(auth.user.email)
     }
 
@@ -132,24 +156,25 @@ export default function StartStore() {
   }
 
   // Verify OTP
-  async function handleVerifyOTP() {
+  async function handleVerifyOTP(candidateOtp?: string) {
     setError('')
     setSuccessMsg('')
 
+    const codeToVerify = (candidateOtp !== undefined ? candidateOtp : otp).trim()
     const cleanPhone = phone.replace(/\D/g, '')
-    if (!otp || otp.trim().length < 4) {
+    if (!codeToVerify || codeToVerify.length < 4) {
       setError('Please enter the OTP code sent to your mobile number.')
       return
     }
 
     setLoading(true)
     try {
-      const res = await auth.verifyOTP(cleanPhone, otp)
+      const res = await auth.verifyOTP(cleanPhone, codeToVerify)
       setOtpVerified(true)
 
       if (res.user) {
-        if (res.user.first_name && !firstName) setFirstName(res.user.first_name)
-        if (res.user.last_name && !lastName) setLastName(res.user.last_name)
+        const combined = [res.user.first_name, res.user.last_name].filter(Boolean).join(' ')
+        if (combined && !fullName) setFullName(combined)
         if (res.user.email && !email && !res.user.email.includes('@store.local')) setEmail(res.user.email)
       }
 
@@ -180,18 +205,26 @@ export default function StartStore() {
       setError('Store name is required.')
       return
     }
-    if (!firstName.trim() || !lastName.trim()) {
-      setError('First name and last name are required.')
+    if (!address.trim()) {
+      setError('Store address is required.')
       return
     }
+    if (!fullName.trim()) {
+      setError('Aapka poora naam (Full Name) required hai.')
+      return
+    }
+
+    const nameParts = fullName.trim().split(/\s+/)
+    const parsedFirstName = nameParts[0] || ''
+    const parsedLastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : nameParts[0] || ''
 
     setLoading(true)
     try {
       const { store } = await auth.registerWithOTP({
         phone_number: cleanPhone,
         otp: otp,
-        first_name: firstName,
-        last_name: lastName,
+        first_name: parsedFirstName,
+        last_name: parsedLastName,
         store_name: name,
         category: description,
         business_type: businessType,
@@ -212,10 +245,50 @@ export default function StartStore() {
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    if (!name.trim()) {
+      setError('Store name is required.')
+      return
+    }
+    if (!address.trim()) {
+      setError('Store address is required.')
+      return
+    }
+    if (!fullName.trim()) {
+      setError('Aapka poora naam (Full Name) required hai.')
+      return
+    }
+    const cleanPhone = phone.replace(/\D/g, '')
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setError('10-digit mobile number enter karna mandatory hai.')
+      return
+    }
+    if (!otpVerified) {
+      setError('Please verify your mobile number with OTP first.')
+      return
+    }
+
+    const nameParts = fullName.trim().split(/\s+/)
+    const parsedFirstName = nameParts[0] || ''
+    const parsedLastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : nameParts[0] || ''
+
     setLoading(true)
     try {
-      await auth.register({ email, password, first_name: firstName, last_name: lastName })
-      const store = await api.post('/stores/', { name, description, business_type: businessType, address, latitude, longitude })
+      await auth.register({
+        email,
+        password,
+        first_name: parsedFirstName,
+        last_name: parsedLastName,
+        phone_number: cleanPhone
+      })
+      const store = await api.post('/stores/', {
+        name,
+        description,
+        business_type: businessType,
+        address,
+        latitude,
+        longitude,
+        phone_number: cleanPhone
+      })
       navigate(`/stores/${store.data.id}/manage`)
     } catch (requestError) {
       setError(errorMessage(requestError))
@@ -284,6 +357,11 @@ export default function StartStore() {
         {/* --- FORM 1: MOBILE OTP REGISTRATION --- */}
         {regMode === 'otp' && (
           <form onSubmit={handleOTPSubmit} className="space-y-8 p-8 sm:p-10 shadow-2xl shadow-indigo-500/10 border border-white/80 rounded-[2.5rem] bg-white/60 backdrop-blur-2xl">
+            {/* Required Indicator Hint */}
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-[11px] text-slate-400">
+              <span className="font-semibold text-indigo-600 uppercase tracking-wider">Fast Seller Onboarding</span>
+              <span><span className="text-rose-500 font-bold">*</span> Zaroori (Required) fields</span>
+            </div>
 
             {/* STEP 01: Store Info & Mobile Verification */}
             <section>
@@ -302,7 +380,7 @@ export default function StartStore() {
               {/* Mobile Number & OTP Verification Box */}
               <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Mobile Number (for SMS & OTP Verification)
+                  Mobile Number (for SMS & OTP Verification) <span className="text-rose-500 font-bold">*</span>
                 </label>
 
                 <div className="flex gap-2">
@@ -326,7 +404,7 @@ export default function StartStore() {
                       type="button"
                       onClick={handleSendOTP}
                       disabled={loading || countdown > 0}
-                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm whitespace-nowrap shadow-sm"
+                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm whitespace-nowrap shadow-sm disabled:opacity-60"
                     >
                       {countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP →'}
                     </button>
@@ -338,7 +416,13 @@ export default function StartStore() {
                   <div className="pt-2 flex gap-2 items-center">
                     <input
                       value={otp}
-                      onChange={e => setOtp(e.target.value)}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                        setOtp(val)
+                        if (val.length === 6 && !otpVerified) {
+                          handleVerifyOTP(val)
+                        }
+                      }}
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
@@ -349,9 +433,9 @@ export default function StartStore() {
                     />
                     <button
                       type="button"
-                      onClick={handleVerifyOTP}
+                      onClick={() => handleVerifyOTP()}
                       disabled={loading}
-                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm"
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm whitespace-nowrap disabled:opacity-60"
                     >
                       {loading ? 'Verifying...' : 'Verify OTP ✓'}
                     </button>
@@ -362,7 +446,9 @@ export default function StartStore() {
               {/* Store Name & Description Inputs */}
               <div className="mt-4 grid gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Store Name</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Store Name <span className="text-rose-500 font-bold">*</span>
+                  </label>
                   <input
                     value={name}
                     onChange={e => setName(e.target.value)}
@@ -373,25 +459,67 @@ export default function StartStore() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Aap kya sell karte hain?</label>
-                  <div className="premium-input mb-3 w-full font-semibold" aria-label="Business category">
-                    {BUSINESS_TYPES[0].icon} {getBusinessTypeTitle(BUSINESS_TYPES[0], i18n.language)}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Aap kya sell karte hain?
+                    </label>
+                    <span className="text-emerald-700 font-semibold text-[11px] bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      ✓ Auto-selected
+                    </span>
+                  </div>
+
+                  {/* Single Default Auto-Selected Category */}
+                  <div className="p-3.5 rounded-2xl border-2 border-indigo-500 bg-indigo-50/70 shadow-xs flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">👗</span>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Clothing, Garments & Fashion</p>
+                        <p className="text-xs text-slate-500">Kapde, Readymade, Garments & Fashion</p>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-xl shadow-xs">
+                      ✓ Selected
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Store Address <span className="text-rose-500 font-bold">*</span>
+                    </label>
                   </div>
                   <textarea
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    placeholder="Aap kya sell karte hain? (e.g. Clothes, Grocery, Electronics, Medicine)"
+                    value={address}
+                    onChange={e => setAddress(e.target.value)}
+                    required
+                    placeholder="Full shop address (e.g. Shop #4, Market Road, Near City Bank)"
                     className="premium-input min-h-20 w-full"
                   />
+                  <button
+                    type="button"
+                    onClick={captureStoreLocation}
+                    disabled={locationLoading}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition-colors"
+                  >
+                    <span>📍</span>
+                    {locationLoading ? 'Locating...' : latitude ? 'Location captured ✓' : 'Use current shop location'}
+                  </button>
+                  {gpsStatus && (
+                    <p
+                      role="status"
+                      className={`mt-2 text-xs font-medium p-2.5 rounded-xl border transition-all ${
+                        locationLoading
+                          ? 'text-amber-800 bg-amber-50 border-amber-200/80'
+                          : latitude
+                          ? 'text-emerald-800 bg-emerald-50 border-emerald-200/80 font-semibold'
+                          : 'text-slate-600 bg-slate-100 border-slate-200'
+                      }`}
+                    >
+                      {gpsStatus}
+                    </p>
+                  )}
                 </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Store address</label>
-                    <textarea value={address} onChange={e => setAddress(e.target.value)} required placeholder="Full shop address" className="premium-input min-h-20 w-full" />
-                    <button type="button" onClick={captureStoreLocation} disabled={locationLoading} className="mt-2 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white">
-                      {locationLoading ? 'Locating...' : latitude ? 'Location captured' : 'Use current shop location'}
-                    </button>
-                    {gpsStatus && <p role="status" className={`mt-2 text-xs font-semibold ${locationLoading ? 'text-amber-700' : latitude ? 'text-emerald-700' : 'text-rose-700'}`}>{gpsStatus}{gpsAccuracy !== null ? ` (best ±${Math.round(gpsAccuracy)} m)` : ''}</p>}
-                  </div>
               </div>
             </section>
 
@@ -400,39 +528,33 @@ export default function StartStore() {
               <span className="section-label text-xs font-bold text-indigo-600">Step 02</span>
               <h2 className="mt-0.5 text-lg font-bold text-slate-900">Aapka account</h2>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">First Name</label>
-                  <input
-                    value={firstName}
-                    onChange={e => setFirstName(e.target.value)}
-                    required
-                    placeholder="First name (e.g. Rahul)"
-                    className="premium-input w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name</label>
-                  <input
-                    value={lastName}
-                    onChange={e => setLastName(e.target.value)}
-                    required
-                    placeholder="Last name (e.g. Kolhe)"
-                    className="premium-input w-full"
-                  />
-                </div>
+              <div className="mt-4">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Full Name <span className="text-rose-500 font-bold">*</span>
+                </label>
+                <input
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  required
+                  placeholder="Aapka poora naam (e.g. Rahul Kolhe)"
+                  className="premium-input w-full"
+                />
               </div>
 
               <div className="mt-3">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Email Address <span className="text-slate-400 font-normal">(Optional)</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Email Address
+                  </label>
+                  <span className="text-slate-400 font-normal text-[11px] bg-slate-100 px-2 py-0.5 rounded-md">
+                    Optional
+                  </span>
+                </div>
                 <input
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   type="email"
-                  placeholder="Optional email address"
+                  placeholder="Optional email address (e.g. rahul@example.com)"
                   className="premium-input w-full"
                 />
               </div>
@@ -442,9 +564,16 @@ export default function StartStore() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 text-base font-black bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 text-white rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5"
+              className="w-full py-4 text-base font-black bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
             >
-              {loading ? 'Store ban raha hai...' : 'Create my store →'}
+              {loading ? (
+                <>
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>Store ban raha hai...</span>
+                </>
+              ) : (
+                <span>Create my store →</span>
+              )}
             </button>
 
             <p className="text-center text-sm text-slate-500">
@@ -459,79 +588,225 @@ export default function StartStore() {
         {/* --- FORM 2: ORIGINAL EMAIL REGISTRATION (PRESERVED) --- */}
         {regMode === 'email' && (
           <form onSubmit={handleEmailSubmit} className="space-y-8 p-8 sm:p-10 shadow-2xl shadow-indigo-500/10 border border-white/80 rounded-[2.5rem] bg-white/60 backdrop-blur-2xl">
+            {/* Required Indicator Hint */}
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-[11px] text-slate-400">
+              <span className="font-semibold text-indigo-600 uppercase tracking-wider">Email Account Setup</span>
+              <span><span className="text-rose-500 font-bold">*</span> Zaroori (Required) fields</span>
+            </div>
+
             <section>
               <p className="section-label text-xs font-bold text-indigo-600">Step 01</p>
               <h2 className="mt-1 text-lg font-bold text-slate-900">Aapki store information</h2>
               <div className="mt-4 grid gap-3">
-                <input
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  required
-                  placeholder="Store name (e.g. Rahul Digital Shop)"
-                  className="premium-input"
-                />
-                <textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder="Aap kya sell karte hain?"
-                  className="premium-input min-h-24"
-                />
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Store Name <span className="text-rose-500 font-bold">*</span>
+                  </label>
+                  <input
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    required
+                    placeholder="Store name (e.g. Rahul Digital Shop)"
+                    className="premium-input w-full"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Aap kya sell karte hain?
+                    </label>
+                    <span className="text-emerald-700 font-semibold text-[11px] bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      ✓ Auto-selected
+                    </span>
+                  </div>
+
+                  {/* Single Default Auto-Selected Category */}
+                  <div className="p-3.5 rounded-2xl border-2 border-indigo-500 bg-indigo-50/70 shadow-xs flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">👗</span>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Clothing, Garments & Fashion</p>
+                        <p className="text-xs text-slate-500">Kapde, Readymade, Garments & Fashion</p>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-xl shadow-xs">
+                      ✓ Selected
+                    </span>
+                  </div>
+                </div>
               </div>
             </section>
 
             <section className="border-t border-slate-100 pt-6">
               <p className="section-label text-xs font-bold text-indigo-600">Step 02</p>
               <h2 className="mt-1 text-lg font-bold text-slate-900">Aapka account</h2>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="mt-4">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Full Name <span className="text-rose-500 font-bold">*</span>
+                </label>
                 <input
-                  value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
                   required
-                  placeholder="First name"
-                  className="premium-input"
+                  placeholder="Aapka poora naam (e.g. Rahul Kolhe)"
+                  className="premium-input w-full"
                 />
-                <input
-                  value={lastName}
-                  onChange={e => setLastName(e.target.value)}
-                  required
-                  placeholder="Last name"
-                  className="premium-input"
-                />
-                <div className="premium-input font-semibold" aria-label="Business category">
-                  {BUSINESS_TYPES[0].icon} {getBusinessTypeTitle(BUSINESS_TYPES[0], i18n.language)}
-                </div>
-                <textarea value={address} onChange={e => setAddress(e.target.value)} required placeholder="Full shop address" className="premium-input min-h-20" />
-                <button type="button" onClick={captureStoreLocation} disabled={locationLoading} className="w-fit rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white">
-                  {locationLoading ? 'Locating...' : latitude ? 'Location captured' : 'Use current shop location'}
-                </button>
-                {gpsStatus && <p role="status" className={`text-xs font-semibold ${locationLoading ? 'text-amber-700' : latitude ? 'text-emerald-700' : 'text-rose-700'}`}>{gpsStatus}{gpsAccuracy !== null ? ` (best ±${Math.round(gpsAccuracy)} m)` : ''}</p>}
               </div>
-              <div className="mt-3 grid gap-3">
-                <input
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+
+              <div className="mt-3">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Store Address <span className="text-rose-500 font-bold">*</span>
+                </label>
+                <textarea
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
                   required
-                  type="email"
-                  placeholder="Email address"
-                  className="premium-input"
+                  placeholder="Full shop address"
+                  className="premium-input min-h-20 w-full"
                 />
-                <input
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  type="password"
-                  placeholder="Password (minimum 8 characters)"
-                  className="premium-input"
-                />
+                <button
+                  type="button"
+                  onClick={captureStoreLocation}
+                  disabled={locationLoading}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-white transition-colors"
+                >
+                  <span>📍</span>
+                  {locationLoading ? 'Locating...' : latitude ? 'Location captured ✓' : 'Use current shop location'}
+                </button>
+                {gpsStatus && (
+                  <p
+                    role="status"
+                    className={`mt-2 text-xs font-medium p-2.5 rounded-xl border transition-all ${
+                      locationLoading
+                        ? 'text-amber-800 bg-amber-50 border-amber-200/80'
+                        : latitude
+                        ? 'text-emerald-800 bg-emerald-50 border-emerald-200/80 font-semibold'
+                        : 'text-slate-600 bg-slate-100 border-slate-200'
+                    }`}
+                  >
+                    {gpsStatus}
+                  </p>
+                )}
+              </div>
+
+              {/* Mobile Number & OTP Verification Box */}
+              <div className="mt-3 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Mobile Number (SMS & OTP Verification) <span className="text-rose-500 font-bold">*</span>
+                  </label>
+                  {otpVerified && (
+                    <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
+                      ✓ Phone Verified
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3.5 top-3 text-sm font-semibold text-slate-500">+91</span>
+                    <input
+                      value={phone}
+                      onChange={e => { setPhone(e.target.value.replace(/\D/g, '').slice(0, 10)); setOtpVerified(false); }}
+                      disabled={otpVerified}
+                      required
+                      type="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={10}
+                      placeholder="9876543210"
+                      className="premium-input pl-14 w-full text-base font-semibold"
+                    />
+                  </div>
+                  {!otpVerified && (
+                    <button
+                      type="button"
+                      onClick={handleSendOTP}
+                      disabled={loading || countdown > 0}
+                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm whitespace-nowrap shadow-sm disabled:opacity-60"
+                    >
+                      {countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP →'}
+                    </button>
+                  )}
+                </div>
+
+                {/* OTP Entry Box */}
+                {otpSent && !otpVerified && (
+                  <div className="pt-2 flex gap-2 items-center">
+                    <input
+                      value={otp}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                        setOtp(val)
+                        if (val.length === 6 && !otpVerified) {
+                          handleVerifyOTP(val)
+                        }
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      autoComplete="one-time-code"
+                      placeholder="Enter 6-digit OTP"
+                      className="premium-input flex-1 text-center font-bold text-lg tracking-widest border-2 border-indigo-300 focus:border-indigo-600 rounded-xl"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleVerifyOTP()}
+                      disabled={loading}
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm whitespace-nowrap disabled:opacity-60"
+                    >
+                      {loading ? 'Verifying...' : 'Verify OTP ✓'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Email Address <span className="text-rose-500 font-bold">*</span>
+                  </label>
+                  <input
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    type="email"
+                    placeholder="Email address (e.g. rahul@example.com)"
+                    className="premium-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Password <span className="text-rose-500 font-bold">*</span>
+                  </label>
+                  <input
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    type="password"
+                    placeholder="Password (minimum 8 characters)"
+                    className="premium-input w-full"
+                  />
+                </div>
               </div>
             </section>
 
             <button
+              type="submit"
               disabled={loading}
-              className="w-full py-4 text-base font-black bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 text-white rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5"
+              className="w-full py-4 text-base font-black bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
             >
-              {loading ? 'Store ban raha hai...' : 'Create my store →'}
+              {loading ? (
+                <>
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>Store ban raha hai...</span>
+                </>
+              ) : (
+                <span>Create my store →</span>
+              )}
             </button>
 
             <p className="text-center text-sm text-slate-500">

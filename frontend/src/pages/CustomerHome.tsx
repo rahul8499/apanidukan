@@ -1,17 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  AlertCircle,
+  ArrowRight,
   ChevronRight,
+  Compass,
   LocateFixed,
   MapPin,
+  RefreshCw,
   Search,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Star,
   Store as StoreIcon,
-  Truck,
-  ShoppingBag,
-  ArrowRight
+  Truck
 } from 'lucide-react'
 import api from '../services/api'
 import CustomerAppBottomNav from '../components/CustomerAppBottomNav'
@@ -34,11 +37,18 @@ export default function CustomerHome() {
   const [locating, setLocating] = useState(false)
   const [error, setError] = useState('')
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
+  const [isShowingFallback, setIsShowingFallback] = useState(false)
   const { favorites, isFavorite, toggleFavorite } = useCustomerFavorites()
 
-  async function loadStores(nextLocation: typeof location, nextCategory: string, nextRadius = radius) {
+  async function loadStores(
+    nextLocation: typeof location,
+    nextCategory: string,
+    nextRadius = radius,
+    allowProximityFallback = true
+  ) {
     setLoading(true)
     setError('')
+    setIsShowingFallback(false)
     try {
       const params: Record<string, string> = {}
       if (nextCategory) params.category = nextCategory
@@ -48,9 +58,33 @@ export default function CustomerHome() {
         params.radius_km = String(nextRadius)
       }
       const response = await api.get('/public/stores/', { params })
-      setStores(Array.isArray(response.data) ? response.data : response.data.results || [])
+      const list = Array.isArray(response.data) ? response.data : response.data.results || []
+
+      // If customer has location and 0 stores are found within radius, fallback to show platform stores
+      if (list.length === 0 && nextLocation && allowProximityFallback) {
+        try {
+          const fallbackRes = await api.get('/public/stores/', {
+            params: {
+              ...(nextCategory ? { category: nextCategory } : {}),
+              lat: String(nextLocation.latitude),
+              lng: String(nextLocation.longitude),
+              all: '1'
+            }
+          })
+          const fallbackList = Array.isArray(fallbackRes.data) ? fallbackRes.data : fallbackRes.data.results || []
+          if (fallbackList.length > 0) {
+            setStores(fallbackList)
+            setIsShowingFallback(true)
+            return
+          }
+        } catch {
+          // If fallback query fails, retain list as empty
+        }
+      }
+
+      setStores(list)
     } catch {
-      setError('Stores load nahi ho paaye. Please refresh karein.')
+      setError('Stores load nahi ho paaye. Internet connection check karke dobara try karein.')
     } finally {
       setLoading(false)
     }
@@ -58,10 +92,12 @@ export default function CustomerHome() {
 
   function selectLocation() {
     if (!navigator.geolocation) {
-      setError('Is device par location support nahi hai. Nearby stores dikhane ke liye location on karein.')
+      setError('Is device par location support nahi hai. Sabhi verified stores dikhaye ja rahe hain.')
+      loadStores(null, category, radius)
       return
     }
     setLocating(true)
+    setError('')
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const nextLocation = { latitude: Number(coords.latitude.toFixed(6)), longitude: Number(coords.longitude.toFixed(6)) }
@@ -70,13 +106,17 @@ export default function CustomerHome() {
         setLocationLabel(`Near me: ${radius} km`)
         setLocating(false)
         setShowLocationPrompt(false)
-        loadStores(nextLocation, category)
+        loadStores(nextLocation, category, radius)
       },
-      () => {
+      (geoError) => {
+        console.warn('Geolocation failed or denied:', geoError)
         setLocating(false)
-        setError('Location permission nahi mili. Browser settings se location allow karke phir try karein.')
+        setShowLocationPrompt(false)
+        if (stores.length === 0) {
+          loadStores(null, category, radius)
+        }
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     )
   }
 
@@ -96,15 +136,20 @@ export default function CustomerHome() {
         localStorage.removeItem('customer-location')
       }
     }
-    setLoading(false)
+    // First-time or unlocated visitor: load all platform stores immediately so page is never blank
+    loadStores(null, '', initialRadius)
     setShowLocationPrompt(true)
   }, [])
 
   function chooseRadius(nextRadius: number) {
     setRadius(nextRadius)
     localStorage.setItem('customer-search-radius-km', String(nextRadius))
-    setLocationLabel(`Near me: ${nextRadius} km`)
-    if (location) loadStores(location, category, nextRadius)
+    if (location) {
+      setLocationLabel(`Near me: ${nextRadius} km`)
+      loadStores(location, category, nextRadius)
+    } else {
+      selectLocation()
+    }
   }
 
   function applyCustomRadius() {
@@ -114,11 +159,12 @@ export default function CustomerHome() {
       return
     }
     chooseRadius(Math.round(value * 10) / 10)
+    setShowCustomRadius(false)
   }
 
   function chooseCategory(nextCategory: string) {
     setCategory(nextCategory)
-    if (location) loadStores(location, nextCategory)
+    loadStores(location, nextCategory, radius)
   }
 
   const visibleStores = useMemo(() => {
@@ -325,36 +371,170 @@ export default function CustomerHome() {
             </Link>
           </div>
 
+          {isShowingFallback && (
+            <div className="mb-4 rounded-2xl border border-amber-200/90 bg-gradient-to-r from-amber-50 to-orange-50/50 p-3.5 sm:p-4 text-xs shadow-xs">
+              <div className="flex items-start gap-2.5">
+                <Compass className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-black text-amber-950">
+                    Aapke {radius} km ke daayre me abhi koi store nahi mila.
+                  </p>
+                  <p className="mt-0.5 text-[11px] font-medium text-amber-800/90">
+                    Platform ke verified stores dikhaye ja rahe hain (Delivery & Pickup options ke saath).
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-slate-500">Radius badhayein:</span>
+                    {[20, 50, 100].map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => chooseRadius(r)}
+                        className="rounded-lg border border-amber-300 bg-white px-2 py-0.5 text-[10px] font-black text-amber-900 hover:bg-amber-100 transition active:scale-95 cursor-pointer"
+                      >
+                        +{r} km
+                      </button>
+                    ))}
+                    {category && (
+                      <button
+                        type="button"
+                        onClick={() => chooseCategory('')}
+                        className="rounded-lg bg-amber-200/70 px-2 py-0.5 text-[10px] font-black text-amber-950 hover:bg-amber-300 transition active:scale-95 cursor-pointer"
+                      >
+                        Clear category filter
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {error && (
-            <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold text-rose-700">
-              {error}
+            <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50/90 p-4 shadow-xs">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-rose-800">{error}</p>
+                    <p className="mt-0.5 text-[11px] text-rose-600">Internet connection check karein ya Dobara try karein.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => loadStores(location, category, radius)}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-black text-white hover:bg-rose-700 shadow-xs transition active:scale-95 cursor-pointer"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Retry
+                </button>
+              </div>
             </div>
           )}
 
           {loading && (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-36 animate-pulse rounded-2xl bg-white shadow-xs" />
-              ))}
+            <div className="py-4">
+              <div className="mb-5 flex flex-col items-center justify-center rounded-3xl border border-orange-100 bg-white/95 p-6 text-center shadow-xs backdrop-blur-sm">
+                <div className="relative flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-full border-3 border-orange-200 border-t-orange-500 animate-spin" />
+                  <StoreIcon className="absolute h-5 w-5 text-orange-500" />
+                </div>
+                <p className="mt-3 text-xs sm:text-sm font-black text-slate-800">
+                  {locating ? 'Aapki location detect ho rahi hai...' : 'Verified dukaanein load ho rahi hain...'}
+                </p>
+                <p className="mt-0.5 text-[11px] font-medium text-slate-400">
+                  Apani Dukan · Local trusted merchants & fast delivery
+                </p>
+              </div>
+
+              <div className="grid gap-3.5 sm:grid-cols-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-3.5 shadow-xs animate-pulse"
+                  >
+                    <div className="flex gap-3">
+                      <div className="h-16 w-16 shrink-0 rounded-2xl bg-slate-200/80" />
+                      <div className="min-w-0 flex-1 space-y-2 py-0.5">
+                        <div className="flex items-center justify-between">
+                          <div className="h-4 w-32 rounded-md bg-slate-200/80" />
+                          <div className="h-4 w-10 rounded-full bg-slate-200/60" />
+                        </div>
+                        <div className="h-2.5 w-20 rounded-md bg-slate-200/60" />
+                        <div className="h-3 w-40 rounded-md bg-slate-200/60" />
+                      </div>
+                    </div>
+                    <div className="mt-3.5 flex items-center justify-between border-t border-slate-100 pt-2.5">
+                      <div className="h-3 w-28 rounded-md bg-slate-200/60" />
+                      <div className="h-6 w-20 rounded-xl bg-slate-200/80" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {!loading && !error && storePreview.length === 0 && (
-            <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center shadow-xs">
-              <StoreIcon className="mx-auto h-10 w-10 text-slate-300" />
-              <p className="mt-3 text-sm font-black text-slate-700">
-                {location ? `Is ${radius} km area me abhi koi store nahi mila.` : 'Location allow karke nearby stores dekhein.'}
+            <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-8 sm:p-10 text-center shadow-xs">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
+                <StoreIcon className="h-7 w-7" />
+              </div>
+              <h3 className="mt-3.5 text-base font-black text-slate-800">
+                {search
+                  ? `"${search}" ke liye koi store nahi mila`
+                  : category
+                  ? 'Is category me abhi koi store nahi mila'
+                  : location
+                  ? `Is ${radius} km area me abhi koi store nahi mila`
+                  : 'Abhi koi verified store uplabdh nahi hai'}
+              </h3>
+              <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                {search || category
+                  ? 'Search query ya category filter clear karke sabhi stores dekhein.'
+                  : 'Radius badhayein ya sabhi platform stores explore karein.'}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Radius badhayein ya category filter clear karein.
-              </p>
-              {!location && (
-                <button type="button" onClick={selectLocation}
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-white hover:bg-orange-600 shadow-sm shadow-orange-500/20 transition cursor-pointer"
+
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                {(search || category) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch('')
+                      setCategory('')
+                      loadStores(location, '', radius)
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-white hover:bg-orange-600 shadow-xs transition active:scale-95 cursor-pointer"
+                  >
+                    Filters Clear Karein
+                  </button>
+                )}
+
+                {location && (
+                  <button
+                    type="button"
+                    onClick={() => loadStores(null, category, radius)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 shadow-xs transition active:scale-95 cursor-pointer"
+                  >
+                    <Compass className="h-3.5 w-3.5 text-orange-500" /> Sabhi Stores Dekhein
+                  </button>
+                )}
+
+                {!location && (
+                  <button
+                    type="button"
+                    onClick={selectLocation}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-white hover:bg-orange-600 shadow-xs transition active:scale-95 cursor-pointer"
+                  >
+                    <LocateFixed className="h-3.5 w-3.5" /> Location On Karein
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => loadStores(location, category, radius)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 shadow-xs transition active:scale-95 cursor-pointer"
                 >
-                  <LocateFixed className="h-3.5 w-3.5" /> Location on karein
+                  <RefreshCw className="h-3.5 w-3.5 text-slate-500" /> Refresh
                 </button>
-              )}
+              </div>
             </div>
           )}
 

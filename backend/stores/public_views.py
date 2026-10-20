@@ -69,7 +69,11 @@ class PublicStoreListView(generics.ListAPIView):
         try:
             latitude = float(request.query_params['lat'])
             longitude = float(request.query_params['lng'])
-            radius_km = min(max(float(request.query_params.get('radius_km', 10)), 1), 100)
+            radius_raw = request.query_params.get('radius_km', '10')
+            if str(radius_raw).strip().lower() in ('all', 'any', 'none', '0'):
+                radius_km = None
+            else:
+                radius_km = min(max(float(radius_raw), 1), 100)
         except (KeyError, TypeError, ValueError):
             latitude = longitude = None
             radius_km = 10
@@ -79,17 +83,30 @@ class PublicStoreListView(generics.ListAPIView):
             return Response(serialized)
 
         nearby = []
+        far_stores = []
+        unlocated_stores = []
         for store, data in zip(stores, serialized):
             if store.latitude is None or store.longitude is None:
+                data['distance_km'] = None
+                unlocated_stores.append(data)
                 continue
             lat1, lon1 = radians(latitude), radians(longitude)
             lat2, lon2 = radians(float(store.latitude)), radians(float(store.longitude))
             delta_lat, delta_lon = lat2 - lat1, lon2 - lon1
             distance = 6371 * 2 * asin(sqrt(sin(delta_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(delta_lon / 2) ** 2))
-            if distance <= radius_km:
-                data['distance_km'] = round(distance, 1)
+            data['distance_km'] = round(distance, 1)
+            if radius_km is None or distance <= radius_km:
                 nearby.append(data)
-        nearby.sort(key=lambda store: store['distance_km'])
+            else:
+                far_stores.append(data)
+
+        nearby.sort(key=lambda s: s['distance_km'])
+        far_stores.sort(key=lambda s: s['distance_km'])
+
+        include_all = request.query_params.get('all', '').strip().lower() in ('1', 'true', 'yes')
+        if include_all or radius_km is None:
+            return Response(nearby + far_stores + unlocated_stores)
+
         return Response(nearby)
 
 

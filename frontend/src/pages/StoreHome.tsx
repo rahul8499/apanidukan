@@ -83,19 +83,24 @@ function Storefront() {
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         const { latitude, longitude } = coords
+        let fullAddr = `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
         try {
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
-          const place = await response.json()
-          const fullAddr = place.display_name || `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+          const res = await api.get('/public/reverse-geocode/', { params: { lat: latitude, lng: longitude } })
+          if (res.data?.display_name) {
+            fullAddr = res.data.display_name
+          }
+        } catch {
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
+            const place = await response.json()
+            if (place?.display_name) fullAddr = place.display_name
+          } catch {
+            // retain coordinate string
+          }
+        } finally {
           localStorage.setItem('multistore_user_delivery_address', fullAddr)
           setUserLocation(fullAddr)
           setLocationModalOpen(false)
-        } catch {
-          const fallback = `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-          localStorage.setItem('multistore_user_delivery_address', fallback)
-          setUserLocation(fallback)
-          setLocationModalOpen(false)
-        } finally {
           setDetectingGps(false)
         }
       },

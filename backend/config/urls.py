@@ -15,6 +15,8 @@ from stores.public_views import (
     PublicValidateCouponView,
     PublicStoreReportView,
     PublicCustomerNotificationsView,
+    PublicGeocodeView,
+    PublicReverseGeocodeView,
     public_store_og_view
 )
 from config.health import health_check_view
@@ -55,6 +57,11 @@ urlpatterns = [
     path('api/v1/public/stores/<slug:slug>/report/', PublicStoreReportView.as_view()),
     path('api/v1/public/stores/<slug:slug>/notifications/', PublicCustomerNotificationsView.as_view()),
     path('api/v1/public/stores/id/<int:store_id>/notifications/', PublicCustomerNotificationsView.as_view()),
+    # High-accuracy Location Services (Mappls with OSM Fallback)
+    path('api/v1/public/geocode/', PublicGeocodeView.as_view(), name='public-geocode'),
+    path('api/v1/public/reverse-geocode/', PublicReverseGeocodeView.as_view(), name='public-reverse-geocode'),
+    path('api/v1/location/geocode/', PublicGeocodeView.as_view(), name='location-geocode'),
+    path('api/v1/location/reverse-geocode/', PublicReverseGeocodeView.as_view(), name='location-reverse-geocode'),
 ]
 
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns

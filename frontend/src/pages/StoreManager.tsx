@@ -17,7 +17,7 @@ import CustomerLocationPrompt from '../components/CustomerLocationPrompt'
 import { useTranslation } from 'react-i18next'
 import { BUSINESS_TYPES, getBusinessType, getBusinessTypeTitle, getBusinessTypeCategories, getBusinessTypeProducts, getBusinessTypeCheckoutHint, getUnitDisplayLabel, getUnitHint, formatUnitDisplay, UNIT_LABEL_MAP, getStockLabel, getStockHint } from '../utils/businessTypes'
 import { getStoreShareUrl, getStoreWhatsAppShareLink } from '../utils/storeShareMessage'
-import { X, Trash2, MapPin, LocateFixed, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { X, Trash2, MapPin, LocateFixed, CheckCircle2, AlertTriangle, ExternalLink, Navigation, Sparkles, Check } from 'lucide-react'
 
 const GARMENT_SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '28', '30', '32', '34', '36', '38', '40', '42', '44', '46', 'FREE SIZE']
 const parseSizeList = (value?: string) => (value || '').split(/[|,]/).map(size => size.trim().toUpperCase()).filter(Boolean)
@@ -78,7 +78,35 @@ export default function StoreManager() {
   const [isCapturingShopLocation, setIsCapturingShopLocation] = useState(false)
   const [shopGpsAccuracy, setShopGpsAccuracy] = useState<number | null>(null)
   const [shopGpsStatus, setShopGpsStatus] = useState('')
+  const [approximateGpsCoords, setApproximateGpsCoords] = useState<{ latitude: number, longitude: number } | null>(null)
   const locationPromptShown = useRef(false)
+
+  // Step 01: Compact Address & Location Accordion State
+  const [isAddressAccordionOpen, setIsAddressAccordionOpen] = useState(false)
+
+  // Step 03: Products Hub Tab Switcher State ('single' | 'bulk' | 'catalog')
+  const [productTab, setProductTab] = useState<'single' | 'bulk' | 'catalog'>('single')
+
+  const getProductThumbnail = (prod: any) => {
+    if (prod?.image) {
+      if (typeof prod.image === 'string' && prod.image.startsWith('http')) return prod.image
+      return `${api.defaults.baseURL?.replace('/api', '') || ''}${prod.image}`
+    }
+    if (Array.isArray(prod?.images) && prod.images.length > 0) {
+      const firstImg = prod.images[0]?.image
+      if (firstImg) {
+        if (typeof firstImg === 'string' && firstImg.startsWith('http')) return firstImg
+        return `${api.defaults.baseURL?.replace('/api', '') || ''}${firstImg}`
+      }
+    }
+    return null
+  }
+
+  const getCategoryName = (catId?: number | null) => {
+    if (!catId) return 'Uncategorized'
+    const c = categories.find(item => item.id === catId)
+    return c ? c.name : 'Uncategorized'
+  }
 
   // Dedicated Bulk Product Creator State
   const [bulkCategory, setBulkCategory] = useState('')
@@ -269,20 +297,21 @@ export default function StoreManager() {
     }
     setIsGeocodingAddress(true)
     setShopGpsAccuracy(null)
-    setShopGpsStatus('Address ko map par locate karke save kar rahe hain...')
+    setShopGpsStatus('Address se map location dhundh rahe hain...')
     try {
       const response = await api.post(`/stores/${store.id}/geocode-address/`, { address: store.address })
       const { latitude, longitude, display_name } = response.data
       const saved = await saveStoreLocation(latitude, longitude, display_name)
       if (!saved) {
-        setShopGpsStatus('Address location could not be saved. Please retry.')
+        setShopGpsStatus('Location save nahi ho saki. Dobara try karein.')
         return
       }
       setStore((previous: any) => ({ ...previous, address: display_name, latitude, longitude }))
-      setShopGpsStatus('Address-based map location saved. GPS accuracy reading is not available for this method.')
-      toast.success('Address se map location find karke save kar di gayi.')
+      setShopGpsStatus('Shop location map par verify & save ho gayi!')
+      toast.success('Address se location save ho gayi!')
     } catch (err) {
       toast.error(errorMessage(err))
+      setShopGpsStatus('Address nahi mila. Pincode aur city ke saath poora address likhein.')
     } finally {
       setIsGeocodingAddress(false)
     }
@@ -295,39 +324,51 @@ export default function StoreManager() {
     }
     setIsCapturingShopLocation(true)
     setShopGpsAccuracy(null)
-    setShopGpsStatus('GPS reading le rahe hain; ±50 m ya usse behtar accuracy ka wait karein.')
+    setShopGpsStatus('GPS location detect ho rahi hai...')
     void captureAccurateLocation(accuracy => {
       setShopGpsAccuracy(accuracy)
-      setShopGpsStatus(accuracy <= 50
-        ? `Accurate GPS reading: ±${Math.round(accuracy)} m. Saving location...`
-        : `GPS reading ±${Math.round(accuracy)} m; ±50 m ya behtar ke liye retry ho raha hai...`)
+      if (accuracy <= 100) {
+        setShopGpsStatus('Accurate GPS mil gaya, location save ho rahi hai...')
+      }
     }).then(async ({ coords }) => {
         const latitude = Number(coords.latitude.toFixed(6))
         const longitude = Number(coords.longitude.toFixed(6))
         let detectedAddress = store?.address || ''
         try {
           const response = await api.post(`/stores/${store.id}/reverse-geocode/`, { latitude, longitude })
-          detectedAddress = response.data.display_name || `GPS location: ${latitude}, ${longitude}`
+          detectedAddress = response.data.display_name || detectedAddress || `Location: ${latitude}, ${longitude}`
         } catch {
-          detectedAddress = `GPS location: ${latitude}, ${longitude}`
+          detectedAddress = detectedAddress || `Location: ${latitude}, ${longitude}`
         }
         const saved = await saveStoreLocation(latitude, longitude, detectedAddress)
         if (!saved) {
-          setShopGpsStatus(`GPS accuracy ±${Math.round(coords.accuracy)} m mili, lekin location save nahi hui. Dobara try karein.`)
+          setShopGpsStatus('Location detect hui lekin save nahi ho saki. Dobara try karein.')
           return
         }
         setStore((previous: any) => ({ ...previous, address: detectedAddress, latitude, longitude }))
         setShopGpsAccuracy(coords.accuracy)
-        setShopGpsStatus(`Location saved with GPS accuracy ±${Math.round(coords.accuracy)} m.`)
-        toast.success(`Exact GPS location saved (±${Math.round(coords.accuracy)} m).`)
+        setShopGpsStatus('Shop location GPS se save ho gayi!')
+        toast.success('GPS location save ho gayi!')
       }).catch((error: any) => {
         if (Number.isFinite(error?.bestAccuracy)) {
           setShopGpsAccuracy(error.bestAccuracy)
-          setShopGpsStatus(`Location save nahi hui. Best GPS accuracy ±${Math.round(error.bestAccuracy)} m thi; ±50 m ya behtar reading ke liye open area mein retry karein.`)
+          if (error?.position?.coords) {
+            setApproximateGpsCoords({
+              latitude: Number(error.position.coords.latitude.toFixed(6)),
+              longitude: Number(error.position.coords.longitude.toFixed(6)),
+            })
+          }
+          if (error.bestAccuracy > 2000) {
+            setShopGpsStatus('Desktop browser par physical GPS chip nahi hota. Upar address likhein aur "Find location from address" button use karein.')
+            toast('Address likhkar "Find location from address" use karein.', { icon: '📍' })
+          } else {
+            setShopGpsStatus('GPS reading weak hai. Kripya open area mein try karein ya Address se locate karein.')
+            toast.error('GPS reading weak hai. Address se locate karein.')
+          }
         } else {
-          setShopGpsStatus(error?.message || 'GPS unavailable. Location save nahi hui.')
+          setShopGpsStatus('Location permission off hai. Upar address likhein aur "Find location from address" use karein.')
+          toast.error('Location permission off hai.')
         }
-        toast.error(error?.message || 'Location permission denied ya GPS unavailable hai.')
       }).finally(() => setIsCapturingShopLocation(false))
   }
 
@@ -2017,52 +2058,177 @@ export default function StoreManager() {
       )}
 
       {store && (
-        <section className="overflow-hidden rounded-xl border border-teal-200 bg-white shadow-xs sm:rounded-2xl">
-          <div className="flex items-start gap-3 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-white p-3.5 sm:p-5">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal-100 text-teal-700"><MapPin className="h-4.5 w-4.5" /></span>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-sm font-black text-slate-900">Store address & location</h2>
-                {store.latitude != null && store.longitude != null
-                  ? <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800"><CheckCircle2 className="h-3 w-3" /> Location saved{shopGpsAccuracy !== null ? ` · ±${Math.round(shopGpsAccuracy)} m` : ''}</span>
-                  : <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800"><AlertTriangle className="h-3 w-3" /> Location not set</span>}
+        <section id="location" className="overflow-hidden rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white shadow-xs transition-all">
+          {/* Compact Header */}
+          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-3 py-2 sm:px-4 sm:py-2.5 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="grid h-6 w-6 sm:h-7 sm:w-7 shrink-0 place-items-center rounded-lg bg-teal-600 text-white shadow-2xs">
+                <MapPin className="h-3.5 w-3.5" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-xs sm:text-sm font-black text-slate-900 truncate">Store address & location</h2>
               </div>
-              <p className="mt-1 text-xs font-medium leading-relaxed text-slate-600">Customers ko nearby results mein dikhane ke liye shop ka complete address aur map location save karein.</p>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {store.latitude != null && store.longitude != null ? (
+                <>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold shadow-2xs">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                    </span>
+                    Location saved
+                  </span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-[10px] sm:text-[11px] font-bold text-slate-700 border border-slate-200 hover:text-emerald-700 hover:border-emerald-300 transition active:scale-95 shadow-2xs cursor-pointer"
+                  >
+                    <span>View Map</span>
+                    <ExternalLink className="h-2.5 w-2.5 text-slate-400" />
+                  </a>
+                </>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold shadow-2xs">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                  Location not set
+                </span>
+              )}
             </div>
           </div>
 
-          <div className="space-y-3.5 p-3.5 sm:p-5">
-            <div>
-              <label htmlFor="store-full-address" className="mb-1.5 block text-xs font-black text-slate-800">Full shop address</label>
-              <textarea
-                id="store-full-address"
-                rows={3}
-                value={store.address || ''}
-                onChange={event => setStore((previous: any) => ({ ...previous, address: event.target.value }))}
-                placeholder="Shop number, street, area, city, Maharashtra"
-                className="min-h-24 w-full rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-              />
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">Address mein shop number, area, city aur pincode add karein.</p>
+          {/* Compact Body */}
+          <div className="p-2.5 sm:p-3.5 space-y-2">
+
+            {/* Address Input */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label htmlFor="store-full-address" className="text-[11px] sm:text-xs font-black text-slate-800">
+                  Full shop address
+                </label>
+                {store.address && (
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {store.address.length} chars
+                  </span>
+                )}
+              </div>
+
+              <div className="relative">
+                <textarea
+                  id="store-full-address"
+                  rows={2}
+                  value={store.address || ''}
+                  onChange={event => setStore((previous: any) => ({ ...previous, address: event.target.value }))}
+                  placeholder="Shop number, building name, area (e.g. Viman Nagar), city, pincode"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 p-2 sm:p-2.5 text-xs font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-100 leading-snug transition resize-none pr-7"
+                />
+                {store.address && (
+                  <button
+                    type="button"
+                    onClick={() => setStore((previous: any) => ({ ...previous, address: '' }))}
+                    title="Clear address"
+                    className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 rounded p-0.5 transition cursor-pointer"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium flex items-center gap-1">
+                <span className="text-amber-500">💡</span> Address mein shop number, area, city aur pincode add karein.
+              </p>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-3">
-              <button type="button" onClick={() => void saveStoreLocation()} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-700">
-                Save address
+            {/* Compact 3-Column Action Buttons (Android Mobile & Desktop) */}
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-0.5">
+              <button
+                type="button"
+                disabled={isCapturingShopLocation}
+                onClick={captureStoreLocation}
+                className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-2 py-1 text-[11px] sm:text-xs font-bold text-white shadow-2xs hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer truncate"
+                title="Use current shop GPS"
+              >
+                {isCapturingShopLocation ? (
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white shrink-0" />
+                ) : (
+                  <LocateFixed className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span className="truncate">Use GPS</span>
               </button>
-              <button type="button" disabled={isGeocodingAddress || !store.address?.trim()} onClick={geocodeAndSaveStoreAddress} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-800 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50">
-                {isGeocodingAddress ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-800" /> Finding address location…</> : <><MapPin className="h-3.5 w-3.5" /> Find location from address</>}
+
+              <button
+                type="button"
+                disabled={isGeocodingAddress || !store.address?.trim()}
+                onClick={geocodeAndSaveStoreAddress}
+                className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] sm:text-xs font-bold text-indigo-950 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs transition active:scale-95 cursor-pointer truncate"
+                title="Find location from address"
+              >
+                {isGeocodingAddress ? (
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-800 shrink-0" />
+                ) : (
+                  <MapPin className="h-3.5 w-3.5 text-indigo-700 shrink-0" />
+                )}
+                <span className="truncate">Find on Map</span>
               </button>
-              <button type="button" disabled={isCapturingShopLocation} onClick={captureStoreLocation} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-black text-teal-800 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-50">
-                {isCapturingShopLocation ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal-300 border-t-teal-800" /> Waiting for accurate GPS…</> : <><LocateFixed className="h-3.5 w-3.5" /> Use current shop GPS</>}
+
+              <button
+                type="button"
+                onClick={() => void saveStoreLocation()}
+                className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-slate-900 px-2 py-1 text-[11px] sm:text-xs font-bold text-white hover:bg-slate-800 shadow-2xs transition active:scale-95 cursor-pointer truncate"
+                title="Save address"
+              >
+                <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                <span className="truncate">Save</span>
               </button>
             </div>
 
-            {shopGpsStatus && <p role="status" className={`rounded-xl border px-3 py-2 text-xs font-semibold leading-relaxed ${isCapturingShopLocation ? 'border-amber-200 bg-amber-50 text-amber-900' : shopGpsStatus.includes('saved') ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>{shopGpsStatus}{shopGpsAccuracy !== null ? ` Best reading: ±${Math.round(shopGpsAccuracy)} m.` : ''}</p>}
-
-            {store.latitude != null && store.longitude != null && (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2">
-                <span className="text-[11px] font-black text-emerald-900">Saved map coordinates</span>
-                <code className="rounded-md bg-white px-2 py-1 text-[11px] font-bold text-slate-700">{Number(store.latitude).toFixed(6)}, {Number(store.longitude).toFixed(6)}</code>
+            {/* Status & Helper Notification (Compact) */}
+            {shopGpsStatus && (
+              <div
+                role="status"
+                className={`rounded-xl border px-2.5 py-1.5 text-[11px] leading-snug transition shadow-2xs ${
+                  isCapturingShopLocation || isGeocodingAddress
+                    ? 'border-amber-200 bg-amber-50 text-amber-950'
+                    : shopGpsStatus.includes('save') || shopGpsStatus.includes('Save')
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-950 font-medium'
+                    : 'border-slate-200 bg-slate-50 text-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs shrink-0">
+                    {isCapturingShopLocation || isGeocodingAddress ? '⏳' : shopGpsStatus.includes('save') || shopGpsStatus.includes('Save') ? '✅' : '💡'}
+                  </span>
+                  <p className="font-semibold truncate flex-1">{shopGpsStatus}</p>
+                </div>
+                {approximateGpsCoords && !shopGpsStatus.includes('save') && !shopGpsStatus.includes('Save') && (
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-slate-200/80">
+                    <button
+                      type="button"
+                      disabled={isGeocodingAddress || !store.address?.trim()}
+                      onClick={geocodeAndSaveStoreAddress}
+                      className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[10px] font-bold text-white shadow-2xs hover:bg-indigo-700 disabled:opacity-50 cursor-pointer"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      Address Pinpoint
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const saved = await saveStoreLocation(approximateGpsCoords.latitude, approximateGpsCoords.longitude)
+                        if (saved) {
+                          setStore((prev: any) => ({ ...prev, latitude: approximateGpsCoords.latitude, longitude: approximateGpsCoords.longitude }))
+                          setShopGpsStatus('Shop location save ho gayi!')
+                          setApproximateGpsCoords(null)
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-100 cursor-pointer"
+                    >
+                      Approx Save
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -2071,29 +2237,68 @@ export default function StoreManager() {
 
 
 
-      {/* Step 02: Category Add */}
-      <section id="categories" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs transition-all">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-slate-900 text-white text-[10px] sm:text-xs font-black shadow-xs">
+      {/* Step 02: Category Add & Logic Setup */}
+      <section id="categories" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs transition-all space-y-3">
+        {/* Header Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-2.5 gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <span className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-lg bg-slate-900 text-white text-[10px] sm:text-xs font-black shadow-xs">
               02
             </span>
             <div>
-              <h2 className="text-xs sm:text-base font-black text-slate-900">{t('step2Title')}</h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xs sm:text-base font-black text-slate-900">{t('step2Title')}</h2>
+                {store && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-[10px] sm:text-[11px] font-black text-indigo-900">
+                    <span>{getBusinessType(store.business_type).icon}</span>
+                    <span>{getBusinessTypeTitle(getBusinessType(store.business_type), i18n.language)}</span>
+                  </span>
+                )}
+              </div>
               <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{t('step2Subtext')}</p>
             </div>
           </div>
-          <span className="rounded-full bg-slate-100 px-2 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-xs font-bold text-slate-700 border border-slate-200">
-            {categories.length} Categories
-          </span>
+
+          {/* Header Action: 1-Click Auto Categories button + Categories counter */}
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <button
+              type="button"
+              onClick={requestAutoCreateSampleCategories}
+              className="rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-black text-slate-950 hover:brightness-110 shadow-2xs transition-all cursor-pointer shrink-0 active:scale-95 flex items-center gap-1"
+            >
+              <span>⚡ 1-Click Auto Categories</span>
+            </button>
+
+            <span className="rounded-full bg-slate-100 px-2 sm:px-2.5 py-0.5 text-[9px] sm:text-xs font-bold text-slate-700 border border-slate-200 shrink-0">
+              {categories.length} Categories
+            </span>
+          </div>
         </div>
 
-        <form onSubmit={addCategory} className="mt-3 flex gap-1.5">
+        {/* Compact Business Category Logic Strip */}
+        {store && (
+          <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[10px] sm:text-[11px] text-slate-600 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-extrabold text-slate-800">🎯 Checkout Hint:</span>
+              <span className="text-slate-600">{getBusinessTypeCheckoutHint(getBusinessType(store.business_type), i18n.language)}</span>
+            </div>
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className="font-extrabold text-slate-700">Units:</span>
+              {getBusinessType(store.business_type).units.map(u => (
+                <span key={u} className="bg-white text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded text-[9px] font-bold">
+                  {u}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={addCategory} className="flex gap-1.5">
           <input
             value={categoryName}
             onChange={e => setCategoryName(e.target.value)}
             required
-            placeholder="e.g. E-books, Groceries, Electronics"
+            placeholder="e.g. Shirts, Kurtis, Sarees, Jeans"
             className="flex-1 rounded-lg sm:rounded-xl border border-slate-200 bg-white p-2 text-xs font-medium text-slate-900 focus:border-slate-900 focus:outline-none transition-all shadow-2xs"
           />
           <button disabled={isAddingCategory} className="rounded-lg sm:rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 whitespace-nowrap cursor-pointer transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
@@ -2186,16 +2391,17 @@ export default function StoreManager() {
         )}
       </section>
 
-      {/* Step 03: Single Product Addition */}
-      <section id="products" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs space-y-3 sm:space-y-4 transition-all">
+      {/* Step 03: Products Hub (Merged into Tabs) */}
+      <section id="products" className="rounded-xl sm:rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-xs space-y-4 transition-all">
+        {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
           <div className="flex items-center gap-2 sm:gap-3">
-            <span className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-lg sm:rounded-xl bg-slate-900 text-white text-[10px] sm:text-xs font-black shadow-xs">
+            <span className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-lg bg-slate-900 text-white text-[10px] sm:text-xs font-black shadow-xs">
               03
             </span>
             <div>
-              <h2 className="text-xs sm:text-base font-black text-slate-900">{t('step3Title')}</h2>
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{t('step3Subtext')}</p>
+              <h2 className="text-xs sm:text-base font-black text-slate-900">Products ({products.length})</h2>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Add single product, bulk import via CSV/Text, or view catalog</p>
             </div>
           </div>
           <span className="rounded-full bg-emerald-50 px-2 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-xs font-bold text-emerald-700 border border-emerald-200">
@@ -2203,186 +2409,773 @@ export default function StoreManager() {
           </span>
         </div>
 
-        <form onSubmit={requestAddProduct} className="space-y-2.5">
-          <div className="grid gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Product Name <span className="text-rose-500 font-extrabold">*</span></label>
-              <input value={productName} onChange={e => setProductName(e.target.value)} required placeholder="Product name" className="premium-input mt-0.5 p-2 text-xs" />
-            </div>
-            <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('price')} (₹) <span className="text-rose-500 font-extrabold">*</span></label>
-              <input value={price} onChange={e => setPrice(e.target.value)} required min="0.01" type="number" step="0.01" placeholder="Price in INR (> 0)" className="premium-input mt-0.5 p-2 text-xs" />
-            </div>
-            <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Ordering Unit (युनिट)</label>
-              <select
-                value={productUnit || getBusinessType(store?.business_type).defaultUnit}
-                onChange={e => setProductUnit(e.target.value)}
-                className="premium-input mt-0.5 p-2 text-xs font-medium"
-              >
-                {getBusinessType(store?.business_type).units.map(u => (
-                  <option key={u} value={u}>{getUnitDisplayLabel(u, store?.business_type)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-span-full lg:col-span-3">
-              <p className="text-[10px] text-indigo-700 font-semibold bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
-                <span>💡</span>
-                <span><strong>{formatUnitDisplay(productUnit || getBusinessType(store?.business_type).defaultUnit)}:</strong> {getUnitHint(productUnit || getBusinessType(store?.business_type).defaultUnit, store?.business_type)}</span>
-              </p>
-            </div>
-            <div className="col-span-full lg:col-span-3 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3">
-              <div className="flex flex-wrap items-center justify-between gap-1">
-                <label className="text-[11px] sm:text-xs font-black text-slate-800">Available Sizes (multiple select)</label>
-                <span className="text-[10px] font-semibold text-slate-500">Optional for Free Size / non-sized items</span>
+        {/* Tab Switcher */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200/90 overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setProductTab('single')}
+            className={`flex-1 min-w-[120px] py-1.5 sm:py-2 px-3 text-xs font-black rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              productTab === 'single'
+                ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+            }`}
+          >
+            <span>⚡ Single Product</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setProductTab('bulk')}
+            className={`flex-1 min-w-[130px] py-1.5 sm:py-2 px-3 text-xs font-black rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              productTab === 'bulk'
+                ? 'bg-slate-900 text-amber-300 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+            }`}
+          >
+            <span>📊 Bulk / CSV Import</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setProductTab('catalog')}
+            className={`flex-1 min-w-[120px] py-1.5 sm:py-2 px-3 text-xs font-black rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              productTab === 'catalog'
+                ? 'bg-white text-teal-700 shadow-xs border border-teal-200'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+            }`}
+          >
+            <span>📁 View Catalog ({products.length})</span>
+          </button>
+        </div>
+
+        {/* TAB 1: Single Product Addition Form */}
+        {productTab === 'single' && (
+          <form onSubmit={requestAddProduct} className="space-y-3 animate-in fade-in duration-150">
+            <div className="grid gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <label className="text-[11px] sm:text-xs font-bold text-slate-700">Product Name <span className="text-rose-500 font-extrabold">*</span></label>
+                <input value={productName} onChange={e => setProductName(e.target.value)} required placeholder="Product name" className="premium-input mt-0.5 p-2 text-xs" />
               </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {GARMENT_SIZE_OPTIONS.map(size => {
-                  const selected = productSizes.includes(size)
-                  return (
-                    <button
-                      key={size}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => {
-                        setProductSizes(current => selected ? current.filter(item => item !== size) : [...current, size])
-                        setProductSizeStock(current => {
-                          const next = { ...current }
-                          if (selected) delete next[size]
-                          else next[size] = 0
-                          return next
-                        })
-                      }}
-                      className={`rounded-lg border px-3 py-1.5 text-xs font-black transition-all ${selected ? 'border-indigo-700 bg-indigo-700 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-400'}`}
-                    >
-                      {selected ? '✓ ' : ''}{size}
-                    </button>
-                  )
-                })}
+              <div>
+                <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('price')} (₹) <span className="text-rose-500 font-extrabold">*</span></label>
+                <input value={price} onChange={e => setPrice(e.target.value)} required min="0.01" type="number" step="0.01" placeholder="Price in INR (> 0)" className="premium-input mt-0.5 p-2 text-xs" />
               </div>
-              {productSizes.length > 0 && <p className="mt-2 text-[10px] font-bold text-indigo-700">Selected: {productSizes.join(', ')}</p>}
-              {productSizes.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-indigo-200 pt-3">
-                  {productSizes.map(size => (
-                    <label key={size} className="text-[10px] font-black text-slate-700">
-                      {size} Stock
-                      <input type="number" min="0" required value={productSizeStock[size] ?? 0} onChange={event => setProductSizeStock(current => ({ ...current, [size]: Math.max(0, Number(event.target.value)) }))} className="mt-1 w-full rounded-lg border border-indigo-200 bg-white p-2 text-xs font-bold" />
-                    </label>
+              <div>
+                <label className="text-[11px] sm:text-xs font-bold text-slate-700">Ordering Unit (युनिट)</label>
+                <select
+                  value={productUnit || getBusinessType(store?.business_type).defaultUnit}
+                  onChange={e => setProductUnit(e.target.value)}
+                  className="premium-input mt-0.5 p-2 text-xs font-medium"
+                >
+                  {getBusinessType(store?.business_type).units.map(u => (
+                    <option key={u} value={u}>{getUnitDisplayLabel(u, store?.business_type)}</option>
                   ))}
+                </select>
+              </div>
+              <div className="col-span-full lg:col-span-3">
+                <p className="text-[10px] text-indigo-700 font-semibold bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
+                  <span>💡</span>
+                  <span><strong>{formatUnitDisplay(productUnit || getBusinessType(store?.business_type).defaultUnit)}:</strong> {getUnitHint(productUnit || getBusinessType(store?.business_type).defaultUnit, store?.business_type)}</span>
+                </p>
+              </div>
+              <div className="col-span-full lg:col-span-3 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <label className="text-[11px] sm:text-xs font-black text-slate-800">Available Sizes (multiple select)</label>
+                  <span className="text-[10px] font-semibold text-slate-500">Optional for Free Size / non-sized items</span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {GARMENT_SIZE_OPTIONS.map(size => {
+                    const selected = productSizes.includes(size)
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => {
+                          setProductSizes(current => selected ? current.filter(item => item !== size) : [...current, size])
+                          setProductSizeStock(current => {
+                            const next = { ...current }
+                            if (selected) delete next[size]
+                            else next[size] = 0
+                            return next
+                          })
+                        }}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-black transition-all cursor-pointer ${selected ? 'border-indigo-700 bg-indigo-700 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-400'}`}
+                      >
+                        {selected ? '✓ ' : ''}{size}
+                      </button>
+                    )
+                  })}
+                </div>
+                {productSizes.length > 0 && <p className="mt-2 text-[10px] font-bold text-indigo-700">Selected: {productSizes.join(', ')}</p>}
+                {productSizes.length > 0 && (
+                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-indigo-200 pt-3">
+                    {productSizes.map(size => (
+                      <label key={size} className="text-[10px] font-black text-slate-700">
+                        {size} Stock
+                        <input type="number" min="0" required value={productSizeStock[size] ?? 0} onChange={event => setProductSizeStock(current => ({ ...current, [size]: Math.max(0, Number(event.target.value)) }))} className="mt-1 w-full rounded-lg border border-indigo-200 bg-white p-2 text-xs font-bold" />
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="text-[11px] sm:text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language, productUnit || getBusinessType(store?.business_type).defaultUnit)}</label>
+                <input value={productSizes.length ? String(Object.values(productSizeStock).reduce((sum, quantity) => sum + Number(quantity || 0), 0)) : stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" disabled={productSizes.length > 0} placeholder="Default 100" className="premium-input mt-0.5 p-2 text-xs disabled:bg-slate-100" />
+              </div>
+              <div>
+                <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('category')} <span className="text-rose-500 font-extrabold">*</span></label>
+                <select value={category} onChange={e => setCategory(e.target.value)} required className="premium-input mt-0.5 p-2 text-xs font-bold border-indigo-200">
+                  <option value="">-- Select Category (Required) --</option>
+                  {categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Multiple Product Photos Picker */}
+            <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3 transition-all">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] sm:text-xs font-bold text-slate-800 flex items-center gap-1">
+                  <span>🖼️ Photos (Optional)</span>
+                </label>
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
+                  {productImages.length > 0 ? `${productImages.length} Selected` : 'Optional'}
+                </span>
+              </div>
+
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={e => {
+                  const files = Array.from(e.target.files || [])
+                  setProductImages(files)
+                  setProductPrimaryIndex(0)
+                }}
+                className="premium-input text-xs p-1.5"
+              />
+
+              {productImages.length > 0 && (
+                <div className="space-y-1 pt-1.5 border-t border-slate-200">
+                  <p className="text-[9px] font-bold text-slate-600">Tap photo to choose Main Card Display:</p>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+                    {productImages.map((imgFile, idx) => {
+                      const isPrimary = productPrimaryIndex === idx
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setProductPrimaryIndex(idx)}
+                          className={`relative h-14 rounded-lg border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${isPrimary ? 'border-teal-600 ring-1 ring-teal-300' : 'border-slate-200 opacity-70'
+                            }`}
+                        >
+                          <img src={URL.createObjectURL(imgFile)} alt="preview" className="h-8 w-full object-cover rounded" />
+                          <span className={`text-[7px] font-black text-center py-0.2 rounded ${isPrimary ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                            {isPrimary ? '⭐ Main' : 'Gallery'}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
               )}
             </div>
+
             <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language, productUnit || getBusinessType(store?.business_type).defaultUnit)}</label>
-              <input value={productSizes.length ? String(Object.values(productSizeStock).reduce((sum, quantity) => sum + Number(quantity || 0), 0)) : stockQuantity} onChange={e => setStockQuantity(e.target.value)} required type="number" min="0" disabled={productSizes.length > 0} placeholder="Default 100" className="premium-input mt-0.5 p-2 text-xs disabled:bg-slate-100" />
+              <label className="text-[11px] sm:text-xs font-bold text-slate-700">Digital Downloadable File (Optional PDF/Zip)</label>
+              <input onChange={e => setFile(e.target.files?.[0] || null)} type="file" className="premium-input mt-0.5 p-1.5 text-xs" />
             </div>
-            <div>
-              <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('category')} <span className="text-rose-500 font-extrabold">*</span></label>
-              <select value={category} onChange={e => setCategory(e.target.value)} required className="premium-input mt-0.5 p-2 text-xs font-bold border-indigo-200">
-                <option value="">-- Select Category (Required) --</option>
-                {categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-              </select>
+
+            <button
+              type="submit"
+              disabled={isAddingProduct}
+              className="primary-button bg-slate-900 shadow-md hover:bg-slate-800 py-3 text-xs font-black cursor-pointer transition-all w-full flex items-center justify-center gap-2 rounded-xl text-white disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isAddingProduct ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Publishing Product to S3 Cloud...</span>
+                </>
+              ) : (
+                <span>⚡ + Add Published Product</span>
+              )}
+            </button>
+          </form>
+        )}
+
+        {/* TAB 2: Bulk / CSV Import Engine */}
+        {productTab === 'bulk' && (
+          <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-3.5 sm:p-5 text-white shadow-xl transition-all animate-in fade-in duration-150">
+            {/* Top Engine Header & Mode Switcher */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-800/50 pb-3">
+              <div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-2 py-0.2 text-[8px] sm:text-[9px] font-black uppercase text-slate-950 shadow-xs tracking-wider">
+                    {t('killerFeature')}
+                  </span>
+                  <span className="text-[10px] sm:text-xs font-extrabold text-amber-200/90 tracking-wide">
+                    {t('expressEngine')}
+                  </span>
+                </div>
+                <h3 className="mt-1 text-sm sm:text-lg font-black tracking-tight text-white">
+                  {t('bulkImportTitle')}
+                </h3>
+              </div>
+
+              <div className="flex rounded-xl bg-white/10 p-0.5 sm:p-1 border border-amber-400/20 backdrop-blur-md self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setBulkMode('csv')}
+                  className={`rounded-lg px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-extrabold transition-all cursor-pointer ${bulkMode === 'csv'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                    }`}
+                >
+                  {t('csvMode')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkMode('text')}
+                  className={`rounded-lg px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-extrabold transition-all cursor-pointer ${bulkMode === 'text'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                    }`}
+                >
+                  {t('textMode')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkMode('matrix')}
+                  className={`rounded-lg px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-extrabold transition-all cursor-pointer ${bulkMode === 'matrix'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                    }`}
+                >
+                  {t('gridMode')}
+                </button>
+              </div>
+            </div>
+
+            {/* Mode Specific Body */}
+            <div className="pt-3 text-slate-900">
+              {bulkMode === 'csv' ? (
+                <div className="space-y-3">
+                  <div className="bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                        <span>📊 CSV Columns Supported:</span>
+                        <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Multi-Image Active</span>
+                      </p>
+                      <p className="text-[11px] font-mono text-slate-600 mt-0.5">Category, Product Name, Price, Stock, Unit, Available Sizes, Size Stock, Description, Image URL</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowDemoCsvModal(true)}
+                        className="rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all flex items-center gap-1 cursor-pointer"
+                        title="Preview Demo CSV content & 1-Click Auto-Import"
+                      >
+                        <span>👁️ 1-Click Live CSV Demo</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setGuideModalType('csv')}
+                        className="rounded-lg bg-teal-50 px-2.5 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                        title="Open Multi-Image CSV Guide & Format Examples"
+                      >
+                        <span>📖 Multi-Image Guide</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={downloadSampleCsv}
+                        className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <span>📥 Download Sample CSV</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border-2 border-dashed border-indigo-300/80 bg-white p-5 text-center shadow-xs">
+                    <input
+                      type="file"
+                      accept=".csv,.txt"
+                      onChange={handleCsvFileSelect}
+                      className="hidden"
+                      id="csv-file-input-standalone"
+                    />
+                    <label htmlFor="csv-file-input-standalone" className="cursor-pointer space-y-1.5 block">
+                      <span className="text-3xl">📄</span>
+                      <p className="text-sm font-bold text-slate-800">
+                        {csvFile ? csvFile.name : 'Click to select CSV / Excel File'}
+                      </p>
+                      <p className="text-xs text-slate-500">Supports .csv file exported from Excel or Sheets</p>
+                    </label>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-indigo-50/90 p-3 rounded-xl border border-indigo-200 gap-2">
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">🖼️ Have local product image files on your phone/PC?</p>
+                      <p className="text-[11px] text-slate-600">Select multiple image files to auto-match with CSV products!</p>
+                    </div>
+                    <label className="cursor-pointer rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 whitespace-nowrap text-center transition-all">
+                      📁 Pick Local Images
+                      <input type="file" accept="image/*" multiple onChange={handleLocalImagesSelect} className="hidden" />
+                    </label>
+                  </div>
+
+                  {csvPreview.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs font-bold text-slate-200">Preview ({csvPreview.length} items parsed):</p>
+                        <span className="text-[11px] text-teal-300 font-bold">
+                          {csvPreview.filter(i => i.image_file || i.image_url).length}/{csvPreview.length} Images Attached
+                        </span>
+                      </div>
+                      <div className="max-h-56 overflow-y-auto space-y-1.5 border border-slate-200 rounded-xl bg-white p-2 text-xs">
+                        {csvPreview.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100 gap-2">
+                            <div className="flex items-center gap-2 overflow-hidden">
+                              {item.image_preview_url || item.image_url ? (
+                                <img src={item.image_preview_url || item.image_url} alt="" className="h-9 w-9 rounded-md object-cover border border-slate-200 shrink-0" />
+                              ) : (
+                                <div className="h-9 w-9 rounded-md bg-slate-200 flex items-center justify-center text-[10px] text-slate-500 font-bold shrink-0">No img</div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-bold text-slate-900 truncate">{item.name}</p>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {item.category_name && <span className="text-[10px] bg-indigo-50 font-bold text-indigo-600 px-1.5 py-0.5 rounded">{item.category_name}</span>}
+                                  <span className="text-[10px] bg-slate-100 font-bold text-slate-700 px-1.5 py-0.5 rounded">Stock: {item.stock || '100'}</span>
+                                  {item.sizes && <span className="text-[10px] bg-indigo-100 font-bold text-indigo-700 px-1.5 py-0.5 rounded">Sizes: {parseSizeList(item.sizes).join(', ') || '—'}</span>}
+                                  {item.size_stock && <span className="text-[10px] bg-amber-100 font-bold text-amber-800 px-1.5 py-0.5 rounded">Size stock: {item.size_stock}</span>}
+                                  {item.image_file && <span className="text-[10px] bg-emerald-50 font-bold text-emerald-600 px-1 py-0.5 rounded">Local File attached</span>}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <label className="cursor-pointer rounded bg-slate-200 px-2 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-300">
+                                📷 Photo
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={e => e.target.files?.[0] && handleSingleItemImageSelect(idx, e.target.files[0])}
+                                  className="hidden"
+                                />
+                              </label>
+                              <span className="font-extrabold text-emerald-600">₹{item.price}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={isImporting}
+                        onClick={handleCsvImport}
+                        className="w-full rounded-xl bg-teal-600 py-3 text-xs font-black text-white shadow-md hover:bg-teal-700 disabled:opacity-50 transition-all cursor-pointer"
+                      >
+                        {isImporting ? '⏳ Importing Products & Images...' : `🚀 Import All ${csvPreview.length} Products & Images (1-Click)`}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : bulkMode === 'text' ? (
+                <div className="space-y-3">
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                        <span>✨ Text Product Import:</span>
+                        <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Paste & Import</span>
+                      </p>
+                      <p className="text-[11px] font-mono text-slate-600 mt-0.5">Format: Product Name - Price - Stock - Unit - Sizes (S|M|L|XL)</p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setGuideModalType('text')}
+                        className="rounded-lg bg-teal-50 px-2.5 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                        title="Open Text Import Format Guide"
+                      >
+                        <span>📖 Text Guide</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={downloadSampleText}
+                        className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <span>📥 Download Sample Text</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="text-xs font-bold text-slate-200">Target Category:</label>
+                      <select
+                        value={bulkCategory}
+                        onChange={e => setBulkCategory(e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-900"
+                      >
+                        <option value="">No category (Uncategorized)</option>
+                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-200">Default Stock Qty (if not in text):</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={textDefaultStock}
+                        onChange={e => setTextDefaultStock(e.target.value)}
+                        placeholder="100"
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-200">Paste product list (1 item per line):</label>
+                      <span className="text-[10px] font-bold text-indigo-300 bg-white/10 px-2 py-0.5 rounded border border-white/10">Name - Price - Stock - Unit - Sizes</span>
+                    </div>
+                    <textarea
+                      rows={5}
+                      value={bulkRawText}
+                      onChange={e => setBulkRawText(e.target.value)}
+                      placeholder={`Example:\nClassic Cotton Shirt - 799 - 40 - Pc - S|M|L|XL|XXL\nSlim Fit Jeans - 1299 - 30 - Pc - 28|30|32|34|36\nTraditional Saree - 1499 - 20 - Pc - FREE SIZE`}
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={handleParseRawText}
+                      className="flex-1 rounded-xl border border-white/20 bg-white/10 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-white/20 transition-all cursor-pointer"
+                    >
+                      ✨ Auto-Parse & Edit in Form
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDirectTextImport}
+                      className="flex-1 rounded-xl bg-teal-600 py-2.5 text-xs font-black text-white shadow-md hover:bg-teal-700 transition-all cursor-pointer"
+                    >
+                      🚀 Instant 1-Click Import from Text
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleBulkSubmit} className="space-y-3">
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                        <span>📝 Multi-Row Form Grid:</span>
+                        <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Direct Entry</span>
+                      </p>
+                      <p className="text-[11px] text-slate-600 mt-0.5 font-medium">Add multiple items with custom price, stock & photos directly!</p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setGuideModalType('matrix')}
+                        className="rounded-lg bg-teal-50 px-2.5 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                        title="Open Form Grid Guide"
+                      >
+                        <span>📖 Form Guide</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={downloadSampleCsv}
+                        className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <span>📥 Download Template</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-200">Target Category:</label>
+                    <select
+                      value={bulkCategory}
+                      onChange={e => setBulkCategory(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-semibold text-slate-900"
+                    >
+                      <option value="">No category (Uncategorized)</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    {bulkRows.map((row, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5 rounded-xl bg-white p-2 border border-slate-200 shadow-xs">
+                        <span className="text-xs font-bold text-slate-600 w-4 text-center shrink-0">{idx + 1}.</span>
+                        <input
+                          type="text"
+                          placeholder="Product Name"
+                          value={row.name}
+                          onChange={e => handleRowChange(idx, 'name', e.target.value)}
+                          className="flex-1 min-w-0 rounded-lg border border-slate-200 p-1.5 text-xs font-medium focus:outline-indigo-500"
+                        />
+                        <div className="relative w-20 shrink-0">
+                          <span className="absolute left-1.5 top-1.5 text-xs text-slate-400">₹</span>
+                          <input
+                            type="number"
+                            placeholder="Price"
+                            value={row.price}
+                            onChange={e => handleRowChange(idx, 'price', e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 p-1.5 pl-4 text-xs font-bold text-slate-800 focus:outline-indigo-500"
+                          />
+                        </div>
+                        <div className="w-16 shrink-0">
+                          <input
+                            type="number"
+                            placeholder="Stock"
+                            title="Stock Quantity"
+                            value={row.stock}
+                            onChange={e => handleRowChange(idx, 'stock', e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 p-1.5 text-xs font-bold text-slate-800 focus:outline-indigo-500 text-center"
+                          />
+                        </div>
+                        <select
+                          value={row.unit}
+                          onChange={e => handleRowChange(idx, 'unit', e.target.value)}
+                          title="Ordering Unit"
+                          className="w-16 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800"
+                        >
+                          {getBusinessType(store?.business_type).units.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+                        </select>
+                        <input
+                          type="text"
+                          placeholder="Sizes: S|M|L"
+                          title="Available Sizes separated by | or comma"
+                          value={row.sizes}
+                          onChange={e => handleRowChange(idx, 'sizes', e.target.value)}
+                          className="w-28 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-indigo-500"
+                        />
+                        <input
+                          type="text"
+                          placeholder="S:5|M:8|L:4"
+                          title="Stock for each selected size"
+                          value={row.size_stock}
+                          onChange={e => handleRowChange(idx, 'size_stock', e.target.value)}
+                          className="w-32 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-indigo-500"
+                        />
+                        <div className="flex items-center gap-1 shrink-0">
+                          {row.image_preview_urls && row.image_preview_urls.length > 0 ? (
+                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                              {row.image_preview_urls.map((url, imgIdx) => (
+                                <div key={imgIdx} className="relative group">
+                                  <img src={url} alt="" className="h-6 w-6 rounded object-cover border border-slate-300" />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveRowImage(idx, imgIdx)}
+                                    className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center opacity-80 hover:opacity-100"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                              <label className="cursor-pointer rounded bg-slate-200 px-1.5 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-300" title="Add More Photos">
+                                +
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  onChange={e => e.target.files && handleRowImageSelect(idx, Array.from(e.target.files))}
+                                  className="hidden"
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <label className="cursor-pointer rounded-lg bg-slate-100 p-1.5 hover:bg-slate-200 border border-slate-200 shrink-0 flex items-center gap-1 text-slate-700" title="Attach Product Photos (Multiple supported)">
+                              <span className="text-xs">📷</span>
+                              <span className="text-[10px] font-bold">Add Photos</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={e => e.target.files && handleRowImageSelect(idx, Array.from(e.target.files))}
+                                className="hidden"
+                              />
+                            </label>
+                          )}
+                        </div>
+                        {bulkRows.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBulkRow(idx)}
+                            className="h-7 w-7 rounded-lg bg-red-50 text-red-600 text-xs font-bold hover:bg-red-100 shrink-0 cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-indigo-800/50">
+                    <button
+                      type="button"
+                      onClick={handleAddBulkRow}
+                      className="rounded-xl border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/20 transition-all cursor-pointer"
+                    >
+                      + Add Row
+                    </button>
+                    <button
+                      type="submit"
+                      className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-black text-white shadow-md hover:bg-teal-700 transition-all cursor-pointer"
+                    >
+                      🚀 Save All {bulkRows.filter(r => r.name.trim()).length} Products (1-Click)
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
+        )}
 
-          {/* Multiple Product Photos Picker with Main Card Photo Selection */}
-          <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3 transition-all">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] sm:text-xs font-bold text-slate-800 flex items-center gap-1">
-                <span>🖼️ Photos (Optional)</span>
-              </label>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
-                {productImages.length > 0 ? `${productImages.length} Selected` : 'Optional'}
-              </span>
+        {/* TAB 3: View Catalog & Quick Product Manager */}
+        {productTab === 'catalog' && (
+          <div className="space-y-3 animate-in fade-in duration-150">
+            {/* Top Catalog Access Card */}
+            <div className="rounded-xl sm:rounded-2xl border border-indigo-900/40 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-3 sm:p-4 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full bg-teal-500/20 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30">
+                    {t('categoryCatalog')}
+                  </span>
+                  <span className="text-[10px] sm:text-xs font-bold text-indigo-200">{products.length} Products</span>
+                </div>
+                <h3 className="mt-0.5 text-xs sm:text-base font-black text-white">{t('categoryCatalog')}</h3>
+                <p className="text-[10px] sm:text-xs text-indigo-200">
+                  {t('viewAllProducts')}
+                </p>
+              </div>
+
+              {store && (
+                <Link
+                  to={`/stores/${store.id}/catalog`}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg sm:rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition-all shrink-0 cursor-pointer"
+                >
+                  <span>{t('openCategoryCatalog')} ({products.length})</span>
+                  <span>➔</span>
+                </Link>
+              )}
             </div>
 
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={e => {
-                const files = Array.from(e.target.files || [])
-                setProductImages(files)
-                setProductPrimaryIndex(0)
-              }}
-              className="premium-input text-xs p-1.5"
-            />
-
-            {productImages.length > 0 && (
-              <div className="space-y-1 pt-1.5 border-t border-slate-200">
-                <p className="text-[9px] font-bold text-slate-600">Tap photo to choose Main Card Display:</p>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
-                  {productImages.map((imgFile, idx) => {
-                    const isPrimary = productPrimaryIndex === idx
+            {/* In-Page Products List */}
+            {products.length === 0 ? (
+              <div className="text-center py-8 px-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 space-y-3">
+                <div className="h-12 w-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl shadow-2xs">
+                  📦
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-slate-800">No Products Added Yet</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Your store catalog is empty. Add your first item using Single Product or Bulk Import!
+                  </p>
+                </div>
+                <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setProductTab('single')}
+                    className="rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-slate-800 cursor-pointer shadow-xs"
+                  >
+                    ⚡ Add Single Product
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProductTab('bulk')}
+                    className="rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 px-3.5 py-1.5 text-xs font-black text-slate-950 hover:brightness-110 cursor-pointer shadow-xs"
+                  >
+                    📊 Bulk / CSV Import
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-500 px-1">
+                  <span>Store Products List</span>
+                  <span>Showing {products.length} Items</span>
+                </div>
+                <div className="max-h-96 overflow-y-auto space-y-2 pr-1 scrollbar-thin">
+                  {products.map(prod => {
+                    const thumb = getProductThumbnail(prod)
                     return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setProductPrimaryIndex(idx)}
-                        className={`relative h-14 rounded-lg border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${isPrimary ? 'border-teal-600 ring-1 ring-teal-300' : 'border-slate-200 opacity-70'
-                          }`}
+                      <div
+                        key={prod.id}
+                        className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs hover:border-slate-300 transition-all"
                       >
-                        <img src={URL.createObjectURL(imgFile)} alt="preview" className="h-8 w-full object-cover rounded" />
-                        <span className={`text-[7px] font-black text-center py-0.2 rounded ${isPrimary ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                          {isPrimary ? '⭐ Main' : 'Gallery'}
-                        </span>
-                      </button>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {thumb ? (
+                            <img
+                              src={thumb}
+                              alt={prod.name}
+                              className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg object-cover border border-slate-200 shrink-0"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 flex items-center justify-center text-sm font-bold shrink-0">
+                              🛍️
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
+                              {prod.name}
+                            </h4>
+                            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                              <span className="text-[10px] bg-indigo-50 font-bold text-indigo-700 px-1.5 py-0.2 rounded border border-indigo-100">
+                                {getCategoryName(prod.category)}
+                              </span>
+                              <span className="text-[10px] bg-slate-100 font-bold text-slate-700 px-1.5 py-0.2 rounded">
+                                Stock: {prod.stock_quantity ?? 0} {prod.unit || 'Pc'}
+                              </span>
+                              {Array.isArray(prod.available_sizes) && prod.available_sizes.length > 0 && (
+                                <span className="text-[9.5px] bg-amber-50 font-bold text-amber-800 px-1.5 py-0.2 rounded border border-amber-200">
+                                  Sizes: {prod.available_sizes.join(', ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs sm:text-sm font-black text-emerald-600">
+                            ₹{prod.price}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(prod)}
+                              className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 cursor-pointer shadow-2xs"
+                              title="Edit Product"
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => promptDeleteProduct(prod)}
+                              className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 cursor-pointer shadow-2xs"
+                              title="Delete Product"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     )
                   })}
                 </div>
               </div>
             )}
           </div>
-
-          <div>
-            <label className="text-[11px] sm:text-xs font-bold text-slate-700">Digital Downloadable File (Optional PDF/Zip)</label>
-            <input onChange={e => setFile(e.target.files?.[0] || null)} type="file" className="premium-input mt-0.5 p-1.5 text-xs" />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isAddingProduct}
-            className="primary-button bg-slate-900 shadow-md hover:bg-slate-800 py-3 text-xs font-black cursor-pointer transition-all w-full flex items-center justify-center gap-2 rounded-xl text-white disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isAddingProduct ? (
-              <>
-                <svg className="animate-spin h-4 w-4 text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Publishing Product to S3 Cloud...</span>
-              </>
-            ) : (
-              <span>⚡ + Add Published Product</span>
-            )}
-          </button>
-        </form>
-
-        {/* Prominent Category Catalog Button & Access Banner */}
-        <div className="rounded-xl sm:rounded-2xl border border-indigo-900/40 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-3 sm:p-4 text-white shadow-md">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="rounded-full bg-teal-500/20 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30">
-                  {t('categoryCatalog')}
-                </span>
-                <span className="text-[10px] sm:text-xs font-bold text-indigo-200">{products.length} Products</span>
-              </div>
-              <h3 className="mt-0.5 text-xs sm:text-base font-black text-white">{t('categoryCatalog')}</h3>
-              <p className="text-[10px] sm:text-xs text-indigo-200">
-                {t('viewAllProducts')}
-              </p>
-            </div>
-
-            <Link
-              to={`/stores/${store.id}/catalog`}
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg sm:rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition-all shrink-0 cursor-pointer"
-            >
-              <span>{t('openCategoryCatalog')} ({products.length})</span>
-              <span>➔</span>
-            </Link>
-          </div>
-        </div>
+        )}
       </section>
 
       {/* Product Edit Modal */}

@@ -326,4 +326,17 @@ OLLAMA_TEXT_RESPONSE_TOKENS = int(os.environ.get('OLLAMA_TEXT_RESPONSE_TOKENS', 
 NOMINATIM_BASE_URL = os.environ.get('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org').rstrip('/')
 # Use a real support address in production as required by Nominatim's policy.
 NOMINATIM_USER_AGENT = os.environ.get('NOMINATIM_USER_AGENT', 'ApaniDukan/1.0 (support@apanidukan.com)')
+
+# Mappls (MapmyIndia) Location Configuration
+# Read Static Key carefully from .env (supports MAPPLS_STATIC_KEY or MAPMYINDIA_STATIC_KEY)
+MAPPLS_STATIC_KEY = (
+    os.environ.get('MAPPLS_STATIC_KEY')
+    or os.environ.get('MAPMYINDIA_STATIC_KEY')
+    or os.environ.get('MAPPLS_REST_KEY')
+    or ''
+).strip(" '\"")
+MAPPLS_API_BASE_URL = os.environ.get('MAPPLS_API_BASE_URL', 'https://apis.mappls.com/advancedmaps/v1').rstrip('/')
+MAPPLS_SEARCH_BASE_URL = os.environ.get('MAPPLS_SEARCH_BASE_URL', 'https://search.mappls.com/search/address').rstrip('/')
+
 AI_ASSISTANT_MAX_IMAGE_BYTES = int(os.environ.get('AI_ASSISTANT_MAX_IMAGE_BYTES', str(8 * 1024 * 1024)))
+

@@ -617,3 +617,54 @@ def public_store_og_view(request, slug):
 </body>
 </html>"""
     return HttpResponse(html_content, content_type="text/html; charset=utf-8")
+
+
+from rest_framework.views import APIView
+from .views import _resolve_address_geocoding, _resolve_reverse_geocoding
+
+
+class PublicGeocodeView(APIView):
+    """Public geocoding endpoint utilizing Mappls with OpenStreetMap fallback."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        address = ' '.join(str(request.data.get('address', '')).split())
+        result, error_msg, status_code = _resolve_address_geocoding(address)
+        if error_msg:
+            return Response({'detail': error_msg}, status=status_code)
+        return Response(result)
+
+    def get(self, request):
+        address = ' '.join(str(request.query_params.get('address', '')).split())
+        result, error_msg, status_code = _resolve_address_geocoding(address)
+        if error_msg:
+            return Response({'detail': error_msg}, status=status_code)
+        return Response(result)
+
+
+class PublicReverseGeocodeView(APIView):
+    """Public reverse geocoding endpoint utilizing Mappls with OpenStreetMap fallback."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        try:
+            latitude = round(float(request.data.get('latitude') or request.data.get('lat')), 6)
+            longitude = round(float(request.data.get('longitude') or request.data.get('lng') or request.data.get('lon')), 6)
+        except (TypeError, ValueError):
+            return Response({'detail': 'Invalid GPS coordinates.'}, status=status.HTTP_400_BAD_REQUEST)
+        result, error_msg, status_code = _resolve_reverse_geocoding(latitude, longitude)
+        if error_msg:
+            return Response({'detail': error_msg}, status=status_code)
+        return Response(result)
+
+    def get(self, request):
+        try:
+            latitude = round(float(request.query_params.get('latitude') or request.query_params.get('lat')), 6)
+            longitude = round(float(request.query_params.get('longitude') or request.query_params.get('lng') or request.query_params.get('lon')), 6)
+        except (TypeError, ValueError):
+            return Response({'detail': 'Invalid GPS coordinates.'}, status=status.HTTP_400_BAD_REQUEST)
+        result, error_msg, status_code = _resolve_reverse_geocoding(latitude, longitude)
+        if error_msg:
+            return Response({'detail': error_msg}, status=status_code)
+        return Response(result)
+

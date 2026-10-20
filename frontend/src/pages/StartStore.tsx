@@ -85,7 +85,17 @@ export default function StartStore() {
           setGpsStatus(`✅ Shop location capture ho gayi. Kripya apna address verify karein.`)
         }
         if (!address) {
-          setAddress(`Shop Location (${roundedLatitude}, ${roundedLongitude})`)
+          api.get('/public/reverse-geocode/', { params: { lat: roundedLatitude, lng: roundedLongitude } })
+            .then(res => {
+              if (res.data?.display_name) {
+                setAddress(res.data.display_name)
+              } else {
+                setAddress(`Shop Location (${roundedLatitude}, ${roundedLongitude})`)
+              }
+            })
+            .catch(() => {
+              setAddress(`Shop Location (${roundedLatitude}, ${roundedLongitude})`)
+            })
         }
       })
       .catch((locationError: any) => {

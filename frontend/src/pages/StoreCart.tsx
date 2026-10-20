@@ -330,15 +330,22 @@ function CartContent() {
         setLocationUrl(mapsUrl)
         setDeliveryCoordinates({ latitude, longitude })
         try {
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
-          const place = await response.json()
-          const detected = place.display_name || `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+          const res = await api.get('/public/reverse-geocode/', { params: { lat: latitude, lng: longitude } })
+          const detected = res.data?.display_name || `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
           setDeliveryAddress(detected)
           localStorage.setItem('multistore_user_delivery_address', detected)
         } catch {
-          const fallback = `Location: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-          setDeliveryAddress(fallback)
-          localStorage.setItem('multistore_user_delivery_address', fallback)
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
+            const place = await response.json()
+            const detected = place.display_name || `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+            setDeliveryAddress(detected)
+            localStorage.setItem('multistore_user_delivery_address', detected)
+          } catch {
+            const fallback = `Location: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+            setDeliveryAddress(fallback)
+            localStorage.setItem('multistore_user_delivery_address', fallback)
+          }
         } finally {
           setLocationLoading(false)
         }

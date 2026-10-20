@@ -54,66 +54,75 @@ export default function StartStore() {
   const [successMsg, setSuccessMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
-  function captureStoreLocation() {
+  async function captureStoreLocation() {
     if (!navigator.geolocation) {
-      setGpsStatus('Device par GPS support nahi hai. Kripya shop address manually type karein.')
+      setGpsStatus('Device par location support nahi hai. Kripya shop address manually type karein.')
       return
     }
     setLocationLoading(true)
     setGpsAccuracy(null)
     setGpsStatus('📍 Shop location detect kar rahe hain...')
 
-    captureAccurateLocation(
-      accuracy => {
+    try {
+      const { coords } = await captureAccurateLocation(accuracy => {
         setGpsAccuracy(accuracy)
-        if (accuracy <= 100) {
-          setGpsStatus(`Accurate location detect ho rahi hai... (±${Math.round(accuracy)} m)`)
+        if (accuracy <= 200) {
+          setGpsStatus(`Location detect ho rahi hai... (±${Math.round(accuracy)} m)`)
         }
-      },
-      100,
-      8000
-    )
-      .then(({ coords }) => {
+      })
+
+      const roundedLatitude = Number(coords.latitude.toFixed(6))
+      const roundedLongitude = Number(coords.longitude.toFixed(6))
+      setLatitude(roundedLatitude)
+      setLongitude(roundedLongitude)
+      setGpsAccuracy(coords.accuracy)
+      setGpsStatus('✅ Location capture ho gayi. Address auto-fill ho raha hai...')
+
+      // Multi-layer reverse geocoding
+      let detectedAddress = ''
+      try {
+        const res = await api.get('/public/reverse-geocode/', { params: { lat: roundedLatitude, lng: roundedLongitude } })
+        if (res.data?.display_name) {
+          detectedAddress = res.data.display_name
+        }
+      } catch { }
+
+      if (!detectedAddress) {
+        try {
+          const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${roundedLatitude}&lon=${roundedLongitude}`, {
+            headers: { 'Accept-Language': 'en' },
+          })
+          if (osmRes.ok) {
+            const osmData = await osmRes.json()
+            if (osmData.display_name) {
+              detectedAddress = osmData.display_name
+            }
+          }
+        } catch { }
+      }
+
+      if (!detectedAddress) {
+        detectedAddress = `Shop Location (${roundedLatitude}, ${roundedLongitude})`
+      }
+
+      setAddress(detectedAddress)
+      setGpsStatus(`✅ Shop location & address capture ho gaya (±${Math.round(coords.accuracy)} m)`)
+    } catch (locationError: any) {
+      if (locationError?.position) {
+        const coords = locationError.position.coords
         const roundedLatitude = Number(coords.latitude.toFixed(6))
         const roundedLongitude = Number(coords.longitude.toFixed(6))
         setLatitude(roundedLatitude)
         setLongitude(roundedLongitude)
-        setGpsAccuracy(coords.accuracy)
-        if (coords.accuracy <= 100) {
-          setGpsStatus(`✅ Shop location capture ho gayi (±${Math.round(coords.accuracy)} m)`)
-        } else {
-          setGpsStatus(`✅ Shop location capture ho gayi. Kripya apna address verify karein.`)
-        }
-        if (!address) {
-          api.get('/public/reverse-geocode/', { params: { lat: roundedLatitude, lng: roundedLongitude } })
-            .then(res => {
-              if (res.data?.display_name) {
-                setAddress(res.data.display_name)
-              } else {
-                setAddress(`Shop Location (${roundedLatitude}, ${roundedLongitude})`)
-              }
-            })
-            .catch(() => {
-              setAddress(`Shop Location (${roundedLatitude}, ${roundedLongitude})`)
-            })
-        }
-      })
-      .catch((locationError: any) => {
-        // Soft fallback: Never show scary ±362830 m numbers or trigger global error banner
-        if (locationError?.position) {
-          const coords = locationError.position.coords
-          const roundedLatitude = Number(coords.latitude.toFixed(6))
-          const roundedLongitude = Number(coords.longitude.toFixed(6))
-          setLatitude(roundedLatitude)
-          setLongitude(roundedLongitude)
-          setGpsStatus('Approximate location mili hai. Kripya apna poora address manually type karein.')
-        } else if (locationError?.locationErrorCode === 1) {
-          setGpsStatus('Location permission denied hai. Kripya apna shop address manually type karein.')
-        } else {
-          setGpsStatus('GPS signal weak hai (Desktop/Wi-Fi). Kripya apna shop address manually type karein.')
-        }
-      })
-      .finally(() => setLocationLoading(false))
+        setGpsStatus('Approximate location mili hai. Kripya apna poora address manually type karein.')
+      } else if (locationError?.locationErrorCode === 1) {
+        setGpsStatus('Location permission denied hai. Kripya apna shop address manually type karein.')
+      } else {
+        setGpsStatus('Location signal weak hai. Kripya apna shop address manually type karein.')
+      }
+    } finally {
+      setLocationLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -535,7 +544,7 @@ export default function StartStore() {
                     className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition-colors"
                   >
                     <span>📍</span>
-                    {locationLoading ? 'Locating...' : latitude ? 'Location captured ✓' : 'Use current shop location'}
+                    {locationLoading ? 'Locating...' : latitude ? 'Location captured ✓' : 'Current Location'}
                   </button>
                   {gpsStatus && (
                     <p
@@ -704,7 +713,7 @@ export default function StartStore() {
                   className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-white transition-colors"
                 >
                   <span>📍</span>
-                  {locationLoading ? 'Locating...' : latitude ? 'Location captured ✓' : 'Use current shop location'}
+                  {locationLoading ? 'Locating...' : latitude ? 'Location captured ✓' : 'Current Location'}
                 </button>
                 {gpsStatus && (
                   <p

@@ -317,65 +317,98 @@ export default function StoreManager() {
     }
   }
 
-  function captureStoreLocation() {
+  async function captureStoreLocation() {
     if (!navigator.geolocation) {
-      toast.error('Location is not supported on this device.')
+      toast.error('Device par location support nahi hai.')
       return
     }
     setIsCapturingShopLocation(true)
     setShopGpsAccuracy(null)
-    setShopGpsStatus('GPS location detect ho rahi hai...')
-    void captureAccurateLocation(accuracy => {
-      setShopGpsAccuracy(accuracy)
-      if (accuracy <= 100) {
-        setShopGpsStatus('Accurate GPS mil gaya, location save ho rahi hai...')
+    setShopGpsStatus('Current location detect ho rahi hai...')
+
+    try {
+      const position = await captureAccurateLocation(accuracy => {
+        setShopGpsAccuracy(accuracy)
+      })
+
+      const latitude = Number(position.coords.latitude.toFixed(6))
+      const longitude = Number(position.coords.longitude.toFixed(6))
+      setShopGpsStatus('Address fetch ho raha hai...')
+
+      // Multi-layer reverse geocoding to guarantee address auto-fill
+      let detectedAddress = ''
+
+      // Layer 1: Backend store reverse-geocode (uses Mappls first, Nominatim fallback)
+      try {
+        const response = await api.post(`/stores/${store.id}/reverse-geocode/`, { latitude, longitude })
+        if (response.data?.display_name) {
+          detectedAddress = response.data.display_name
+        }
+      } catch (err) {
+        console.warn('Backend store reverse geocode failed:', err)
       }
-    }).then(async ({ coords }) => {
-        const latitude = Number(coords.latitude.toFixed(6))
-        const longitude = Number(coords.longitude.toFixed(6))
-        let detectedAddress = store?.address || ''
+
+      // Layer 2: Backend public reverse-geocode
+      if (!detectedAddress) {
         try {
-          const response = await api.post(`/stores/${store.id}/reverse-geocode/`, { latitude, longitude })
-          detectedAddress = response.data.display_name || detectedAddress || `Location: ${latitude}, ${longitude}`
-        } catch {
-          detectedAddress = detectedAddress || `Location: ${latitude}, ${longitude}`
-        }
-        const saved = await saveStoreLocation(latitude, longitude, detectedAddress)
-        if (!saved) {
-          setShopGpsStatus('Location detect hui lekin save nahi ho saki. Dobara try karein.')
-          return
-        }
-        setStore((previous: any) => ({ ...previous, address: detectedAddress, latitude, longitude }))
-        setShopGpsAccuracy(coords.accuracy)
-        setShopGpsStatus('Shop location GPS se save ho gayi!')
-        toast.success('GPS location save ho gayi!')
-      }).catch((error: any) => {
-        if (Number.isFinite(error?.bestAccuracy)) {
-          setShopGpsAccuracy(error.bestAccuracy)
-          if (error?.position?.coords) {
-            setApproximateGpsCoords({
-              latitude: Number(error.position.coords.latitude.toFixed(6)),
-              longitude: Number(error.position.coords.longitude.toFixed(6)),
-            })
+          const pubRes = await api.get('/public/reverse-geocode/', { params: { lat: latitude, lng: longitude } })
+          if (pubRes.data?.display_name) {
+            detectedAddress = pubRes.data.display_name
           }
-          if (error.bestAccuracy > 2000) {
-            setShopGpsStatus('Desktop browser par physical GPS chip nahi hota. Upar address likhein aur "Find on Map" button use karein.')
-            toast('Address likhkar "Find on Map" use karein.', { icon: '📍' })
-          } else {
-            setShopGpsStatus('GPS reading weak hai. Kripya open area mein try karein ya Address se locate karein.')
-            toast.error('GPS reading weak hai. Address se locate karein.')
-          }
-        } else if (error?.locationErrorCode === 1 || error?.code === 1) {
-          setShopGpsStatus('Browser me Location Permission Blocked hai. Chrome ke 🔒 lock icon par tap karke Location ko "Allow" karein, ya upar address likhkar "Find on Map" dabayein.')
-          toast.error('Browser me Location Blocked hai. Address bar me 🔒 par click karke Allow karein.', { duration: 6000 })
-        } else if (error?.locationErrorCode === 3 || error?.code === 3) {
-          setShopGpsStatus('Device GPS timeout ho gaya. Upar address likhkar "Find on Map" use karein.')
-          toast.error('GPS timeout ho gaya. Address se locate karein.')
-        } else {
-          setShopGpsStatus('GPS location nahi mil saki. Upar address likhkar "Find on Map" use karein.')
-          toast.error('GPS nahi mila. Address se locate karein.')
+        } catch (err) {
+          console.warn('Backend public reverse geocode failed:', err)
         }
-      }).finally(() => setIsCapturingShopLocation(false))
+      }
+
+      // Layer 3: Direct Nominatim OpenStreetMap client-side
+      if (!detectedAddress) {
+        try {
+          const osmRes = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+            { headers: { 'Accept-Language': 'en' } }
+          )
+          if (osmRes.ok) {
+            const osmData = await osmRes.json()
+            if (osmData.display_name) {
+              detectedAddress = osmData.display_name
+            }
+          }
+        } catch (err) {
+          console.warn('Direct OSM fallback failed:', err)
+        }
+      }
+
+      // Layer 4: Coordinate fallback if network is completely offline
+      if (!detectedAddress) {
+        detectedAddress = store?.address?.trim() || `Shop Location (${latitude}, ${longitude})`
+      }
+
+      // 1. Immediately update textarea & local state
+      setStore((previous: any) => ({ ...previous, address: detectedAddress, latitude, longitude }))
+
+      // 2. Persist to backend database
+      const saved = await saveStoreLocation(latitude, longitude, detectedAddress)
+      if (saved) {
+        setShopGpsAccuracy(position.coords.accuracy)
+        setShopGpsStatus('Current location & address save ho gaya!')
+        toast.success('Current location address detect ho gaya!')
+      } else {
+        setShopGpsStatus('Address detect ho gaya. "Save" dabakar verify karein.')
+      }
+    } catch (error: any) {
+      if (error?.locationErrorCode === 1 || error?.code === 1) {
+        setShopGpsStatus('Browser me Location Permission Blocked hai. Chrome ke 🎛️ lock icon par tap karke Location ko "Allow" karein, ya upar address likhkar "Find on Map" dabayein.')
+        toast.error('Browser me Location Blocked hai. Address bar me 🎛️ par click karke Allow karein.', { duration: 6000 })
+      } else if (error?.locationErrorCode === 3 || error?.code === 3) {
+        setShopGpsStatus('Location detect nahi ho saki. Upar address likhkar "Find on Map" use karein.')
+        toast.error('Location timeout. Address likhkar Find on Map use karein.')
+      } else {
+        setShopGpsStatus('Location nahi mil saki. Upar address likhkar "Find on Map" use karein.')
+        toast.error('Location nahi mil saki. Address se locate karein.')
+      }
+    } finally {
+      setIsCapturingShopLocation(false)
+    }
   }
 
   useEffect(() => {
@@ -2149,19 +2182,20 @@ export default function StoreManager() {
 
             {/* Compact 3-Column Action Buttons (Android Mobile & Desktop) */}
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-0.5">
+              {/* Primary Current Location Auto-Detect Button */}
               <button
                 type="button"
                 disabled={isCapturingShopLocation}
                 onClick={captureStoreLocation}
                 className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-2 py-1 text-[11px] sm:text-xs font-bold text-white shadow-2xs hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer truncate"
-                title="Use current shop GPS"
+                title="Current location & address detect karein"
               >
                 {isCapturingShopLocation ? (
                   <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white shrink-0" />
                 ) : (
                   <LocateFixed className="h-3.5 w-3.5 shrink-0" />
                 )}
-                <span className="truncate">Use GPS</span>
+                <span className="truncate">Current Location</span>
               </button>
 
               <button
@@ -3761,7 +3795,7 @@ export default function StoreManager() {
         onAllow={() => { setShowSellerLocationPrompt(false); captureStoreLocation() }}
         onClose={() => setShowSellerLocationPrompt(false)}
         title="Apni shop ki exact location save karein"
-        description="GPS location se customers ko aapki shop sahi distance par dikhegi. Agar shop par nahi hain, full address likhkar ‘Address se exact location nikalein’ use karein."
+        description="Current location se customers ko aapki shop sahi distance par dikhegi. Agar shop par nahi hain, full address likhkar ‘Find on Map’ use karein."
       />
 
     </div>

@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
   ChevronRight,
   Compass,
+  ExternalLink,
   LocateFixed,
   MapPin,
+  Navigation,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -24,6 +26,7 @@ import i18n from '../i18n'
 type FulfilmentFilter = 'all' | 'delivery' | 'pickup'
 
 export default function CustomerStores() {
+  const navigate = useNavigate()
   const [stores, setStores] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
@@ -166,6 +169,24 @@ export default function CustomerStores() {
   function selectCategory(nextCategory: string) {
     setCategory(nextCategory)
     loadStores(location, nextCategory, radius)
+  }
+
+  function getStoreMapUrl(targetStore: any) {
+    if (targetStore.latitude != null && targetStore.longitude != null) {
+      return `https://www.google.com/maps/dir/?api=1&destination=${targetStore.latitude},${targetStore.longitude}`
+    } else if (targetStore.address) {
+      return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(targetStore.address)}`
+    }
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetStore.name || 'Store')}`
+  }
+
+  function openStoreInGoogleMaps(targetStore: any, e?: React.MouseEvent) {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    const url = getStoreMapUrl(targetStore)
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const visibleStores = useMemo(() => {
@@ -495,11 +516,10 @@ export default function CustomerStores() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {visibleStores.map((store) => (
-                <Link
+                <div
                   key={store.id}
-                  to={`/s/${store.slug}`}
-                  state={{ returnTo: '/customer-stores' }}
-                  className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs transition-all hover:border-orange-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99]"
+                  onClick={() => navigate(`/s/${store.slug}`, { state: { returnTo: '/customer-stores' } })}
+                  className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs transition-all hover:border-orange-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer"
                 >
                   <div className="flex gap-3">
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 border border-slate-100">
@@ -526,9 +546,17 @@ export default function CustomerStores() {
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {store.distance_km !== undefined && (
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black text-slate-700">
-                              {store.distance_km} km
-                            </span>
+                            <a
+                              href={getStoreMapUrl(store)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              title="Google Maps par route aur distance dekhein"
+                              className="inline-flex items-center gap-1 rounded-full bg-slate-100 hover:bg-orange-50 hover:text-orange-700 hover:ring-1 hover:ring-orange-300 px-2 py-0.5 text-[9px] font-black text-slate-700 transition active:scale-95 shadow-2xs"
+                            >
+                              <Navigation className="h-2.5 w-2.5 text-orange-600" />
+                              <span>{store.distance_km} km</span>
+                            </a>
                           )}
                           <button
                             type="button"
@@ -553,10 +581,19 @@ export default function CustomerStores() {
                           </button>
                         </div>
                       </div>
-                      <p className="mt-1.5 flex items-center gap-1 truncate text-[11px] font-medium text-slate-500">
-                        <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
+                      {/* Store Address with Clickable Map Link */}
+                      <a
+                        href={getStoreMapUrl(store)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        title="Google Maps par store dekhein"
+                        className="mt-1.5 flex items-center gap-1 truncate text-[11px] font-medium text-slate-500 hover:text-orange-600 group/addr transition text-left w-full"
+                      >
+                        <MapPin className="h-3 w-3 shrink-0 text-orange-500 group-hover/addr:scale-110 transition-transform" />
                         <span className="truncate">{store.address || 'Local verified merchant'}</span>
-                      </p>
+                        <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover/addr:opacity-100 text-orange-500 shrink-0 transition-opacity" />
+                      </a>
                       <p className="mt-1 text-[10px] font-black text-emerald-600 flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         Open now
@@ -564,19 +601,34 @@ export default function CustomerStores() {
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5">
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
-                      <Truck className="h-3 w-3 text-slate-400" />
-                      {store.allow_home_delivery && store.allow_store_pickup !== false
-                        ? 'Delivery & Pickup available'
-                        : store.allow_home_delivery
-                        ? 'Delivery available'
-                        : 'Store pickup available'}
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 truncate">
+                      <Truck className="h-3 w-3 text-slate-400 shrink-0" />
+                      <span className="truncate">
+                        {store.allow_home_delivery && store.allow_store_pickup !== false
+                          ? 'Delivery & Pickup'
+                          : store.allow_home_delivery
+                          ? 'Delivery available'
+                          : 'Store pickup only'}
+                      </span>
                     </span>
-                    <span className="rounded-xl bg-orange-500 px-3.5 py-1.5 text-xs font-black text-white shadow-xs shadow-orange-500/20 group-hover:bg-orange-600 transition-colors flex items-center gap-1">
-                      Visit Store <ChevronRight className="h-3 w-3" />
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href={getStoreMapUrl(store)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        title="Google Maps par route aur distance dekhein"
+                        className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 px-2.5 py-1.5 text-[11px] font-black text-slate-700 shadow-2xs transition active:scale-95 cursor-pointer"
+                      >
+                        <Navigation className="h-3 w-3 text-orange-500" />
+                        <span>Map</span>
+                      </a>
+                      <span className="rounded-xl bg-orange-500 px-3.5 py-1.5 text-xs font-black text-white shadow-xs shadow-orange-500/20 group-hover:bg-orange-600 transition-colors flex items-center gap-1">
+                        Visit Store <ChevronRight className="h-3 w-3" />
+                      </span>
+                    </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}

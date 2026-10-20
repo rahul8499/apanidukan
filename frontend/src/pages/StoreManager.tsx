@@ -359,15 +359,21 @@ export default function StoreManager() {
             })
           }
           if (error.bestAccuracy > 2000) {
-            setShopGpsStatus('Desktop browser par physical GPS chip nahi hota. Upar address likhein aur "Find location from address" button use karein.')
-            toast('Address likhkar "Find location from address" use karein.', { icon: '📍' })
+            setShopGpsStatus('Desktop browser par physical GPS chip nahi hota. Upar address likhein aur "Find on Map" button use karein.')
+            toast('Address likhkar "Find on Map" use karein.', { icon: '📍' })
           } else {
             setShopGpsStatus('GPS reading weak hai. Kripya open area mein try karein ya Address se locate karein.')
             toast.error('GPS reading weak hai. Address se locate karein.')
           }
+        } else if (error?.locationErrorCode === 1 || error?.code === 1) {
+          setShopGpsStatus('Browser me Location Permission Blocked hai. Chrome ke 🔒 lock icon par tap karke Location ko "Allow" karein, ya upar address likhkar "Find on Map" dabayein.')
+          toast.error('Browser me Location Blocked hai. Address bar me 🔒 par click karke Allow karein.', { duration: 6000 })
+        } else if (error?.locationErrorCode === 3 || error?.code === 3) {
+          setShopGpsStatus('Device GPS timeout ho gaya. Upar address likhkar "Find on Map" use karein.')
+          toast.error('GPS timeout ho gaya. Address se locate karein.')
         } else {
-          setShopGpsStatus('Location permission off hai. Upar address likhein aur "Find location from address" use karein.')
-          toast.error('Location permission off hai.')
+          setShopGpsStatus('GPS location nahi mil saki. Upar address likhkar "Find on Map" use karein.')
+          toast.error('GPS nahi mila. Address se locate karein.')
         }
       }).finally(() => setIsCapturingShopLocation(false))
   }

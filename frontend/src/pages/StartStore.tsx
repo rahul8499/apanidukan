@@ -10,8 +10,13 @@ const DEFAULT_CATEGORY = 'Clothing, Garments & Fashion'
 
 const errorMessage = (error: any) => {
   const data = error?.response?.data
-  if (!data) return 'Server se connection nahi hua. Backend running hai ya nahi check karein.'
-  return data.detail || Object.values(data).flat().join(' ') || 'Details check karke phir try karein.'
+  if (!data) return error?.message || 'Server se connection nahi hua. Backend running hai ya nahi check karein.'
+  if (typeof data.detail === 'string') return data.detail
+  if (Array.isArray(data.phone_number) && data.phone_number[0]) return data.phone_number[0]
+  if (Array.isArray(data.email) && data.email[0]) return data.email[0]
+  if (typeof data.phone_number === 'string') return data.phone_number
+  if (typeof data.email === 'string') return data.email
+  return Object.values(data).flat().join(' ') || error?.message || 'Details check karke phir try karein.'
 }
 
 /** Public platform onboarding: create seller store with MSG91 Mobile OTP or Email. */
@@ -144,7 +149,7 @@ export default function StartStore() {
 
     setLoading(true)
     try {
-      const res = await auth.sendOTP(cleanPhone)
+      const res = await auth.sendOTP(cleanPhone, auth.user ? undefined : 'register')
       setOtpSent(true)
       setCountdown(30)
       setSuccessMsg(res.message || 'OTP sent successfully!')
@@ -342,9 +347,26 @@ export default function StartStore() {
 
         {/* Global Alerts */}
         {error && (
-          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-start gap-2">
-            <span>⚠️</span>
-            <div>{error}</div>
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-start gap-2.5">
+              <span className="text-lg">⚠️</span>
+              <div>
+                <p className="font-bold">{error}</p>
+                {(error.includes('already exists') || error.includes('do account nahi ban sakte')) && (
+                  <p className="text-xs text-red-600 mt-1">
+                    Is number ya email se pehle hi account bana hua hai. Kripya login karein.
+                  </p>
+                )}
+              </div>
+            </div>
+            {(error.includes('already exists') || error.includes('do account nahi ban sakte')) && (
+              <Link
+                to="/login"
+                className="shrink-0 px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black rounded-xl transition-all shadow-sm"
+              >
+                Login Karein →
+              </Link>
+            )}
           </div>
         )}
         {successMsg && (

@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
 from .views import (
     RegisterView, CurrentUserView, PlatformDashboardView,
     PasswordResetRequestView, PasswordResetConfirmView, LogoutView,
-    SendOTPView, VerifyOTPView, OTPRegisterCompleteView, AccountDeletionRequestView, PublicVerifiedAccountDeletionView, DeletedSellerAdminView, RestoreDeletedSellerView,
+    SendOTPView, VerifyOTPView, OTPRegisterCompleteView, CheckAvailabilityView, AccountDeletionRequestView, PublicVerifiedAccountDeletionView, DeletedSellerAdminView, RestoreDeletedSellerView,
     AdminToggleStoreStatusView, AdminDeactivateStoreView, AdminStoreCustomersView,
     PublicPlatformAnnouncementView, AdminPlatformAnnouncementView, AdminExportStoresCSVView,
 )
@@ -35,4 +35,5 @@ urlpatterns = [
     path('otp/send/', SendOTPView.as_view(), name='auth-otp-send'),
     path('otp/verify/', VerifyOTPView.as_view(), name='auth-otp-verify'),
     path('otp/register-complete/', OTPRegisterCompleteView.as_view(), name='auth-otp-register-complete'),
+    path('check-availability/', CheckAvailabilityView.as_view(), name='auth-check-availability'),
 ]

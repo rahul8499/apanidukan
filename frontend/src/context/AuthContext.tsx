@@ -18,7 +18,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<User>
   register: (data: any) => Promise<void>
   logout: () => void
-  sendOTP: (phone_number: string) => Promise<{ success: boolean; message: string; user_exists: boolean; phone_number: string }>
+  sendOTP: (phone_number: string, purpose?: string) => Promise<{ success: boolean; message: string; user_exists: boolean; phone_number: string }>
   verifyOTP: (phone_number: string, otp: string, access_token?: string) => Promise<{
     is_new_user: boolean
     has_store?: boolean
@@ -142,9 +142,18 @@ export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
     return userObj
   }
 
-  async function sendOTP(phone_number: string) {
+  async function sendOTP(phone_number: string, purpose?: string) {
+    if (purpose === 'register') {
+      const check = await api.post('/auth/check-availability/', { phone_number })
+      if (check.data?.phone_exists) {
+        const msg = check.data?.phone_error || 'An account with this mobile number already exists. Ek number se do account nahi ban sakte.'
+        const err: any = new Error(msg)
+        err.response = { data: { detail: msg } }
+        throw err
+      }
+    }
     await sendMsg91WidgetOtp(phone_number)
-    const exists = await api.post('/auth/otp/send/', { phone_number, provider_only: true })
+    const exists = await api.post('/auth/otp/send/', { phone_number, provider_only: true, purpose })
     return { success: true, message: 'OTP sent to your mobile number.', phone_number, user_exists: Boolean(exists.data.user_exists) }
   }
 

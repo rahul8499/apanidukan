@@ -5,13 +5,25 @@ from django.utils import timezone
 SUPERADMIN_EMAIL = 'rahulkolhe90.rk.rk@gmail.com'
 
 
+def _clean_phone(phone):
+    if not phone:
+        return None
+    digits = ''.join(c for c in str(phone) if c.isdigit())
+    if len(digits) > 10 and digits.startswith('91'):
+        digits = digits[2:]
+    clean = digits[-10:] if len(digits) >= 10 else digits
+    return clean if clean else None
+
+
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError('Email must be set')
-        email = self.normalize_email(email)
+        email = email.strip().lower()
+        if 'phone_number' in extra_fields:
+            extra_fields['phone_number'] = _clean_phone(extra_fields['phone_number'])
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -45,7 +57,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
+    def clean(self):
+        super().clean()
+        if self.email:
+            self.email = self.email.strip().lower()
+        self.phone_number = _clean_phone(self.phone_number)
+
     def save(self, *args, **kwargs):
+        if self.email:
+            self.email = self.email.strip().lower()
+        self.phone_number = _clean_phone(self.phone_number)
+
         # Strict security guard: Only the primary platform superadmin email can EVER hold staff/superuser privileges.
         if not self.email or self.email.strip().lower() != SUPERADMIN_EMAIL:
             self.is_staff = False

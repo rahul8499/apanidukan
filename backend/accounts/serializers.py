@@ -13,6 +13,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         validate_password(value)
         return value
 
+    def validate_email(self, value):
+        if not value:
+            raise serializers.ValidationError('Email address is required.')
+        clean_email = value.strip().lower()
+        if User.objects.filter(email__iexact=clean_email).exists():
+            raise serializers.ValidationError('An account with this email address already exists. Ek email se do account nahi ban sakte.')
+        return clean_email
+
     def validate_phone_number(self, value):
         if not value:
             raise serializers.ValidationError('Valid 10-digit mobile number is required.')
@@ -20,10 +28,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         from .models import PhoneOTP
         from django.utils import timezone
         clean = normalize_phone(value)
-        if not clean or len(clean) < 10:
+        if not clean or len(clean) != 10:
             raise serializers.ValidationError('Valid 10-digit mobile number is required.')
         if User.objects.filter(phone_number=clean).exists():
-            raise serializers.ValidationError('An account with this phone number already exists.')
+            raise serializers.ValidationError('An account with this mobile number already exists. Ek number se do account nahi ban sakte.')
         verified = PhoneOTP.objects.filter(
             phone_number=clean, is_verified=True, expires_at__gte=timezone.now()
         ).exists()

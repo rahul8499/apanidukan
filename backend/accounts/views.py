@@ -371,6 +371,7 @@ class SendOTPView(APIView):
 
     def post(self, request):
         phone_number = request.data.get('phone_number', '')
+        purpose = request.data.get('purpose', '')
         if not phone_number:
             return Response({'detail': 'Phone number is required.'}, status=400)
         
@@ -378,24 +379,34 @@ class SendOTPView(APIView):
         if not clean_phone or len(clean_phone) < 10:
             return Response({'detail': 'Please enter a valid 10-digit mobile number.'}, status=400)
 
+        user_exists = User.objects.filter(phone_number=clean_phone).exists()
+
+        # Duplicate number validation for registration flow
+        if purpose == 'register' and user_exists:
+            return Response({
+                'detail': 'An account with this mobile number already exists. Ek number se do account nahi ban sakte. Kripya login karein.',
+                'user_exists': True,
+                'code': 'USER_ALREADY_EXISTS'
+            }, status=400)
+
         if request.data.get('provider_only'):
             return Response({
                 'success': True,
                 'phone_number': clean_phone,
-                'user_exists': User.objects.filter(phone_number=clean_phone).exists()
+                'user_exists': user_exists
             })
 
         success, otp_code, msg = create_and_send_otp(clean_phone)
         if not success:
             return Response({'detail': msg}, status=400)
 
-        user_exists = User.objects.filter(phone_number=clean_phone).exists()
         return Response({
             'success': True,
             'message': msg,
             'phone_number': clean_phone,
             'user_exists': user_exists
         })
+
 
 
 class VerifyOTPView(APIView):
@@ -498,40 +509,63 @@ class OTPRegisterCompleteView(APIView):
                     phone_number=clean_phone, is_verified=True, expires_at__gte=timezone.now()
                 ).order_by('-created_at').first()
 
-        if not email:
-            email = f"user_{clean_phone}@store.local"
-            i = 1
-            while User.objects.filter(email=email).exists():
-                email = f"user_{clean_phone}_{i}@store.local"
-                i += 1
-        elif User.objects.filter(email=email).exclude(phone_number=clean_phone).exists():
-            return Response({'detail': 'An account with this email address already exists.'}, status=400)
+        clean_email = email.strip().lower() if email else ''
 
         if request.user and request.user.is_authenticated:
             user = request.user
-            if clean_phone and not user.phone_number:
+            # Check duplicate phone for another user
+            if clean_phone and clean_phone != user.phone_number:
+                if User.objects.filter(phone_number=clean_phone).exclude(id=user.id).exists():
+                    return Response({
+                        'detail': 'An account with this mobile number already exists. Ek number se do account nahi ban sakte.'
+                    }, status=400)
                 user.phone_number = clean_phone
+            # Check duplicate email for another user
+            if clean_email and not clean_email.endswith('@store.local'):
+                if User.objects.filter(email__iexact=clean_email).exclude(id=user.id).exists():
+                    return Response({
+                        'detail': 'An account with this email address already exists. Ek email se do account nahi ban sakte.'
+                    }, status=400)
+                user.email = clean_email
             if first_name: user.first_name = first_name
             if last_name: user.last_name = last_name
             user.save()
         else:
-            user, created = User.objects.get_or_create(
-                phone_number=clean_phone,
-                defaults={
-                    'email': email,
-                    'first_name': first_name,
-                    'last_name': last_name,
-                    'is_staff': False,
-                    'is_superuser': False,
-                }
-            )
-            if not created:
-                if first_name: user.first_name = first_name
-                if last_name: user.last_name = last_name
-                user.save()
+            # UNREGISTERED / NEW ACCOUNT CREATION
+            # 1. Strictly prevent duplicate mobile number - Ek number se do account nahi ban sakte!
+            if User.objects.filter(phone_number=clean_phone).exists():
+                return Response({
+                    'detail': 'An account with this mobile number already exists. Ek number se do account nahi ban sakte. Kripya login karein.',
+                    'code': 'PHONE_ALREADY_EXISTS'
+                }, status=400)
+
+            # 2. Strictly prevent duplicate email address - Ek email se do account nahi ban sakte!
+            if clean_email and not clean_email.endswith('@store.local'):
+                if User.objects.filter(email__iexact=clean_email).exists():
+                    return Response({
+                        'detail': 'An account with this email address already exists. Ek email se do account nahi ban sakte. Kripya login karein.',
+                        'code': 'EMAIL_ALREADY_EXISTS'
+                    }, status=400)
+                final_email = clean_email
             else:
-                user.set_unusable_password()
-                user.save()
+                final_email = f"user_{clean_phone}@store.local"
+                i = 1
+                while User.objects.filter(email__iexact=final_email).exists():
+                    final_email = f"user_{clean_phone}_{i}@store.local"
+                    i += 1
+
+            # Create the unique new user account
+            user = User.objects.create_user(
+                email=final_email,
+                password=None,
+                phone_number=clean_phone,
+                first_name=first_name,
+                last_name=last_name,
+                is_staff=False,
+                is_superuser=False,
+            )
+            user.set_unusable_password()
+            user.save()
 
         # Check if user already has a store with this exact name, or if we should create a new store
         store = Store.objects.filter(owner=user, name=store_name).first() if store_name else Store.objects.filter(owner=user).first()
@@ -730,3 +764,32 @@ class AdminExportStoresCSVView(APIView):
             ])
 
         return response
+
+
+class CheckAvailabilityView(APIView):
+    """Real-time availability check for mobile number and email during registration."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        phone_number = request.data.get('phone_number', '')
+        email = request.data.get('email', '')
+        response = {'success': True}
+
+        if phone_number:
+            clean_phone = normalize_phone(phone_number)
+            if clean_phone and len(clean_phone) == 10:
+                phone_exists = User.objects.filter(phone_number=clean_phone).exists()
+                response['phone_exists'] = phone_exists
+                if phone_exists:
+                    response['phone_error'] = 'An account with this mobile number already exists. Ek number se do account nahi ban sakte.'
+
+        if email:
+            clean_email = email.strip().lower()
+            if '@' in clean_email:
+                email_exists = User.objects.filter(email__iexact=clean_email).exists()
+                response['email_exists'] = email_exists
+                if email_exists:
+                    response['email_error'] = 'An account with this email address already exists. Ek email se do account nahi ban sakte.'
+
+        return Response(response)
+

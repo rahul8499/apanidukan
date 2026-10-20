@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import Store, StoreSettings, StoreScratchConfig, SearchQuery, ProductRequest, StoreReport, SellerNotification, CustomerNotification
+from .models import (
+    Store, StoreSettings, StoreScratchConfig, SearchQuery,
+    ProductRequest, StoreReport, SellerNotification, CustomerNotification,
+    DeliveryAgent
+)
 
 
 class StoreSettingsInline(admin.StackedInline):
@@ -95,4 +99,62 @@ class StoreReportAdmin(admin.ModelAdmin):
     @admin.action(description='Dismiss selected reports')
     def mark_dismissed(self, request, queryset):
         queryset.update(status=StoreReport.STATUS_DISMISSED)
+
+
+@admin.register(DeliveryAgent)
+class DeliveryAgentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'agent_code', 'full_name', 'phone_number', 'get_store_name', 'vehicle_type', 'is_active', 'created_at')
+    search_fields = ('agent_code', 'full_name', 'phone_number', 'store__name')
+    list_filter = ('is_active', 'vehicle_type', 'store')
+    readonly_fields = ('created_at', 'updated_at')
+
+    @admin.display(description='Store')
+    def get_store_name(self, obj):
+        try:
+            return obj.store.name if (obj and obj.store) else "No Store"
+        except Exception:
+            return "No Store"
+
+
+@admin.register(SellerNotification)
+class SellerNotificationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'get_store_name', 'notification_type', 'title', 'is_read', 'created_at')
+    search_fields = ('title', 'body', 'store__name')
+    list_filter = ('notification_type', 'is_read', 'created_at', 'store')
+
+    @admin.display(description='Store')
+    def get_store_name(self, obj):
+        try:
+            return obj.store.name if (obj and obj.store) else "No Store"
+        except Exception:
+            return "No Store"
+
+
+@admin.register(CustomerNotification)
+class CustomerNotificationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'get_store_name', 'customer_id', 'notification_type', 'title', 'is_read', 'created_at')
+    search_fields = ('title', 'body', 'customer_id', 'store__name')
+    list_filter = ('notification_type', 'is_read', 'created_at', 'store')
+
+    @admin.display(description='Store')
+    def get_store_name(self, obj):
+        try:
+            return obj.store.name if (obj and obj.store) else "No Store"
+        except Exception:
+            return "No Store"
+
+
+@admin.register(StoreScratchConfig)
+class StoreScratchConfigAdmin(admin.ModelAdmin):
+    list_display = ('id', 'get_store_name', 'enabled', 'title', 'coupon_code', 'discount_type', 'discount_value', 'min_order')
+    search_fields = ('store__name', 'title', 'coupon_code')
+    list_filter = ('enabled', 'discount_type')
+
+    @admin.display(description='Store')
+    def get_store_name(self, obj):
+        try:
+            return obj.store.name if (obj and obj.store) else "No Store"
+        except Exception:
+            return "No Store"
+
 

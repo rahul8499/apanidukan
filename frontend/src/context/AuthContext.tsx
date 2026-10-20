@@ -26,7 +26,7 @@ type AuthContextType = {
     store?: { id: number; name: string; slug: string }
     user?: User
   }>
-  registerWithOTP: (data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string }) => Promise<User>
+  registerWithOTP: (data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string }) => Promise<{ user: User; store: { id: number; name: string; slug: string } }>
 }
 
 declare global {
@@ -175,7 +175,7 @@ export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
     }
   }
 
-  async function registerWithOTP(data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string }): Promise<User> {
+  async function registerWithOTP(data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string }): Promise<{ user: User; store: { id: number; name: string; slug: string } }> {
     const res = await api.post('/auth/otp/register-complete/', data)
     const resData = res.data
     const { access, refresh, user: userObj } = resData
@@ -183,7 +183,7 @@ export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
     localStorage.setItem('refresh_token', refresh)
     api.defaults.headers.common['Authorization'] = `Bearer ${access}`
     setUser(userObj)
-    return userObj
+    return { user: userObj, store: resData.store }
   }
 
   async function register(data: any) {

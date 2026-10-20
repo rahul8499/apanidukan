@@ -187,7 +187,7 @@ export default function StartStore() {
 
     setLoading(true)
     try {
-      await auth.registerWithOTP({
+      const { store } = await auth.registerWithOTP({
         phone_number: cleanPhone,
         otp: otp,
         first_name: firstName,
@@ -200,7 +200,7 @@ export default function StartStore() {
         longitude,
         email: email,
       })
-      navigate('/dashboard')
+      navigate(`/stores/${store.id}/manage`, { replace: true })
     } catch (err: any) {
       setError(errorMessage(err))
     } finally {

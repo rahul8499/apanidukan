@@ -80,6 +80,8 @@ export default function StoreManager() {
   const [shopGpsStatus, setShopGpsStatus] = useState('')
   const [approximateGpsCoords, setApproximateGpsCoords] = useState<{ latitude: number, longitude: number } | null>(null)
   const locationPromptShown = useRef(false)
+  const hasSavedStoreLocation = store?.latitude != null && store?.longitude != null &&
+    (Number(store.latitude) !== 0 || Number(store.longitude) !== 0)
 
   // Step 01: Compact Address & Location Accordion State
   const [isAddressAccordionOpen, setIsAddressAccordionOpen] = useState(false)
@@ -286,7 +288,9 @@ export default function StoreManager() {
         try { localStorage.setItem(`qs_seller_loc_prompt_${response.data.id}`, 'true') } catch {}
       }
       setShowSellerLocationPrompt(false)
-      toast.success('Store address and location saved.')
+      if (latitude == null || longitude == null) {
+        toast.success('Store address and location saved.')
+      }
       return true
     } catch (err) {
       toast.error(errorMessage(err))
@@ -2205,10 +2209,10 @@ export default function StoreManager() {
               {/* Primary Current Location Auto-Detect Button */}
               <button
                 type="button"
-                disabled={isCapturingShopLocation}
+                disabled={isCapturingShopLocation || hasSavedStoreLocation}
                 onClick={captureStoreLocation}
                 className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-2 py-1 text-[11px] sm:text-xs font-bold text-white shadow-2xs hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer truncate"
-                title="Current location & address detect karein"
+                title={hasSavedStoreLocation ? 'Store location saved' : 'Current location & address detect karein'}
               >
                 {isCapturingShopLocation ? (
                   <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white shrink-0" />

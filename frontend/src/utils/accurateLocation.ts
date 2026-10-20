@@ -5,17 +5,13 @@ export type AccurateLocationError = Error & {
 }
 
 /**
- * Fast, highly resilient device geolocation capture:
- * 1. Checks cached/network location first (maximumAge: 10 mins) — returns in <200ms on mobile.
- * 2. If cached or network accuracy is acceptable (<= 200m), resolves immediately.
- * 3. Starts high accuracy in parallel; if any valid position arrives, accepts it within 2.5s
- *    instead of blocking the user indoors waiting for impossible satellite locks.
- * 4. Never fails with false timeouts if any position exists.
+ * Try a cached/network fix first, then allow Android browsers time to acquire GPS.
+ * If only a coarse position arrives, use it as a fallback after GPS has had time to refine it.
  */
 export function captureAccurateLocation(
   onAccuracy?: (accuracy: number) => void,
   accuracyThreshold = 200,
-  timeoutMs = 15000,
+  timeoutMs = 30000,
 ): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -63,15 +59,13 @@ export function captureAccurateLocation(
         return
       }
 
-      // If we got ANY valid position (e.g. 250m-500m Wi-Fi/Cell lock),
-      // give high accuracy 2.5 seconds to refine, then resolve with what we have.
-      // This prevents indoor satellite timeouts completely!
-      if (!quickResolveTimer) {
+      // Keep the coarse fix briefly while GPS refines it, then fall back to it.
+      if (acc > accuracyThreshold && quickResolveTimer === null) {
         quickResolveTimer = window.setTimeout(() => {
           if (bestPosition && !resolved) {
             finish(bestPosition)
           }
-        }, 2500)
+        }, 10000)
       }
     }
 
@@ -88,7 +82,7 @@ export function captureAccurateLocation(
             reject(permError)
           }
         },
-        { enableHighAccuracy: false, maximumAge: 600000, timeout: 8000 },
+        { enableHighAccuracy: false, maximumAge: 600000, timeout: Math.min(timeoutMs, 15000) },
       )
     } catch { }
 
@@ -134,6 +128,6 @@ export function captureAccurateLocation(
       const timeoutError = new Error('Location detect nahi ho saki. Upar address likhkar "Find on Map" dabayein.') as AccurateLocationError
       timeoutError.locationErrorCode = 3
       reject(timeoutError)
-    }, timeoutMs)
+    }, timeoutMs + 1000)
   })
 }

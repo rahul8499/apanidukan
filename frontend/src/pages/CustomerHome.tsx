@@ -24,6 +24,7 @@ import CustomerAppHeader from '../components/CustomerAppHeader'
 import CustomerLocationPrompt from '../components/CustomerLocationPrompt'
 import { BUSINESS_TYPES, getBusinessTypeTitle } from '../utils/businessTypes'
 import { useCustomerFavorites, FavoriteStoreItem } from '../utils/customerFavorites'
+import { captureAccurateLocation } from '../utils/accurateLocation'
 import i18n from '../i18n'
 
 export default function CustomerHome() {
@@ -101,8 +102,7 @@ export default function CustomerHome() {
     }
     setLocating(true)
     setError('')
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
+    captureAccurateLocation().then(({ coords }) => {
         const nextLocation = { latitude: Number(coords.latitude.toFixed(6)), longitude: Number(coords.longitude.toFixed(6)) }
         setLocation(nextLocation)
         localStorage.setItem('customer-location', JSON.stringify(nextLocation))
@@ -110,17 +110,15 @@ export default function CustomerHome() {
         setLocating(false)
         setShowLocationPrompt(false)
         loadStores(nextLocation, category, radius)
-      },
-      (geoError) => {
+      }).catch((geoError) => {
         console.warn('Geolocation failed or denied:', geoError)
         setLocating(false)
         setShowLocationPrompt(false)
+        setError(geoError?.message || 'Location nahi mili. Browser settings mein Location allow karke phir try karein.')
         if (stores.length === 0) {
           loadStores(null, category, radius)
         }
-      },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
-    )
+      })
   }
 
   useEffect(() => {

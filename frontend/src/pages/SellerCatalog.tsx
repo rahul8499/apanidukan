@@ -1030,7 +1030,7 @@ export default function SellerCatalog() {
                 <input
                   value={newProdName}
                   onChange={(e) => setNewProdName(e.target.value)}
-                  placeholder="e.g. Wireless Headphones"
+                  placeholder="e.g. Cotton Kurti, Men's Shirt, Saree"
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-seller-600 focus:outline-none"
                   required
                 />

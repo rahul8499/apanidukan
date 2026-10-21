@@ -36,6 +36,23 @@ export default function StartStore() {
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
   const [gpsStatus, setGpsStatus] = useState('')
   const [fullName, setFullName] = useState('')
+  const [step, setStep] = useState(1)
+  const [allowHomeDelivery, setAllowHomeDelivery] = useState(true)
+  const [allowStorePickup, setAllowStorePickup] = useState(true)
+  const [minDeliveryOrder, setMinDeliveryOrder] = useState('0')
+  const [deliveryRadiusKm, setDeliveryRadiusKm] = useState('10')
+  const [serviceablePincodes, setServiceablePincodes] = useState('')
+  const [deliveryChargeType, setDeliveryChargeType] = useState('FIXED')
+  const [deliveryFlatFee, setDeliveryFlatFee] = useState('0')
+  const [deliveryPerKmFee, setDeliveryPerKmFee] = useState('0')
+  const [freeDeliveryAbove, setFreeDeliveryAbove] = useState('0')
+  const [deliveryEstimatedTime, setDeliveryEstimatedTime] = useState('30-45 mins')
+  const [pickupInstructions, setPickupInstructions] = useState('')
+  const [exchangeEnabled, setExchangeEnabled] = useState(false)
+  const [exchangeWindowDays, setExchangeWindowDays] = useState('7')
+  const [exchangeEvidenceRequired, setExchangeEvidenceRequired] = useState(true)
+  const [exchangeReasons, setExchangeReasons] = useState('Size does not fit\nWrong item received\nDamaged or defective item\nColour differs from listing')
+  const [exchangePolicy, setExchangePolicy] = useState('Item must be unused, unwashed and have original tags attached.')
 
   // Email mode fields
   const [email, setEmail] = useState('')
@@ -172,6 +189,8 @@ export default function StartStore() {
       setSuccessMsg(res.message || 'OTP sent successfully!')
     } catch (err: any) {
       setError(errorMessage(err))
+      const retryAfter = Number(err?.response?.data?.retry_after || 0)
+      if (retryAfter > 0 && retryAfter <= 60) setCountdown(retryAfter)
     } finally {
       setLoading(false)
     }
@@ -254,8 +273,24 @@ export default function StartStore() {
         latitude,
         longitude,
         email: email,
+        allow_home_delivery: allowHomeDelivery,
+        allow_store_pickup: allowStorePickup,
+        min_delivery_order: Number(minDeliveryOrder) || 0,
+        delivery_radius_km: Number(deliveryRadiusKm) || 10,
+        serviceable_pincodes: serviceablePincodes.split(/[\s,]+/).map(pin => pin.trim()).filter(pin => /^\d{6}$/.test(pin)),
+        delivery_charge_type: deliveryChargeType,
+        delivery_flat_fee: Number(deliveryFlatFee) || 0,
+        delivery_per_km_fee: Number(deliveryPerKmFee) || 0,
+        free_delivery_above: Number(freeDeliveryAbove) || 0,
+        delivery_estimated_time: deliveryEstimatedTime.trim() || '30-45 mins',
+        pickup_instructions: pickupInstructions.trim(),
+        exchange_enabled: exchangeEnabled,
+        exchange_window_days: Number(exchangeWindowDays) || 7,
+        exchange_evidence_required: exchangeEvidenceRequired,
+        exchange_allowed_reasons: exchangeReasons.split('\n').map(reason => reason.trim()).filter(Boolean),
+        exchange_policy: exchangePolicy.trim(),
       })
-      navigate(`/stores/${store.id}/manage`, { replace: true })
+      navigate(`/stores/${store.id}/catalog?add=1`, { replace: true })
     } catch (err: any) {
       setError(errorMessage(err))
     } finally {
@@ -309,9 +344,25 @@ export default function StartStore() {
         address,
         latitude,
         longitude,
-        phone_number: cleanPhone
+        phone_number: cleanPhone,
+        allow_home_delivery: allowHomeDelivery,
+        allow_store_pickup: allowStorePickup,
+        min_delivery_order: Number(minDeliveryOrder) || 0,
+        delivery_radius_km: Number(deliveryRadiusKm) || 10,
+        serviceable_pincodes: serviceablePincodes.split(/[\s,]+/).map(pin => pin.trim()).filter(pin => /^\d{6}$/.test(pin)),
+        delivery_charge_type: deliveryChargeType,
+        delivery_flat_fee: Number(deliveryFlatFee) || 0,
+        delivery_per_km_fee: Number(deliveryPerKmFee) || 0,
+        free_delivery_above: Number(freeDeliveryAbove) || 0,
+        delivery_estimated_time: deliveryEstimatedTime.trim() || '30-45 mins',
+        pickup_instructions: pickupInstructions.trim(),
+        exchange_enabled: exchangeEnabled,
+        exchange_window_days: Number(exchangeWindowDays) || 7,
+        exchange_evidence_required: exchangeEvidenceRequired,
+        exchange_allowed_reasons: exchangeReasons.split('\n').map(reason => reason.trim()).filter(Boolean),
+        exchange_policy: exchangePolicy.trim(),
       })
-      navigate(`/stores/${store.data.id}/manage`)
+      navigate(`/stores/${store.data.id}/catalog?add=1`)
     } catch (requestError) {
       setError(errorMessage(requestError))
     } finally {
@@ -319,547 +370,106 @@ export default function StartStore() {
     }
   }
 
+  const nextStep = () => {
+    setError('')
+    if (step === 1) {
+      if (regMode === 'otp' && !otpVerified) return setError('Please verify your mobile number with OTP first.')
+      if (regMode === 'email' && (!otpVerified || !email.trim() || password.length < 8)) return setError('Verify your mobile number and enter a valid email and password (minimum 8 characters).')
+      if (!name.trim()) return setError('Store name is required.')
+    }
+    if (step === 2 && (!address.trim() || !fullName.trim())) return setError('Store address and owner full name are required.')
+    if (step === 3) {
+      if (!allowHomeDelivery && !allowStorePickup) return setError('Enable home delivery or walk-in / store pickup to continue.')
+      if (allowHomeDelivery && Number(deliveryRadiusKm) <= 0) return setError('Delivery radius must be greater than 0 km.')
+    }
+    if (step === 4 && exchangeEnabled) {
+      if (Number(exchangeWindowDays) < 1 || Number(exchangeWindowDays) > 30) return setError('Exchange window must be between 1 and 30 days.')
+      if (!exchangeReasons.split('\n').map(reason => reason.trim()).filter(Boolean).length) return setError('Add at least one exchange reason.')
+    }
+    setStep(current => Math.min(5, current + 1))
+  }
+
+  const fieldClass = 'premium-input mt-1 w-full'
+  const toggleRow = (label: string, description: string, checked: boolean, onChange: (value: boolean) => void) => (
+    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4">
+      <span><span className="block text-sm font-bold text-slate-900">{label} <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] ${checked ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>{checked ? 'ON' : 'OFF'}</span></span><span className="mt-1 block text-xs text-slate-500">{description}</span></span>
+      <input type="checkbox" checked={checked} onChange={event => onChange(event.target.checked)} className="h-5 w-5 shrink-0 accent-orange-600" />
+    </label>
+  )
+
   return (
     <main className="min-h-screen w-full bg-slate-50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-50/80 via-white to-slate-50 flex flex-col items-center px-4 py-7 font-sans sm:py-10">
       <div className="w-full max-w-xl">
-        {/* Header Banner */}
         <div className="mb-5 text-center sm:mb-6">
-          <div className="mb-3 flex justify-center">
-            <img
-              src="/apanidukan-brand-logo.png"
-              alt="Apani Dukan"
-              className="h-auto w-[220px] max-w-full object-contain sm:w-[250px]"
-            />
-          </div>
-          <span className="inline-flex items-center rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-orange-700">
-            Seller account setup
-          </span>
-          <h1 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-3xl">
-            Apna online store, <span className="text-orange-600">minutes mein.</span>
-          </h1>
-          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600 sm:text-base">
-            Store details add karein, products list karein, aur apna storefront customers ke saath share karein.
-          </p>
-
-          {/* Mode Selector */}
+          <div className="mb-3 flex justify-center"><img src="/apanidukan-brand-logo.png" alt="Apani Dukan" className="h-auto w-[220px] max-w-full object-contain sm:w-[250px]" /></div>
+          <span className="inline-flex items-center rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-orange-700">Seller account setup</span>
+          <h1 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-3xl">Apna online store, <span className="text-orange-600">minutes mein.</span></h1>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">Store details, delivery rules aur exchange policy set karein. Baad mein dashboard se edit kar sakte hain.</p>
           <div className="mx-auto mt-5 grid max-w-sm grid-cols-2 rounded-xl border border-slate-200 bg-slate-100 p-1" role="tablist" aria-label="Choose account setup method">
-            <button
-              type="button"
-              onClick={() => { setRegMode('otp'); setError(''); setSuccessMsg(''); }}
-              role="tab"
-              aria-selected={regMode === 'otp'}
-              className={`min-h-11 rounded-lg px-2 text-sm font-semibold transition-colors ${regMode === 'otp' ? 'bg-white text-orange-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              Mobile OTP
-            </button>
-            <button
-              type="button"
-              onClick={() => { setRegMode('email'); setError(''); setSuccessMsg(''); }}
-              role="tab"
-              aria-selected={regMode === 'email'}
-              className={`min-h-11 rounded-lg px-2 text-sm font-semibold transition-colors ${regMode === 'email' ? 'bg-white text-orange-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              Email account
-            </button>
+            <button type="button" onClick={() => { setRegMode('otp'); setError(''); setSuccessMsg('') }} role="tab" aria-selected={regMode === 'otp'} className={`min-h-11 rounded-lg px-2 text-sm font-semibold ${regMode === 'otp' ? 'bg-white text-orange-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600'}`}>Mobile OTP</button>
+            <button type="button" onClick={() => { setRegMode('email'); setError(''); setSuccessMsg('') }} role="tab" aria-selected={regMode === 'email'} className={`min-h-11 rounded-lg px-2 text-sm font-semibold ${regMode === 'email' ? 'bg-white text-orange-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600'}`}>Email account</button>
           </div>
         </div>
 
-        {/* Global Alerts */}
-        {error && (
-          <div role="alert" className="mb-4 flex flex-col items-start justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 sm:flex-row sm:items-center">
-            <div className="flex items-start gap-2.5">
-              <span className="text-lg">⚠️</span>
-              <div>
-                <p className="font-bold">{error}</p>
-                {(error.includes('already exists') || error.includes('do account nahi ban sakte')) && (
-                  <p className="text-xs text-red-600 mt-1">
-                    Is number ya email se pehle hi account bana hua hai. Kripya login karein.
-                  </p>
-                )}
-              </div>
-            </div>
-            {(error.includes('already exists') || error.includes('do account nahi ban sakte')) && (
-              <Link
-                to="/login"
-                className="shrink-0 rounded-lg bg-rose-700 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-rose-800"
-              >
-                Login Karein →
-              </Link>
-            )}
+        {error && <div role="alert" className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-800">⚠️ {error}</div>}
+        {successMsg && <div role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">✅ {successMsg}</div>}
+
+        <form onSubmit={step === 5 ? (regMode === 'otp' ? handleOTPSubmit : handleEmailSubmit) : event => { event.preventDefault(); nextStep() }} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_55px_-30px_rgba(15,23,42,0.3)] sm:p-7">
+          <div className="space-y-3">
+            <div className="flex justify-between text-xs font-bold text-slate-500"><span>Store registration</span><span>Step {step} of 5</span></div>
+            <div className="grid grid-cols-5 gap-1.5">{[1,2,3,4,5].map(item => <div key={item} className={`h-1.5 rounded-full ${item <= step ? 'bg-orange-600' : 'bg-slate-200'}`} />)}</div>
           </div>
-        )}
-        {successMsg && (
-          <div role="status" className="mb-4 flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-            <span>✅</span>
-            <div>{successMsg}</div>
+
+          {step === 1 && <section className="space-y-4">
+            <div><span className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 01</span><h2 className="mt-1 text-lg font-bold text-slate-900">Account and store basics</h2></div>
+            {regMode === 'otp' ? <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <label className="block text-xs font-semibold text-slate-700">Mobile number (OTP verification) *</label>
+              <div className="mt-2 flex gap-2"><div className="relative flex-1"><span className="absolute left-3.5 top-3 text-sm font-semibold text-slate-500">+91</span><input value={phone} onChange={event => { setPhone(event.target.value.replace(/\D/g, '').slice(0, 10)); setOtpVerified(false) }} disabled={otpVerified} required type="tel" inputMode="numeric" maxLength={10} placeholder="9876543210" className="premium-input w-full pl-14" /></div>{!otpVerified && <button type="button" onClick={handleSendOTP} disabled={loading || countdown > 0} className="rounded-xl bg-orange-600 px-4 text-xs font-bold text-white disabled:opacity-60">{countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP →'}</button>}</div>
+              {otpSent && !otpVerified && <div className="mt-3 flex gap-2"><input value={otp} onChange={event => { const code = event.target.value.replace(/\D/g, '').slice(0, 6); setOtp(code); if (code.length === 6) handleVerifyOTP(code) }} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="Enter 6-digit OTP" className="premium-input min-w-0 flex-1 text-center tracking-widest" /><button type="button" onClick={() => handleVerifyOTP()} disabled={loading} className="rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white">Verify OTP</button></div>}
+              {otpVerified && <p className="mt-2 text-xs font-bold text-emerald-700">✓ Mobile verified</p>}
+            </div> : <div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-semibold text-slate-700">Email address *<input type="email" value={email} onChange={event => setEmail(event.target.value)} required className={fieldClass} /></label><label className="text-xs font-semibold text-slate-700">Password *<input type="password" value={password} onChange={event => setPassword(event.target.value)} required minLength={8} className={fieldClass} /></label><label className="text-xs font-semibold text-slate-700 sm:col-span-2">Mobile number *<div className="mt-1 flex gap-2"><input value={phone} onChange={event => setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))} disabled={otpVerified} required maxLength={10} placeholder="9876543210" className="premium-input min-w-0 flex-1" />{!otpVerified && <button type="button" onClick={handleSendOTP} disabled={loading || countdown > 0} className="rounded-xl bg-orange-600 px-3 text-xs font-bold text-white">{countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP'}</button>}</div>{otpSent && !otpVerified && <div className="mt-2 flex gap-2"><input value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="OTP" maxLength={6} className="premium-input min-w-0 flex-1" /><button type="button" onClick={() => handleVerifyOTP()} className="rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white">Verify OTP</button></div>}{otpVerified && <span className="mt-1 block text-emerald-700">✓ Mobile verified</span>}</label></div>}
+            <label className="block text-xs font-semibold text-slate-700">Store name *<input value={name} onChange={event => setName(event.target.value)} required placeholder="Store name" className={fieldClass} /></label>
+            <div><span className="block text-xs font-semibold text-slate-700">Store category</span><div className="mt-1 flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/60 p-3"><span className="text-sm font-bold text-slate-900">👗 {DEFAULT_CATEGORY}</span><span className="rounded-lg bg-orange-600 px-2 py-1 text-[10px] font-bold text-white">Selected</span></div></div>
+          </section>}
+
+          {step === 2 && <section className="space-y-4">
+            <div><span className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 02</span><h2 className="mt-1 text-lg font-bold text-slate-900">Store location and owner</h2></div>
+            <label className="block text-xs font-semibold text-slate-700">Store address *<textarea value={address} onChange={event => setAddress(event.target.value)} required placeholder="Shop, street, area, city, PIN code" className="premium-input mt-1 min-h-24 w-full" /></label>
+            <button type="button" onClick={captureStoreLocation} disabled={locationLoading} className="rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white">{locationLoading ? 'Locating...' : latitude ? 'Location captured ✓' : '📍 Use current location'}</button>{gpsStatus && <p className="text-xs text-slate-600">{gpsStatus}</p>}
+            <label className="block text-xs font-semibold text-slate-700">Store phone (OTP verified)<input value={phone} readOnly className="premium-input mt-1 w-full bg-emerald-50" /></label>
+            <label className="block text-xs font-semibold text-slate-700">Store owner full name *<input value={fullName} onChange={event => setFullName(event.target.value)} required placeholder="Full name" className={fieldClass} /></label>
+            {regMode === 'otp' && <label className="block text-xs font-semibold text-slate-700">Email address (optional)<input type="email" value={email} onChange={event => setEmail(event.target.value)} className={fieldClass} /></label>}
+          </section>}
+
+          {step === 3 && <section className="space-y-4">
+            <div><span className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 03</span><h2 className="mt-1 text-lg font-bold text-slate-900">Checkout Fulfillment</h2><p className="mt-1 text-sm text-slate-500">Configure order options and delivery pricing shown to customers.</p></div>
+            {toggleRow('🚚 Home Delivery', 'Deliver order to customer home', allowHomeDelivery, setAllowHomeDelivery)}
+            {allowHomeDelivery && <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-orange-700">Delivery rates</p>
+              <div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-semibold text-slate-700">Minimum order (₹)<input type="number" min="0" value={minDeliveryOrder} onChange={event => setMinDeliveryOrder(event.target.value)} className={fieldClass} /></label><label className="text-xs font-semibold text-slate-700">Maximum distance (km)<input type="number" min="0.1" step="0.1" value={deliveryRadiusKm} onChange={event => setDeliveryRadiusKm(event.target.value)} className={fieldClass} /></label><label className="text-xs font-semibold text-slate-700">Delivery fee type<select value={deliveryChargeType} onChange={event => setDeliveryChargeType(event.target.value)} className={fieldClass}><option value="FREE">Free delivery</option><option value="FIXED">Flat fee</option><option value="PER_KM">Per km</option><option value="HYBRID">Base fee + per km</option></select></label>{['FIXED','HYBRID'].includes(deliveryChargeType) && <label className="text-xs font-semibold text-slate-700">Flat / base fee (₹)<input type="number" min="0" value={deliveryFlatFee} onChange={event => setDeliveryFlatFee(event.target.value)} className={fieldClass} /></label>}{['PER_KM','HYBRID'].includes(deliveryChargeType) && <label className="text-xs font-semibold text-slate-700">Per km fee (₹)<input type="number" min="0" value={deliveryPerKmFee} onChange={event => setDeliveryPerKmFee(event.target.value)} className={fieldClass} /></label>}<label className="text-xs font-semibold text-slate-700">Free delivery above (₹)<input type="number" min="0" value={freeDeliveryAbove} onChange={event => setFreeDeliveryAbove(event.target.value)} className={fieldClass} /></label><label className="text-xs font-semibold text-slate-700">Estimated delivery time<input value={deliveryEstimatedTime} onChange={event => setDeliveryEstimatedTime(event.target.value)} placeholder="30-45 mins" className={fieldClass} /></label><label className="text-xs font-semibold text-slate-700 sm:col-span-2">Serviceable PIN codes (optional)<input value={serviceablePincodes} onChange={event => setServiceablePincodes(event.target.value)} placeholder="411001, 411002" className={fieldClass} /></label></div>
+            </div>}
+            {toggleRow('🏪 Walk-in / Store Pickup', 'Customer collects at shop', allowStorePickup, setAllowStorePickup)}
+            {allowStorePickup && <label className="block text-xs font-semibold text-slate-700">Pickup instructions (optional)<textarea value={pickupInstructions} onChange={event => setPickupInstructions(event.target.value)} placeholder="Collect at store counter • 10:00 AM to 09:00 PM" className="premium-input mt-1 min-h-16 w-full" /></label>}
+          </section>}
+
+          {step === 4 && <section className="space-y-4">
+            <div><span className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 04</span><p className="mt-1 text-[10px] font-black uppercase tracking-wider text-orange-700">Garments After-Sales</p><h2 className="text-lg font-bold text-slate-900">🔄 Exchange Settings</h2><p className="text-sm text-slate-500">Set the exchange toggle, days, evidence, reasons and customer policy.</p></div>
+            {toggleRow('Accept exchanges', 'Customers can request an exchange for eligible orders', exchangeEnabled, setExchangeEnabled)}
+            {exchangeEnabled && <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4"><label className="block text-xs font-semibold text-slate-700">Exchange window (days, 1–30)<input type="number" min="1" max="30" value={exchangeWindowDays} onChange={event => setExchangeWindowDays(event.target.value)} className={fieldClass} /></label><label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={exchangeEvidenceRequired} onChange={event => setExchangeEvidenceRequired(event.target.checked)} className="accent-orange-600" />Require item photo evidence</label><label className="block text-xs font-semibold text-slate-700">Allowed exchange reasons (one per line)<textarea value={exchangeReasons} onChange={event => setExchangeReasons(event.target.value)} className="premium-input mt-1 min-h-24 w-full" /></label><label className="block text-xs font-semibold text-slate-700">Customer exchange policy<textarea value={exchangePolicy} onChange={event => setExchangePolicy(event.target.value)} className="premium-input mt-1 min-h-20 w-full" /></label></div>}
+          </section>}
+
+          {step === 5 && <section className="space-y-3">
+            <div><span className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 05</span><h2 className="mt-1 text-lg font-bold text-slate-900">Review and create store</h2></div>
+            <div className="space-y-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-700"><p><b>Owner:</b> {fullName}</p><p><b>Store:</b> {name}</p><p><b>Category:</b> {DEFAULT_CATEGORY}</p><p><b>Verified phone:</b> +91 {phone}</p><p><b>Address:</b> {address}</p><p><b>Home delivery:</b> {allowHomeDelivery ? `ON · min ₹${minDeliveryOrder} · max ${deliveryRadiusKm} km · ${deliveryChargeType === 'FREE' ? 'Free' : deliveryChargeType === 'PER_KM' ? `₹${deliveryPerKmFee}/km` : deliveryChargeType === 'HYBRID' ? `₹${deliveryFlatFee} + ₹${deliveryPerKmFee}/km` : `₹${deliveryFlatFee} flat`} · ${deliveryEstimatedTime}` : 'OFF'}</p><p><b>Walk-in / pickup:</b> {allowStorePickup ? `ON${pickupInstructions ? ` · ${pickupInstructions}` : ''}` : 'OFF'}</p><p><b>Exchange:</b> {exchangeEnabled ? `ON · ${exchangeWindowDays} days · ${exchangeEvidenceRequired ? 'photo evidence required' : 'no evidence required'}` : 'OFF'}</p></div>
+            <p className="text-xs text-slate-500">You can change these settings later from your store dashboard. After creating the store, you’ll add your first product.</p>
+          </section>}
+
+          <div className="flex gap-3 border-t border-slate-100 pt-4">
+            {step > 1 && <button type="button" onClick={() => { setError(''); setStep(current => current - 1) }} className="min-h-12 flex-1 rounded-xl border border-orange-500 px-4 py-3 text-sm font-bold text-orange-700">Back</button>}
+            {step < 5 ? <button type="button" onClick={nextStep} className="min-h-12 flex-1 rounded-xl bg-orange-600 px-4 py-3 text-sm font-bold text-white hover:bg-orange-700">Next →</button> : <button type="submit" disabled={loading} className="min-h-12 flex-1 rounded-xl bg-orange-600 px-4 py-3 text-sm font-bold text-white hover:bg-orange-700 disabled:opacity-60">{loading ? 'Creating store…' : 'Review complete · Create store →'}</button>}
           </div>
-        )}
-
-        {/* --- FORM 1: MOBILE OTP REGISTRATION --- */}
-        {regMode === 'otp' && (
-          <form onSubmit={handleOTPSubmit} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_55px_-30px_rgba(15,23,42,0.3)] sm:p-7">
-            {/* Required Indicator Hint */}
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-[11px] text-slate-400">
-              <span className="font-semibold uppercase tracking-wider text-orange-700">Fast seller setup</span>
-              <span><span className="text-rose-500 font-bold">*</span> Zaroori (Required) fields</span>
-            </div>
-
-            {/* STEP 01: Store Info & Mobile Verification */}
-            <section>
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 01</span>
-                  <h2 className="mt-0.5 text-lg font-bold text-slate-900">Aapki store information</h2>
-                </div>
-                {otpVerified && (
-                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-bold">
-                    ✓ Phone Verified
-                  </span>
-                )}
-              </div>
-
-              {/* Mobile Number & OTP Verification Box */}
-              <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <label className="block text-xs font-semibold text-slate-700">
-                  Mobile Number (for SMS & OTP Verification) <span className="text-rose-500 font-bold">*</span>
-                </label>
-
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <span className="absolute left-3.5 top-3 text-sm font-semibold text-slate-500">+91</span>
-                    <input
-                      value={phone}
-                      onChange={e => { setPhone(e.target.value); setOtpVerified(false); }}
-                      disabled={otpVerified}
-                      required
-                      type="tel"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={10}
-                      placeholder="9876543210"
-                      className="premium-input pl-14 w-full text-base font-semibold"
-                    />
-                  </div>
-                  {!otpVerified && (
-                    <button
-                      type="button"
-                      onClick={handleSendOTP}
-                      disabled={loading || countdown > 0}
-                      className="rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:opacity-60 sm:text-sm"
-                    >
-                      {countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP →'}
-                    </button>
-                  )}
-                </div>
-
-                {/* OTP Entry Box */}
-                {otpSent && !otpVerified && (
-                  <div className="pt-2 flex gap-2 items-center">
-                    <input
-                      value={otp}
-                      onChange={e => {
-                        const val = e.target.value.replace(/\D/g, '').slice(0, 6)
-                        setOtp(val)
-                        if (val.length === 6 && !otpVerified) {
-                          handleVerifyOTP(val)
-                        }
-                      }}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={6}
-                      autoComplete="one-time-code"
-                      placeholder="Enter 6-digit OTP"
-                      className="premium-input flex-1 rounded-xl border-2 border-orange-200 text-center text-lg font-bold tracking-widest focus:border-orange-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleVerifyOTP()}
-                      disabled={loading}
-                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm whitespace-nowrap disabled:opacity-60"
-                    >
-                      {loading ? 'Verifying...' : 'Verify OTP ✓'}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Store Name & Description Inputs */}
-              <div className="mt-4 grid gap-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Store Name <span className="text-rose-500 font-bold">*</span>
-                  </label>
-                  <input
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    required
-                    placeholder="Store name (e.g. Rahul Digital Shop)"
-                    className="premium-input w-full"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Aap kya sell karte hain?
-                    </label>
-                    <span className="text-emerald-700 font-semibold text-[11px] bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
-                      ✓ Auto-selected
-                    </span>
-                  </div>
-
-                  {/* Single Default Auto-Selected Category */}
-                  <div className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/60 p-3.5 shadow-xs">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">👗</span>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">Clothing, Garments & Fashion</p>
-                        <p className="text-xs text-slate-500">Kapde, Readymade, Garments & Fashion</p>
-                      </div>
-                    </div>
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-orange-600 px-2.5 py-1 text-xs font-bold text-white shadow-xs">
-                      ✓ Selected
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Store Address <span className="text-rose-500 font-bold">*</span>
-                    </label>
-                  </div>
-                  <textarea
-                    value={address}
-                    onChange={e => setAddress(e.target.value)}
-                    required
-                    placeholder="Full shop address (e.g. Shop #4, Market Road, Near City Bank)"
-                    className="premium-input min-h-20 w-full"
-                  />
-                  <button
-                    type="button"
-                    onClick={captureStoreLocation}
-                    disabled={locationLoading}
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition-colors"
-                  >
-                    <span>📍</span>
-                    {locationLoading ? 'Locating...' : latitude ? 'Location captured ✓' : 'Current Location'}
-                  </button>
-                  {gpsStatus && (
-                    <p
-                      role="status"
-                      className={`mt-2 text-xs font-medium p-2.5 rounded-xl border transition-all ${
-                        locationLoading
-                          ? 'text-amber-800 bg-amber-50 border-amber-200/80'
-                          : latitude
-                          ? 'text-emerald-800 bg-emerald-50 border-emerald-200/80 font-semibold'
-                          : 'text-slate-600 bg-slate-100 border-slate-200'
-                      }`}
-                    >
-                      {gpsStatus}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            {/* STEP 02: Account Details */}
-            <section className="border-t border-slate-100 pt-6">
-              <span className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 02</span>
-              <h2 className="mt-0.5 text-lg font-bold text-slate-900">Aapka account</h2>
-
-              <div className="mt-4">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Full Name <span className="text-rose-500 font-bold">*</span>
-                </label>
-                <input
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  required
-                  placeholder="Aapka poora naam (e.g. Rahul Kolhe)"
-                  className="premium-input w-full"
-                />
-              </div>
-
-              <div className="mt-3">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-semibold text-slate-700">
-                    Email Address
-                  </label>
-                  <span className="text-slate-400 font-normal text-[11px] bg-slate-100 px-2 py-0.5 rounded-md">
-                    Optional
-                  </span>
-                </div>
-                <input
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  type="email"
-                  placeholder="Optional email address (e.g. rahul@example.com)"
-                  className="premium-input w-full"
-                />
-              </div>
-            </section>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? (
-                <>
-                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  <span>Store ban raha hai...</span>
-                </>
-              ) : (
-                <span>Create my store →</span>
-              )}
-            </button>
-
-            <p className="text-center text-sm text-slate-500">
-              Already account hai?{' '}
-              <Link className="font-semibold text-orange-700 hover:underline" to="/login">
-                Login karein
-              </Link>
-            </p>
-          </form>
-        )}
-
-        {/* --- FORM 2: ORIGINAL EMAIL REGISTRATION (PRESERVED) --- */}
-        {regMode === 'email' && (
-          <form onSubmit={handleEmailSubmit} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_55px_-30px_rgba(15,23,42,0.3)] sm:p-7">
-            {/* Required Indicator Hint */}
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-[11px] text-slate-400">
-              <span className="font-semibold uppercase tracking-wider text-orange-700">Email account setup</span>
-              <span><span className="text-rose-500 font-bold">*</span> Zaroori (Required) fields</span>
-            </div>
-
-            <section>
-              <p className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 01</p>
-              <h2 className="mt-1 text-lg font-bold text-slate-900">Aapki store information</h2>
-              <div className="mt-4 grid gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Store Name <span className="text-rose-500 font-bold">*</span>
-                  </label>
-                  <input
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    required
-                    placeholder="Store name (e.g. Rahul Digital Shop)"
-                    className="premium-input w-full"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Aap kya sell karte hain?
-                    </label>
-                    <span className="text-emerald-700 font-semibold text-[11px] bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md flex items-center gap-1">
-                      ✓ Auto-selected
-                    </span>
-                  </div>
-
-                  {/* Single Default Auto-Selected Category */}
-                  <div className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/60 p-3.5 shadow-xs">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">👗</span>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">Clothing, Garments & Fashion</p>
-                        <p className="text-xs text-slate-500">Kapde, Readymade, Garments & Fashion</p>
-                      </div>
-                    </div>
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-orange-600 px-2.5 py-1 text-xs font-bold text-white shadow-xs">
-                      ✓ Selected
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="border-t border-slate-100 pt-6">
-              <p className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 02</p>
-              <h2 className="mt-1 text-lg font-bold text-slate-900">Aapka account</h2>
-              <div className="mt-4">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Full Name <span className="text-rose-500 font-bold">*</span>
-                </label>
-                <input
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  required
-                  placeholder="Aapka poora naam (e.g. Rahul Kolhe)"
-                  className="premium-input w-full"
-                />
-              </div>
-
-              <div className="mt-3">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Store Address <span className="text-rose-500 font-bold">*</span>
-                </label>
-                <textarea
-                  value={address}
-                  onChange={e => setAddress(e.target.value)}
-                  required
-                  placeholder="Full shop address"
-                  className="premium-input min-h-20 w-full"
-                />
-                <button
-                  type="button"
-                  onClick={captureStoreLocation}
-                  disabled={locationLoading}
-                  className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-white transition-colors"
-                >
-                  <span>📍</span>
-                  {locationLoading ? 'Locating...' : latitude ? 'Location captured ✓' : 'Current Location'}
-                </button>
-                {gpsStatus && (
-                  <p
-                    role="status"
-                    className={`mt-2 text-xs font-medium p-2.5 rounded-xl border transition-all ${
-                      locationLoading
-                        ? 'text-amber-800 bg-amber-50 border-amber-200/80'
-                        : latitude
-                        ? 'text-emerald-800 bg-emerald-50 border-emerald-200/80 font-semibold'
-                        : 'text-slate-600 bg-slate-100 border-slate-200'
-                    }`}
-                  >
-                    {gpsStatus}
-                  </p>
-                )}
-              </div>
-
-              {/* Mobile Number & OTP Verification Box */}
-              <div className="mt-3 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-slate-700">
-                    Mobile Number (SMS & OTP Verification) <span className="text-rose-500 font-bold">*</span>
-                  </label>
-                  {otpVerified && (
-                    <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
-                      ✓ Phone Verified
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <span className="absolute left-3.5 top-3 text-sm font-semibold text-slate-500">+91</span>
-                    <input
-                      value={phone}
-                      onChange={e => { setPhone(e.target.value.replace(/\D/g, '').slice(0, 10)); setOtpVerified(false); }}
-                      disabled={otpVerified}
-                      required
-                      type="tel"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={10}
-                      placeholder="9876543210"
-                      className="premium-input pl-14 w-full text-base font-semibold"
-                    />
-                  </div>
-                  {!otpVerified && (
-                    <button
-                      type="button"
-                      onClick={handleSendOTP}
-                      disabled={loading || countdown > 0}
-                      className="rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:opacity-60 sm:text-sm"
-                    >
-                      {countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP →'}
-                    </button>
-                  )}
-                </div>
-
-                {/* OTP Entry Box */}
-                {otpSent && !otpVerified && (
-                  <div className="pt-2 flex gap-2 items-center">
-                    <input
-                      value={otp}
-                      onChange={e => {
-                        const val = e.target.value.replace(/\D/g, '').slice(0, 6)
-                        setOtp(val)
-                        if (val.length === 6 && !otpVerified) {
-                          handleVerifyOTP(val)
-                        }
-                      }}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={6}
-                      autoComplete="one-time-code"
-                      placeholder="Enter 6-digit OTP"
-                      className="premium-input flex-1 rounded-xl border-2 border-orange-200 text-center text-lg font-bold tracking-widest focus:border-orange-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleVerifyOTP()}
-                      disabled={loading}
-                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm whitespace-nowrap disabled:opacity-60"
-                    >
-                      {loading ? 'Verifying...' : 'Verify OTP ✓'}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Email Address <span className="text-rose-500 font-bold">*</span>
-                  </label>
-                  <input
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    type="email"
-                    placeholder="Email address (e.g. rahul@example.com)"
-                    className="premium-input w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Password <span className="text-rose-500 font-bold">*</span>
-                  </label>
-                  <input
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    minLength={8}
-                    type="password"
-                    placeholder="Password (minimum 8 characters)"
-                    className="premium-input w-full"
-                  />
-                </div>
-              </div>
-            </section>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? (
-                <>
-                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  <span>Store ban raha hai...</span>
-                </>
-              ) : (
-                <span>Create my store →</span>
-              )}
-            </button>
-
-            <p className="text-center text-sm text-slate-500">
-              Already account hai?{' '}
-              <Link className="font-semibold text-orange-700 hover:underline" to="/login">
-                Login karein
-              </Link>
-            </p>
-          </form>
-        )}
+          <p className="text-center text-sm text-slate-500">Already account hai? <Link className="font-semibold text-orange-700 hover:underline" to="/login">Login karein</Link></p>
+        </form>
       </div>
     </main>
   )

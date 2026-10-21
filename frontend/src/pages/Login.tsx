@@ -77,6 +77,8 @@ export default function Login() {
       setSuccessMsg(res.message || 'OTP sent successfully!')
     } catch (err: any) {
       setError(err?.response?.data?.detail || err?.message || 'Failed to send OTP. Try again.')
+      const retryAfter = Number(err?.response?.data?.retry_after || 0)
+      if (retryAfter > 0 && retryAfter <= 60) setCountdown(retryAfter)
     } finally {
       setLoading(false)
     }

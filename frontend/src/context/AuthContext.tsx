@@ -26,7 +26,7 @@ type AuthContextType = {
     store?: { id: number; name: string; slug: string }
     user?: User
   }>
-  registerWithOTP: (data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string }) => Promise<{ user: User; store: { id: number; name: string; slug: string } }>
+  registerWithOTP: (data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string; allow_home_delivery?: boolean; allow_store_pickup?: boolean; min_delivery_order?: number; delivery_radius_km?: number; serviceable_pincodes?: string[]; delivery_charge_type?: string; delivery_flat_fee?: number; delivery_per_km_fee?: number; free_delivery_above?: number; delivery_estimated_time?: string; pickup_instructions?: string; exchange_enabled?: boolean; exchange_window_days?: number; exchange_evidence_required?: boolean; exchange_allowed_reasons?: string[]; exchange_policy?: string }) => Promise<{ user: User; store: { id: number; name: string; slug: string } }>
 }
 
 declare global {
@@ -152,8 +152,9 @@ export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
         throw err
       }
     }
-    await sendMsg91WidgetOtp(phone_number)
     const exists = await api.post('/auth/otp/send/', { phone_number, provider_only: true, purpose })
+    // Ask the server to rate-limit/reserve this send before MSG91 can dispatch it.
+    await sendMsg91WidgetOtp(phone_number)
     return { success: true, message: 'OTP sent to your mobile number.', phone_number, user_exists: Boolean(exists.data.user_exists) }
   }
 
@@ -184,7 +185,7 @@ export const AuthProvider: React.FC<{ children: any }> = ({ children }) => {
     }
   }
 
-  async function registerWithOTP(data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string }): Promise<{ user: User; store: { id: number; name: string; slug: string } }> {
+  async function registerWithOTP(data: { phone_number: string; otp?: string; first_name: string; last_name: string; store_name: string; category?: string; business_type?: string; address?: string; latitude?: number | null; longitude?: number | null; email?: string; allow_home_delivery?: boolean; allow_store_pickup?: boolean; min_delivery_order?: number; delivery_radius_km?: number; serviceable_pincodes?: string[]; delivery_charge_type?: string; delivery_flat_fee?: number; delivery_per_km_fee?: number; free_delivery_above?: number; delivery_estimated_time?: string; pickup_instructions?: string; exchange_enabled?: boolean; exchange_window_days?: number; exchange_evidence_required?: boolean; exchange_allowed_reasons?: string[]; exchange_policy?: string }): Promise<{ user: User; store: { id: number; name: string; slug: string } }> {
     const res = await api.post('/auth/otp/register-complete/', data)
     const resData = res.data
     const { access, refresh, user: userObj } = resData

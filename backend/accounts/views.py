@@ -1,4 +1,5 @@
 import csv
+import hashlib
 from django.http import HttpResponse
 from django.db.models import Sum, Count
 from rest_framework import generics, permissions, status
@@ -7,6 +8,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.core.cache import cache
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
@@ -379,6 +381,27 @@ class SendOTPView(APIView):
         if not clean_phone or len(clean_phone) < 10:
             return Response({'detail': 'Please enter a valid 10-digit mobile number.'}, status=400)
 
+        # Gate the provider call before the browser sends an SMS through MSG91.
+        # PhoneRateThrottle adds a short burst limit; these counters also enforce
+        # a 45-second cooldown and a rolling five-send/24-hour cap per number.
+        phone_key = hashlib.sha256(clean_phone.encode('utf-8')).hexdigest()
+        cooldown_key = f'otp-send-cooldown:{phone_key}'
+        if not cache.add(cooldown_key, 1, timeout=45):
+            return Response({'detail': 'Please wait 45 seconds before requesting another OTP.', 'retry_after': 45}, status=429)
+
+        daily_key = f'otp-send-daily:{phone_key}'
+        if cache.add(daily_key, 1, timeout=24 * 60 * 60):
+            daily_count = 1
+        else:
+            try:
+                daily_count = cache.incr(daily_key)
+            except ValueError:
+                cache.add(daily_key, 1, timeout=24 * 60 * 60)
+                daily_count = 1
+        if daily_count > 5:
+            cache.delete(cooldown_key)
+            return Response({'detail': 'Daily OTP limit reached for this number (maximum 5 per 24 hours). Please try again later.', 'retry_after': 24 * 60 * 60}, status=429)
+
         user_exists = User.objects.filter(phone_number=clean_phone).exists()
 
         # Duplicate number validation for registration flow
@@ -486,10 +509,43 @@ class OTPRegisterCompleteView(APIView):
         latitude = request.data.get('latitude')
         longitude = request.data.get('longitude')
         email = request.data.get('email', '').strip().lower()
+        allow_home_delivery = request.data.get('allow_home_delivery', True)
+        allow_store_pickup = request.data.get('allow_store_pickup', True)
+        min_delivery_order = request.data.get('min_delivery_order', 0)
+        delivery_radius_km = request.data.get('delivery_radius_km', 10)
+        serviceable_pincodes = request.data.get('serviceable_pincodes', [])
+        delivery_charge_type = request.data.get('delivery_charge_type', 'FIXED')
+        delivery_flat_fee = request.data.get('delivery_flat_fee', 0)
+        delivery_per_km_fee = request.data.get('delivery_per_km_fee', 0)
+        free_delivery_above = request.data.get('free_delivery_above', 0)
+        delivery_estimated_time = request.data.get('delivery_estimated_time', '30-45 mins')
+        pickup_instructions = request.data.get('pickup_instructions', '')
+        exchange_enabled = request.data.get('exchange_enabled', False)
+        exchange_window_days = request.data.get('exchange_window_days', 7)
+        exchange_evidence_required = request.data.get('exchange_evidence_required', True)
+        exchange_allowed_reasons = request.data.get('exchange_allowed_reasons', [])
+        exchange_policy = request.data.get('exchange_policy', 'Item must be unused, unwashed and have original tags attached.')
 
         clean_phone = normalize_phone(phone_number)
         if not clean_phone or len(clean_phone) < 10:
             return Response({'detail': 'Valid 10-digit phone number is required.'}, status=400)
+
+        try:
+            exchange_window_days = int(exchange_window_days)
+        except (TypeError, ValueError):
+            return Response({'detail': 'Exchange window must be between 1 and 30 days.'}, status=400)
+        if exchange_enabled and not 1 <= exchange_window_days <= 30:
+            return Response({'detail': 'Exchange window must be between 1 and 30 days.'}, status=400)
+        if delivery_charge_type not in {'FREE', 'FIXED', 'PER_KM', 'HYBRID'}:
+            return Response({'detail': 'Select a valid delivery charge type.'}, status=400)
+        if allow_home_delivery and float(delivery_radius_km or 0) <= 0:
+            return Response({'detail': 'Delivery radius must be greater than 0 km.'}, status=400)
+        if not allow_home_delivery and not allow_store_pickup:
+            return Response({'detail': 'Enable home delivery or store pickup.'}, status=400)
+        if not isinstance(exchange_allowed_reasons, list):
+            return Response({'detail': 'Exchange reasons must be a list.'}, status=400)
+        if not isinstance(serviceable_pincodes, list):
+            return Response({'detail': 'Serviceable PIN codes must be a list.'}, status=400)
 
         # Registration is allowed if OTP proof verified OR user is logged in session OR valid OTP provided.
         verified = PhoneOTP.objects.filter(
@@ -581,6 +637,22 @@ class OTPRegisterCompleteView(APIView):
                 latitude=latitude or None,
                 longitude=longitude or None,
                 phone_number=clean_phone,
+                allow_home_delivery=allow_home_delivery,
+                allow_store_pickup=allow_store_pickup,
+                min_delivery_order=min_delivery_order,
+                delivery_radius_km=delivery_radius_km,
+                serviceable_pincodes=[str(pin).strip() for pin in serviceable_pincodes if str(pin).strip().isdigit() and len(str(pin).strip()) == 6][:500],
+                delivery_charge_type=delivery_charge_type,
+                delivery_flat_fee=delivery_flat_fee,
+                delivery_per_km_fee=delivery_per_km_fee,
+                free_delivery_above=free_delivery_above,
+                delivery_estimated_time=str(delivery_estimated_time or '30-45 mins')[:100],
+                pickup_instructions=str(pickup_instructions or ''),
+                exchange_enabled=exchange_enabled,
+                exchange_window_days=exchange_window_days,
+                exchange_evidence_required=exchange_evidence_required,
+                exchange_allowed_reasons=[str(reason).strip()[:120] for reason in exchange_allowed_reasons if str(reason).strip()][:12],
+                exchange_policy=str(exchange_policy or '')[:5000],
                 status=Store.STATUS_PUBLISHED,
                 is_published=True,
                 manage_in_app=True,

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
@@ -15,6 +15,7 @@ const errorMessage = (error: any) =>
 
 export default function SellerCatalog() {
   const { storeId } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
 
@@ -147,6 +148,13 @@ export default function SellerCatalog() {
   useEffect(() => {
     loadData()
   }, [storeId])
+
+  useEffect(() => {
+    if (searchParams.get('add') === '1') {
+      setShowAddModal(true)
+      setSearchParams(params => { params.delete('add'); return params }, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   const getProdCategoryId = (prod: any) => {
     if (!prod || !prod.category) return null

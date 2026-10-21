@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { ArrowLeft, ShieldCheck } from 'lucide-react'
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -9,14 +9,19 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 )
 
-const PrivacyPolicy: React.FC = () => (
+const PrivacyPolicy: React.FC = () => {
+  const location = useLocation()
+  const sellerMatch = location.pathname.match(/^\/stores\/([^/]+)\/privacy-policy$/)
+  const backTo = sellerMatch ? `/stores/${sellerMatch[1]}/manage` : '/customer-home'
+
+  return (
   <div className="min-h-screen bg-slate-50 text-slate-800">
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link to="/customer-home" className="flex items-center gap-2 text-sm font-bold text-slate-700 hover:text-orange-600">
+        <Link to={backTo} className="flex items-center gap-2 text-sm font-bold text-slate-700 hover:text-orange-600">
           <ArrowLeft className="h-4 w-4" /> Back
         </Link>
-        <Link to="/customer-home" aria-label="Apani Dukan home">
+        <Link to={backTo} aria-label="Apani Dukan home">
           <img src="/apanidukan-customer-logo.png" alt="Apani Dukan" className="h-8 w-auto object-contain" />
         </Link>
       </div>
@@ -30,7 +35,7 @@ const PrivacyPolicy: React.FC = () => (
           </span>
           <h1 className="mt-4 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">Privacy Policy</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            This policy explains how Apani Dukan handles information when people discover stores, place orders, or run a seller storefront on our platform.
+            This policy explains how Apani Dukan handles information when people discover stores, place orders, or run a seller storefront on our platform. Sellers can review the responsibilities that apply when they receive customer and order information.
           </p>
           <p className="mt-4 text-xs font-medium text-slate-500"><strong>Effective and updated:</strong> 21 October 2026</p>
         </div>
@@ -116,5 +121,7 @@ const PrivacyPolicy: React.FC = () => (
     <footer className="py-6 text-center text-xs text-slate-500">© 2026 Apani Dukan · Connecting customers with independent local sellers</footer>
   </div>
 )
+
+}
 
 export default PrivacyPolicy

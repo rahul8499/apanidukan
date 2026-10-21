@@ -206,6 +206,7 @@ function AppContent() {
           <Route path="/stores/:storeId/requests" element={<ProtectedRoute><SellerRequests /></ProtectedRoute>} />
           <Route path="/stores/:storeId/analytics" element={<ProtectedRoute><SellerAnalytics /></ProtectedRoute>} />
           <Route path="/stores/:storeId/subscription" element={<ProtectedRoute><SellerSubscription /></ProtectedRoute>} />
+          <Route path="/stores/:storeId/privacy-policy" element={<ProtectedRoute><PrivacyPolicy /></ProtectedRoute>} />
           <Route path="/stores/:storeId/coupons" element={<ProtectedRoute><SellerCoupons /></ProtectedRoute>} />
           <Route path="/stores/:storeId/delivery-team" element={<ProtectedRoute><SellerDeliveryTeam /></ProtectedRoute>} />
           <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />

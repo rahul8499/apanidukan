@@ -36,6 +36,7 @@ import {
   Phone,
   Sparkles,
   ShieldCheck,
+  FileText,
   Zap,
   User,
   Edit3,
@@ -1340,6 +1341,23 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               </a>
             </div>
           </div>
+
+          <Link
+            to={`/stores/${store.id}/privacy-policy`}
+            onClick={() => setIsSettingsOpen(false)}
+            className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 shadow-xs transition-colors hover:border-seller-300 hover:bg-seller-50/50"
+          >
+            <span className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-seller-100 bg-seller-50 text-seller-700">
+                <FileText className="h-4 w-4" />
+              </span>
+              <span>
+                <span className="block font-semibold text-slate-900">Privacy Policy</span>
+                <span className="mt-0.5 block text-[10px] font-medium text-slate-500">How Apani Dukan handles seller and customer data</span>
+              </span>
+            </span>
+            <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+          </Link>
 
           {/* 10. 💳 ACTIVE SUBSCRIPTION */}
           <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 shadow-xs">

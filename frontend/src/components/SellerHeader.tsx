@@ -614,36 +614,32 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
       {/* Slide-over Clean Premium Mobile-Native App & Web Settings Sidebar Drawer */}
       <aside
-        className={`fixed top-0 right-0 z-[110] h-full w-full sm:w-96 sm:max-w-[92vw] bg-slate-50 text-slate-900 border-l border-slate-200/90 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 z-[110] h-full w-full sm:w-96 sm:max-w-[92vw] bg-slate-50 text-slate-900 border-l border-slate-200 shadow-xl transition-transform duration-300 ease-in-out flex flex-col ${isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
-        {/* Ultra-Premium Mobile App Header with Store Identity */}
-        <div className="relative shrink-0 overflow-hidden bg-slate-950 px-4 sm:px-5 py-4 text-white border-b border-slate-800 shadow-md">
-          {/* Subtle Ambient Glow */}
-          <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-seller-500/20 blur-2xl pointer-events-none" />
-
-          <div className="relative z-10 flex items-center justify-between">
+        {/* Store identity and drawer controls */}
+        <div className="shrink-0 bg-white px-4 sm:px-5 py-3.5 text-slate-900 border-b border-slate-200">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              {/* Mobile Close Button */}
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white active:scale-95 transition-all cursor-pointer border border-white/10 shrink-0"
+                aria-label="Close sidebar"
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 active:scale-95 transition-colors cursor-pointer border border-slate-200 shrink-0"
               >
                 <X className="h-5 w-5" />
               </button>
 
-              <div className="relative shrink-0">
-                <img src="/apanidukan.png" alt="Apani Dukan" className="h-12 sm:h-14 w-auto scale-110 sm:scale-125 origin-left" />
-                <span className={`absolute bottom-0 -right-2 h-3 w-3 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-emerald-400' : 'bg-seller-400'}`} />
+              <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                <img src="/customer-icon-512.png" alt="Apani Dukan" className="h-8 w-8 object-contain" />
               </div>
 
-              <div className="min-w-0 ml-3 sm:ml-4">
-                <h2 className="font-black text-sm text-white truncate tracking-tight">{store.name}</h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.2 rounded-full border ${store.is_published ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-seller-500/20 text-seller-300 border-seller-500/30'
+              <div className="min-w-0">
+                <h2 className="font-bold text-sm text-slate-900 truncate tracking-tight">{store.name}</h2>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${store.is_published ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'
                     }`}>
-                    {store.is_published ? '● Live Online' : '○ Draft Mode'}
+                    {store.is_published ? 'Live' : 'Draft'}
                   </span>
                 </div>
               </div>
@@ -654,7 +650,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <Link
                   to={`/s/${store.slug}`}
                   target="_blank"
-                  className="flex h-8 px-2.5 items-center justify-center gap-1 rounded-xl bg-seller-600/80 text-white text-[11px] font-bold hover:bg-seller-600 active:scale-95 transition-all cursor-pointer border border-seller-500/30"
+                  className="flex h-9 px-3 items-center justify-center gap-1.5 rounded-xl border border-seller-200 bg-seller-50 text-seller-700 text-xs font-semibold hover:bg-seller-100 active:scale-95 transition-colors cursor-pointer"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Store</span>
@@ -665,7 +661,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
         </div>
 
         {/* Drawer Content Body — Organized High-Density Layout */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-slate-50">
 
           {/* 1. PWA Install Button */}
           <InstallAppButton storeSlug={store?.slug} variant="drawer_item" />
@@ -677,22 +673,22 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               setIsSettingsOpen(false)
               setShowOnboardingModal(true)
             }}
-            className="w-full flex items-center justify-between rounded-2xl border border-seller-200/90 bg-gradient-to-r from-seller-50 to-seller-50 p-3 text-xs font-black text-seller-950 hover:border-seller-300 transition-all cursor-pointer shadow-xs"
+            className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-800 hover:border-seller-300 hover:bg-seller-50/50 transition-colors cursor-pointer shadow-xs"
           >
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-seller-600 text-white text-sm font-bold shadow-xs">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-seller-50 text-seller-700 text-sm font-bold border border-seller-100">
                 📖
               </span>
               <div className="text-left">
-                <p className="font-black text-seller-950">Store Setup Guide & Tour</p>
-                <p className="text-[10px] text-seller-700 font-semibold">दुकान कशी वापरावी ते शिका (मार्गदर्शक)</p>
+                <p className="font-semibold text-slate-900">Store Setup Guide & Tour</p>
+                <p className="text-[10px] text-slate-500 font-medium">दुकान कशी वापरावी ते शिका (मार्गदर्शक)</p>
               </div>
             </div>
-            <span className="rounded-full bg-seller-600 px-2 py-0.5 text-[9px] font-black text-white">OPEN</span>
+            <span className="rounded-full bg-seller-50 border border-seller-100 px-2 py-0.5 text-[9px] font-bold text-seller-700">OPEN</span>
           </button>
 
           {/* 2. 🏪 STORE PROFILE & IDENTITY */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-3 shadow-xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-seller-600" />
@@ -787,7 +783,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5 shadow-xs">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 shadow-xs">
             <p className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 px-1 flex items-center gap-1.5">
               <FolderKanban className="h-3.5 w-3.5 text-seller-600" />
               <span>{t('workspaceModules')}</span>
@@ -841,7 +837,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 4. 🚚 CHECKOUT FULFILLMENT & DELIVERY MODES */}
-          <div className="rounded-xl border border-seller-200/90 bg-gradient-to-br from-seller-50/60 to-seller-50/40 p-3 space-y-2.5 shadow-2xs">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between border-b border-seller-100/80 pb-1.5">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-wider text-seller-600">{t('checkoutFulfillment')}</p>
@@ -852,7 +848,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               </div>
               <div className="flex items-center gap-1.5">
                 {isUpdatingDeliverySettings && (
-                  <span className="text-[9px] font-extrabold text-seller-600 animate-pulse">Saving...</span>
+                  <span className="text-[9px] font-semibold text-seller-700">Saving...</span>
                 )}
                 <button
                   type="button"
@@ -871,8 +867,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
             <div className="space-y-2">
               {/* Home Delivery Card */}
-              <div className={`rounded-xl p-2.5 border transition-all shadow-2xs ${allowHomeDelivery
-                ? 'bg-white border-emerald-300 ring-1 ring-emerald-400/20'
+              <div className={`rounded-lg p-2.5 border transition-colors ${allowHomeDelivery
+                ? 'bg-white border-slate-200'
                 : 'bg-slate-100/70 border-slate-200 opacity-75'
                 }`}>
                 <div className="flex items-center justify-between">
@@ -948,8 +944,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               </div>
 
               {/* Walk-in Store Pickup Card */}
-              <div className={`rounded-xl p-2.5 border transition-all shadow-2xs ${allowStorePickup
-                ? 'bg-white border-emerald-300 ring-1 ring-emerald-400/20'
+              <div className={`rounded-lg p-2.5 border transition-colors ${allowStorePickup
+                ? 'bg-white border-slate-200'
                 : 'bg-slate-100/70 border-slate-200 opacity-75'
                 }`}>
                 <div className="flex items-center justify-between">
@@ -993,7 +989,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 5. 🚀 SELLER NAVIGATION & MARKETING TOOLS */}
-          <div className="rounded-2xl border-2 border-seller-300 bg-gradient-to-br from-seller-50 to-white p-3.5 shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-wider text-seller-600">Garments After-Sales</p>
@@ -1006,7 +1002,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 5. 🚀 SELLER NAVIGATION & MARKETING TOOLS */}
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5 shadow-2xs">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 shadow-xs">
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1">
               <ShieldCheck className="h-3.5 w-3.5 text-seller-600" />
               <span>{t('sellerNavMarketing')}</span>
@@ -1053,15 +1049,15 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 6. 👑 PRO ENTERPRISE SUITE (GOLD VIP) */}
-          <div className="rounded-2xl border border-seller-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-seller-950/50 p-3.5 space-y-3 shadow-lg relative overflow-hidden text-white">
-            <div className="flex items-center justify-between border-b border-seller-500/30 pb-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg text-slate-950 font-black text-xs shadow-xs">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-50 text-amber-700 font-bold text-xs border border-amber-100">
                   👑
                 </span>
-                <span className="font-black text-xs text-seller-300 tracking-wide uppercase">{t('proEnterprise')}</span>
+                <span className="font-bold text-xs text-slate-800 tracking-wide uppercase">{t('proEnterprise')}</span>
               </div>
-              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-seller-500/20 text-seller-300 border border-seller-500/40">
+              <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
                 {t('vipSuite')}
               </span>
             </div>
@@ -1074,45 +1070,45 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   setIsSettingsOpen(false)
                   setIsLangModalOpen(true)
                 }}
-                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-seller-500/20 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-seller-400/50 hover:border-seller-300 transition-all cursor-pointer shadow-md"
+                className="w-full group flex items-center justify-between rounded-lg bg-white p-2.5 sm:p-3 text-xs font-semibold text-slate-800 border border-slate-200 hover:border-seller-300 hover:bg-seller-50/50 transition-colors cursor-pointer"
               >
                 <span className="flex items-center gap-2.5">
-                  <Globe className="h-4 w-4 text-seller-400 shrink-0" />
-                  <span className="font-extrabold text-seller-200">{t('switchLangTitle')}</span>
+                  <Globe className="h-4 w-4 text-seller-600 shrink-0" />
+                  <span className="font-semibold text-slate-800">{t('switchLangTitle')}</span>
                 </span>
-                <span className="text-[10px] font-black text-seller-400 flex items-center gap-0.5">
+                <span className="text-[10px] font-semibold text-seller-700 flex items-center gap-0.5">
                   <span>{t('change')}</span> ➔
                 </span>
               </button>
 
               {/* 1. Hindi Voice Soundbox Toggle */}
-              <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gradient-to-r from-seller-500/20 via-slate-900 to-slate-950 border border-seller-400/50 text-white shadow-md">
+              <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-white border border-slate-200 text-slate-800">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-sm shadow-sm ${soundboxOn ? 'bg-gradient-to-tr from-seller-500 to-seller-400 text-slate-950 shadow-seller-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
-                    {soundboxOn ? <Volume2 className="h-4.5 w-4.5 text-slate-950 font-black" /> : <VolumeX className="h-4.5 w-4.5 text-slate-400" />}
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-bold text-sm ${soundboxOn ? 'bg-seller-50 text-seller-700 border border-seller-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                    {soundboxOn ? <Volume2 className="h-4.5 w-4.5" /> : <VolumeX className="h-4.5 w-4.5" />}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-black text-white truncate">{t('hindiVoiceSoundbox')}</p>
-                      <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-gradient-to-r from-seller-500 to-seller-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                      <p className="text-xs font-semibold text-slate-900 truncate">{t('hindiVoiceSoundbox')}</p>
+                      <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-0.5 shrink-0">
                         <Crown className="h-2 w-2" /> PRO
                       </span>
                     </div>
-                    <p className="text-[10px] text-seller-200/90 font-medium truncate">{t('speaksLiveOrders')}</p>
+                    <p className="text-[10px] text-slate-500 font-medium truncate">{t('speaksLiveOrders')}</p>
                   </div>
                 </div>
 
                 {/* Switch Toggle Button + Status Label */}
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${soundboxOn ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
+                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${soundboxOn ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
                     {soundboxOn ? 'ON' : 'OFF'}
                   </span>
                   <button
                     type="button"
                     onClick={toggleSoundbox}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-emerald-500 shadow-emerald-500/30 shadow-md' : 'bg-slate-700'}`}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundboxOn ? 'bg-seller-600' : 'bg-slate-300'}`}
                   >
-                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-5' : 'translate-x-0'}`} />
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${soundboxOn ? 'translate-x-5' : 'translate-x-0'}`} />
                   </button>
                 </div>
               </div>
@@ -1124,13 +1120,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   setIsSettingsOpen(false)
                   setShowThemeModal(true)
                 }}
-                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-seller-500/15 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-seller-500/40 hover:border-seller-300 transition-all cursor-pointer shadow-md"
+                className="w-full group flex items-center justify-between rounded-lg bg-white p-2.5 sm:p-3 text-xs font-semibold text-slate-800 border border-slate-200 hover:border-seller-300 hover:bg-seller-50/50 transition-colors cursor-pointer"
               >
                 <span className="flex items-center gap-2.5">
-                  <Palette className="h-4 w-4 text-seller-400 shrink-0" />
-                  <span className="font-extrabold text-white">{t('storeThemeCustomizer')}</span>
+                  <Palette className="h-4 w-4 text-seller-600 shrink-0" />
+                  <span className="font-semibold text-slate-800">{t('storeThemeCustomizer')}</span>
                 </span>
-                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-seller-500 to-seller-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-0.5 shrink-0">
                   <Crown className="h-2.5 w-2.5" /> PRO
                 </span>
               </button>
@@ -1142,13 +1138,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   setIsSettingsOpen(false)
                   setShowPosterModal(true)
                 }}
-                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-seller-900/40 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-seller-400/40 hover:border-seller-300 transition-all shadow-md cursor-pointer text-left"
+                className="w-full group flex items-center justify-between rounded-lg bg-white p-2.5 sm:p-3 text-xs font-semibold text-slate-800 border border-slate-200 hover:border-seller-300 hover:bg-seller-50/50 transition-colors cursor-pointer text-left"
               >
                 <span className="flex items-center gap-2.5">
-                  <ImageIcon className="h-4 w-4 text-seller-400 shrink-0" />
+                  <ImageIcon className="h-4 w-4 text-seller-600 shrink-0" />
                   <span>{t('aiPosterGenerator')}</span>
                 </span>
-                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-seller-500 to-seller-500 text-white shadow-xs flex items-center gap-0.5 shrink-0">
+                <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-0.5 shrink-0">
                   <Crown className="h-2.5 w-2.5" /> PRO
                 </span>
               </button>
@@ -1158,14 +1154,14 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 type="button"
                 disabled
                 title="AI Copilot is currently locked."
-                className="w-full flex items-center justify-between rounded-xl bg-slate-900/40 p-2.5 sm:p-3 text-xs font-bold text-slate-500 border border-slate-800 opacity-60 cursor-not-allowed text-left"
+                className="w-full flex items-center justify-between rounded-lg bg-slate-50 p-2.5 sm:p-3 text-xs font-medium text-slate-500 border border-slate-200 opacity-70 cursor-not-allowed text-left"
               >
                 <span className="flex items-center gap-2.5">
                   <Sparkles className="h-4 w-4 text-slate-500 shrink-0" />
                   <span>{t('aiSalesCopilot')}</span>
                 </span>
-                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-seller-400 border border-slate-700 flex items-center gap-1 shrink-0">
-                  <Lock className="h-2.5 w-2.5 text-seller-400" /> Locked
+                <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 flex items-center gap-1 shrink-0">
+                  <Lock className="h-2.5 w-2.5 text-slate-500" /> Locked
                 </span>
               </button>
 
@@ -1174,21 +1170,21 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 type="button"
                 disabled
                 title="Custom Domain mapping is currently locked."
-                className="w-full flex items-center justify-between rounded-xl bg-slate-900/40 p-2.5 sm:p-3 text-xs font-bold text-slate-500 border border-slate-800 opacity-60 cursor-not-allowed text-left"
+                className="w-full flex items-center justify-between rounded-lg bg-slate-50 p-2.5 sm:p-3 text-xs font-medium text-slate-500 border border-slate-200 opacity-70 cursor-not-allowed text-left"
               >
                 <div className="flex items-center gap-2.5">
                   <Globe className="h-4 w-4 text-slate-500 shrink-0" />
                   <span>{t('customDomainBrand')}</span>
                 </div>
-                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-seller-400 border border-slate-700 flex items-center gap-1 shrink-0">
-                  <Lock className="h-2.5 w-2.5 text-seller-400" /> Locked
+                <span className="text-[8px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 flex items-center gap-1 shrink-0">
+                  <Lock className="h-2.5 w-2.5 text-slate-500" /> Locked
                 </span>
               </button>
             </div>
           </div>
 
           {/* 7. ⚙️ STORE PREFERENCES & VISIBILITY (MANAGE APP MODE) */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-3 shadow-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div>
@@ -1210,7 +1206,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   type="button"
                   onClick={() => toggleManageInApp(true)}
                   className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${store.manage_in_app
-                    ? 'bg-emerald-600 text-white shadow-xs'
+                    ? 'bg-seller-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                     }`}
                 >
@@ -1221,7 +1217,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   type="button"
                   onClick={() => toggleManageInApp(false)}
                   className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${!store.manage_in_app
-                    ? 'bg-slate-800 text-white shadow-xs'
+                    ? 'bg-seller-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                     }`}
                 >
@@ -1248,7 +1244,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               >
                 {store.is_published ? (
                   <>
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
                     <span>{t('liveClickToDraft')}</span>
                   </>
                 ) : (
@@ -1262,7 +1258,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 8. 🔔 REAL-TIME PUSH ALERTS */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-2.5 shadow-xs">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-seller-600" />
@@ -1298,7 +1294,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 9. 🎧 PLATFORM TECHNICAL SUPPORT */}
-          <div className="rounded-2xl border border-seller-100 bg-gradient-to-br from-seller-50/60 to-seller-50/40 p-3.5 space-y-2.5 shadow-xs">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-seller-600" />
@@ -1346,26 +1342,26 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 10. 💳 ACTIVE SUBSCRIPTION */}
-          <div className="rounded-2xl border border-seller-500/30 bg-slate-950 p-3.5 space-y-2.5 shadow-md text-white">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Crown className="h-4 w-4 text-seller-400" />
-                <span className="text-xs font-black uppercase text-seller-200">{t('activeSubscription')}</span>
+                <Crown className="h-4 w-4 text-amber-600" />
+                <span className="text-xs font-bold uppercase text-slate-800">{t('activeSubscription')}</span>
               </div>
-              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-seller-400/20 text-seller-300 border border-seller-400/30">
+              <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
                 {subStatus?.plan_name || 'PREMIUM'} PLAN
               </span>
             </div>
             <Link
               to={`/stores/${store.id}/subscription`}
               onClick={() => setIsSettingsOpen(false)}
-              className="w-full flex items-center justify-between rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 p-2.5 text-xs font-bold text-white transition-all shadow-2xs"
+              className="w-full flex items-center justify-between rounded-lg bg-slate-50 hover:bg-seller-50 border border-slate-200 p-2.5 text-xs font-semibold text-slate-800 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-seller-300" />
+                <CreditCard className="h-4 w-4 text-seller-600" />
                 <span>{t('managePlan')}</span>
               </div>
-              <span className="text-[10px] font-extrabold text-seller-300">Open ➔</span>
+              <span className="text-[10px] font-bold text-seller-700">Open ➔</span>
             </Link>
           </div>
 
@@ -1377,7 +1373,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 setIsSettingsOpen(false)
                 setShowQrModal(true)
               }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-seller-600 to-seller-600 py-2.5 text-xs font-black text-white hover:from-seller-500 hover:to-seller-500 active:scale-98 transition-all shadow-md cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-seller-600 py-2.5 text-xs font-semibold text-white hover:bg-seller-700 active:scale-[0.99] transition-colors shadow-xs cursor-pointer"
             >
               <span>{t('printQrStandee')}</span>
             </button>

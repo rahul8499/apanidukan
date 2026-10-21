@@ -19,15 +19,15 @@ export default function CustomerAppHeader({
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-40 border-b border-slate-200/70 bg-white/95 shadow-xs backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3.5 py-2.5 sm:px-6 sm:py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
           <Link to="/customer-home" className="flex items-center gap-2 group cursor-pointer" aria-label="Apani Dukan Home">
             <img
               src="/apanidukan-customer-logo.png"
               alt="Apani Dukan"
-              className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-102"
+              className="h-7 w-auto max-w-[148px] object-contain transition-transform group-hover:scale-102 sm:h-9 sm:max-w-none"
             />
           </Link>
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {showInstall && <InstallAppButton customerApp variant="header_pill" />}
 
             {/* Favorite Stores Button */}

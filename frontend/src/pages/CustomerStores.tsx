@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
   ChevronRight,
   Compass,
+  ChevronDown,
   ExternalLink,
+  Filter,
   LocateFixed,
   MapPin,
   Navigation,
@@ -13,7 +15,8 @@ import {
   ShieldCheck,
   Star,
   Store as StoreIcon,
-  Truck
+  Truck,
+  X
 } from 'lucide-react'
 import api from '../services/api'
 import CustomerAppBottomNav from '../components/CustomerAppBottomNav'
@@ -37,6 +40,7 @@ export default function CustomerStores() {
   const [showCustomRadius, setShowCustomRadius] = useState(false)
   const [fulfilment, setFulfilment] = useState<FulfilmentFilter>('all')
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [locationLabel, setLocationLabel] = useState('')
   const [loading, setLoading] = useState(true)
   const isInitialLoad = useRef(true)
   const [locating, setLocating] = useState(false)
@@ -45,6 +49,23 @@ export default function CustomerStores() {
   const [isShowingFallback, setIsShowingFallback] = useState(false)
   const { favorites, isFavorite, toggleFavorite } = useCustomerFavorites()
   const [onlyFavorites, setOnlyFavorites] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+
+  async function resolveLocationLabel(coords: { latitude: number; longitude: number }) {
+    try {
+      const response = await api.get('/public/reverse-geocode/', {
+        params: { lat: coords.latitude, lng: coords.longitude }
+      })
+      const fullAddress = String(response.data?.display_name || '').trim()
+      const area = fullAddress.split(',').map((part: string) => part.trim()).filter(Boolean).slice(0, 2).join(', ')
+      if (area) {
+        setLocationLabel(area)
+        localStorage.setItem('customer-location-label', area)
+      }
+    } catch {
+      // Keep the saved label, if any; coordinates still power nearby store search.
+    }
+  }
 
   async function loadStores(
     nextLocation: typeof location,
@@ -106,6 +127,9 @@ export default function CustomerStores() {
       try {
         const parsed = JSON.parse(saved)
         setLocation(parsed)
+        const savedLabel = localStorage.getItem('customer-location-label') || ''
+        setLocationLabel(savedLabel)
+        if (!savedLabel) resolveLocationLabel(parsed)
         loadStores(parsed, '', initialRadius)
         return
       } catch {
@@ -118,10 +142,6 @@ export default function CustomerStores() {
   }, [])
 
   function selectNearby() {
-    if (location) {
-      loadStores(location, category, radius)
-      return
-    }
     if (!navigator.geolocation) {
       setError('Is device par location support nahi hai. Sabhi verified stores dikhaye ja rahe hain.')
       loadStores(null, category, radius)
@@ -133,6 +153,8 @@ export default function CustomerStores() {
         const nextLocation = { latitude: Number(coords.latitude.toFixed(6)), longitude: Number(coords.longitude.toFixed(6)) }
         localStorage.setItem('customer-location', JSON.stringify(nextLocation))
         setLocation(nextLocation)
+        setLocationLabel('Current location')
+        resolveLocationLabel(nextLocation)
         setLocating(false)
         setShowLocationPrompt(false)
         loadStores(nextLocation, category, radius)
@@ -208,133 +230,127 @@ export default function CustomerStores() {
     })
   }, [fulfilment, search, stores, onlyFavorites, isFavorite])
 
+  const activeFilterCount = Number(onlyFavorites) + Number(fulfilment !== 'all') + Number(!!category) + Number(radius !== 10)
+
   if (loading && isInitialLoad.current) return <SellerSplashLoader variant="customer" />
 
   return (
     <main className="min-h-screen bg-[#f8fafc] pt-16 sm:pt-18 pb-24 text-slate-950">
       <CustomerAppHeader subtitle="Explore all stores" />
 
-      <div className="mx-auto max-w-6xl px-3.5 py-3 sm:px-6 sm:py-4">
-        {/* Instant Search Bar */}
-        <div className="relative mb-2.5">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search store name, area, category..."
-            className="w-full rounded-2xl border border-slate-200/90 bg-white py-2.5 pl-10 pr-3 text-xs font-bold text-slate-900 shadow-xs outline-none ring-2 ring-transparent transition focus:border-orange-400 focus:ring-orange-300"
-          />
-        </div>
+      <div className="mx-auto max-w-6xl px-3 py-2 sm:px-6 sm:py-4">
+        {/* Current delivery area, shown above search */}
+        <button
+          type="button"
+          onClick={selectNearby}
+          disabled={locating}
+          className="mb-1.5 flex min-w-0 items-center gap-2 rounded-lg py-1 text-left disabled:opacity-60"
+          aria-label="Detect or change current location"
+        >
+          <MapPin className="h-4 w-4 shrink-0 fill-orange-500 text-orange-600" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[9px] font-semibold uppercase tracking-wide text-slate-500">Delivering near</span>
+            <span className="block truncate text-xs font-extrabold text-slate-900">{locating ? 'Detecting your location…' : locationLabel || (location ? 'Current location' : 'Choose your location')}</span>
+          </span>
+          <span className="shrink-0 text-[10px] font-bold text-orange-600">Change</span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+        </button>
 
-        {/* Nearby distance selector */}
-        <div className="relative mb-3 rounded-2xl bg-white p-1.5 shadow-xs border border-slate-200/80">
+        {/* Search and filters */}
+        <div className="mb-2 flex min-w-0 items-center gap-2">
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search store name, area, category..."
+              className="w-full rounded-xl border border-slate-200/90 bg-white py-2.5 pl-10 pr-3 text-sm font-semibold text-slate-900 shadow-xs outline-none ring-2 ring-transparent transition placeholder:font-medium placeholder:text-slate-400 focus:border-orange-400 focus:ring-orange-100"
+            />
+          </div>
           <button
             type="button"
-            onClick={selectNearby}
-            disabled={locating}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black text-orange-600 hover:bg-orange-50"
+            onClick={() => setShowFilters(true)}
+            className="relative flex h-[42px] shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-xs transition hover:border-orange-200 hover:text-orange-600"
+            aria-expanded={showFilters}
+            aria-label={activeFilterCount ? `Open filters, ${activeFilterCount} active` : 'Open store filters'}
           >
-            <LocateFixed className="h-4 w-4" />
-            {locating ? 'Locating...' : 'Change location'}
+            <Filter className="h-4 w-4 text-orange-600" />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[9px] font-extrabold leading-none text-white">{activeFilterCount}</span>
+            )}
           </button>
-          <div className="relative mt-1 flex items-center gap-1 rounded-xl bg-slate-100 p-0.5">
-            {[2, 5, 10, 20].map((value) => <button key={value} type="button" aria-pressed={radius === value} onClick={() => chooseRadius(value)} className={`min-w-0 flex-1 rounded-lg px-1 py-1.5 text-[10px] font-black transition sm:text-[11px] ${radius === value ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-orange-600'}`}>{value} km</button>)}
-            <button type="button" aria-expanded={showCustomRadius} onClick={() => setShowCustomRadius(value => !value)} className={`shrink-0 rounded-lg px-2 py-1.5 text-[10px] font-black transition-colors ${showCustomRadius ? 'bg-orange-500 text-white' : 'text-orange-600 hover:bg-white'}`}>Custom</button>
-            {showCustomRadius && <div className="absolute right-0 top-full z-40 mt-2 w-60 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl" role="group" aria-label="Set custom search radius"><label htmlFor="stores-custom-radius" className="mb-1.5 block text-xs font-black text-slate-800">Custom search distance</label><div className="flex items-center gap-2"><input id="stores-custom-radius" autoFocus aria-label="Custom distance in kilometres" type="number" min="1" max="100" step="0.5" inputMode="decimal" value={customRadius} onChange={(event) => setCustomRadius(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && applyCustomRadius()} placeholder="1–100" className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 px-3 text-sm font-bold text-slate-900 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" /><span className="text-xs font-bold text-slate-500">km</span><button type="button" onClick={() => { applyCustomRadius(); if (Number(customRadius) >= 1 && Number(customRadius) <= 100) setShowCustomRadius(false) }} className="h-10 rounded-xl bg-slate-900 px-3 text-xs font-black text-white">Apply</button></div><p className="mt-1.5 text-[10px] font-medium text-slate-500">Choose 1–100 km</p></div>}
-          </div>
         </div>
 
-        {/* Categories Bar */}
-        <section className="mt-4">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Categories</h2>
-          </div>
-          <div
-            className="flex gap-2 overflow-x-auto pb-1"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
+        {/* Compact category rail */}
+        <section className="mb-2 min-w-0">
+          <div className="flex gap-1 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
-              { id: '', label: 'All Categories', icon: '▦' },
-              ...BUSINESS_TYPES.map((type) => ({
-                id: type.id,
-                label: getBusinessTypeTitle(type, i18n.language),
-                icon: type.icon
-              }))
+              { id: '', label: 'All', icon: '▦' },
+              ...BUSINESS_TYPES.map((type) => ({ id: type.id, label: getBusinessTypeTitle(type, i18n.language), icon: type.icon }))
             ].map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => selectCategory(item.id)}
-                className={`shrink-0 flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-xs font-black transition-all cursor-pointer active:scale-95 ${
-                  category === item.id
-                    ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/25'
-                    : 'border border-slate-200/80 bg-white text-slate-700 hover:border-orange-200 hover:bg-orange-50/40'
-                }`}
+                className={`flex h-8 shrink-0 items-center gap-1 rounded-lg border px-2.5 text-[10px] font-semibold transition-colors ${category === item.id ? 'border-orange-500 bg-orange-500 text-white shadow-sm shadow-orange-500/20' : 'border-slate-200 bg-white text-slate-600 hover:border-orange-200'}`}
               >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
+                <span>{item.icon}</span><span>{item.label}</span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* Options & Favorites Filter */}
-        <section className="mt-3 flex gap-2 overflow-x-auto pb-1 items-center">
-          <button
-            type="button"
-            onClick={() => setOnlyFavorites((prev) => !prev)}
-            className={`shrink-0 flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-black transition-all cursor-pointer ${
-              onlyFavorites
-                ? 'border-amber-500 bg-amber-500 text-white shadow-xs'
-                : 'border-slate-200/80 bg-white text-slate-700 hover:border-amber-300 hover:text-amber-600'
-            }`}
-          >
-            <Star
-              className={`h-3.5 w-3.5 ${
-                onlyFavorites
-                  ? 'fill-white text-white'
-                  : favorites.length > 0
-                  ? 'fill-amber-400 text-amber-500'
-                  : 'text-slate-400'
-              }`}
-            />
-            <span>Favorites</span>
-            {favorites.length > 0 && (
-              <span
-                className={`rounded-full px-1.5 py-0.2 text-[9px] font-black ${
-                  onlyFavorites ? 'bg-white/30 text-white' : 'bg-amber-100 text-amber-800'
-                }`}
-              >
-                {favorites.length}
-              </span>
-            )}
-          </button>
+        {showFilters && (
+          <div className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-4" onClick={() => setShowFilters(false)}>
+            <section className="max-h-[88dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl" role="dialog" aria-modal="true" aria-labelledby="store-filters-title" onClick={(event) => event.stopPropagation()}>
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 id="store-filters-title" className="text-base font-extrabold text-slate-900">Filters</h2>
+                  <p className="text-xs text-slate-500">Stores ko apni zaroorat ke hisaab se chunein</p>
+                </div>
+                <button type="button" onClick={() => setShowFilters(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600" aria-label="Close filters"><X className="h-4 w-4" /></button>
+              </div>
 
-          {(
-            [
-              { id: 'all', label: 'All Options' },
-              { id: 'delivery', label: 'Home Delivery' },
-              { id: 'pickup', label: 'Store Pickup' }
-            ] as { id: FulfilmentFilter; label: string }[]
-          ).map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setFulfilment(item.id)}
-              className={`shrink-0 rounded-xl border px-3 py-2 text-xs font-black transition-all cursor-pointer ${
-                fulfilment === item.id
-                  ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
-                  : 'border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </section>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="mb-2 text-xs font-bold text-slate-700">Category</h3>
+                  <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
+                    {[
+                      { id: '', label: 'All Categories', icon: '▦' },
+                      ...BUSINESS_TYPES.map((type) => ({ id: type.id, label: getBusinessTypeTitle(type, i18n.language), icon: type.icon }))
+                    ].map((item) => (
+                      <button key={item.id} type="button" onClick={() => selectCategory(item.id)} className={`flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold ${category === item.id ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-slate-200 text-slate-600'}`}><span>{item.icon}</span>{item.label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="mb-2 text-xs font-bold text-slate-700">Distance</h3>
+                  <div className="grid grid-cols-5 gap-1 rounded-xl bg-slate-100 p-1">
+                    {[2, 5, 10, 20].map((value) => <button key={value} type="button" aria-pressed={radius === value} onClick={() => chooseRadius(value)} className={`h-9 rounded-lg text-xs font-bold ${radius === value ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600'}`}>{value} km</button>)}
+                    <button type="button" aria-expanded={showCustomRadius} onClick={() => setShowCustomRadius((value) => !value)} className={`h-9 rounded-lg text-[10px] font-bold ${showCustomRadius ? 'bg-orange-500 text-white' : 'text-orange-600'}`}>Custom</button>
+                  </div>
+                  {showCustomRadius && <div className="mt-2 flex items-center gap-2"><input aria-label="Custom distance in kilometres" type="number" min="1" max="100" step="0.5" inputMode="decimal" value={customRadius} onChange={(event) => setCustomRadius(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && applyCustomRadius()} placeholder="1–100 km" className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-orange-400" /><button type="button" onClick={applyCustomRadius} className="h-10 rounded-xl bg-slate-900 px-4 text-xs font-bold text-white">Apply</button></div>}
+                </div>
+
+                <div>
+                  <h3 className="mb-2 text-xs font-bold text-slate-700">Show stores offering</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([{ id: 'all', label: 'All options' }, { id: 'delivery', label: 'Home delivery' }, { id: 'pickup', label: 'Store pickup' }] as { id: FulfilmentFilter; label: string }[]).map((item) => <button key={item.id} type="button" onClick={() => setFulfilment(item.id)} className={`h-9 rounded-xl border px-2 text-xs font-bold ${fulfilment === item.id ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600'}`}>{item.label}</button>)}
+                    <button type="button" onClick={() => setOnlyFavorites((value) => !value)} className={`flex h-9 items-center justify-center gap-1.5 rounded-xl border px-2 text-xs font-bold ${onlyFavorites ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-slate-200 text-slate-600'}`}><Star className={`h-3.5 w-3.5 ${onlyFavorites ? 'fill-amber-400 text-amber-500' : ''}`} />Favorites{favorites.length > 0 ? ` (${favorites.length})` : ''}</button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowFilters(false)} className="mt-5 h-11 w-full rounded-xl bg-orange-500 text-sm font-bold text-white shadow-sm shadow-orange-500/20">Show {visibleStores.length} stores</button>
+            </section>
+          </div>
+        )}
 
         {/* Store Grid */}
-        <section className="mt-5">
-          <div className="mb-3 flex items-end justify-between">
+        <section className="mt-3 sm:mt-5">
+          <div className="mb-2 flex items-end justify-between">
             <div>
               <h2 className="text-lg font-black tracking-tight text-slate-900">
                 {onlyFavorites
@@ -517,15 +533,15 @@ export default function CustomerStores() {
               </div>
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               {visibleStores.map((store) => (
                 <div
                   key={store.id}
                   onClick={() => navigate(`/s/${store.slug}`, { state: { returnTo: '/customer-stores' } })}
-                  className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs transition-all hover:border-orange-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer"
+                  className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-2.5 shadow-xs transition-all hover:border-orange-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99] sm:p-4 cursor-pointer"
                 >
-                  <div className="flex gap-3">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 border border-slate-100">
+                  <div className="flex min-w-0 gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 border border-slate-100 sm:h-16 sm:w-16 sm:rounded-2xl">
                       {store.logo ? (
                         <img src={store.logo} alt="" className="h-full w-full object-cover" />
                       ) : (
@@ -537,8 +553,8 @@ export default function CustomerStores() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1">
-                            <h3 className="truncate text-sm sm:text-base font-black text-slate-900 group-hover:text-orange-600 transition-colors">
+                          <div className="flex min-w-0 items-center gap-1">
+                            <h3 className="truncate text-sm sm:text-base font-bold text-slate-900 group-hover:text-orange-600 transition-colors">
                               {store.name}
                             </h3>
                             <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
@@ -547,7 +563,7 @@ export default function CustomerStores() {
                             {store.business_type || 'Local store'}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0 sm:gap-1.5">
                           {store.distance_km !== undefined && (
                             <a
                               href={getStoreMapUrl(store)}
@@ -603,7 +619,7 @@ export default function CustomerStores() {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5">
+                  <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-2 sm:flex-row sm:items-center sm:justify-between">
                     <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 truncate">
                       <Truck className="h-3 w-3 text-slate-400 shrink-0" />
                       <span className="truncate">
@@ -614,19 +630,19 @@ export default function CustomerStores() {
                           : 'Store pickup only'}
                       </span>
                     </span>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex shrink-0 gap-1.5">
                       <a
                         href={getStoreMapUrl(store)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         title="Google Maps par route aur distance dekhein"
-                        className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 px-2.5 py-1.5 text-[11px] font-black text-slate-700 shadow-2xs transition active:scale-95 cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-2xs transition hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 active:scale-95 cursor-pointer"
                       >
                         <Navigation className="h-3 w-3 text-orange-500" />
                         <span>Map</span>
                       </a>
-                      <span className="rounded-xl bg-orange-500 px-3.5 py-1.5 text-xs font-black text-white shadow-xs shadow-orange-500/20 group-hover:bg-orange-600 transition-colors flex items-center gap-1">
+                      <span className="rounded-lg bg-orange-500 px-2.5 py-1.5 text-[10px] font-bold text-white shadow-xs shadow-orange-500/20 group-hover:bg-orange-600 transition-colors flex items-center justify-center gap-1 sm:px-3.5 sm:py-2 sm:text-xs">
                         Visit Store <ChevronRight className="h-3 w-3" />
                       </span>
                     </div>

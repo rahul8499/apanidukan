@@ -13,7 +13,7 @@ export default function CustomerAppBottomNav({ active }: { active: CustomerTab }
   ]
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white/95 px-2 pt-1.5 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl" style={{ paddingBottom: 'max(0.4rem, env(safe-area-inset-bottom))' }}>
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white/95 px-2 pt-1 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
       <div className="mx-auto flex max-w-2xl items-center justify-around gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon

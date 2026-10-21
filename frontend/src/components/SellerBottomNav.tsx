@@ -12,42 +12,66 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
   const { t } = useTranslation()
   const [unreadCount, setUnreadCount] = React.useState<number>(0)
   const [newOrderCount, setNewOrderCount] = React.useState<number>(0)
-  const [wsConnected, setWsConnected] = React.useState(false)
 
   React.useEffect(() => {
     if (!storeId) return
+    let markExistingOrdersAsSeen = activeTab === 'orders'
 
     const fetchCount = () => {
       if (document.hidden) return
       import('../services/api').then(({ default: api }) => {
-        if (!wsConnected) {
-          api.get(`/seller/stores/${storeId}/chat-count/`)
-            .then(res => setUnreadCount(res.data.unread_count || 0))
-            .catch(() => {})
-          api.get(`/seller/stores/${storeId}/whatsapp-orders/count/`)
-            .then(res => setNewOrderCount(res.data.new_orders_count || 0))
-            .catch(() => {})
-        }
+        api.get(`/seller/stores/${storeId}/chat-count/`)
+          .then(res => setUnreadCount(res.data.unread_count || 0))
+          .catch(() => {})
+        api.get(`/seller/stores/${storeId}/whatsapp-orders/count/`)
+          .then(res => {
+            const newOrderIds: number[] = Array.isArray(res.data.new_order_ids)
+              ? res.data.new_order_ids.map(Number)
+              : []
+            const seenKey = `qs_seen_order_ids_${storeId}`
+            let seenIds = new Set<number>()
+            try {
+              const savedIds = JSON.parse(localStorage.getItem(seenKey) || '[]')
+              if (Array.isArray(savedIds)) seenIds = new Set(savedIds.map(Number))
+            } catch {}
+
+            // Opening Orders marks the currently listed new orders as seen.
+            const shouldMarkExistingOrdersAsSeen = markExistingOrdersAsSeen
+            if (shouldMarkExistingOrdersAsSeen) {
+              newOrderIds.forEach(id => seenIds.add(id))
+              markExistingOrdersAsSeen = false
+              try {
+                localStorage.setItem(seenKey, JSON.stringify([...seenIds]))
+              } catch {}
+            }
+
+            // Keep only IDs that are still new, preventing storage from growing
+            // as orders move to another status.
+            seenIds = new Set([...seenIds].filter(id => newOrderIds.includes(id)))
+            try {
+              localStorage.setItem(seenKey, JSON.stringify([...seenIds]))
+            } catch {}
+            setNewOrderCount(newOrderIds.length
+              ? newOrderIds.filter(id => !seenIds.has(id)).length
+              : (shouldMarkExistingOrdersAsSeen ? 0 : (res.data.new_orders_count || 0)))
+          })
+          .catch(() => {})
       })
     }
 
     fetchCount()
     window.addEventListener('qs-chat-count-updated', fetchCount)
     window.addEventListener('qs-order-count-updated', fetchCount)
+    window.addEventListener('unread_chat_updated', fetchCount)
     const interval = window.setInterval(fetchCount, 60000)
-    const handleWsStatus = (event: Event) => {
-      const detail = (event as CustomEvent).detail || {}
-      if (String(detail.storeId) === String(storeId)) setWsConnected(Boolean(detail.connected))
-    }
-    window.addEventListener('qs-seller-ws-status', handleWsStatus)
 
     return () => {
       window.removeEventListener('qs-chat-count-updated', fetchCount)
       window.removeEventListener('qs-order-count-updated', fetchCount)
-      window.removeEventListener('qs-seller-ws-status', handleWsStatus)
+      window.removeEventListener('unread_chat_updated', fetchCount)
       window.clearInterval(interval)
     }
-  }, [storeId, wsConnected])
+  }, [storeId, activeTab])
 
   const tabs = [
     {
@@ -125,13 +149,8 @@ export default function SellerBottomNav({ storeId, activeTab }: SellerBottomNavP
 
                 {/* Live Unread Badge */}
                 {(tab.badge === 'orders' ? newOrderCount : unreadCount) > 0 ? (
-                  <span className="absolute -right-2.5 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-rose-500 text-white font-black text-[8px] px-0.5 border border-white shadow-xs animate-pulse">
+                  <span className="absolute -right-2.5 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-rose-500 text-white font-black text-[8px] px-0.5 border border-white shadow-xs">
                     {(tab.badge === 'orders' ? newOrderCount : unreadCount) > 99 ? '99+' : (tab.badge === 'orders' ? newOrderCount : unreadCount)}
-                  </span>
-                ) : tab.badge ? (
-                  <span className="absolute -right-1 -top-1 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-seller-400 opacity-75"></span>
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-seller-500 border border-white"></span>
                   </span>
                 ) : null}
               </div>

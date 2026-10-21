@@ -864,7 +864,11 @@ class SellerExchangeCompletionOTPView(SellerWhatsAppOrdersView):
 class SellerWhatsAppOrderCountView(SellerWhatsAppOrdersView):
     def get(self, request, store_id):
         store = self.get_store(request, store_id)
-        return Response({'new_orders_count': store.whatsapp_orders.filter(status=WhatsAppOrder.STATUS_NEW).count()})
+        new_orders = store.whatsapp_orders.filter(status=WhatsAppOrder.STATUS_NEW)
+        return Response({
+            'new_orders_count': new_orders.count(),
+            'new_order_ids': list(new_orders.values_list('id', flat=True)),
+        })
 
 
 class SellerDeliveryOTPView(SellerWhatsAppOrdersView):

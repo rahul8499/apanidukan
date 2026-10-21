@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Link, Navigate, useLocation, matchPath } from 'react-router-dom'
 import { useAuth, AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { resetGenericPlatformPwa } from './pwa/pwaManager'
@@ -133,7 +133,19 @@ function AppContent() {
     isStandaloneMode() ||
     new URLSearchParams(location.search).get('source') === 'customer-app'
   )
-  const hideHeader = location.pathname === '/' || isCustomerAppLaunch ||
+  const knownRoutePatterns = [
+    '/', '/login', '/forgot-password', '/reset-password/:uid/:token', '/register', '/dashboard',
+    '/stores/create', '/stores/:storeId/manage', '/stores/:storeId/catalog', '/stores/:storeId/payments',
+    '/stores/:storeId/orders', '/stores/:storeId/chat', '/stores/:storeId/requests', '/stores/:storeId/analytics',
+    '/stores/:storeId/subscription', '/stores/:storeId/privacy-policy', '/stores/:storeId/coupons', '/stores/:storeId/delivery-team',
+    '/delivery/dashboard', '/start', '/platform', '/admin', '/cart', '/checkout', '/orders', '/orders/:id',
+    '/downloads', '/download', '/seller', '/customer-home', '/customer-orders', '/customer-account', '/customer-stores',
+    '/store/:storeSlug', '/s/:storeSlug', '/store/:storeSlug/cart', '/s/:storeSlug/cart',
+    '/store/:storeSlug/order/:reference', '/s/:storeSlug/order/:reference', '/store/:storeSlug/orders', '/s/:storeSlug/orders',
+    '/store/:storeSlug/product/:productSlug', '/s/:storeSlug/product/:productSlug', '/privacy-policy', '/delete-account'
+  ]
+  const isKnownRoute = knownRoutePatterns.some(path => matchPath({ path, end: true }, location.pathname))
+  const hideHeader = !isKnownRoute || location.pathname === '/' || isCustomerAppLaunch ||
     location.pathname.startsWith('/store/') ||
     location.pathname.startsWith('/s/') ||
     location.pathname.startsWith('/stores/') ||
@@ -240,6 +252,7 @@ function AppContent() {
           <Route path="/" element={<PwaLaunch />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>

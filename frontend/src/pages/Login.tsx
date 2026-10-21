@@ -118,14 +118,14 @@ export default function Login() {
   }
 
   return (
-    <main className="relative flex min-h-[100svh] w-full items-center justify-center overflow-x-hidden bg-slate-50 px-4 py-7 font-sans sm:py-10">
+    <main className="relative flex h-dvh w-full items-center justify-center overflow-hidden bg-slate-50 p-3 font-sans sm:p-4">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-32 -top-36 h-80 w-80 rounded-full bg-orange-100/70 blur-3xl" />
         <div className="absolute -bottom-40 -right-24 h-96 w-96 rounded-full bg-indigo-100/60 blur-3xl" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[440px]">
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_18px_55px_-28px_rgba(15,23,42,0.28)] sm:p-7">
+      <div className="relative z-10 flex max-h-full w-full max-w-[440px] items-center">
+        <section className="max-h-[calc(100dvh-1.5rem)] w-full overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_18px_55px_-28px_rgba(15,23,42,0.28)] sm:max-h-[calc(100dvh-2rem)] sm:p-6">
           <div className="mb-2 flex justify-center">
             <img
               src="/apanidukan-brand-logo.png"

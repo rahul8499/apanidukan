@@ -69,8 +69,18 @@ export default function SellerAnalytics() {
       ])
 
       setAnalytics(analyticsRes.data)
-      setProducts((productRes.data || []).filter((item: any) => String(item.store) === String(found.id)))
-      setOrders(ordersRes.data || [])
+      const productList = Array.isArray(productRes.data)
+        ? productRes.data
+        : Array.isArray(productRes.data?.results)
+          ? productRes.data.results
+          : []
+      setProducts(productList.filter((item: any) => String(item.store) === String(found.id)))
+      const orderList = Array.isArray(ordersRes.data)
+        ? ordersRes.data
+        : Array.isArray(ordersRes.data?.results)
+          ? ordersRes.data.results
+          : []
+      setOrders(orderList)
       const couponList = Array.isArray(couponsRes.data) ? couponsRes.data : (couponsRes.data?.results || [])
       setCoupons(couponList.filter((item: any) => String(item.store) === String(found.id)))
       if ('error' in analyticsRes) {
@@ -79,7 +89,16 @@ export default function SellerAnalytics() {
       setMessage('')
     } catch (error: any) {
       const detail = error.response?.data?.detail
-      setMessage(typeof detail === 'string' ? detail : 'Analytics could not be refreshed. Please try again.')
+      const status = error.response?.status
+      const failureHint = status
+        ? ` (server returned ${status})`
+        : error.request
+          ? ' (the API server could not be reached)'
+          : ` (${error.message || 'unknown request error'})`
+      const errorText = typeof detail === 'string'
+        ? detail
+        : 'Analytics could not be refreshed. Please try again.'
+      setMessage(`${errorText}${failureHint}`)
     } finally {
       if (requestId === loadRequestId.current) {
         setLoading(false)

@@ -1,5 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Bell } from 'lucide-react'
 import { useNotifications } from '../context/NotificationContext'
 
 export default function NotificationBellHeader({ className = '' }: { className?: string }) {
@@ -40,13 +41,18 @@ export default function NotificationBellHeader({ className = '' }: { className?:
       <button
         type="button"
         onClick={() => setShowNotifDrawer(!showNotifDrawer)}
-        className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800/90 hover:bg-slate-700 text-lg transition-colors cursor-pointer text-white shadow-xs"
+        className={`relative flex items-center justify-center rounded-lg border transition-all cursor-pointer active:scale-95 ${
+          isSellerRoute
+            ? 'h-7 w-7 sm:h-8 sm:w-8 border-slate-200 bg-white text-slate-700 hover:border-seller-200 hover:text-seller-700 hover:bg-slate-50 shadow-2xs'
+            : 'h-8 w-8 sm:h-9 sm:w-9 border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 shadow-xs'
+        }`}
         title="Notifications Center"
+        aria-label="Notifications"
       >
-        🔔
+        <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-600 transition-colors" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-black text-white shadow-md animate-bounce">
-            {unreadCount}
+          <span className="absolute -top-1 -right-1 flex h-3.5 min-w-[14px] sm:h-4 sm:min-w-[16px] items-center justify-center rounded-full bg-rose-600 px-1 text-[8px] sm:text-[9px] font-black text-white shadow-xs animate-pulse">
+            {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>

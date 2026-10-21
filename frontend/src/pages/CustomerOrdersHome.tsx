@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle,
@@ -47,6 +47,7 @@ export default function CustomerOrdersHome() {
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<OrderFilter>('all')
   const [resendTimer, setResendTimer] = useState(() => Math.max(0, Math.ceil(((readPendingOrdersOtp()?.resendAt || 0) - Date.now()) / 1000)))
+  const ordersRequestInFlight = useRef(false)
 
   // Resend OTP countdown
   useEffect(() => {
@@ -57,10 +58,13 @@ export default function CustomerOrdersHome() {
     return () => clearInterval(interval)
   }, [resendTimer])
 
-  async function loadOrders(customerToken = token) {
-    if (!customerToken) return
-    setLoading(true)
-    setError('')
+  async function loadOrders(customerToken = token, background = false) {
+    if (!customerToken || ordersRequestInFlight.current) return
+    ordersRequestInFlight.current = true
+    if (!background) {
+      setLoading(true)
+      setError('')
+    }
     try {
       const response = await api.get('/public/customer-orders/', {
         params: { customer_token: customerToken },
@@ -68,13 +72,14 @@ export default function CustomerOrdersHome() {
       const fetched = Array.isArray(response.data) ? response.data : response.data?.results || []
       setOrders(fetched)
     } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Orders load nahi ho paaye. Please retry karein.')
+      if (!background) setError(err?.response?.data?.detail || 'Orders load nahi ho paaye. Please retry karein.')
       if (err?.response?.status === 401) {
         localStorage.removeItem('customer-orders-token')
         setToken('')
       }
     } finally {
-      setLoading(false)
+      ordersRequestInFlight.current = false
+      if (!background) setLoading(false)
     }
   }
 
@@ -83,6 +88,21 @@ export default function CustomerOrdersHome() {
       loadOrders(token)
     }
   }, [])
+
+  // Keep the cross-store order list reasonably fresh without constant requests:
+  // sync every 30 seconds only while this page is visible, and immediately on return.
+  useEffect(() => {
+    if (!token) return
+    const syncIfVisible = () => {
+      if (!document.hidden) void loadOrders(token, true)
+    }
+    const interval = window.setInterval(syncIfVisible, 30_000)
+    document.addEventListener('visibilitychange', syncIfVisible)
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', syncIfVisible)
+    }
+  }, [token])
 
   async function handleSendOtp(event?: React.FormEvent) {
     if (event) event.preventDefault()
@@ -245,7 +265,7 @@ export default function CustomerOrdersHome() {
                   My Orders
                 </h1>
                 <p className="text-xs text-orange-100/90 leading-tight">
-                  Track purchases, live status & receipts across all stores.
+                  Track purchases, auto-updating order status & receipts across all stores.
                 </p>
               </div>
             </div>

@@ -31,7 +31,13 @@ export default function SellerChat() {
   const navigate = useNavigate()
   const chatBottomRef = useRef<HTMLDivElement>(null)
   const chatInputRef = useRef<HTMLInputElement>(null)
+  const selectedConvRef = useRef<any>(null)
+  const wsConnectedRef = useRef(false)
   const [isRefreshingData, setIsRefreshingData] = useState(false)
+
+  useEffect(() => {
+    selectedConvRef.current = selectedConv
+  }, [selectedConv])
 
   // Load store info and list of customer conversations
   const loadStoreAndConversations = async () => {
@@ -123,7 +129,8 @@ export default function SellerChat() {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // WebSocket for Store level new messages
+  // Keep the store chat socket alive with bounded reconnects. If it is down,
+  // use a modest polling fallback while the tab is visible.
   useEffect(() => {
     if (!storeId) return
 
@@ -132,39 +139,98 @@ export default function SellerChat() {
     const wsUrl = getWebSocketUrl(`/ws/store_chats/${storeId}/?token=${encodeURIComponent(token)}`)
 
     let socket: WebSocket | null = null
-    try {
-      socket = new WebSocket(wsUrl)
-      socket.onopen = () => setWsConnected(true)
-      socket.onclose = () => setWsConnected(false)
+    let reconnectTimer: number | undefined
+    let pollTimer: number | undefined
+    let reconnectDelay = 1000
+    let disposed = false
 
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-          if (data.type === 'new_chat_message' && data.message) {
-            const incomingMsg = data.message
-            const convId = data.conversation_id
-
-            if (selectedConv && selectedConv.id === convId) {
-              setMessages((prev) => {
-                if (prev.some((m) => m.id === incomingMsg.id)) return prev
-                return [...prev, incomingMsg]
-              })
-            }
-
-            api.get(`/seller/stores/${storeId}/conversations/`).then((res) => setConversations(res.data))
-          }
-        } catch (e) {
-          console.error('WS parse error:', e)
+    const refreshChatData = async () => {
+      if (document.hidden) return
+      try {
+        const convRes = await api.get(`/seller/stores/${storeId}/conversations/`)
+        const nextConversations = Array.isArray(convRes.data) ? convRes.data : (convRes.data?.results || [])
+        setConversations(nextConversations)
+        const active = selectedConvRef.current
+        if (active?.id) {
+          const messageRes = await api.get(`/seller/stores/${storeId}/conversations/${active.id}/messages/`)
+          const fetchedMessages = Array.isArray(messageRes.data?.messages) ? messageRes.data.messages : []
+          setMessages(fetchedMessages)
         }
-      }
-    } catch (e) {
-      console.warn('WS Connect error:', e)
+      } catch { /* Keep the current conversation visible; retry on the next sync. */ }
     }
+
+    const connect = () => {
+      if (disposed || document.hidden) return
+      try {
+        const activeSocket = new WebSocket(wsUrl)
+        socket = activeSocket
+        activeSocket.onopen = () => {
+          if (socket !== activeSocket) return
+          wsConnectedRef.current = true
+          setWsConnected(true)
+          reconnectDelay = 1000
+          void refreshChatData()
+        }
+        activeSocket.onclose = () => {
+          if (socket === activeSocket) {
+            wsConnectedRef.current = false
+            setWsConnected(false)
+          }
+          if (!disposed && !document.hidden && socket === activeSocket) {
+            reconnectTimer = window.setTimeout(connect, reconnectDelay)
+            reconnectDelay = Math.min(reconnectDelay * 2, 30_000)
+          }
+        }
+        activeSocket.onerror = () => activeSocket.close()
+        activeSocket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data)
+            if (data.type === 'new_chat_message' && data.message) {
+              const incomingMsg = data.message
+              const convId = data.conversation_id
+              if (Number(selectedConvRef.current?.id) === Number(convId)) {
+                setMessages((prev) => prev.some((m) => m.id === incomingMsg.id) ? prev : [...prev, incomingMsg])
+              }
+              api.get(`/seller/stores/${storeId}/conversations/`).then((res) => {
+                setConversations(Array.isArray(res.data) ? res.data : (res.data?.results || []))
+              }).catch(() => {})
+            }
+          } catch (e) {
+            console.error('WS parse error:', e)
+          }
+        }
+      } catch {
+        wsConnectedRef.current = false
+        setWsConnected(false)
+        reconnectTimer = window.setTimeout(connect, reconnectDelay)
+        reconnectDelay = Math.min(reconnectDelay * 2, 30_000)
+      }
+    }
+
+    connect()
+    pollTimer = window.setInterval(() => {
+      if (!wsConnectedRef.current && !document.hidden) void refreshChatData()
+    }, 20_000)
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (reconnectTimer) window.clearTimeout(reconnectTimer)
+        socket?.close()
+      } else {
+        void refreshChatData()
+        if (!wsConnectedRef.current) connect()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
 
     return () => {
-      if (socket) socket.close()
+      disposed = true
+      if (reconnectTimer) window.clearTimeout(reconnectTimer)
+      if (pollTimer) window.clearInterval(pollTimer)
+      document.removeEventListener('visibilitychange', onVisibility)
+      wsConnectedRef.current = false
+      socket?.close()
     }
-  }, [storeId, selectedConv?.id])
+  }, [storeId])
 
   // Send reply message
   const sendMessage = async (e: React.FormEvent) => {
@@ -260,8 +326,9 @@ export default function SellerChat() {
             <div className="p-3.5 border-b border-slate-100 bg-gradient-to-r from-slate-900 via-seller-950 to-slate-900 text-white space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className={`h-2 w-2 rounded-full ${wsConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-300'}`} title={wsConnected ? 'Chat connection is live' : 'Reconnecting; messages will sync automatically'}></span>
                   <h2 className="text-sm font-extrabold text-white">{t('waInbox')}</h2>
+                  <span className="text-[9px] font-semibold text-slate-300">{wsConnected ? 'Live' : 'Syncing'}</span>
                   {totalUnreadCount > 0 && (
                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] px-1.5 shadow-md shadow-emerald-500/40 border border-emerald-400 animate-pulse">
                       {totalUnreadCount}

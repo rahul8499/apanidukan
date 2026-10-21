@@ -450,9 +450,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               const custText = data.order.customer_name ? `${data.order.customer_name} se ` : ''
               const totalVal = data.order.total || data.order.subtotal
               const amtText = totalVal ? `kul ${Number(totalVal).toFixed(0)} rupaye ka ` : ''
-              speakSoundboxAlert(`QuickStore par ${custText}${amtText}naya order praapt hua.`, 800)
+              speakSoundboxAlert(`Apani Dukan par ${custText}${amtText}naya order praapt hua.`, 800)
             } else if (notifType === 'request' && currentIsSeller) {
-              speakSoundboxAlert(`QuickStore par naya product request aaya hai: ${data.item_name || 'Item'}.`, 800)
+              speakSoundboxAlert(`Apani Dukan par naya product request aaya hai: ${data.item_name || 'Item'}.`, 800)
             } else if (notifType === 'product' && !currentIsSeller) {
               const pName = data.product?.name || data.product_name || data.item_name || 'Naya item'
               speakSoundboxAlert(`Store par naya product live ho gaya hai: ${pName}.`)
@@ -603,7 +603,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     playNotificationAudio(notif.type === 'product' ? 'customer' : 'seller')
 
     if (notif.type === 'order') {
-      speakSoundboxAlert(`QuickStore naya order aaya hai! ${notif.title}. ${notif.body}`)
+      speakSoundboxAlert(`Apani Dukan naya order aaya hai! ${notif.title}. ${notif.body}`)
     } else if (notif.type === 'product') {
       speakSoundboxAlert(`Store par naya product live ho gaya hai! ${notif.title}`)
     } else if (notif.type === 'request') {
@@ -651,7 +651,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   function testVoiceAlert() {
     playNotificationAudio('seller')
-    speakSoundboxAlert('QuickStore soundbox notification voice active aur ready hai!')
+    speakSoundboxAlert('Apani Dukan soundbox notification voice active aur ready hai!')
   }
 
   return (

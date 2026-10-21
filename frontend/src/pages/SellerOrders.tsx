@@ -66,6 +66,7 @@ export default function SellerOrders() {
   const [deliveryOtpLoading, setDeliveryOtpLoading] = useState(false)
   const [deliveryProof, setDeliveryProof] = useState<File | null>(null)
   const [otpResendSeconds, setOtpResendSeconds] = useState(0)
+  const [otpExpiresSeconds, setOtpExpiresSeconds] = useState(0)
   const [deliveryAgents, setDeliveryAgents] = useState<any[]>([])
   const auth = useAuth()
   const navigate = useNavigate()
@@ -100,8 +101,11 @@ export default function SellerOrders() {
         const savedOrder = orderList.find((item:any) => String(item.id) === savedOtpOrderId)
         if (savedOrder && savedOrder.status !== 'DELIVERED') {
           setDeliveryOtpOrder(savedOrder)
-          setDeliveryOtpSent(Boolean(savedOrder.delivery_otp_pending))
+          // Keep the verification step open after refresh while an OTP record exists,
+          // including the expired-but-resend-cooldown period.
+          setDeliveryOtpSent(Boolean(savedOrder.delivery_otp_expires_at || savedOrder.delivery_otp_pending))
           if (savedOrder.delivery_otp_resend_at) setOtpResendSeconds(Math.max(0, Math.ceil((new Date(savedOrder.delivery_otp_resend_at).getTime() - Date.now()) / 1000)))
+          if (savedOrder.delivery_otp_expires_at) setOtpExpiresSeconds(Math.max(0, Math.ceil((new Date(savedOrder.delivery_otp_expires_at).getTime() - Date.now()) / 1000)))
         } else sessionStorage.removeItem(`delivery_otp_order_${storeId}`)
       }
       api.get(`/seller/stores/${storeId}/delivery-agents/`).then(r => setDeliveryAgents(r.data.filter((a:any)=>a.is_active))).catch(()=>{})
@@ -141,10 +145,13 @@ export default function SellerOrders() {
   }, [storeId])
 
   useEffect(() => {
-    if (otpResendSeconds <= 0) return
-    const timer = window.setInterval(() => setOtpResendSeconds(value => Math.max(0, value - 1)), 1000)
+    if (otpResendSeconds <= 0 && otpExpiresSeconds <= 0) return
+    const timer = window.setInterval(() => {
+      setOtpResendSeconds(value => Math.max(0, value - 1))
+      setOtpExpiresSeconds(value => Math.max(0, value - 1))
+    }, 1000)
     return () => window.clearInterval(timer)
-  }, [otpResendSeconds > 0])
+  }, [otpResendSeconds > 0 || otpExpiresSeconds > 0])
 
   // WebSocket Live Updates Connection
   useEffect(() => {
@@ -241,6 +248,7 @@ export default function SellerOrders() {
       const res = await api.post(`/seller/stores/${storeId}/whatsapp-orders/${deliveryOtpOrder.id}/delivery-otp/`)
       setDeliveryOtpSent(true)
       setOtpResendSeconds(60)
+      setOtpExpiresSeconds(Number(res.data.expires_in_seconds) || 600)
       setDeliveryOtpMessage(res.data.message || 'OTP sent to the customer.')
     } catch (err: any) {
       setDeliveryOtpMessage(err?.response?.data?.detail || 'OTP could not be sent.')
@@ -262,6 +270,9 @@ export default function SellerOrders() {
       setDeliveryOtpOrder(null)
       sessionStorage.removeItem(`delivery_otp_order_${storeId}`)
       setDeliveryOtp('')
+      setDeliveryOtpSent(false)
+      setOtpExpiresSeconds(0)
+      setOtpResendSeconds(0)
     } catch (err: any) {
       setDeliveryOtpMessage(err?.response?.data?.detail || 'OTP verification failed.')
     } finally {
@@ -973,9 +984,14 @@ export default function SellerOrders() {
             <div className="flex items-start justify-between"><div><p className="text-[10px] font-black uppercase tracking-wider text-seller-600">Secure fulfilment</p><h2 className="mt-1 text-base font-black text-slate-950">Confirm Delivery with OTP</h2></div><button onClick={() => { setDeliveryOtpOrder(null); sessionStorage.removeItem(`delivery_otp_order_${storeId}`) }} className="rounded-full bg-slate-100 px-2 py-1 font-bold">✕</button></div>
             <div className="rounded-xl border border-seller-200 bg-seller-50 p-3 text-xs text-seller-950"><p className="font-bold">Order #{deliveryOtpOrder.reference}</p><p className="mt-1 text-[11px]">OTP will be sent only to the customer number saved with this order. The number cannot be changed here.</p></div>
             {!deliveryOtpSent ? <button disabled={deliveryOtpLoading} onClick={sendDeliveryOtp} className="w-full rounded-xl bg-seller-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Sending…' : 'Send Delivery OTP'}</button> : <>
+              <p className={`rounded-lg px-3 py-2 text-center text-[11px] font-bold ${otpExpiresSeconds > 0 ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}`}>
+                {otpExpiresSeconds > 0
+                  ? `OTP expires in ${Math.floor(otpExpiresSeconds / 60)}:${String(otpExpiresSeconds % 60).padStart(2, '0')}`
+                  : 'OTP expired. Request a new code when resend is available.'}
+              </p>
               <label className="block text-xs font-bold text-slate-700">Enter OTP told by customer<input autoFocus value={deliveryOtp} onChange={e => setDeliveryOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" placeholder="6-digit OTP" className="mt-1.5 w-full rounded-xl border p-3 text-center text-xl font-black tracking-[0.4em]"/></label>
               {deliveryOtpOrder.order_type === 'HOME_DELIVERY' && <label className="block rounded-xl border border-dashed p-3 text-xs font-bold">Delivery proof photo (Required)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setDeliveryProof(e.target.files?.[0] || null)} className="mt-2 block w-full text-xs"/></label>}
-              <button disabled={deliveryOtpLoading || deliveryOtp.length !== 6 || (deliveryOtpOrder.order_type === 'HOME_DELIVERY' && !deliveryProof)} onClick={verifyDeliveryOtp} className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Verifying…' : 'Verify OTP & Mark Delivered'}</button>
+              <button disabled={deliveryOtpLoading || otpExpiresSeconds <= 0 || deliveryOtp.length !== 6 || (deliveryOtpOrder.order_type === 'HOME_DELIVERY' && !deliveryProof)} onClick={verifyDeliveryOtp} className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Verifying…' : 'Verify OTP & Mark Delivered'}</button>
               <button disabled={deliveryOtpLoading || otpResendSeconds > 0} onClick={sendDeliveryOtp} className="w-full text-xs font-bold text-seller-700 disabled:text-slate-400">{otpResendSeconds > 0 ? `Resend OTP in ${otpResendSeconds}s` : 'Resend OTP'}</button>
             </>}
             {deliveryOtpMessage && <p className={`rounded-xl p-3 text-xs font-bold ${deliveryOtpMessage.toLowerCase().includes('sent') ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-700'}`}>{deliveryOtpMessage}</p>}

@@ -149,7 +149,9 @@ function AppContent() {
     location.pathname === '/login' ||
     location.pathname === '/start' ||
     location.pathname === '/register' ||
-    location.pathname === '/forgot-password'
+    location.pathname === '/forgot-password' ||
+    location.pathname === '/privacy-policy' ||
+    location.pathname === '/delete-account'
 
   useEffect(() => {
     const isCustomerOrSellerStore = location.pathname.startsWith('/s/') || location.pathname.startsWith('/store/') || location.pathname.startsWith('/stores/')
@@ -168,9 +170,8 @@ function AppContent() {
       {!hideHeader && (
         <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-            <Link to="/" className="flex items-center gap-2 font-bold text-slate-950">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-sm text-white">Q</span>
-              QuickStore
+            <Link to="/" className="flex items-center gap-2 font-bold text-slate-950" aria-label="Apani Dukan home">
+              <img src="/apanidukan-logo-horizontal.png" alt="Apani Dukan" className="h-8 w-auto object-contain" />
             </Link>
             <nav className="flex items-center gap-4">
               <Link to="/start" className="text-sm font-semibold text-indigo-700">Create your store</Link>

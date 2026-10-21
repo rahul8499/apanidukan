@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Globe, Check, AlertCircle, ExternalLink, ShieldCheck, Copy } from 'lucide-react'
+import { X, Globe, Check, AlertCircle, ExternalLink, ShieldCheck } from 'lucide-react'
 import api from '../services/api'
 
 interface SellerCustomDomainModalProps {
@@ -16,7 +16,6 @@ export default function SellerCustomDomainModal({
   const [domainInput, setDomainInput] = useState(store?.custom_domain || '')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [copiedRecord, setCopiedRecord] = useState(false)
 
   const cleanedDomain = domainInput
     .trim()
@@ -32,14 +31,14 @@ export default function SellerCustomDomainModal({
     try {
       const res = await api.patch(`/stores/${store.id}/`, {
         custom_domain: cleanedDomain || null,
-        custom_domain_verified: Boolean(cleanedDomain),
+        custom_domain_verified: false,
       })
 
       if (res.data) {
         setMessage({
           type: 'success',
           text: cleanedDomain
-            ? `🎉 Domain '${cleanedDomain}' successfully connected & verified!`
+            ? `Domain '${cleanedDomain}' saved. DNS setup and verification are still required.`
             : 'Custom domain removed successfully.',
         })
         onSaveSuccess()
@@ -50,12 +49,6 @@ export default function SellerCustomDomainModal({
     } finally {
       setSaving(false)
     }
-  }
-
-  const copyDnsRecord = (val: string) => {
-    navigator.clipboard.writeText(val)
-    setCopiedRecord(true)
-    setTimeout(() => setCopiedRecord(false), 2000)
   }
 
   return (
@@ -130,51 +123,39 @@ export default function SellerCustomDomainModal({
                 <ShieldCheck className="h-4 w-4 text-seller-600" />
                 <span>DNS Configuration Instructions</span>
               </span>
-              <button
-                type="button"
-                onClick={() => copyDnsRecord('stores.quickstore.com')}
-                className="text-[10px] font-black text-seller-700 bg-white border border-seller-200 px-2 py-0.5 rounded-lg hover:bg-seller-100 transition-all flex items-center gap-1 cursor-pointer"
-              >
-                {copiedRecord ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                <span>{copiedRecord ? 'Copied!' : 'Copy CNAME'}</span>
-              </button>
             </div>
 
             <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-              Log in to your domain registrar (GoDaddy, Namecheap, Cloudflare, Hostinger) and add the following record:
+              Custom-domain DNS targets depend on the hosting configuration. Contact Apani Dukan support for the verified target before adding or changing DNS records.
             </p>
 
             <div className="bg-white p-2.5 rounded-xl border border-seller-100 space-y-1.5 font-mono text-[11px]">
-              <div className="flex justify-between items-center text-slate-700">
-                <span className="font-bold text-slate-500 text-[10px]">RECORD TYPE:</span>
-                <span className="font-black text-seller-700 bg-seller-50 px-1.5 py-0.2 rounded">CNAME</span>
-              </div>
               <div className="flex justify-between items-center text-slate-700">
                 <span className="font-bold text-slate-500 text-[10px]">HOST / NAME:</span>
                 <span className="font-black text-slate-900">www / @</span>
               </div>
               <div className="flex justify-between items-center text-slate-700">
-                <span className="font-bold text-slate-500 text-[10px]">POINTS TO / TARGET:</span>
-                <span className="font-black text-emerald-700">stores.quickstore.com</span>
+                <span className="font-bold text-slate-500 text-[10px]">RECORD TYPE / TARGET:</span>
+                <span className="font-black text-slate-500">Confirm with support</span>
               </div>
             </div>
           </div>
 
           {/* Current Domain Status */}
           {store.custom_domain && (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3 flex items-center justify-between text-xs">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-3 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
                 <div>
-                  <p className="font-black text-emerald-950">Active Custom Domain</p>
-                  <p className="text-[10px] font-mono text-emerald-700">{store.custom_domain}</p>
+                  <p className="font-black text-amber-950">Custom Domain Saved · DNS Setup Required</p>
+                  <p className="text-[10px] font-mono text-amber-800">{store.custom_domain}</p>
                 </div>
               </div>
               <a
                 href={`https://${store.custom_domain}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-600 text-white font-extrabold text-[10px] hover:bg-emerald-700 transition-all shadow-xs"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-600 text-white font-extrabold text-[10px] hover:bg-slate-700 transition-all shadow-xs"
               >
                 <span>Visit Store ↗</span>
                 <ExternalLink className="h-3 w-3" />

@@ -101,9 +101,8 @@ const DeleteAccount: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-800">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4">
-          <Link to="/" className="flex items-center gap-2 font-bold text-slate-950">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-sm text-white">Q</span>
-            QuickStore
+          <Link to="/" aria-label="Apani Dukan home">
+            <img src="/apanidukan-logo-horizontal.png" alt="Apani Dukan" className="h-8 w-auto object-contain" />
           </Link>
         </div>
       </header>
@@ -145,7 +144,7 @@ const DeleteAccount: React.FC = () => {
                   disabled={false}
                   className="w-full rounded-xl bg-rose-600 py-2.5 text-sm font-black text-white hover:bg-rose-700 disabled:opacity-50"
                 >
-                  {auth.user ? 'Delete My Account' : otpSent ? 'Verify OTP & Delete Account' : 'Send Verification OTP'}
+                  {auth.user ? 'Deactivate My Account' : otpSent ? 'Verify OTP & Deactivate Account' : 'Send Verification OTP'}
                 </button>
                 {!auth.user && (
                   <p className="text-center text-xs text-slate-500">
@@ -155,41 +154,22 @@ const DeleteAccount: React.FC = () => {
               </form>
 
               <div className="mt-8 border-t border-slate-200 pt-8">
-                <h2 className="text-lg font-bold text-slate-800">What Happens When You Delete Your Account</h2>
+                <h2 className="text-lg font-bold text-slate-800">What Happens When You Deactivate Your Seller Account</h2>
                 <p className="mt-2 text-sm text-slate-600">
                   Upon submitting this request, the following actions will be performed:
                 </p>
                 <ul className="mt-3 list-disc list-inside space-y-2 text-sm text-slate-600">
-                  <li>Your seller account will be deactivated and marked as deleted in our system.</li>
+                  <li>Your seller account will be deactivated. This disables seller access; it does not immediately erase every record.</li>
                   <li>All your stores will be unpublished and set to archived status.</li>
                   <li>You will no longer be able to log in to your seller account or manage any stores.</li>
-                  <li>All active customer orders must be resolved before account deletion can proceed.</li>
+                  <li>Open or paid customer orders must be resolved before deactivation can proceed.</li>
                   <li>A confirmation email will be sent to your registered email address if one exists.</li>
                 </ul>
 
-                <h2 className="mt-6 text-lg font-bold text-slate-800">Data Deleted Upon Account Deletion</h2>
+                <h2 className="mt-6 text-lg font-bold text-slate-800">Information and records after deactivation</h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  The following personal data associated with your account will be removed:
+                  Deactivation unpublishes and archives your stores. Account, store, catalog, order, and transaction records may remain in our systems; the current deactivation flow does not automatically erase them. You may separately request deletion or correction by contacting privacy@apanidukan.com. We will review the request and explain any records that must be kept for orders, disputes, security, or legal obligations.
                 </p>
-                <ul className="mt-3 list-disc list-inside space-y-2 text-sm text-slate-600">
-                  <li>Your login credentials (email, phone number, password hash, name)</li>
-                  <li>Store information you provided (name, description, address, location coordinates, phone number, logo, theme)</li>
-                  <li>Product catalog data (product names, descriptions, images, prices, stock, digital files)</li>
-                  <li>Customer loyalty wallet data you can access through your dashboard</li>
-                  <li>Store delivery and payment configuration (UPI ID, Razorpay keys)</li>
-                  <li>Published storefront settings (custom domain, banner, favicon)</li>
-                </ul>
-
-                <h2 className="mt-6 text-lg font-bold text-slate-800">Data Retained for Legal &amp; Security Reasons</h2>
-                <p className="mt-2 text-sm text-slate-600">
-                  To comply with legal obligations and protect our platform, the following data is retained:
-                </p>
-                <ul className="mt-3 list-disc list-inside space-y-2 text-sm text-slate-600">
-                  <li><strong>Transaction records and order history</strong> — retained for <strong>24 months</strong> for tax, accounting, and audit purposes.</li>
-                  <li><strong>Audit logs (IP address, timestamps, device info)</strong> — retained for <strong>12 months</strong> for fraud prevention and security investigations.</li>
-                  <li><strong>Communications between you and customers</strong> — retained for <strong>12 months</strong> for dispute resolution.</li>
-                  <li><strong>Soft-deleted account record</strong> — retained for <strong>90 days</strong> after deletion request, after which the account may be permanently purged from our systems.</li>
-                </ul>
               </div>
             </>
           )}
@@ -206,17 +186,13 @@ const DeleteAccount: React.FC = () => {
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-green-100 text-green-600">
                 ✅
               </div>
-              <h1 className="mt-4 text-2xl font-black text-slate-900">Account Deletion Requested</h1>
+              <h1 className="mt-4 text-2xl font-black text-slate-900">Seller Account Deactivated</h1>
               <p className="mt-3 text-sm text-slate-600">
                 Your account has been deactivated. All stores have been unpublished and you will
                 no longer be able to access your seller account. If you had a registered email,
                 a confirmation has been sent to that address.
               </p>
-              <p className="mt-3 text-sm text-slate-600">
-                Note: Some transaction records and audit logs are retained for legal compliance
-                for up to 24 months. After 90 days, your soft-deleted account record may be
-                permanently purged.
-              </p>
+              <p className="mt-3 text-sm text-slate-600">Deactivation unpublishes your stores and prevents seller login. It does not automatically erase all data. To request deletion or correction of personal information, contact privacy@apanidukan.com. Some records may need to be retained for open orders, disputes, security, or legal obligations.</p>
               <Link
                 to="/"
                 className="mt-6 inline-block rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-black text-white hover:bg-indigo-700"

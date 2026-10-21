@@ -23,19 +23,30 @@ import CustomerAppBottomNav from '../components/CustomerAppBottomNav'
 import CustomerAppHeader from '../components/CustomerAppHeader'
 
 type OrderFilter = 'all' | 'active' | 'completed'
+const pendingOrdersOtpKey = 'customer-orders-pending-otp'
+
+function readPendingOrdersOtp() {
+  try {
+    const pending = JSON.parse(localStorage.getItem(pendingOrdersOtpKey) || 'null')
+    if (pending?.phone) return pending as { phone: string; resendAt: number }
+  } catch {
+    localStorage.removeItem(pendingOrdersOtpKey)
+  }
+  return null
+}
 
 export default function CustomerOrdersHome() {
-  const [phone, setPhone] = useState(localStorage.getItem('customer-orders-phone') || '')
+  const [phone, setPhone] = useState(() => readPendingOrdersOtp()?.phone || localStorage.getItem('customer-orders-phone') || '')
   const [otp, setOtp] = useState('')
   const [token, setToken] = useState(localStorage.getItem('customer-orders-token') || '')
-  const [otpSent, setOtpSent] = useState(false)
+  const [otpSent, setOtpSent] = useState(() => Boolean(readPendingOrdersOtp()))
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [sendingOtp, setSendingOtp] = useState(false)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<OrderFilter>('all')
-  const [resendTimer, setResendTimer] = useState(0)
+  const [resendTimer, setResendTimer] = useState(() => Math.max(0, Math.ceil(((readPendingOrdersOtp()?.resendAt || 0) - Date.now()) / 1000)))
 
   // Resend OTP countdown
   useEffect(() => {
@@ -85,6 +96,9 @@ export default function CustomerOrdersHome() {
     try {
       await sendMsg91WidgetOtp(cleaned)
       setOtpSent(true)
+      const resendAt = Date.now() + 30_000
+      localStorage.setItem(pendingOrdersOtpKey, JSON.stringify({ phone: cleaned, resendAt }))
+      setPhone(cleaned)
       setResendTimer(30)
     } catch (err: any) {
       setError(err?.message || 'OTP bhejne me dikkat aayi. Please dobara try karein.')
@@ -111,6 +125,7 @@ export default function CustomerOrdersHome() {
       const newToken = response.data.customer_token
       localStorage.setItem('customer-orders-phone', cleaned)
       localStorage.setItem('customer-orders-token', newToken)
+      localStorage.removeItem(pendingOrdersOtpKey)
       setToken(newToken)
       setOtpSent(false)
       setOtp('')
@@ -125,6 +140,7 @@ export default function CustomerOrdersHome() {
   function handleLogout() {
     localStorage.removeItem('customer-orders-phone')
     localStorage.removeItem('customer-orders-token')
+    localStorage.removeItem(pendingOrdersOtpKey)
     setToken('')
     setOrders([])
     setOtpSent(false)
@@ -319,6 +335,7 @@ export default function CustomerOrdersHome() {
                       setOtpSent(false)
                       setOtp('')
                       setError('')
+                      localStorage.removeItem(pendingOrdersOtpKey)
                     }}
                     className="font-black text-orange-600 hover:underline cursor-pointer"
                   >

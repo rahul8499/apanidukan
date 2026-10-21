@@ -1327,7 +1327,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               </a>
 
               <a
-                href="https://wa.me/917796216506?text=Hi%20QuickStore%20Support,%20I%20need%20technical%20help%20with%20my%20store."
+                href="https://wa.me/917796216506?text=Hi%20Apani%20Dukan%20Support,%20I%20need%20technical%20help%20with%20my%20store."
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-between p-2 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 transition-all text-xs font-extrabold text-[#075E54]"

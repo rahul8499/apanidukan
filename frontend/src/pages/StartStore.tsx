@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
-import { BUSINESS_TYPES, getBusinessTypeTitle } from '../utils/businessTypes'
 import { captureAccurateLocation } from '../utils/accurateLocation'
-import i18n from '../i18n'
 
 const DEFAULT_CATEGORY = 'Clothing, Garments & Fashion'
 
@@ -322,51 +320,55 @@ export default function StartStore() {
   }
 
   return (
-    <main className="min-h-screen w-full bg-slate-50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/80 via-white to-teal-50/80 flex flex-col items-center pt-10 pb-20 px-4 font-sans">
-      <div className="w-full max-w-2xl">
+    <main className="min-h-screen w-full bg-slate-50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-50/80 via-white to-slate-50 flex flex-col items-center px-4 py-7 font-sans sm:py-10">
+      <div className="w-full max-w-xl">
         {/* Header Banner */}
-        <div className="mb-8 text-center">
-          <div className="flex justify-center mb-0 sm:mb-0 mt-0 sm:mt-0">
+        <div className="mb-5 text-center sm:mb-6">
+          <div className="mb-3 flex justify-center">
             <img
-              src="/apanidukan1.png"
+              src="/apanidukan-brand-logo.png"
               alt="Apani Dukan"
-              className="h-28 sm:h-32 md:h-40 lg:h-48 w-auto object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+              className="h-auto w-[220px] max-w-full object-contain sm:w-[250px]"
             />
           </div>
-          <span className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-indigo-50 to-teal-50 border border-indigo-100/50 text-[10px] font-black tracking-widest text-indigo-600 uppercase mb-3 shadow-xs">
-            Launch your digital storefront
+          <span className="inline-flex items-center rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-orange-700">
+            Seller account setup
           </span>
-          <h1 className="text-3xl sm:text-[40px] leading-tight font-black tracking-tight text-slate-900">
-            Apna online store, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-teal-500">minutes mein.</span>
+          <h1 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-3xl">
+            Apna online store, <span className="text-orange-600">minutes mein.</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-lg text-[14px] sm:text-base font-bold text-slate-500 leading-relaxed">
-            Store details bharain, products add karein, aur apna unique customer link share karein.
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600 sm:text-base">
+            Store details add karein, products list karein, aur apna storefront customers ke saath share karein.
           </p>
 
           {/* Mode Selector */}
-          <div className="mt-6 flex justify-center max-w-xs mx-auto rounded-2xl bg-slate-200/70 p-1">
+          <div className="mx-auto mt-5 grid max-w-sm grid-cols-2 rounded-xl border border-slate-200 bg-slate-100 p-1" role="tablist" aria-label="Choose account setup method">
             <button
               type="button"
               onClick={() => { setRegMode('otp'); setError(''); setSuccessMsg(''); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${regMode === 'otp' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-slate-900'
+              role="tab"
+              aria-selected={regMode === 'otp'}
+              className={`min-h-11 rounded-lg px-2 text-sm font-semibold transition-colors ${regMode === 'otp' ? 'bg-white text-orange-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900'
                 }`}
             >
-              📱 Mobile OTP
+              Mobile OTP
             </button>
             <button
               type="button"
               onClick={() => { setRegMode('email'); setError(''); setSuccessMsg(''); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${regMode === 'email' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-slate-900'
+              role="tab"
+              aria-selected={regMode === 'email'}
+              className={`min-h-11 rounded-lg px-2 text-sm font-semibold transition-colors ${regMode === 'email' ? 'bg-white text-orange-700 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900'
                 }`}
             >
-              ✉️ Email Account
+              Email account
             </button>
           </div>
         </div>
 
         {/* Global Alerts */}
         {error && (
-          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div role="alert" className="mb-4 flex flex-col items-start justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 sm:flex-row sm:items-center">
             <div className="flex items-start gap-2.5">
               <span className="text-lg">⚠️</span>
               <div>
@@ -381,7 +383,7 @@ export default function StartStore() {
             {(error.includes('already exists') || error.includes('do account nahi ban sakte')) && (
               <Link
                 to="/login"
-                className="shrink-0 px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black rounded-xl transition-all shadow-sm"
+                className="shrink-0 rounded-lg bg-rose-700 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-rose-800"
               >
                 Login Karein →
               </Link>
@@ -389,7 +391,7 @@ export default function StartStore() {
           </div>
         )}
         {successMsg && (
-          <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 flex items-start gap-2">
+          <div role="status" className="mb-4 flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
             <span>✅</span>
             <div>{successMsg}</div>
           </div>
@@ -397,10 +399,10 @@ export default function StartStore() {
 
         {/* --- FORM 1: MOBILE OTP REGISTRATION --- */}
         {regMode === 'otp' && (
-          <form onSubmit={handleOTPSubmit} className="space-y-8 p-8 sm:p-10 shadow-2xl shadow-indigo-500/10 border border-white/80 rounded-[2.5rem] bg-white/60 backdrop-blur-2xl">
+          <form onSubmit={handleOTPSubmit} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_55px_-30px_rgba(15,23,42,0.3)] sm:p-7">
             {/* Required Indicator Hint */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-[11px] text-slate-400">
-              <span className="font-semibold text-indigo-600 uppercase tracking-wider">Fast Seller Onboarding</span>
+              <span className="font-semibold uppercase tracking-wider text-orange-700">Fast seller setup</span>
               <span><span className="text-rose-500 font-bold">*</span> Zaroori (Required) fields</span>
             </div>
 
@@ -408,7 +410,7 @@ export default function StartStore() {
             <section>
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="section-label text-xs font-bold text-indigo-600">Step 01</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 01</span>
                   <h2 className="mt-0.5 text-lg font-bold text-slate-900">Aapki store information</h2>
                 </div>
                 {otpVerified && (
@@ -445,7 +447,7 @@ export default function StartStore() {
                       type="button"
                       onClick={handleSendOTP}
                       disabled={loading || countdown > 0}
-                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm whitespace-nowrap shadow-sm disabled:opacity-60"
+                      className="rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:opacity-60 sm:text-sm"
                     >
                       {countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP →'}
                     </button>
@@ -470,7 +472,7 @@ export default function StartStore() {
                       maxLength={6}
                       autoComplete="one-time-code"
                       placeholder="Enter 6-digit OTP"
-                      className="premium-input flex-1 text-center font-bold text-lg tracking-widest border-2 border-indigo-300 focus:border-indigo-600 rounded-xl"
+                      className="premium-input flex-1 rounded-xl border-2 border-orange-200 text-center text-lg font-bold tracking-widest focus:border-orange-500"
                     />
                     <button
                       type="button"
@@ -510,7 +512,7 @@ export default function StartStore() {
                   </div>
 
                   {/* Single Default Auto-Selected Category */}
-                  <div className="p-3.5 rounded-2xl border-2 border-indigo-500 bg-indigo-50/70 shadow-xs flex items-center justify-between">
+                  <div className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/60 p-3.5 shadow-xs">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">👗</span>
                       <div>
@@ -518,7 +520,7 @@ export default function StartStore() {
                         <p className="text-xs text-slate-500">Kapde, Readymade, Garments & Fashion</p>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-xl shadow-xs">
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-orange-600 px-2.5 py-1 text-xs font-bold text-white shadow-xs">
                       ✓ Selected
                     </span>
                   </div>
@@ -566,7 +568,7 @@ export default function StartStore() {
 
             {/* STEP 02: Account Details */}
             <section className="border-t border-slate-100 pt-6">
-              <span className="section-label text-xs font-bold text-indigo-600">Step 02</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 02</span>
               <h2 className="mt-0.5 text-lg font-bold text-slate-900">Aapka account</h2>
 
               <div className="mt-4">
@@ -605,7 +607,7 @@ export default function StartStore() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 text-base font-black bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -619,7 +621,7 @@ export default function StartStore() {
 
             <p className="text-center text-sm text-slate-500">
               Already account hai?{' '}
-              <Link className="font-semibold text-indigo-600 hover:underline" to="/login">
+              <Link className="font-semibold text-orange-700 hover:underline" to="/login">
                 Login karein
               </Link>
             </p>
@@ -628,15 +630,15 @@ export default function StartStore() {
 
         {/* --- FORM 2: ORIGINAL EMAIL REGISTRATION (PRESERVED) --- */}
         {regMode === 'email' && (
-          <form onSubmit={handleEmailSubmit} className="space-y-8 p-8 sm:p-10 shadow-2xl shadow-indigo-500/10 border border-white/80 rounded-[2.5rem] bg-white/60 backdrop-blur-2xl">
+          <form onSubmit={handleEmailSubmit} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_55px_-30px_rgba(15,23,42,0.3)] sm:p-7">
             {/* Required Indicator Hint */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-[11px] text-slate-400">
-              <span className="font-semibold text-indigo-600 uppercase tracking-wider">Email Account Setup</span>
+              <span className="font-semibold uppercase tracking-wider text-orange-700">Email account setup</span>
               <span><span className="text-rose-500 font-bold">*</span> Zaroori (Required) fields</span>
             </div>
 
             <section>
-              <p className="section-label text-xs font-bold text-indigo-600">Step 01</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 01</p>
               <h2 className="mt-1 text-lg font-bold text-slate-900">Aapki store information</h2>
               <div className="mt-4 grid gap-3">
                 <div>
@@ -663,7 +665,7 @@ export default function StartStore() {
                   </div>
 
                   {/* Single Default Auto-Selected Category */}
-                  <div className="p-3.5 rounded-2xl border-2 border-indigo-500 bg-indigo-50/70 shadow-xs flex items-center justify-between">
+                  <div className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/60 p-3.5 shadow-xs">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">👗</span>
                       <div>
@@ -671,7 +673,7 @@ export default function StartStore() {
                         <p className="text-xs text-slate-500">Kapde, Readymade, Garments & Fashion</p>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-xl shadow-xs">
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-orange-600 px-2.5 py-1 text-xs font-bold text-white shadow-xs">
                       ✓ Selected
                     </span>
                   </div>
@@ -680,7 +682,7 @@ export default function StartStore() {
             </section>
 
             <section className="border-t border-slate-100 pt-6">
-              <p className="section-label text-xs font-bold text-indigo-600">Step 02</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-orange-700">Step 02</p>
               <h2 className="mt-1 text-lg font-bold text-slate-900">Aapka account</h2>
               <div className="mt-4">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -765,7 +767,7 @@ export default function StartStore() {
                       type="button"
                       onClick={handleSendOTP}
                       disabled={loading || countdown > 0}
-                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm whitespace-nowrap shadow-sm disabled:opacity-60"
+                      className="rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:opacity-60 sm:text-sm"
                     >
                       {countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP →'}
                     </button>
@@ -790,7 +792,7 @@ export default function StartStore() {
                       maxLength={6}
                       autoComplete="one-time-code"
                       placeholder="Enter 6-digit OTP"
-                      className="premium-input flex-1 text-center font-bold text-lg tracking-widest border-2 border-indigo-300 focus:border-indigo-600 rounded-xl"
+                      className="premium-input flex-1 rounded-xl border-2 border-orange-200 text-center text-lg font-bold tracking-widest focus:border-orange-500"
                     />
                     <button
                       type="button"
@@ -838,7 +840,7 @@ export default function StartStore() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 text-base font-black bg-gradient-to-r from-indigo-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-2xl shadow-xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -852,7 +854,7 @@ export default function StartStore() {
 
             <p className="text-center text-sm text-slate-500">
               Already account hai?{' '}
-              <Link className="font-semibold text-indigo-600 hover:underline" to="/login">
+              <Link className="font-semibold text-orange-700 hover:underline" to="/login">
                 Login karein
               </Link>
             </p>

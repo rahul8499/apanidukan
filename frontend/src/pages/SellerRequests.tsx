@@ -127,11 +127,11 @@ export default function SellerRequests() {
       <SellerHeader store={store} activeTabTitle={t('productRequestsTitle')} onStoreUpdate={loadStore} />
 
       <div className="space-y-4 p-4 sm:p-6">
-        <div className="rounded-2xl bg-gradient-to-br from-amber-800 via-amber-700 to-slate-900 p-5 text-white shadow-lg border border-amber-600/30 flex items-center justify-between">
+        <div className="rounded-2xl border border-seller-100 bg-gradient-to-br from-seller-50 via-white to-seller-50 p-5 text-slate-900 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-amber-200">{t('productRequestsTitle')}</p>
+            <p className="text-sm font-semibold text-seller-700">{t('productRequestsTitle')}</p>
             <p className="mt-1 text-xl font-bold">{t('fulfillmentQueue')}</p>
-            <p className="mt-2 text-xs text-amber-100 leading-relaxed">
+            <p className="mt-2 text-xs text-slate-600 leading-relaxed">
               {t('productRequestsSubtitle')}
             </p>
           </div>
@@ -142,7 +142,7 @@ export default function SellerRequests() {
               await loadStore()
               setTimeout(() => setIsRefreshingData(false), 500)
             }}
-            className="flex shrink-0 items-center gap-1.5 rounded-xl border border-amber-400/40 bg-amber-950/60 px-3 py-2 text-xs font-extrabold text-amber-200 hover:bg-amber-900 hover:text-white transition-all cursor-pointer shadow-xs ml-3"
+            className="flex shrink-0 items-center gap-1.5 rounded-xl border border-seller-200 bg-white px-3 py-2 text-xs font-extrabold text-seller-700 hover:bg-seller-50 transition-all cursor-pointer shadow-xs ml-3"
             title="Click to fetch live fresh product requests"
           >
             <span className={`text-sm ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
@@ -155,15 +155,15 @@ export default function SellerRequests() {
         <section className="space-y-3">
           <h2 className="text-sm font-black text-slate-900">Returns, Exchanges & Refunds ({orderIssues.length})</h2>
           {orderIssues.length === 0 ? <div className="rounded-2xl border border-dashed p-5 text-center text-xs text-slate-500">No order issue requests.</div> : orderIssues.map(issue => (
-            <div key={issue.id} className="rounded-2xl border border-amber-200 bg-white p-4 shadow-xs space-y-2">
-              <div className="flex justify-between"><b className="text-sm">{issue.request_type} · Order #{issue.order}</b><span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-black text-amber-800">{issue.status}</span></div>
+            <div key={issue.id} className="rounded-2xl border border-seller-200 bg-white p-4 shadow-xs space-y-2">
+              <div className="flex justify-between"><b className="text-sm">{issue.request_type} · Order #{issue.order}</b><span className="rounded-full bg-seller-50 px-2 py-1 text-[10px] font-black text-seller-800">{issue.status}</span></div>
               <p className="text-xs text-slate-700">Size {issue.selected_size || 'N/A'}{issue.requested_size ? ` → ${issue.requested_size}` : ''} · Qty {issue.quantity}</p>
               <p className="rounded-lg bg-slate-50 p-2 text-xs text-slate-700">{issue.reason}</p>
               {issue.evidence?.length > 0 && <div className="flex gap-2 overflow-x-auto">{issue.evidence.map((src: string, index: number) => <a key={src} href={src} target="_blank" rel="noreferrer"><img src={src} alt={`Exchange evidence ${index + 1}`} className="h-20 w-20 rounded-lg border object-cover"/></a>)}</div>}
               <div className="flex flex-wrap gap-2">
                 {issue.status === 'REQUESTED' && <><button onClick={() => updateIssue(issue, 'APPROVED')} className="rounded-lg bg-emerald-600 px-3 py-2 text-[11px] font-black text-white">Approve</button><button onClick={() => updateIssue(issue, 'REJECTED')} className="rounded-lg bg-rose-100 px-3 py-2 text-[11px] font-black text-rose-800">Reject</button></>}
-                {issue.status === 'APPROVED' && <button onClick={() => updateIssue(issue, 'PROCESSING')} className="rounded-lg bg-indigo-600 px-3 py-2 text-[11px] font-black text-white">Start Processing</button>}
-                {issue.status === 'PROCESSING' && <><button onClick={() => issue.request_type === 'EXCHANGE' ? completeExchange(issue) : updateIssue(issue, 'COMPLETED')} className="rounded-lg bg-slate-950 px-3 py-2 text-[11px] font-black text-white">{issue.request_type === 'EXCHANGE' ? 'OTP + Proof & Complete' : 'Complete'}</button><button onClick={() => updateIssue(issue, 'FAILED')} className="rounded-lg bg-slate-200 px-3 py-2 text-[11px] font-black">Mark Failed</button></>}
+                {issue.status === 'APPROVED' && <button onClick={() => updateIssue(issue, 'PROCESSING')} className="rounded-lg bg-seller-600 px-3 py-2 text-[11px] font-black text-white">Start Processing</button>}
+                {issue.status === 'PROCESSING' && <><button onClick={() => issue.request_type === 'EXCHANGE' ? completeExchange(issue) : updateIssue(issue, 'COMPLETED')} className="rounded-lg bg-seller-600 px-3 py-2 text-[11px] font-black text-white hover:bg-seller-700">{issue.request_type === 'EXCHANGE' ? 'OTP + Proof & Complete' : 'Complete'}</button><button onClick={() => updateIssue(issue, 'FAILED')} className="rounded-lg bg-slate-200 px-3 py-2 text-[11px] font-black">Mark Failed</button></>}
                 {issue.provider_refund_id && <span className="text-[10px] font-mono text-slate-600">Refund ref: {issue.provider_refund_id}</span>}
               </div>
             </div>

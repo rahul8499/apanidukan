@@ -177,13 +177,13 @@ export default function SellerDeliveryConfigModal({
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 p-4 sm:p-5 bg-white/95 backdrop-blur-md">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-inner">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-seller-50 text-seller-600 border border-seller-100 shadow-inner">
               <Truck className="h-5 w-5" />
             </div>
             <div>
               <h3 className="font-black text-base sm:text-lg text-slate-900 flex items-center gap-2">
                 <span>Fulfillment & Delivery Settings</span>
-                <span className="text-[10px] bg-indigo-50 text-indigo-700 font-extrabold px-2 py-0.5 rounded-full border border-indigo-200">
+                <span className="text-[10px] bg-seller-50 text-seller-700 font-extrabold px-2 py-0.5 rounded-full border border-seller-200">
                   Seller Rules
                 </span>
               </h3>
@@ -217,7 +217,7 @@ export default function SellerDeliveryConfigModal({
           )}
 
           {/* SECTION 1: HOME DELIVERY CONFIGURATION */}
-          <div className="rounded-2xl border border-indigo-100 bg-white p-4 sm:p-5 space-y-4 shadow-xs">
+          <div className="rounded-2xl border border-seller-100 bg-white p-4 sm:p-5 space-y-4 shadow-xs">
             
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
@@ -232,7 +232,7 @@ export default function SellerDeliveryConfigModal({
                     value={serviceablePincodes}
                     onChange={(e) => setServiceablePincodes(e.target.value)}
                     placeholder="411001, 411002, 411003"
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:bg-white focus:outline-none"
                   />
                   <p className="mt-1 text-[10px] font-medium text-slate-500">Comma-separated 6-digit pincodes. Leave blank to use GPS radius only.</p>
                 </div>
@@ -272,7 +272,7 @@ export default function SellerDeliveryConfigModal({
                         value={minDeliveryOrder}
                         onChange={(e) => setMinDeliveryOrder(e.target.value)}
                         placeholder="e.g. 100"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-7 pr-3 py-2 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-indigo-600 focus:bg-white focus:outline-none transition-colors"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-7 pr-3 py-2 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-seller-600 focus:bg-white focus:outline-none transition-colors"
                       />
                     </div>
                     <p className="text-[10px] text-slate-500 mt-1 font-medium">
@@ -283,7 +283,7 @@ export default function SellerDeliveryConfigModal({
                   <div>
                     <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                       <span>Maximum Delivery Radius</span>
-                      <span className="text-[10px] text-indigo-600 font-extrabold">KM</span>
+                      <span className="text-[10px] text-seller-600 font-extrabold">KM</span>
                     </label>
                     <div className="relative mt-1.5">
                       <Navigation className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
@@ -295,7 +295,7 @@ export default function SellerDeliveryConfigModal({
                         value={deliveryRadiusKm}
                         onChange={(e) => setDeliveryRadiusKm(e.target.value)}
                         placeholder="e.g. 10"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-8 pr-3 py-2 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-indigo-600 focus:bg-white focus:outline-none transition-colors"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-8 pr-3 py-2 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-seller-600 focus:bg-white focus:outline-none transition-colors"
                       />
                     </div>
                     <p className="text-[10px] text-slate-500 mt-1 font-medium">
@@ -323,14 +323,14 @@ export default function SellerDeliveryConfigModal({
                         onClick={() => setDeliveryChargeType(model.id)}
                         className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                           deliveryChargeType === model.id
-                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-1 ring-indigo-300'
+                            ? 'bg-seller-600 text-white border-seller-600 shadow-sm ring-1 ring-seller-300'
                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                         }`}
                       >
                         <span className="text-sm block">{model.icon}</span>
                         <p className="text-[11px] font-black mt-1 leading-tight">{model.label}</p>
                         <p className={`text-[9px] mt-0.5 font-medium ${
-                          deliveryChargeType === model.id ? 'text-indigo-100' : 'text-slate-400'
+                          deliveryChargeType === model.id ? 'text-seller-100' : 'text-slate-400'
                         }`}>
                           {model.desc}
                         </p>
@@ -353,7 +353,7 @@ export default function SellerDeliveryConfigModal({
                           value={deliveryFlatFee}
                           onChange={(e) => setDeliveryFlatFee(e.target.value)}
                           placeholder="30"
-                          className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                          className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -371,7 +371,7 @@ export default function SellerDeliveryConfigModal({
                           value={deliveryPerKmFee}
                           onChange={(e) => setDeliveryPerKmFee(e.target.value)}
                           placeholder="5"
-                          className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                          className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -390,7 +390,7 @@ export default function SellerDeliveryConfigModal({
                             value={deliveryFlatFee}
                             onChange={(e) => setDeliveryFlatFee(e.target.value)}
                             placeholder="20"
-                            className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                            className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none"
                           />
                         </div>
                       </div>
@@ -405,7 +405,7 @@ export default function SellerDeliveryConfigModal({
                             value={deliveryPerKmFee}
                             onChange={(e) => setDeliveryPerKmFee(e.target.value)}
                             placeholder="5"
-                            className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                            className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none"
                           />
                         </div>
                       </div>
@@ -435,7 +435,7 @@ export default function SellerDeliveryConfigModal({
                           value={freeDeliveryAbove}
                           onChange={(e) => setFreeDeliveryAbove(e.target.value)}
                           placeholder="e.g. 499"
-                          className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                          className="w-full rounded-xl border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none"
                         />
                       </div>
                       <p className="text-[10px] text-slate-500 mt-1 font-medium">
@@ -456,7 +456,7 @@ export default function SellerDeliveryConfigModal({
                     value={deliveryEstimatedTime}
                     onChange={(e) => setDeliveryEstimatedTime(e.target.value)}
                     placeholder="e.g. 30-45 mins or 1-2 hours"
-                    className="w-full mt-1.5 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-indigo-600 focus:bg-white focus:outline-none transition-colors"
+                    className="w-full mt-1.5 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-seller-600 focus:bg-white focus:outline-none transition-colors"
                   />
                 </div>
 
@@ -469,10 +469,10 @@ export default function SellerDeliveryConfigModal({
           </div>
 
           {/* SECTION 2: WALK-IN STORE PICKUP */}
-          <div className="rounded-2xl border border-amber-200/80 bg-white p-4 sm:p-5 space-y-3 shadow-xs">
+          <div className="rounded-2xl border border-seller-200/80 bg-white p-4 sm:p-5 space-y-3 shadow-xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-200 text-base shadow-inner">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-seller-50 text-seller-600 border border-seller-200 text-base shadow-inner">
                   🏪
                 </div>
                 <div>
@@ -500,17 +500,17 @@ export default function SellerDeliveryConfigModal({
                   value={pickupInstructions}
                   onChange={(e) => setPickupInstructions(e.target.value)}
                   placeholder="e.g. Ready in 15 mins • Counter Pickup 10 AM - 9 PM"
-                  className="w-full mt-1.5 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-indigo-600 focus:bg-white focus:outline-none transition-colors"
+                  className="w-full mt-1.5 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-seller-600 focus:bg-white focus:outline-none transition-colors"
                 />
               </div>
             )}
           </div>
 
           {/* SECTION 3: GARMENTS EXCHANGE POLICY */}
-          <div id="exchange-policy-settings" className="scroll-mt-24 rounded-2xl border-2 border-violet-300 bg-white p-4 sm:p-5 space-y-4 shadow-md">
+          <div id="exchange-policy-settings" className="scroll-mt-24 rounded-2xl border-2 border-seller-300 bg-white p-4 sm:p-5 space-y-4 shadow-md">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div><h4 className="text-sm font-black text-slate-900">🔄 Customer Exchange Facility</h4><p className="text-[11px] text-slate-500">Control whether delivered garments can be exchanged.</p></div>
-              <label className="relative inline-flex cursor-pointer items-center"><input type="checkbox" checked={exchangeEnabled} onChange={e => setExchangeEnabled(e.target.checked)} className="sr-only peer"/><div className="h-6 w-11 rounded-full bg-slate-200 peer peer-checked:bg-violet-600 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:bg-white after:transition-all peer-checked:after:translate-x-full" /></label>
+              <label className="relative inline-flex cursor-pointer items-center"><input type="checkbox" checked={exchangeEnabled} onChange={e => setExchangeEnabled(e.target.checked)} className="sr-only peer"/><div className="h-6 w-11 rounded-full bg-slate-200 peer peer-checked:bg-seller-600 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:bg-white after:transition-all peer-checked:after:translate-x-full" /></label>
             </div>
             {exchangeEnabled && <div className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
@@ -519,19 +519,19 @@ export default function SellerDeliveryConfigModal({
               </div>
               <label className="block text-xs font-bold text-slate-700">Allowed reasons (one per line)<textarea value={exchangeReasons} onChange={e => setExchangeReasons(e.target.value)} className="mt-1.5 min-h-28 w-full rounded-xl border p-3 font-medium"/></label>
               <label className="block text-xs font-bold text-slate-700">Customer policy and item condition<textarea value={exchangePolicy} onChange={e => setExchangePolicy(e.target.value)} className="mt-1.5 min-h-20 w-full rounded-xl border p-3 font-medium" placeholder="Unused, unwashed, original tags required..."/></label>
-              <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-[11px] text-violet-900">Customers will see exchange only after delivery and only for {exchangeWindowDays || 7} days. Backend applies these rules even if someone bypasses the UI.</div>
+              <div className="rounded-xl border border-seller-200 bg-seller-50 p-3 text-[11px] text-seller-900">Customers will see exchange only after delivery and only for {exchangeWindowDays || 7} days. Backend applies these rules even if someone bypasses the UI.</div>
             </div>}
           </div>
 
           {/* LIVE SUMMARY / CUSTOMER PREVIEW CARD */}
-          <div className="rounded-2xl bg-gradient-to-br from-indigo-50/70 via-purple-50/50 to-white border border-indigo-200 p-4 space-y-2 shadow-xs">
-            <div className="flex items-center gap-1.5 text-xs font-black text-indigo-700">
+          <div className="rounded-2xl bg-gradient-to-br from-seller-50/70 via-seller-50/50 to-white border border-seller-200 p-4 space-y-2 shadow-xs">
+            <div className="flex items-center gap-1.5 text-xs font-black text-seller-700">
               <Sparkles className="h-3.5 w-3.5" />
               <span>Customer Checkout Preview</span>
             </div>
             
             <div className="grid sm:grid-cols-2 gap-2.5 text-[11px]">
-              <div className="p-3 rounded-xl bg-white border border-indigo-100 shadow-2xs">
+              <div className="p-3 rounded-xl bg-white border border-seller-100 shadow-2xs">
                 <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
                   <span>🚚 Home Delivery:</span>
                   <span className={`text-[10px] font-black uppercase px-1.5 py-0.2 rounded-full ${
@@ -555,7 +555,7 @@ export default function SellerDeliveryConfigModal({
                 )}
               </div>
 
-              <div className="p-3 rounded-xl bg-white border border-amber-100 shadow-2xs">
+              <div className="p-3 rounded-xl bg-white border border-seller-100 shadow-2xs">
                 <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
                   <span>🏪 Store Pickup:</span>
                   <span className={`text-[10px] font-black uppercase px-1.5 py-0.2 rounded-full ${
@@ -588,7 +588,7 @@ export default function SellerDeliveryConfigModal({
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-black shadow-md shadow-indigo-200 hover:opacity-95 transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-seller-600 to-seller-600 text-white text-xs font-black shadow-md shadow-seller-200 hover:opacity-95 transition-all cursor-pointer disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
               <span>{saving ? 'Saving Settings...' : 'Save Fulfillment Rules'}</span>

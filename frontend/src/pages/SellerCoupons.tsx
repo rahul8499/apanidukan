@@ -401,21 +401,21 @@ export default function SellerCoupons() {
       <main className="w-full p-2.5 sm:p-6 space-y-3 sm:space-y-6">
         
         {/* 🌟 PWA & WEB ADAPTIVE HERO BANNER (ULTRA-SMALL ANDROID CARD / RICH DESKTOP BANNER) */}
-        <div className="relative overflow-hidden rounded-xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-2.5 sm:p-6 lg:p-8 text-white border border-indigo-900/60 shadow-xs sm:shadow-md">
-          <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+        <div className="relative overflow-hidden rounded-xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-seller-950 to-slate-900 p-2.5 sm:p-6 lg:p-8 text-white border border-seller-900/60 shadow-xs sm:shadow-md">
+          <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-seller-500/20 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-rose-500/15 blur-3xl pointer-events-none" />
 
           {/* Top Row: Title + Action Button */}
           <div className="relative z-10 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="flex h-6 w-6 sm:h-9 sm:w-9 items-center justify-center rounded-lg sm:rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 text-[10px] sm:text-sm shrink-0">
+              <span className="flex h-6 w-6 sm:h-9 sm:w-9 items-center justify-center rounded-lg sm:rounded-xl bg-seller-500/20 text-seller-400 border border-seller-400/30 text-[10px] sm:text-sm shrink-0">
                 <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 animate-pulse" />
               </span>
               <div className="min-w-0">
                 <h1 className="text-xs sm:text-lg lg:text-2xl font-black text-white tracking-tight truncate">
                   {t('promotionsHub')}
                 </h1>
-                <p className="text-[9px] sm:text-xs text-indigo-300 font-bold truncate">
+                <p className="text-[9px] sm:text-xs text-seller-300 font-bold truncate">
                   {t('discountsFlashCoinsGifts')}
                 </p>
               </div>
@@ -424,7 +424,7 @@ export default function SellerCoupons() {
             <button
               type="button"
               onClick={openCreateModal}
-              className="flex items-center justify-center gap-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 px-2.5 sm:px-5 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-black text-white shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+              className="flex items-center justify-center gap-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-seller-500 via-seller-600 to-seller-600 px-2.5 sm:px-5 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-black text-white shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
             >
               <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>{t('newCouponBtn')}</span>
@@ -432,19 +432,19 @@ export default function SellerCoupons() {
           </div>
 
           {/* ⚡ 5-PILLAR LIVE STATUS SNAPSHOT (2-COL / 3-COL / 5-COL RESPONSIVE GRID) */}
-          <div className="mt-2 pt-2 sm:mt-5 sm:pt-4 border-t border-indigo-800/40 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2.5">
+          <div className="mt-2 pt-2 sm:mt-5 sm:pt-4 border-t border-seller-800/40 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2.5">
             {/* Pill 1: Coupons */}
             <button
               type="button"
               onClick={() => setActiveTab('coupons')}
               className={`p-1.5 sm:p-3 rounded-lg sm:rounded-xl border text-left transition-all cursor-pointer ${
                 activeTab === 'coupons'
-                  ? 'bg-indigo-600/35 border-indigo-400 shadow-xs ring-1 ring-indigo-400/50'
+                  ? 'bg-seller-600/35 border-seller-400 shadow-xs ring-1 ring-seller-400/50'
                   : 'bg-white/5 border-white/10 hover:bg-white/10'
               }`}
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] sm:text-[10px] font-black uppercase text-indigo-300 flex items-center gap-1 truncate">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase text-seller-300 flex items-center gap-1 truncate">
                   <Tag className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 shrink-0" />
                   <span className="truncate">{t('tabCoupons')}</span>
                 </span>
@@ -489,17 +489,17 @@ export default function SellerCoupons() {
               onClick={() => setActiveTab('loyalty')}
               className={`p-1.5 sm:p-3 rounded-lg sm:rounded-xl border text-left transition-all cursor-pointer ${
                 activeTab === 'loyalty'
-                  ? 'bg-amber-600/35 border-amber-400 shadow-xs ring-1 ring-amber-400/50'
+                  ? 'bg-seller-600/35 border-seller-400 shadow-xs ring-1 ring-seller-400/50'
                   : 'bg-white/5 border-white/10 hover:bg-white/10'
               }`}
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] sm:text-[10px] font-black uppercase text-amber-300 flex items-center gap-1 truncate">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase text-seller-300 flex items-center gap-1 truncate">
                   <Coins className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 shrink-0" />
                   <span className="truncate">{t('tabCoins')}</span>
                 </span>
                 <span className={`text-[8px] sm:text-[9px] font-black px-1 py-0.2 rounded border shrink-0 ${
-                  enableLoyaltyCashback ? 'bg-amber-950 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
+                  enableLoyaltyCashback ? 'bg-seller-950 text-seller-300 border-seller-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
                 }`}>
                   {enableLoyaltyCashback ? `${loyaltyCashbackPercent}%` : 'OFF'}
                 </span>
@@ -515,17 +515,17 @@ export default function SellerCoupons() {
               onClick={() => setActiveTab('scratch')}
               className={`p-1.5 sm:p-3 rounded-lg sm:rounded-xl border text-left transition-all cursor-pointer ${
                 activeTab === 'scratch'
-                  ? 'bg-purple-600/35 border-purple-400 shadow-xs ring-1 ring-purple-400/50'
+                  ? 'bg-seller-600/35 border-seller-400 shadow-xs ring-1 ring-seller-400/50'
                   : 'bg-white/5 border-white/10 hover:bg-white/10'
               }`}
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[9px] sm:text-[10px] font-black uppercase text-purple-300 flex items-center gap-1 truncate">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase text-seller-300 flex items-center gap-1 truncate">
                   <Gift className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 shrink-0" />
                   <span className="truncate">{t('tabGift')}</span>
                 </span>
                 <span className={`text-[8px] sm:text-[9px] font-black px-1 py-0.2 rounded border shrink-0 ${
-                  scratchConfig.enabled ? 'bg-purple-950 text-purple-300 border-purple-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
+                  scratchConfig.enabled ? 'bg-seller-950 text-seller-300 border-seller-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
                 }`}>
                   {scratchConfig.enabled ? 'ON' : 'OFF'}
                 </span>
@@ -562,7 +562,7 @@ export default function SellerCoupons() {
         </div>
 
         {/* 🚀 PROMINENT 1-CLICK WHATSAPP OFFER BROADCAST ACTION BANNER */}
-        <div className="rounded-xl sm:rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-slate-950 via-teal-950 to-emerald-950 p-3 sm:p-4 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="rounded-xl sm:rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-slate-950 via-seller-950 to-emerald-950 p-3 sm:p-4 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-sm sm:text-lg border border-emerald-400/30 shadow-xs">
               📲
@@ -576,7 +576,7 @@ export default function SellerCoupons() {
                   {t('repeatOrdersTag')}
                 </span>
               </div>
-              <p className="text-[10px] sm:text-xs text-teal-300/90 font-medium truncate">
+              <p className="text-[10px] sm:text-xs text-seller-300/90 font-medium truncate">
                 {t('sendActiveCouponsSubtext')}
               </p>
             </div>
@@ -596,7 +596,7 @@ export default function SellerCoupons() {
                 await fetchCustomersForCrm()
                 setShowWhatsAppCrmModal(true)
               }}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-seller-600 hover:from-emerald-400 hover:to-seller-500 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-black text-white shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <MessageSquare className="h-4 w-4" />
               <span>{t('oneClickBroadcast')}</span>
@@ -622,7 +622,7 @@ export default function SellerCoupons() {
             onClick={() => setActiveTab('coupons')}
             className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black transition-all shrink-0 cursor-pointer snap-start ${
               activeTab === 'coupons'
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? 'bg-seller-600 text-white shadow-xs'
                 : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'
             }`}
           >
@@ -662,7 +662,7 @@ export default function SellerCoupons() {
             onClick={() => setActiveTab('loyalty')}
             className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black transition-all shrink-0 cursor-pointer snap-start ${
               activeTab === 'loyalty'
-                ? 'bg-amber-600 text-white shadow-xs'
+                ? 'bg-seller-600 text-white shadow-xs'
                 : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'
             }`}
           >
@@ -670,7 +670,7 @@ export default function SellerCoupons() {
             <span>{t('tabCoins')}</span>
             {enableLoyaltyCashback && (
               <span className={`ml-1 rounded-full px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black border ${
-                activeTab === 'loyalty' ? 'bg-white/20 text-white border-white/30' : 'bg-amber-100 text-amber-800 border-amber-200'
+                activeTab === 'loyalty' ? 'bg-white/20 text-white border-white/30' : 'bg-seller-100 text-seller-800 border-seller-200'
               }`}>
                 {loyaltyCashbackPercent}%
               </span>
@@ -682,7 +682,7 @@ export default function SellerCoupons() {
             onClick={() => setActiveTab('scratch')}
             className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black transition-all shrink-0 cursor-pointer snap-start ${
               activeTab === 'scratch'
-                ? 'bg-purple-600 text-white shadow-xs'
+                ? 'bg-seller-600 text-white shadow-xs'
                 : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'
             }`}
           >
@@ -690,7 +690,7 @@ export default function SellerCoupons() {
             <span>{t('tabGift')}</span>
             {scratchConfig.enabled && (
               <span className={`ml-1 rounded-full px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black border ${
-                activeTab === 'scratch' ? 'bg-white/20 text-white border-white/30' : 'bg-purple-100 text-purple-800 border-purple-200'
+                activeTab === 'scratch' ? 'bg-white/20 text-white border-white/30' : 'bg-seller-100 text-seller-800 border-seller-200'
               }`}>
                 ON
               </span>
@@ -722,14 +722,14 @@ export default function SellerCoupons() {
         {activeTab === 'coupons' && (
           <div className="space-y-2.5 sm:space-y-5 animate-fade-in">
             {/* Simple How-it-Works Hint */}
-            <div className="rounded-lg sm:rounded-xl bg-indigo-50/70 border border-indigo-200 p-2.5 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div className="rounded-lg sm:rounded-xl bg-seller-50/70 border border-seller-200 p-2.5 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-600 text-white font-bold text-xs shrink-0">
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-seller-600 text-white font-bold text-xs shrink-0">
                   💡
                 </span>
                 <div>
-                  <p className="font-extrabold text-indigo-950 text-[11px] sm:text-xs">{t('howCouponsWorkTitle')}</p>
-                  <p className="text-indigo-800 font-medium text-[10px] sm:text-[11px]">
+                  <p className="font-extrabold text-seller-950 text-[11px] sm:text-xs">{t('howCouponsWorkTitle')}</p>
+                  <p className="text-seller-800 font-medium text-[10px] sm:text-[11px]">
                     {t('howCouponsWorkDesc')}
                   </p>
                 </div>
@@ -737,7 +737,7 @@ export default function SellerCoupons() {
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="inline-flex items-center justify-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[11px] sm:text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shrink-0 self-start sm:self-auto"
+                className="inline-flex items-center justify-center gap-1 rounded-lg bg-seller-600 px-3 py-1.5 text-[11px] sm:text-xs font-black text-white hover:bg-seller-700 transition-all cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 <Plus className="h-3 w-3" />
                 <span>{t('createCoupon')}</span>
@@ -751,14 +751,14 @@ export default function SellerCoupons() {
                 <p className="text-base sm:text-2xl font-black text-emerald-600">{publishedCoupons.length}</p>
                 <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium hidden sm:block">{t('liveForCustomers')}</p>
               </div>
-              <div className="rounded-lg sm:rounded-2xl bg-white border border-amber-200 p-2.5 sm:p-4 space-y-0.5 shadow-xs text-center sm:text-left">
-                <p className="text-[9px] sm:text-[11px] font-bold text-amber-700 uppercase tracking-tight truncate">{t('draftCoupons')}</p>
-                <p className="text-base sm:text-2xl font-black text-amber-600">{draftCoupons.length}</p>
+              <div className="rounded-lg sm:rounded-2xl bg-white border border-seller-200 p-2.5 sm:p-4 space-y-0.5 shadow-xs text-center sm:text-left">
+                <p className="text-[9px] sm:text-[11px] font-bold text-seller-700 uppercase tracking-tight truncate">{t('draftCoupons')}</p>
+                <p className="text-base sm:text-2xl font-black text-seller-600">{draftCoupons.length}</p>
                 <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium hidden sm:block">{t('hiddenNotLive')}</p>
               </div>
-              <div className="rounded-lg sm:rounded-2xl bg-white border border-indigo-200 p-2.5 sm:p-4 space-y-0.5 shadow-xs text-center sm:text-left">
-                <p className="text-[9px] sm:text-[11px] font-bold text-indigo-700 uppercase tracking-tight truncate">{t('timesUsed')}</p>
-                <p className="text-base sm:text-2xl font-black text-indigo-600">{totalUsage}</p>
+              <div className="rounded-lg sm:rounded-2xl bg-white border border-seller-200 p-2.5 sm:p-4 space-y-0.5 shadow-xs text-center sm:text-left">
+                <p className="text-[9px] sm:text-[11px] font-bold text-seller-700 uppercase tracking-tight truncate">{t('timesUsed')}</p>
+                <p className="text-base sm:text-2xl font-black text-seller-600">{totalUsage}</p>
                 <p className="text-[8px] sm:text-[10px] text-slate-500 font-medium hidden sm:block">{t('ordersPlaced')}</p>
               </div>
             </div>
@@ -767,7 +767,7 @@ export default function SellerCoupons() {
             <div className="rounded-xl sm:rounded-2xl bg-white border border-slate-200 p-3 sm:p-5 space-y-3 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                 <h2 className="text-xs sm:text-base font-black text-slate-900 flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-600" />
+                  <Tag className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-seller-600" />
                   <span>{t('storeCouponsTitle')} ({filteredCoupons.length})</span>
                 </h2>
 
@@ -800,7 +800,7 @@ export default function SellerCoupons() {
                     onClick={() => setStatusFilter('DRAFT')}
                     className={`px-2 py-1 rounded-md text-[10px] sm:text-[11px] font-black transition-all cursor-pointer shrink-0 ${
                       statusFilter === 'DRAFT'
-                        ? 'bg-amber-500 text-white shadow-2xs'
+                        ? 'bg-seller-500 text-white shadow-2xs'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
@@ -828,7 +828,7 @@ export default function SellerCoupons() {
                   <button
                     type="button"
                     onClick={openCreateModal}
-                    className="mt-1 inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 cursor-pointer"
+                    className="mt-1 inline-flex items-center gap-1 rounded-lg bg-seller-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-seller-700 cursor-pointer"
                   >
                     <Plus className="h-3 w-3" />
                     <span>{t('createFirstCoupon')}</span>
@@ -847,12 +847,12 @@ export default function SellerCoupons() {
                     >
                       <div className="flex items-start justify-between gap-1.5">
                         <div>
-                          <span className="inline-block px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono font-black text-xs tracking-wider">
+                          <span className="inline-block px-2 py-0.5 rounded-md bg-seller-50 border border-seller-200 text-seller-700 font-mono font-black text-xs tracking-wider">
                             {coupon.code}
                           </span>
                           <p className="mt-1 text-xs font-extrabold flex items-center gap-1">
                             {coupon.discount_type === 'BOGO' ? (
-                              <span className="text-purple-600 font-black flex items-center gap-1">
+                              <span className="text-seller-600 font-black flex items-center gap-1">
                                 🎁 BOGO (Buy 1 Get 1 Free)
                               </span>
                             ) : coupon.discount_type === 'FREE_DELIVERY' ? (
@@ -877,7 +877,7 @@ export default function SellerCoupons() {
                         <span className={`px-1.5 py-0.2 rounded-full text-[8px] font-black uppercase tracking-wide flex items-center gap-1 shrink-0 ${
                           coupon.is_active
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : 'bg-amber-100 text-amber-800 border border-amber-300'
+                            : 'bg-seller-100 text-seller-800 border border-seller-300'
                         }`}>
                           {coupon.is_active ? <>{t('activeCoupons')}</> : <>{t('draftCoupons')}</>}
                         </span>
@@ -887,8 +887,8 @@ export default function SellerCoupons() {
                       <div className="rounded-md bg-slate-50 p-1.5 border border-slate-200 text-[10px]">
                         <p className="text-[8px] font-extrabold text-slate-500 uppercase">{t('appliesTo')}</p>
                         {coupon.product_name ? (
-                          <p className="text-indigo-700 font-bold flex items-center gap-1 mt-0.5 truncate text-[10px]">
-                            <ShoppingBag className="h-2.5 w-2.5 text-indigo-600 shrink-0" />
+                          <p className="text-seller-700 font-bold flex items-center gap-1 mt-0.5 truncate text-[10px]">
+                            <ShoppingBag className="h-2.5 w-2.5 text-seller-600 shrink-0" />
                             <span className="truncate">{t('onlyProduct')} {coupon.product_name}</span>
                           </p>
                         ) : (
@@ -912,7 +912,7 @@ export default function SellerCoupons() {
                         )}
                         <div className="flex justify-between">
                           <span className="text-slate-500">{t('timesUsed')}</span>
-                          <strong className="text-indigo-600 font-black">{coupon.usage_count || 0} orders</strong>
+                          <strong className="text-seller-600 font-black">{coupon.usage_count || 0} orders</strong>
                         </div>
                       </div>
 
@@ -921,7 +921,7 @@ export default function SellerCoupons() {
                         <button
                           type="button"
                           onClick={() => openEditModal(coupon)}
-                          className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-200 flex items-center gap-1 cursor-pointer"
+                          className="text-seller-600 hover:text-seller-800 bg-seller-50 px-2 py-1 rounded-md border border-seller-200 flex items-center gap-1 cursor-pointer"
                         >
                           <span>✏️ Edit</span>
                         </button>
@@ -932,7 +932,7 @@ export default function SellerCoupons() {
                             onClick={() => toggleCouponStatus(coupon)}
                             className={`px-2 py-1 rounded-md text-[9px] font-black transition-all cursor-pointer ${
                               coupon.is_active
-                                ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                ? 'bg-seller-50 text-seller-800 border border-seller-200'
                                 : 'bg-emerald-600 text-white'
                             }`}
                           >
@@ -1126,22 +1126,22 @@ export default function SellerCoupons() {
         {/* ══════════════════════════════════════════════════════════════════════ */}
         {activeTab === 'loyalty' && (
           <div className="space-y-2.5 sm:space-y-5 animate-fade-in">
-            <div className="rounded-lg sm:rounded-xl bg-amber-50/70 border border-amber-200 p-2.5 sm:p-3 flex items-center gap-2 text-xs">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500 text-slate-950 font-bold text-xs shrink-0">
+            <div className="rounded-lg sm:rounded-xl bg-seller-50/70 border border-seller-200 p-2.5 sm:p-3 flex items-center gap-2 text-xs">
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-seller-500 text-slate-950 font-bold text-xs shrink-0">
                 🪙
               </span>
               <div>
-                <p className="font-extrabold text-amber-950 text-[11px] sm:text-xs">{t('howCashbackWorksTitle')}</p>
-                <p className="text-amber-900 font-medium text-[10px] sm:text-[11px]">
+                <p className="font-extrabold text-seller-950 text-[11px] sm:text-xs">{t('howCashbackWorksTitle')}</p>
+                <p className="text-seller-900 font-medium text-[10px] sm:text-[11px]">
                   {t('howCashbackWorksDesc')}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-xl sm:rounded-2xl bg-white border border-amber-200 p-3.5 sm:p-6 space-y-3.5 shadow-xs text-slate-900 relative overflow-hidden">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-amber-100 pb-3">
+            <div className="rounded-xl sm:rounded-2xl bg-white border border-seller-200 p-3.5 sm:p-6 space-y-3.5 shadow-xs text-slate-900 relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-seller-100 pb-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg bg-amber-400 text-slate-950 text-base sm:text-xl font-black shadow-xs">
+                  <span className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg bg-seller-400 text-slate-950 text-base sm:text-xl font-black shadow-xs">
                     🪙
                   </span>
                   <div>
@@ -1149,7 +1149,7 @@ export default function SellerCoupons() {
                       <h2 className="text-xs sm:text-base font-black text-slate-900">{t('cashbackProgram')}</h2>
                       <span className={`text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border ${
                         enableLoyaltyCashback 
-                          ? 'bg-amber-100 text-amber-800 border-amber-300' 
+                          ? 'bg-seller-100 text-seller-800 border-seller-300'
                           : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}>
                         {enableLoyaltyCashback ? `${loyaltyCashbackPercent}% Active` : 'Disabled'}
@@ -1163,14 +1163,14 @@ export default function SellerCoupons() {
 
                 {/* Compact Switch Button */}
                 <div className="flex items-center justify-between sm:justify-end gap-2 bg-slate-50 p-1.5 rounded-lg border border-slate-200 self-start sm:self-auto">
-                  <span className={`text-[10px] sm:text-xs font-black ${enableLoyaltyCashback ? 'text-amber-700' : 'text-slate-500'}`}>
+                  <span className={`text-[10px] sm:text-xs font-black ${enableLoyaltyCashback ? 'text-seller-700' : 'text-slate-500'}`}>
                     {enableLoyaltyCashback ? '🪙 Cashback ON' : '⚪ Cashback OFF'}
                   </span>
                   <button
                     type="button"
                     onClick={() => setEnableLoyaltyCashback(!enableLoyaltyCashback)}
                     className={`relative inline-flex h-5 w-10 sm:h-6 sm:w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${
-                      enableLoyaltyCashback ? 'bg-amber-500' : 'bg-slate-300'
+                      enableLoyaltyCashback ? 'bg-seller-500' : 'bg-slate-300'
                     }`}
                   >
                     <span
@@ -1197,7 +1197,7 @@ export default function SellerCoupons() {
                       <label className="text-[10px] sm:text-xs font-bold text-slate-800">
                         {t('cashbackRate')}
                       </label>
-                      <span className="font-mono font-black text-[10px] sm:text-xs text-amber-900 bg-amber-100 border border-amber-300 px-1.5 py-0.2 rounded">
+                      <span className="font-mono font-black text-[10px] sm:text-xs text-seller-900 bg-seller-100 border border-seller-300 px-1.5 py-0.2 rounded">
                         {loyaltyCashbackPercent}% Cashback
                       </span>
                     </div>
@@ -1211,7 +1211,7 @@ export default function SellerCoupons() {
                           onClick={() => setLoyaltyCashbackPercent(pct)}
                           className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
                             Number(loyaltyCashbackPercent) === pct
-                              ? 'bg-amber-500 text-slate-950 shadow-xs scale-105'
+                              ? 'bg-seller-500 text-slate-950 shadow-xs scale-105'
                               : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
                           }`}
                         >
@@ -1228,7 +1228,7 @@ export default function SellerCoupons() {
                         step="0.5"
                         value={loyaltyCashbackPercent}
                         onChange={(e) => setLoyaltyCashbackPercent(e.target.value)}
-                        className="w-full accent-amber-500 cursor-pointer h-1.5"
+                        className="w-full accent-seller-500 cursor-pointer h-1.5"
                       />
                       <div className="flex items-center gap-1 shrink-0">
                         <input
@@ -1238,7 +1238,7 @@ export default function SellerCoupons() {
                           step="0.5"
                           value={loyaltyCashbackPercent}
                           onChange={(e) => setLoyaltyCashbackPercent(e.target.value)}
-                          className="w-14 rounded-lg border border-slate-300 bg-white p-1 text-center text-xs font-black text-amber-900 focus:border-amber-500 focus:outline-none"
+                          className="w-14 rounded-lg border border-slate-300 bg-white p-1 text-center text-xs font-black text-seller-900 focus:border-seller-500 focus:outline-none"
                         />
                         <span className="text-[10px] font-bold text-slate-500">%</span>
                       </div>
@@ -1256,7 +1256,7 @@ export default function SellerCoupons() {
                       value={loyaltyMinOrderAmount}
                       onChange={(e) => setLoyaltyMinOrderAmount(e.target.value)}
                       placeholder="0 = All orders"
-                      className="w-full mt-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-amber-500 focus:outline-none"
+                      className="w-full mt-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 placeholder-slate-400 focus:border-seller-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1264,20 +1264,20 @@ export default function SellerCoupons() {
                 {/* Simulator & Save */}
                 <div className="space-y-2.5 bg-slate-50/80 p-3 rounded-lg border border-slate-200 flex flex-col justify-between">
                   <div className="space-y-1.5">
-                    <h3 className="text-[10px] sm:text-xs font-black text-amber-800 uppercase tracking-wider">
+                    <h3 className="text-[10px] sm:text-xs font-black text-seller-800 uppercase tracking-wider">
                       {t('exampleCalculation')}
                     </h3>
                     <p className="text-[10px] sm:text-[11px] text-slate-600 font-medium">
                       If a customer buys items worth <strong className="text-slate-900 font-black">₹1,000</strong>:
                     </p>
-                    <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between">
+                    <div className="p-2.5 rounded-lg bg-seller-50 border border-seller-200 text-seller-900 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">🪙</span>
                         <div>
-                          <p className="text-xs sm:text-sm font-black text-amber-950">
+                          <p className="text-xs sm:text-sm font-black text-seller-950">
                             {t('customerEarns')} +₹{((1000 * (Number(loyaltyCashbackPercent) || 0)) / 100).toFixed(0)} Coins
                           </p>
-                          <p className="text-[8px] sm:text-[9px] text-amber-800 font-medium">
+                          <p className="text-[8px] sm:text-[9px] text-seller-800 font-medium">
                             Deducts ₹{((1000 * (Number(loyaltyCashbackPercent) || 0)) / 100).toFixed(0)} on next order
                           </p>
                         </div>
@@ -1290,7 +1290,7 @@ export default function SellerCoupons() {
                       type="button"
                       onClick={handleSaveCashbackSettings}
                       disabled={savingCashback}
-                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 px-4 py-2 text-xs font-black text-slate-950 shadow-xs hover:brightness-110 cursor-pointer disabled:opacity-50"
+                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-seller-500 via-seller-400 to-seller-500 px-4 py-2 text-xs font-black text-slate-950 shadow-xs hover:brightness-110 cursor-pointer disabled:opacity-50"
                     >
                       <Check className="h-3.5 w-3.5" />
                       <span>{savingCashback ? 'Saving...' : t('saveCashbackSettings')}</span>
@@ -1307,23 +1307,23 @@ export default function SellerCoupons() {
         {/* ══════════════════════════════════════════════════════════════════════ */}
         {activeTab === 'scratch' && (
           <div className="space-y-2.5 sm:space-y-5 animate-fade-in">
-            <div className="rounded-lg sm:rounded-xl bg-purple-50/70 border border-purple-200 p-2.5 sm:p-3 flex items-center gap-2 text-xs">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-purple-600 text-white font-bold text-xs shrink-0">
+            <div className="rounded-lg sm:rounded-xl bg-seller-50/70 border border-seller-200 p-2.5 sm:p-3 flex items-center gap-2 text-xs">
+              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-seller-600 text-white font-bold text-xs shrink-0">
                 🎁
               </span>
               <div>
-                <p className="font-extrabold text-purple-950 text-[11px] sm:text-xs">{t('howWelcomeScratchWorksTitle')}</p>
-                <p className="text-purple-900 font-medium text-[10px] sm:text-[11px]">
+                <p className="font-extrabold text-seller-950 text-[11px] sm:text-xs">{t('howWelcomeScratchWorksTitle')}</p>
+                <p className="text-seller-900 font-medium text-[10px] sm:text-[11px]">
                   {t('howWelcomeScratchWorksDesc')}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-xl sm:rounded-2xl bg-white border border-purple-200 p-3.5 sm:p-6 space-y-3.5 shadow-xs text-slate-900 relative overflow-hidden">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-purple-100 pb-3">
+            <div className="rounded-xl sm:rounded-2xl bg-white border border-seller-200 p-3.5 sm:p-6 space-y-3.5 shadow-xs text-slate-900 relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-seller-100 pb-3">
                 <div className="flex items-center gap-2.5">
                   <span className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg text-base sm:text-xl font-black shadow-xs ${
-                    scratchConfig.enabled ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-600 border border-purple-200'
+                    scratchConfig.enabled ? 'bg-seller-600 text-white' : 'bg-seller-100 text-seller-600 border border-seller-200'
                   }`}>
                     🎁
                   </span>
@@ -1332,7 +1332,7 @@ export default function SellerCoupons() {
                       <h2 className="text-xs sm:text-base font-black text-slate-900">{t('welcomeScratchGift')}</h2>
                       <span className={`text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border ${
                         scratchConfig.enabled 
-                          ? 'bg-purple-100 text-purple-800 border-purple-300' 
+                          ? 'bg-seller-100 text-seller-800 border-seller-300'
                           : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}>
                         {scratchConfig.enabled ? 'Welcome Gift ON' : 'Disabled'}
@@ -1346,14 +1346,14 @@ export default function SellerCoupons() {
 
                 {/* Compact Switch Button */}
                 <div className="flex items-center justify-between sm:justify-end gap-2 bg-slate-50 p-1.5 rounded-lg border border-slate-200 self-start sm:self-auto">
-                  <span className={`text-[10px] sm:text-xs font-black ${scratchConfig.enabled ? 'text-purple-700' : 'text-slate-500'}`}>
+                  <span className={`text-[10px] sm:text-xs font-black ${scratchConfig.enabled ? 'text-seller-700' : 'text-slate-500'}`}>
                     {scratchConfig.enabled ? '🎁 Gift Card ON' : '⚪ Gift Card OFF'}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleSaveScratchConfig({ ...scratchConfig, enabled: !scratchConfig.enabled })}
                     className={`relative inline-flex h-5 w-10 sm:h-6 sm:w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${
-                      scratchConfig.enabled ? 'bg-purple-600' : 'bg-slate-300'
+                      scratchConfig.enabled ? 'bg-seller-600' : 'bg-slate-300'
                     }`}
                   >
                     <span
@@ -1366,16 +1366,16 @@ export default function SellerCoupons() {
               </div>
 
               {scratchSavedMsg && (
-                <div className="rounded-lg bg-purple-50 border border-purple-300 p-2 text-[11px] font-black text-purple-900 animate-fade-in flex items-center justify-between">
+                <div className="rounded-lg bg-seller-50 border border-seller-300 p-2 text-[11px] font-black text-seller-900 animate-fade-in flex items-center justify-between">
                   <span>{scratchSavedMsg}</span>
-                  <button onClick={() => setScratchSavedMsg('')} className="text-purple-700">✕</button>
+                  <button onClick={() => setScratchSavedMsg('')} className="text-seller-700">✕</button>
                 </div>
               )}
 
               {/* Controls & Mockup */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
                 <div className="space-y-2.5 bg-slate-50/80 p-3 rounded-lg border border-slate-200">
-                  <h3 className="text-[10px] sm:text-xs font-black text-purple-800 uppercase tracking-wider">
+                  <h3 className="text-[10px] sm:text-xs font-black text-seller-800 uppercase tracking-wider">
                     {t('giftDetails')}
                   </h3>
 
@@ -1387,7 +1387,7 @@ export default function SellerCoupons() {
                         value={scratchConfig.couponCode}
                         onChange={(e) => handleSaveScratchConfig({ ...scratchConfig, couponCode: e.target.value.toUpperCase().trim() })}
                         placeholder="LUCKY50"
-                        className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-black font-mono text-purple-800 focus:border-purple-500 focus:outline-none"
+                        className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-black font-mono text-seller-800 focus:border-seller-500 focus:outline-none"
                       />
                     </div>
 
@@ -1399,7 +1399,7 @@ export default function SellerCoupons() {
                         value={scratchConfig.minOrder}
                         onChange={(e) => handleSaveScratchConfig({ ...scratchConfig, minOrder: Number(e.target.value) })}
                         placeholder="299"
-                        className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-purple-500 focus:outline-none"
+                        className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-seller-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1422,7 +1422,7 @@ export default function SellerCoupons() {
                         value={scratchConfig.discountValue}
                         onChange={(e) => handleSaveScratchConfig({ ...scratchConfig, discountValue: Number(e.target.value) })}
                         placeholder="50"
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-black text-slate-900 focus:border-purple-500 focus:outline-none"
+                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-black text-slate-900 focus:border-seller-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1434,7 +1434,7 @@ export default function SellerCoupons() {
                       value={scratchConfig.title}
                       onChange={(e) => handleSaveScratchConfig({ ...scratchConfig, title: e.target.value })}
                       placeholder="🎉 Scratch & Win Welcome Gift!"
-                      className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-purple-500 focus:outline-none"
+                      className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-seller-500 focus:outline-none"
                     />
                   </div>
 
@@ -1445,7 +1445,7 @@ export default function SellerCoupons() {
                       value={scratchConfig.rewardText}
                       onChange={(e) => handleSaveScratchConfig({ ...scratchConfig, rewardText: e.target.value })}
                       placeholder="Flat ₹50 OFF on orders above ₹299"
-                      className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-purple-500 focus:outline-none"
+                      className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:border-seller-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1453,21 +1453,21 @@ export default function SellerCoupons() {
                 {/* Scratch Mockup Preview */}
                 <div className="space-y-2 bg-slate-50/80 p-3 rounded-lg border border-slate-200 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-[10px] sm:text-xs font-black text-purple-800 uppercase tracking-wider">
+                    <h3 className="text-[10px] sm:text-xs font-black text-seller-800 uppercase tracking-wider">
                       {t('customerScreenPreview')}
                     </h3>
                     <p className="text-[9px] sm:text-[10px] text-slate-500 mt-0.5">
                       New shoppers receive this popup on opening your link:
                     </p>
 
-                    <div className="mt-2 mx-auto max-w-[260px] sm:max-w-xs rounded-xl bg-gradient-to-br from-purple-900 via-indigo-950 to-purple-950 p-3 border border-purple-500/40 text-center shadow-xs text-white space-y-1.5">
+                    <div className="mt-2 mx-auto max-w-[260px] sm:max-w-xs rounded-xl bg-gradient-to-br from-seller-900 via-seller-950 to-seller-950 p-3 border border-seller-500/40 text-center shadow-xs text-white space-y-1.5">
                       <div className="text-xl">🎁</div>
                       <h4 className="text-[11px] sm:text-xs font-black text-white">{scratchConfig.title}</h4>
-                      <div className="rounded-lg bg-purple-950/90 border border-purple-400/50 p-2 space-y-0.5">
-                        <p className="text-[10px] sm:text-[11px] font-black text-amber-300 font-mono">
+                      <div className="rounded-lg bg-seller-950/90 border border-seller-400/50 p-2 space-y-0.5">
+                        <p className="text-[10px] sm:text-[11px] font-black text-seller-300 font-mono">
                           CODE: {scratchConfig.couponCode}
                         </p>
-                        <p className="text-[9px] sm:text-[10px] font-bold text-purple-200">
+                        <p className="text-[9px] sm:text-[10px] font-bold text-seller-200">
                           {scratchConfig.rewardText}
                         </p>
                       </div>
@@ -1492,14 +1492,14 @@ export default function SellerCoupons() {
         {activeTab === 'whatsapp' && (
           <div className="space-y-3 sm:space-y-4 animate-fade-in">
             {/* Header & Launcher Card */}
-            <div className="rounded-xl sm:rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-slate-950 via-teal-950 to-slate-900 p-3.5 sm:p-5 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="rounded-xl sm:rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-slate-950 via-seller-950 to-slate-900 p-3.5 sm:p-5 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-base sm:text-xl border border-emerald-400/30">
                   📲
                 </span>
                 <div>
                   <h2 className="text-xs sm:text-base font-black text-white">{t('waMarketingOffers')}</h2>
-                  <p className="text-[10px] sm:text-xs text-teal-300 font-medium">
+                  <p className="text-[10px] sm:text-xs text-seller-300 font-medium">
                     {t('sendPersonalizedOffers')}
                   </p>
                 </div>
@@ -1523,7 +1523,7 @@ export default function SellerCoupons() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5 text-indigo-600" />
+                    <Users className="h-3.5 w-3.5 text-seller-600" />
                     <span>{t('targetAudience')}</span>
                   </label>
                   <span className="text-[10px] font-bold text-slate-500">
@@ -1617,7 +1617,7 @@ export default function SellerCoupons() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
-                      <Sparkles className="h-3.5 w-3.5 text-teal-600" />
+                      <Sparkles className="h-3.5 w-3.5 text-seller-600" />
                       <span>{t('messagePreview')}</span>
                     </label>
                     <button
@@ -1640,11 +1640,11 @@ export default function SellerCoupons() {
                       <p className="font-black text-emerald-700">🎉 {whatsappDiscountText} on your entire cart!</p>
                       <p className="text-slate-600">{whatsappNote}</p>
                       {whatsappCoupon && (
-                        <p className="font-mono font-black text-indigo-700 bg-indigo-50 p-1 rounded-md border border-indigo-200">
+                        <p className="font-mono font-black text-seller-700 bg-seller-50 p-1 rounded-md border border-seller-200">
                           🎟️ Use Coupon Code: <span className="underline">{whatsappCoupon}</span>
                         </p>
                       )}
-                      <div className="pt-0.5 text-[10px] text-teal-700 font-bold">
+                      <div className="pt-0.5 text-[10px] text-seller-700 font-bold">
                         <p>🛒 Shop Online Directly Here:</p>
                         <p className="underline truncate">{window.location.origin}/store/{store?.slug || ''}</p>
                       </div>
@@ -1668,7 +1668,7 @@ export default function SellerCoupons() {
                         setWhatsappCopiedPhones(true)
                         setTimeout(() => setWhatsappCopiedPhones(false), 2000)
                       }}
-                      className="text-[9px] sm:text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-300 px-2 py-0.5 rounded-md hover:bg-indigo-100 flex items-center gap-1 cursor-pointer transition-all"
+                      className="text-[9px] sm:text-[10px] font-black text-seller-700 bg-seller-50 border border-seller-300 px-2 py-0.5 rounded-md hover:bg-seller-100 flex items-center gap-1 cursor-pointer transition-all"
                     >
                       {whatsappCopiedPhones ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                       <span>{whatsappCopiedPhones ? 'Copied!' : t('copyNumbers')}</span>
@@ -1758,7 +1758,7 @@ export default function SellerCoupons() {
           <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-3xl bg-white p-3.5 sm:p-6 border border-slate-200 shadow-2xl space-y-3 text-slate-900 animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-1.5">
-                <Tag className="h-4 w-4 text-indigo-600" />
+                <Tag className="h-4 w-4 text-seller-600" />
                 <h3 className="text-sm sm:text-base font-black text-slate-900">
                   {editingCoupon ? `Edit Coupon: ${editingCoupon.code}` : t('createCouponModalTitle')}
                 </h3>
@@ -1776,12 +1776,12 @@ export default function SellerCoupons() {
 
             {/* ⚡ 1-Click Popular Templates Bar */}
             {!editingCoupon && (
-              <div className="rounded-lg bg-indigo-50/80 border border-indigo-200/80 p-2.5 space-y-1.5">
+              <div className="rounded-lg bg-seller-50/80 border border-seller-200/80 p-2.5 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase text-indigo-950 tracking-wider">
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase text-seller-950 tracking-wider">
                     {t('quickTemplates')}
                   </span>
-                  <span className="text-[8px] sm:text-[9px] text-indigo-600 font-bold">{t('tapToAutoFill')}</span>
+                  <span className="text-[8px] sm:text-[9px] text-seller-600 font-bold">{t('tapToAutoFill')}</span>
                 </div>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
@@ -1789,11 +1789,11 @@ export default function SellerCoupons() {
                     type="button"
                     onClick={() => applyCouponPreset('BUY1GET1', 'BOGO', '0', '0')}
                     className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                      code === 'BUY1GET1' ? 'bg-purple-600 text-white border-purple-600 shadow-2xs' : 'bg-white border-purple-200 text-purple-900 hover:bg-purple-50'
+                      code === 'BUY1GET1' ? 'bg-seller-600 text-white border-seller-600 shadow-2xs' : 'bg-white border-seller-200 text-seller-900 hover:bg-seller-50'
                     }`}
                   >
                     <p className="text-[10px] font-black">🎁 Buy 1 Get 1</p>
-                    <p className={`text-[8px] ${code === 'BUY1GET1' ? 'text-purple-100' : 'text-slate-500'}`}>BOGO Offer</p>
+                    <p className={`text-[8px] ${code === 'BUY1GET1' ? 'text-seller-100' : 'text-slate-500'}`}>BOGO Offer</p>
                   </button>
 
                   <button
@@ -1811,22 +1811,22 @@ export default function SellerCoupons() {
                     type="button"
                     onClick={() => applyCouponPreset('WELCOME50', 'FLAT', '50', '299')}
                     className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                      code === 'WELCOME50' ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white border-indigo-200 text-indigo-900 hover:bg-indigo-50'
+                      code === 'WELCOME50' ? 'bg-seller-600 text-white border-seller-600 shadow-2xs' : 'bg-white border-seller-200 text-seller-900 hover:bg-seller-50'
                     }`}
                   >
                     <p className="text-[10px] font-black">💰 Flat ₹50</p>
-                    <p className={`text-[8px] ${code === 'WELCOME50' ? 'text-indigo-100' : 'text-slate-500'}`}>On ₹299+</p>
+                    <p className={`text-[8px] ${code === 'WELCOME50' ? 'text-seller-100' : 'text-slate-500'}`}>On ₹299+</p>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => applyCouponPreset('SAVE15', 'PERCENTAGE', '15', '0')}
                     className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
-                      code === 'SAVE15' ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white border-indigo-200 text-indigo-900 hover:bg-indigo-50'
+                      code === 'SAVE15' ? 'bg-seller-600 text-white border-seller-600 shadow-2xs' : 'bg-white border-seller-200 text-seller-900 hover:bg-seller-50'
                     }`}
                   >
                     <p className="text-[10px] font-black">🔥 15% OFF</p>
-                    <p className={`text-[8px] ${code === 'SAVE15' ? 'text-indigo-100' : 'text-slate-500'}`}>Storewide</p>
+                    <p className={`text-[8px] ${code === 'SAVE15' ? 'text-seller-100' : 'text-slate-500'}`}>Storewide</p>
                   </button>
                 </div>
               </div>
@@ -1840,7 +1840,7 @@ export default function SellerCoupons() {
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   placeholder="e.g. BUY1GET1, FREEDEL, SAVE20"
-                  className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-black font-mono text-indigo-700 tracking-wider focus:border-indigo-600 focus:outline-none"
+                  className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-black font-mono text-seller-700 tracking-wider focus:border-seller-600 focus:outline-none"
                   required
                 />
               </div>
@@ -1851,7 +1851,7 @@ export default function SellerCoupons() {
                   <select
                     value={discountType}
                     onChange={(e) => setDiscountType(e.target.value as any)}
-                    className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                    className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none"
                   >
                     <option value="FLAT">{t('flatDiscount')}</option>
                     <option value="PERCENTAGE">{t('percentageOff')}</option>
@@ -1876,7 +1876,7 @@ export default function SellerCoupons() {
                         ? '₹ 50'
                         : '15%'
                     }
-                    className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                    className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none"
                   />
                 </div>
               </div>
@@ -1890,7 +1890,7 @@ export default function SellerCoupons() {
                     value={minOrderAmount}
                     onChange={(e) => setMinOrderAmount(e.target.value)}
                     placeholder="0 = Any"
-                    className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                    className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none"
                   />
                 </div>
 
@@ -1903,7 +1903,7 @@ export default function SellerCoupons() {
                     onChange={(e) => setMaxDiscountAmount(e.target.value)}
                     placeholder="Optional"
                     disabled={discountType !== 'PERCENTAGE'}
-                    className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none disabled:opacity-40"
+                    className="w-full mt-0.5 rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none disabled:opacity-40"
                   />
                 </div>
               </div>
@@ -1913,7 +1913,7 @@ export default function SellerCoupons() {
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-bold text-slate-700">{t('appliesTo')}</label>
                   {products.length > 0 && (
-                    <span className="text-[9px] font-bold text-indigo-600">
+                    <span className="text-[9px] font-bold text-seller-600">
                       {products.length} products
                     </span>
                   )}
@@ -1926,7 +1926,7 @@ export default function SellerCoupons() {
                     value={productSearchQuery}
                     onChange={(e) => setProductSearchQuery(e.target.value)}
                     placeholder="🔍 Type product name to search..."
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-xs font-medium text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-xs font-medium text-slate-900 focus:border-seller-500 focus:bg-white focus:outline-none"
                   />
                   {productSearchQuery && (
                     <button
@@ -1942,7 +1942,7 @@ export default function SellerCoupons() {
                 <select
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none"
                 >
                   <option value="">🌐 {t('allProductsInStore')}</option>
                   {products
@@ -1964,7 +1964,7 @@ export default function SellerCoupons() {
                   type="button"
                   onClick={(e) => handleSaveCoupon(e, false)}
                   disabled={saving}
-                  className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-black text-amber-800 hover:bg-slate-200 cursor-pointer border border-slate-200"
+                  className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-black text-seller-800 hover:bg-slate-200 cursor-pointer border border-slate-200"
                 >
                   {saving ? 'Saving...' : t('saveDraft')}
                 </button>
@@ -1972,7 +1972,7 @@ export default function SellerCoupons() {
                   type="button"
                   onClick={(e) => handleSaveCoupon(e, true)}
                   disabled={saving}
-                  className="flex-1 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 py-2 text-xs font-black text-white hover:brightness-110 shadow-xs cursor-pointer"
+                  className="flex-1 rounded-lg bg-gradient-to-r from-emerald-600 to-seller-600 py-2 text-xs font-black text-white hover:brightness-110 shadow-xs cursor-pointer"
                 >
                   {saving ? 'Publishing...' : t('makeActive')}
                 </button>

@@ -414,16 +414,16 @@ export default function SellerCatalog() {
 
       <div className="space-y-6 p-4 sm:p-6">
         {/* Top Title & Stats Banner */}
-        <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-5 text-white shadow-lg border border-indigo-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-seller-950 to-slate-900 p-5 text-white shadow-lg border border-seller-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-indigo-300 border border-indigo-400/30">
+              <span className="rounded-full bg-seller-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-seller-300 border border-seller-400/30">
                 {t('catalogManagement')}
               </span>
-              <span className="text-xs font-semibold text-indigo-200">{products.length} {t('totalItems')}</span>
+              <span className="text-xs font-semibold text-seller-200">{products.length} {t('totalItems')}</span>
             </div>
             <h1 className="mt-2 text-xl font-extrabold text-white">{t('storeProductCatalog')}</h1>
-            <p className="mt-0.5 text-xs text-indigo-200">
+            <p className="mt-0.5 text-xs text-seller-200">
               {t('catalogSubtitle')}
             </p>
           </div>
@@ -436,7 +436,7 @@ export default function SellerCatalog() {
                 await loadData()
                 setTimeout(() => setIsRefreshingData(false), 500)
               }}
-              className="flex items-center gap-1.5 rounded-xl border border-indigo-400/40 bg-indigo-900/60 px-3.5 py-2.5 text-xs font-extrabold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-all cursor-pointer shadow-xs"
+              className="flex items-center gap-1.5 rounded-xl border border-seller-400/40 bg-seller-900/60 px-3.5 py-2.5 text-xs font-extrabold text-seller-200 hover:bg-seller-800 hover:text-white transition-all cursor-pointer shadow-xs"
               title="Click to fetch live fresh catalog products"
             >
               <span className={`text-sm ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
@@ -445,7 +445,7 @@ export default function SellerCatalog() {
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700 transition-all cursor-pointer"
+              className="rounded-xl bg-seller-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-seller-700 transition-all cursor-pointer"
             >
               {t('addProduct')}
             </button>
@@ -466,7 +466,7 @@ export default function SellerCatalog() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('searchCatalogPlaceholder')}
-              className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs font-medium shadow-xs focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs font-medium shadow-xs focus:border-seller-600 focus:outline-none focus:ring-2 focus:ring-seller-100"
             />
             {searchQuery && (
               <button
@@ -481,7 +481,7 @@ export default function SellerCatalog() {
           <select
             value={selectedCategoryFilter}
             onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-xs focus:border-indigo-600 focus:outline-none"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-xs focus:border-seller-600 focus:outline-none"
           >
             <option value="ALL">{t('allCategories')} ({categories.length})</option>
             {categories.map((c) => (
@@ -540,7 +540,7 @@ export default function SellerCatalog() {
             </p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+              className="mt-4 rounded-xl bg-seller-600 px-4 py-2 text-xs font-bold text-white hover:bg-seller-700"
             >
               {t('addFirstProduct')}
             </button>
@@ -554,7 +554,7 @@ export default function SellerCatalog() {
                 {/* Category Group Header Banner */}
                 <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 shadow-xs">
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 text-xs font-black border border-indigo-100">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-seller-50 text-seller-700 text-xs font-black border border-seller-100">
                       📁
                     </span>
                     <div>
@@ -624,7 +624,7 @@ export default function SellerCatalog() {
                                 ) : (
                                   <span className="text-2xl">🛍️</span>
                                 )}
-                                <span className="absolute top-0.5 left-0.5 bg-indigo-600/90 backdrop-blur-xs text-[8px] font-black text-white px-1 py-0.2 rounded">Card Main</span>
+                                <span className="absolute top-0.5 left-0.5 bg-seller-600/90 backdrop-blur-xs text-[8px] font-black text-white px-1 py-0.2 rounded">Card Main</span>
                                 <label
                                   title="Upload Multiple Product Photos"
                                   className="absolute inset-0 bg-slate-950/60 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[10px] font-bold p-1 text-center"
@@ -649,7 +649,7 @@ export default function SellerCatalog() {
                                   {group.name === 'Uncategorized' ? t('uncategorized') : group.name}
                                 </span>
                                 <h3 className="mt-0.5 text-sm font-extrabold text-slate-900 truncate leading-snug">{prod.name}</h3>
-                                <p className="mt-1 text-sm font-black text-indigo-600 flex items-center gap-1">
+                                <p className="mt-1 text-sm font-black text-seller-600 flex items-center gap-1">
                                   <span>₹{prod.price}</span>
                                   <span className="text-[11px] font-bold text-slate-500">
                                     / {formatUnitDisplay(prod.unit || prod.ordering_unit || getBusinessType(store?.business_type).defaultUnit)}
@@ -663,7 +663,7 @@ export default function SellerCatalog() {
                               <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-2 space-y-1">
                                 <p className="text-[10px] font-bold text-slate-500 flex items-center justify-between">
                                   <span>🖼️ {t('productGallery')} ({allProdImages.length})</span>
-                                  <span className="text-indigo-600 font-extrabold">{t('clickThumbnailMain')}</span>
+                                  <span className="text-seller-600 font-extrabold">{t('clickThumbnailMain')}</span>
                                 </p>
                                 <div className="flex gap-1.5 overflow-x-auto py-1">
                                   {allProdImages.map((imgItem, idx) => (
@@ -678,13 +678,13 @@ export default function SellerCatalog() {
                                       }}
                                       className={`relative h-10 w-10 shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                                         imgItem.isPrimary
-                                          ? 'border-indigo-600 ring-2 ring-indigo-300 scale-105'
+                                          ? 'border-seller-600 ring-2 ring-seller-300 scale-105'
                                           : 'border-slate-200 opacity-70 hover:opacity-100'
                                       }`}
                                     >
                                       <img src={imgItem.url} alt="" className="h-full w-full object-cover" />
                                       {imgItem.isPrimary && (
-                                        <span className="absolute bottom-0 inset-x-0 bg-indigo-600 text-[7px] font-black text-white text-center">⭐ Main</span>
+                                        <span className="absolute bottom-0 inset-x-0 bg-seller-600 text-[7px] font-black text-white text-center">⭐ Main</span>
                                       )}
                                     </button>
                                   ))}
@@ -699,7 +699,7 @@ export default function SellerCatalog() {
                                   isOutOfStock
                                     ? 'bg-rose-50 text-rose-700 border-rose-200'
                                     : isLowStock
-                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                    ? 'bg-seller-50 text-seller-700 border-seller-200'
                                     : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 }`}
                               >
@@ -713,7 +713,7 @@ export default function SellerCatalog() {
                               </span>
 
                               {prod.digital_file && (
-                                <span className="rounded-full bg-purple-50 text-purple-700 px-2 py-0.5 border border-purple-200 text-[10px]">
+                                <span className="rounded-full bg-seller-50 text-seller-700 px-2 py-0.5 border border-seller-200 text-[10px]">
                                   {t('digitalFile')}
                                 </span>
                               )}
@@ -766,7 +766,7 @@ export default function SellerCatalog() {
                                 navigator.clipboard.writeText(prodLink)
                                 toast.success('Product link copied!')
                               }}
-                              className="rounded-lg bg-indigo-50 border border-indigo-200 px-2 py-1.5 text-[11px] font-extrabold text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                              className="rounded-lg bg-seller-50 border border-seller-200 px-2 py-1.5 text-[11px] font-extrabold text-seller-700 hover:bg-seller-100 transition-colors cursor-pointer flex items-center justify-center gap-1"
                               title="Copy Direct Product Link"
                             >
                               <Copy className="h-3.5 w-3.5" />
@@ -816,7 +816,7 @@ export default function SellerCatalog() {
                 <input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-indigo-600 focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-seller-600 focus:outline-none"
                   required
                 />
               </div>
@@ -829,7 +829,7 @@ export default function SellerCatalog() {
                     step="0.01"
                     value={editPrice}
                     onChange={(e) => setEditPrice(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-indigo-600 focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-seller-600 focus:outline-none"
                     required
                   />
                 </div>
@@ -838,7 +838,7 @@ export default function SellerCatalog() {
                   <select
                     value={editUnit}
                     onChange={(e) => setEditUnit(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-seller-600 focus:outline-none"
                   >
                     {getBusinessType(store?.business_type).units.map((u) => (
                       <option key={u} value={u}>
@@ -848,7 +848,7 @@ export default function SellerCatalog() {
                   </select>
                 </div>
               </div>
-              <p className="text-[10px] text-indigo-700 font-semibold bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1 mt-0.5">
+              <p className="text-[10px] text-seller-700 font-semibold bg-seller-50/90 p-1.5 rounded-lg border border-seller-200/60 flex items-center gap-1 mt-0.5">
                 <span>💡</span>
                 <span><strong>{formatUnitDisplay(editUnit)}:</strong> {getUnitHint(editUnit, store?.business_type)}</span>
               </p>
@@ -860,7 +860,7 @@ export default function SellerCatalog() {
                     type="number"
                     value={editStock}
                     onChange={(e) => setEditStock(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-indigo-600 focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-seller-600 focus:outline-none"
                     required
                   />
                 </div>
@@ -869,7 +869,7 @@ export default function SellerCatalog() {
                   <select
                     value={editCategory}
                     onChange={(e) => setEditCategory(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-seller-600 focus:outline-none"
                   >
                     <option value="">{t('noCategory')}</option>
                     {categories.map((c) => (
@@ -887,7 +887,7 @@ export default function SellerCatalog() {
                   <label className="text-xs font-extrabold text-slate-800">
                     {t('productGallery')} & Main Card Photo
                   </label>
-                  <span className="text-[10px] text-indigo-600 font-bold">
+                  <span className="text-[10px] text-seller-600 font-bold">
                     {(editingProduct?.images?.length || 0) + (editingProduct?.image ? 1 : 0)} Total
                   </span>
                 </div>
@@ -896,13 +896,13 @@ export default function SellerCatalog() {
                 {/* Existing Gallery Images Grid with Primary Chooser */}
                 <div className="grid grid-cols-3 gap-2">
                   {editingProduct?.image && (
-                    <div className="relative group h-20 rounded-xl border-2 border-indigo-600 bg-white overflow-hidden shadow-xs flex flex-col justify-between p-1">
+                    <div className="relative group h-20 rounded-xl border-2 border-seller-600 bg-white overflow-hidden shadow-xs flex flex-col justify-between p-1">
                       <img
                         src={mediaUrl(editingProduct.image)}
                         alt="Primary"
                         className="h-12 w-full object-cover rounded"
                       />
-                      <span className="bg-indigo-600 text-[9px] font-black text-white text-center py-0.5 rounded">⭐ Main Card Photo</span>
+                      <span className="bg-seller-600 text-[9px] font-black text-white text-center py-0.5 rounded">⭐ Main Card Photo</span>
                     </div>
                   )}
 
@@ -920,12 +920,12 @@ export default function SellerCatalog() {
                             <button
                               type="button"
                               onClick={() => handleSetPrimaryCardImage(editingProduct.id, imgObj.id)}
-                              className="flex-1 bg-slate-800 text-[8px] font-black text-white py-0.5 rounded hover:bg-indigo-600"
+                              className="flex-1 bg-slate-800 text-[8px] font-black text-white py-0.5 rounded hover:bg-seller-600"
                             >
                               ⭐ Set Main
                             </button>
                           ) : (
-                            <span className="flex-1 bg-indigo-600 text-[8px] font-black text-white text-center py-0.5 rounded">⭐ Main</span>
+                            <span className="flex-1 bg-seller-600 text-[8px] font-black text-white text-center py-0.5 rounded">⭐ Main</span>
                           )}
                           <button
                             type="button"
@@ -977,7 +977,7 @@ export default function SellerCatalog() {
                 <button
                   type="submit"
                   disabled={isUpdatingProduct}
-                  className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="flex-1 rounded-xl bg-seller-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   {isUpdatingProduct ? (
                     <>
@@ -1022,7 +1022,7 @@ export default function SellerCatalog() {
                   value={newProdName}
                   onChange={(e) => setNewProdName(e.target.value)}
                   placeholder="e.g. Wireless Headphones"
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-indigo-600 focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-seller-600 focus:outline-none"
                   required
                 />
               </div>
@@ -1036,7 +1036,7 @@ export default function SellerCatalog() {
                     min="0.01"
                     value={newProdPrice}
                     onChange={(e) => setNewProdPrice(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-indigo-600 focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-seller-600 focus:outline-none"
                     required
                   />
                 </div>
@@ -1045,7 +1045,7 @@ export default function SellerCatalog() {
                   <select
                     value={newProdUnit}
                     onChange={(e) => setNewProdUnit(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-seller-600 focus:outline-none"
                   >
                     {getBusinessType(store?.business_type).units.map((u) => (
                       <option key={u} value={u}>
@@ -1055,7 +1055,7 @@ export default function SellerCatalog() {
                   </select>
                 </div>
               </div>
-              <p className="text-[10px] text-indigo-700 font-semibold bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1 mt-0.5">
+              <p className="text-[10px] text-seller-700 font-semibold bg-seller-50/90 p-1.5 rounded-lg border border-seller-200/60 flex items-center gap-1 mt-0.5">
                 <span>💡</span>
                 <span><strong>{formatUnitDisplay(newProdUnit)}:</strong> {getUnitHint(newProdUnit, store?.business_type)}</span>
               </p>
@@ -1067,7 +1067,7 @@ export default function SellerCatalog() {
                     type="number"
                     value={newProdStock}
                     onChange={(e) => setNewProdStock(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-indigo-600 focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-seller-600 focus:outline-none"
                     required
                   />
                 </div>
@@ -1077,7 +1077,7 @@ export default function SellerCatalog() {
                     value={newProdCat}
                     onChange={(e) => setNewProdCat(e.target.value)}
                     required
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-indigo-600 focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-seller-600 focus:outline-none"
                   >
                     <option value="">-- Select Category (Required) --</option>
                     {categories.map((c) => (
@@ -1127,11 +1127,11 @@ export default function SellerCatalog() {
                             type="button"
                             onClick={() => setNewProdPrimaryIndex(idx)}
                             className={`relative h-16 rounded-xl border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${
-                              isPrimary ? 'border-teal-600 ring-2 ring-teal-300' : 'border-slate-200 opacity-70'
+                              isPrimary ? 'border-seller-600 ring-2 ring-seller-300' : 'border-slate-200 opacity-70'
                             }`}
                           >
                             <img src={URL.createObjectURL(file)} alt="preview" className="h-10 w-full object-cover rounded" />
-                            <span className={`text-[8px] font-black text-center py-0.5 rounded ${isPrimary ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                            <span className={`text-[8px] font-black text-center py-0.5 rounded ${isPrimary ? 'bg-seller-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
                               {isPrimary ? '⭐ Main Card' : 'Gallery'}
                             </span>
                           </button>
@@ -1163,7 +1163,7 @@ export default function SellerCatalog() {
                 <button
                   type="submit"
                   disabled={isAddingProduct}
-                  className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="flex-1 rounded-xl bg-seller-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   {isAddingProduct ? (
                     <>
@@ -1243,9 +1243,9 @@ export default function SellerCatalog() {
 
             <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl shadow-md ${
               confirmModal.variant === 'danger' ? 'bg-rose-100 text-rose-600' :
-              confirmModal.variant === 'warning' ? 'bg-amber-100 text-amber-600' :
+              confirmModal.variant === 'warning' ? 'bg-seller-100 text-seller-600' :
               confirmModal.variant === 'success' ? 'bg-emerald-100 text-emerald-600' :
-              'bg-indigo-100 text-indigo-600'
+              'bg-seller-100 text-seller-600'
             }`}>
               {confirmModal.variant === 'danger' ? <Trash2 className="h-7 w-7" /> :
                confirmModal.variant === 'success' ? <span className="text-2xl">🚀</span> :
@@ -1279,9 +1279,9 @@ export default function SellerCatalog() {
                 }}
                 className={`flex-1 rounded-xl py-2.5 text-xs font-bold shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   confirmModal.variant === 'danger' ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-500 hover:to-red-500' :
-                  confirmModal.variant === 'success' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500' :
-                  confirmModal.variant === 'warning' ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black hover:brightness-110' :
-                  'bg-indigo-600 text-white hover:bg-indigo-700'
+                  confirmModal.variant === 'success' ? 'bg-gradient-to-r from-emerald-600 to-seller-600 text-white hover:from-emerald-500 hover:to-seller-500' :
+                  confirmModal.variant === 'warning' ? 'bg-gradient-to-r from-seller-400 to-seller-500 text-slate-950 font-black hover:brightness-110' :
+                  'bg-seller-600 text-white hover:bg-seller-700'
                 }`}
               >
                 {confirmModal.confirmText || 'Confirm'}

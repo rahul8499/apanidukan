@@ -230,14 +230,14 @@ export default function SellerThemeCustomizerModal({
 
   // Curated Hero Gradient Presets
   const gradientPresets = [
-    { name: 'Aurora Teal', gradient: 'from-emerald-950 via-teal-900 to-slate-950' },
+    { name: 'Aurora Teal', gradient: 'from-emerald-950 via-seller-900 to-slate-950' },
     { name: 'Carbon Red', gradient: 'from-slate-950 via-red-950/80 to-slate-950' },
-    { name: 'Cyber Matrix', gradient: 'from-slate-950 via-cyan-950 to-slate-950' },
-    { name: 'Sunset Aura', gradient: 'from-rose-950 via-purple-950 to-amber-950' },
-    { name: 'Midnight Royal', gradient: 'from-slate-950 via-indigo-950 to-slate-900' },
-    { name: '24K Obsidian', gradient: 'from-black via-zinc-950 to-amber-950/70' },
-    { name: 'Pacific Deep', gradient: 'from-slate-950 via-blue-950 to-cyan-950' },
-    { name: 'Velvet Pink', gradient: 'from-purple-950 via-rose-950 to-slate-950' },
+    { name: 'Cyber Matrix', gradient: 'from-slate-950 via-seller-950 to-slate-950' },
+    { name: 'Sunset Aura', gradient: 'from-rose-950 via-seller-950 to-seller-950' },
+    { name: 'Midnight Royal', gradient: 'from-slate-950 via-seller-950 to-slate-900' },
+    { name: '24K Obsidian', gradient: 'from-black via-zinc-950 to-seller-950/70' },
+    { name: 'Pacific Deep', gradient: 'from-slate-950 via-seller-950 to-seller-950' },
+    { name: 'Velvet Pink', gradient: 'from-seller-950 via-rose-950 to-slate-950' },
   ]
 
   return (
@@ -245,10 +245,10 @@ export default function SellerThemeCustomizerModal({
       <div className="relative w-full max-w-6xl h-[94vh] max-h-[900px] flex flex-col rounded-2xl sm:rounded-3xl border border-slate-700/80 bg-slate-900 shadow-2xl overflow-hidden my-auto text-white">
 
         {/* ULTRA-PREMIUM OBSIDIAN GOLD VIP STUDIO HEADER */}
-        <div className="flex items-center justify-between border-b border-amber-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 px-3 sm:px-6 py-2.5 sm:py-3.5 shrink-0 shadow-lg relative z-20">
+        <div className="flex items-center justify-between border-b border-seller-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 px-3 sm:px-6 py-2.5 sm:py-3.5 shrink-0 shadow-lg relative z-20">
           {/* Left: Brand Icon + Title */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-600 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 shrink-0 border border-amber-300/40">
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-seller-500 via-seller-400 to-seller-600 text-slate-950 font-black text-base shadow-md shadow-seller-500/20 shrink-0 border border-seller-300/40">
               ✨
             </span>
             <div className="min-w-0">
@@ -256,12 +256,12 @@ export default function SellerThemeCustomizerModal({
                 <h2 className="text-xs sm:text-base font-black text-white truncate tracking-tight">
                   <span className="hidden sm:inline">Apani Dukan </span>{t('themeStudioTitle')}
                 </h2>
-                <span className="text-[8px] sm:text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                <span className="text-[8px] sm:text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-seller-500 to-seller-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
                   <Crown className="h-2.5 w-2.5" /> PRO
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">
-                {t('customizingStore')} <strong className="text-amber-300 font-bold">{store?.name || 'Your Store'}</strong>
+                {t('customizingStore')} <strong className="text-seller-300 font-bold">{store?.name || 'Your Store'}</strong>
               </p>
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function SellerThemeCustomizerModal({
                 onClick={() => setPreviewDevice('MOBILE')}
                 title="Mobile Screen View"
                 className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                  previewDevice === 'MOBILE' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
+                  previewDevice === 'MOBILE' ? 'bg-seller-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Smartphone className="h-3.5 w-3.5" />
@@ -286,7 +286,7 @@ export default function SellerThemeCustomizerModal({
                 onClick={() => setPreviewDevice('DESKTOP')}
                 title="Desktop Screen View"
                 className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                  previewDevice === 'DESKTOP' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
+                  previewDevice === 'DESKTOP' ? 'bg-seller-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Monitor className="h-3.5 w-3.5" />
@@ -321,7 +321,7 @@ export default function SellerThemeCustomizerModal({
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                  <Layers className="h-3.5 w-3.5 text-indigo-400" />
+                  <Layers className="h-3.5 w-3.5 text-seller-400" />
                   <span>{t('chooseThemeTemplate')}</span>
                 </label>
 
@@ -331,7 +331,7 @@ export default function SellerThemeCustomizerModal({
                     type="button"
                     onClick={() => setTierFilter('ALL')}
                     className={`px-2 py-0.5 text-[9.5px] font-black rounded-lg transition-all ${
-                      tierFilter === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                      tierFilter === 'ALL' ? 'bg-seller-600 text-white' : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     All ({Object.keys(STORE_THEME_PRESETS).length})
@@ -349,7 +349,7 @@ export default function SellerThemeCustomizerModal({
                     type="button"
                     onClick={() => setTierFilter('PREMIUM')}
                     className={`px-2 py-0.5 text-[9.5px] font-black rounded-lg transition-all flex items-center gap-0.5 ${
-                      tierFilter === 'PREMIUM' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-slate-200'
+                      tierFilter === 'PREMIUM' ? 'bg-seller-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     <Crown className="h-2.5 w-2.5" /> Premium
@@ -370,7 +370,7 @@ export default function SellerThemeCustomizerModal({
                       className={`flex flex-col justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs relative overflow-hidden group min-h-[90px] ${
                         isSelected
                           ? isPremium
-                            ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400/40'
+                            ? 'border-seller-400 bg-seller-950/40 ring-2 ring-seller-400/40'
                             : 'border-emerald-400 bg-emerald-950/40 ring-2 ring-emerald-400/30'
                           : 'border-slate-800 bg-slate-800/50 hover:border-slate-700 hover:bg-slate-800'
                       }`}
@@ -380,7 +380,7 @@ export default function SellerThemeCustomizerModal({
                           <span className="text-xl group-hover:scale-110 transition-transform">{preset.icon}</span>
                           <div className="flex items-center gap-1">
                             {isPremium ? (
-                              <span className="text-[8px] font-black px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-2xs flex items-center gap-0.5">
+                              <span className="text-[8px] font-black px-1.5 py-0.2 rounded-full bg-gradient-to-r from-seller-500 to-seller-500 text-slate-950 shadow-2xs flex items-center gap-0.5">
                                 <Crown className="h-2.5 w-2.5" /> Premium
                               </span>
                             ) : (
@@ -408,7 +408,7 @@ export default function SellerThemeCustomizerModal({
                       <div className="flex items-center justify-between w-full mt-1.5 pt-1 border-t border-white/10">
                         <span className="text-[8px] font-bold text-slate-400">1-Click Apply</span>
                         <span className={`text-[8px] font-black px-1.5 py-0.2 rounded ${
-                          isPremium ? 'bg-amber-400/20 text-amber-300' : 'bg-slate-700 text-slate-300'
+                          isPremium ? 'bg-seller-400/20 text-seller-300' : 'bg-slate-700 text-slate-300'
                         }`}>
                           {preset.gradient_name?.split(' ')[0]}
                         </span>
@@ -416,7 +416,7 @@ export default function SellerThemeCustomizerModal({
 
                       {isSelected && (
                         <div className={`absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-white shadow-xs ${
-                          isPremium ? 'bg-amber-500' : 'bg-emerald-500'
+                          isPremium ? 'bg-seller-500' : 'bg-emerald-500'
                         }`}>
                           <Check className="h-2.5 w-2.5 text-slate-950 font-bold" />
                         </div>
@@ -431,7 +431,7 @@ export default function SellerThemeCustomizerModal({
             <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                  <Sparkles className="h-3.5 w-3.5 text-seller-400" />
                   <span>{t('heroBannerGradient')}</span>
                 </label>
                 <span className="text-[10px] font-bold text-slate-500">8 Presets</span>
@@ -447,7 +447,7 @@ export default function SellerThemeCustomizerModal({
                       type="button"
                       onClick={() => setCustomGradient(g.gradient)}
                       className={`p-2 rounded-lg border text-left text-[10px] font-black text-white bg-gradient-to-r ${g.gradient} transition-all cursor-pointer shadow-2xs flex items-center justify-between ${
-                        isActive ? 'ring-2 ring-indigo-400 border-white scale-102' : 'border-slate-800 opacity-80 hover:opacity-100'
+                        isActive ? 'ring-2 ring-seller-400 border-white scale-102' : 'border-slate-800 opacity-80 hover:opacity-100'
                       }`}
                     >
                       <span className="truncate">{g.name}</span>
@@ -462,7 +462,7 @@ export default function SellerThemeCustomizerModal({
             <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                  <Palette className="h-3.5 w-3.5 text-indigo-400" />
+                  <Palette className="h-3.5 w-3.5 text-seller-400" />
                   <span>{t('primaryAccentColor')}</span>
                 </label>
                 <span className="text-[10px] font-mono font-bold text-slate-400">{primaryColor}</span>
@@ -477,7 +477,7 @@ export default function SellerThemeCustomizerModal({
                     title={col.name}
                     className={`h-7 w-7 rounded-lg transition-all cursor-pointer shadow-2xs border-2 ${
                       primaryColor === col.hex
-                        ? 'border-white scale-115 ring-2 ring-indigo-400'
+                        ? 'border-white scale-115 ring-2 ring-seller-400'
                         : 'border-slate-800 hover:scale-108'
                     }`}
                     style={{ backgroundColor: col.hex }}
@@ -500,13 +500,13 @@ export default function SellerThemeCustomizerModal({
             <div className="space-y-3 rounded-2xl border border-slate-800 bg-slate-950/60 p-3.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                  <Sparkles className="h-3.5 w-3.5 text-seller-400" />
                   <span>{t('storefrontHeroTitle')}</span>
                 </label>
                 <button
                   type="button"
                   onClick={handleAiTaglineGenerate}
-                  className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-[10px] font-black text-white hover:brightness-110 cursor-pointer flex items-center gap-1"
+                  className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-seller-600 to-seller-600 text-[10px] font-black text-white hover:brightness-110 cursor-pointer flex items-center gap-1"
                 >
                   <RefreshCw className="h-3 w-3" /> {t('aiSuggest')}
                 </button>
@@ -520,7 +520,7 @@ export default function SellerThemeCustomizerModal({
                   value={customTagline}
                   onChange={(e) => setCustomTagline(e.target.value)}
                   placeholder="e.g. Clean & Fresh Grocery Theme"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-bold text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-bold text-white placeholder-slate-500 focus:border-seller-500 focus:outline-none"
                 />
               </div>
 
@@ -532,7 +532,7 @@ export default function SellerThemeCustomizerModal({
                   value={customSubTagline}
                   onChange={(e) => setCustomSubTagline(e.target.value)}
                   placeholder="e.g. Order directly from our shop for fast doorstep delivery & verified quality."
-                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 placeholder-slate-500 focus:border-seller-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -542,7 +542,7 @@ export default function SellerThemeCustomizerModal({
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <label className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <Tag className="h-3.5 w-3.5 text-amber-400" />
+                    <Tag className="h-3.5 w-3.5 text-seller-400" />
                     <span>{t('topCouponTicker')}</span>
                   </label>
                   <p className="text-[10px] text-slate-400">
@@ -571,13 +571,13 @@ export default function SellerThemeCustomizerModal({
                     <label className="text-[10px] font-bold text-slate-300 flex items-center justify-between">
                       <span>Select Offer / Promo to Feature at Header:</span>
                       {availableCoupons.length === 0 && !scratchConfig?.enabled && !store?.enable_loyalty_cashback && !flashSaleConfig?.active && (
-                        <span className="text-amber-400 text-[9px] font-bold">No Active Offers</span>
+                        <span className="text-seller-400 text-[9px] font-bold">No Active Offers</span>
                       )}
                     </label>
                     <select
                       value={featuredCouponCode}
                       onChange={(e) => setFeaturedCouponCode(e.target.value)}
-                      className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-black text-amber-300 focus:border-amber-500 focus:outline-none cursor-pointer"
+                      className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-black text-seller-300 focus:border-seller-500 focus:outline-none cursor-pointer"
                     >
                       <option value="">✨ Automatic Best Offer (Auto-Select Highest Discount)</option>
 
@@ -621,8 +621,8 @@ export default function SellerThemeCustomizerModal({
                     </select>
                   </div>
 
-                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-2 text-[10px] text-amber-300 flex items-center gap-2">
-                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-400 animate-bounce" />
+                  <div className="rounded-xl bg-seller-500/10 border border-seller-500/30 p-2 text-[10px] text-seller-300 flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-seller-400 animate-bounce" />
                     <span>
                       {featuredCouponCode
                         ? `Selected Offer "${featuredCouponCode}" will be pinned at the top header!`
@@ -637,14 +637,14 @@ export default function SellerThemeCustomizerModal({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5 rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
                 <label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
-                  <Type className="h-3 w-3 text-indigo-400" /> {t('typographyLabel')}
+                  <Type className="h-3 w-3 text-seller-400" /> {t('typographyLabel')}
                 </label>
                 <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
                   <button
                     type="button"
                     onClick={() => setFontStyle('font-sans')}
                     className={`flex-1 py-1 text-[9.5px] font-black rounded-lg ${
-                      fontStyle === 'font-sans' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                      fontStyle === 'font-sans' ? 'bg-seller-600 text-white' : 'text-slate-400'
                     }`}
                   >
                     Modern
@@ -653,7 +653,7 @@ export default function SellerThemeCustomizerModal({
                     type="button"
                     onClick={() => setFontStyle('font-serif')}
                     className={`flex-1 py-1 text-[9.5px] font-serif font-black rounded-lg ${
-                      fontStyle === 'font-serif' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                      fontStyle === 'font-serif' ? 'bg-seller-600 text-white' : 'text-slate-400'
                     }`}
                   >
                     Royal
@@ -662,7 +662,7 @@ export default function SellerThemeCustomizerModal({
                     type="button"
                     onClick={() => setFontStyle('font-mono')}
                     className={`flex-1 py-1 text-[9.5px] font-mono font-black rounded-lg ${
-                      fontStyle === 'font-mono' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                      fontStyle === 'font-mono' ? 'bg-seller-600 text-white' : 'text-slate-400'
                     }`}
                   >
                     Tech
@@ -672,14 +672,14 @@ export default function SellerThemeCustomizerModal({
 
               <div className="space-y-1.5 rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
                 <label className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
-                  <CornerUpRight className="h-3 w-3 text-teal-400" /> {t('cardShapeLabel')}
+                  <CornerUpRight className="h-3 w-3 text-seller-400" /> {t('cardShapeLabel')}
                 </label>
                 <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
                   <button
                     type="button"
                     onClick={() => setBorderRadius('rounded-lg')}
                     className={`flex-1 py-1 text-[9.5px] font-black rounded-lg ${
-                      borderRadius === 'rounded-lg' ? 'bg-teal-600 text-white' : 'text-slate-400'
+                      borderRadius === 'rounded-lg' ? 'bg-seller-600 text-white' : 'text-slate-400'
                     }`}
                   >
                     Sharp
@@ -688,7 +688,7 @@ export default function SellerThemeCustomizerModal({
                     type="button"
                     onClick={() => setBorderRadius('rounded-2xl')}
                     className={`flex-1 py-1 text-[9.5px] font-black rounded-lg ${
-                      borderRadius === 'rounded-2xl' ? 'bg-teal-600 text-white' : 'text-slate-400'
+                      borderRadius === 'rounded-2xl' ? 'bg-seller-600 text-white' : 'text-slate-400'
                     }`}
                   >
                     Sleek
@@ -697,7 +697,7 @@ export default function SellerThemeCustomizerModal({
                     type="button"
                     onClick={() => setBorderRadius('rounded-3xl')}
                     className={`flex-1 py-1 text-[9.5px] font-black rounded-lg ${
-                      borderRadius === 'rounded-3xl' ? 'bg-teal-600 text-white' : 'text-slate-400'
+                      borderRadius === 'rounded-3xl' ? 'bg-seller-600 text-white' : 'text-slate-400'
                     }`}
                   >
                     Pill
@@ -719,7 +719,7 @@ export default function SellerThemeCustomizerModal({
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 px-5 py-2 text-xs font-black text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-seller-600 via-seller-600 to-emerald-600 px-5 py-2 text-xs font-black text-white shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />
                 <span>{isSaving ? t('applyingTemplate') : t('applyAndSaveTheme')}</span>
@@ -733,7 +733,7 @@ export default function SellerThemeCustomizerModal({
             {/* Interactive Preview Bar Header */}
             <div className="w-full flex items-center justify-between text-xs font-bold text-slate-400 mb-3 px-1">
               <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1 text-teal-400 font-extrabold text-[11px]">
+                <span className="flex items-center gap-1 text-seller-400 font-extrabold text-[11px]">
                   <Eye className="h-3.5 w-3.5" />
                   <span>{previewDevice === 'DESKTOP' ? 'Desktop Browser Preview' : 'Mobile App View'}</span>
                 </span>
@@ -745,7 +745,7 @@ export default function SellerThemeCustomizerModal({
                   type="button"
                   onClick={() => setPreviewTab('HOME')}
                   className={`px-2.5 py-0.5 font-black rounded-lg ${
-                    previewTab === 'HOME' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                    previewTab === 'HOME' ? 'bg-seller-600 text-white' : 'text-slate-400'
                   }`}
                 >
                   Home
@@ -754,7 +754,7 @@ export default function SellerThemeCustomizerModal({
                   type="button"
                   onClick={() => setPreviewTab('PRODUCT')}
                   className={`px-2.5 py-0.5 font-black rounded-lg ${
-                    previewTab === 'PRODUCT' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                    previewTab === 'PRODUCT' ? 'bg-seller-600 text-white' : 'text-slate-400'
                   }`}
                 >
                   Product Detail
@@ -763,7 +763,7 @@ export default function SellerThemeCustomizerModal({
                   type="button"
                   onClick={() => setPreviewTab('CART')}
                   className={`px-2.5 py-0.5 font-black rounded-lg ${
-                    previewTab === 'CART' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+                    previewTab === 'CART' ? 'bg-seller-600 text-white' : 'text-slate-400'
                   }`}
                 >
                   Cart
@@ -784,11 +784,11 @@ export default function SellerThemeCustomizerModal({
                   <div className="bg-slate-950 px-3 py-2 flex items-center justify-between border-b border-slate-800 text-slate-400 text-xs">
                     <div className="flex items-center gap-1.5">
                       <div className="h-2.5 w-2.5 rounded-full bg-rose-500" />
-                      <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                      <div className="h-2.5 w-2.5 rounded-full bg-seller-500" />
                       <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                     </div>
                     <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-3 py-0.5 rounded-lg text-[10px] text-slate-300 font-mono w-64 truncate">
-                      <Globe className="h-3 w-3 text-teal-400 shrink-0" />
+                      <Globe className="h-3 w-3 text-seller-400 shrink-0" />
                       <span>https://{store?.slug || 'store'}.apanidukan.com</span>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-500">
@@ -806,13 +806,13 @@ export default function SellerThemeCustomizerModal({
                 {/* APANI DUKAN STORE NAVBAR */}
                 {/* TOP ANNOUNCEMENT TICKER IN PREVIEW */}
                 {showAnnouncementBar && (
-                  <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 px-3 py-1 text-[9.5px] font-black text-center border-b border-amber-300 flex items-center justify-between gap-1">
+                  <div className="bg-gradient-to-r from-seller-500 via-seller-400 to-seller-500 text-slate-950 px-3 py-1 text-[9.5px] font-black text-center border-b border-seller-300 flex items-center justify-between gap-1">
                     <span className="truncate mx-auto flex items-center gap-1">
                       <Sparkles className="h-3 w-3 shrink-0 animate-bounce" />
                       {featuredCouponCode ? (
                         <span>FEATURED OFFER: <strong className="underline font-black">{featuredCouponCode}</strong></span>
                       ) : (
-                        <span>SPECIAL OFFER: Get <strong className="underline font-black">20% OFF</strong> Code: <span className="font-mono bg-slate-950 text-amber-300 px-1 py-0.2 rounded text-[8.5px]">WELCOME20</span></span>
+                        <span>SPECIAL OFFER: Get <strong className="underline font-black">20% OFF</strong> Code: <span className="font-mono bg-slate-950 text-seller-300 px-1 py-0.2 rounded text-[8.5px]">WELCOME20</span></span>
                       )}
                     </span>
                   </div>
@@ -839,7 +839,7 @@ export default function SellerThemeCustomizerModal({
                       <span>Search items...</span>
                     </div>
                     <div className="relative cursor-pointer">
-                      <ShoppingCart className="h-4 w-4 text-teal-400" />
+                      <ShoppingCart className="h-4 w-4 text-seller-400" />
                       <span className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
                         2
                       </span>
@@ -860,7 +860,7 @@ export default function SellerThemeCustomizerModal({
                         {/* Trust Badges in Preview */}
                         <div className="flex items-center gap-1 flex-wrap">
                           {trustBadges.map((badge, idx) => (
-                            <span key={idx} className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-white/15 text-teal-300 border border-white/20">
+                            <span key={idx} className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-white/15 text-seller-300 border border-white/20">
                               {badge === '10MIN' ? '⚡ 10-Min Delivery' : badge === 'GENUINE' ? '🛡️ 100% Genuine' : '💬 Instant WhatsApp'}
                             </span>
                           ))}
@@ -890,7 +890,7 @@ export default function SellerThemeCustomizerModal({
                         <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
                           Featured Products
                         </p>
-                        <span className="text-[9px] font-bold text-teal-400">View All ➔</span>
+                        <span className="text-[9px] font-bold text-seller-400">View All ➔</span>
                       </div>
 
                       <div className={`grid gap-2 ${previewDevice === 'DESKTOP' ? 'grid-cols-3' : 'grid-cols-2'}`}>
@@ -906,8 +906,8 @@ export default function SellerThemeCustomizerModal({
                             <p className="text-[10.5px] sm:text-xs font-black text-white truncate mt-1.5">
                               Demo Product Item
                             </p>
-                            <div className="flex items-center gap-1 text-[8.5px] text-amber-400 font-bold mt-0.5">
-                              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                            <div className="flex items-center gap-1 text-[8.5px] text-seller-400 font-bold mt-0.5">
+                              <Star className="h-2.5 w-2.5 fill-seller-400 text-seller-400" />
                               <span>4.9 (42 reviews)</span>
                             </div>
                           </div>
@@ -939,8 +939,8 @@ export default function SellerThemeCustomizerModal({
                             <p className="text-[10.5px] sm:text-xs font-black text-white truncate mt-1.5">
                               Daily Essential Pack
                             </p>
-                            <div className="flex items-center gap-1 text-[8.5px] text-amber-400 font-bold mt-0.5">
-                              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                            <div className="flex items-center gap-1 text-[8.5px] text-seller-400 font-bold mt-0.5">
+                              <Star className="h-2.5 w-2.5 fill-seller-400 text-seller-400" />
                               <span>5.0 (98 reviews)</span>
                             </div>
                           </div>
@@ -966,15 +966,15 @@ export default function SellerThemeCustomizerModal({
                             <div>
                               <div className="h-20 rounded-lg bg-slate-800 flex items-center justify-center text-2xl relative overflow-hidden">
                                 💎
-                                <span className="absolute top-1 left-1 text-[7px] font-black px-1.5 py-0.2 rounded bg-amber-500 text-slate-950">
+                                <span className="absolute top-1 left-1 text-[7px] font-black px-1.5 py-0.2 rounded bg-seller-500 text-slate-950">
                                   NEW ARRIVAL
                                 </span>
                               </div>
                               <p className="text-xs font-black text-white truncate mt-1.5">
                                 Premium Special Combo
                               </p>
-                              <div className="flex items-center gap-1 text-[8.5px] text-amber-400 font-bold mt-0.5">
-                                <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                              <div className="flex items-center gap-1 text-[8.5px] text-seller-400 font-bold mt-0.5">
+                                <Star className="h-2.5 w-2.5 fill-seller-400 text-seller-400" />
                                 <span>4.8 (15 reviews)</span>
                               </div>
                             </div>
@@ -1032,7 +1032,7 @@ export default function SellerThemeCustomizerModal({
                   <div className="p-4 bg-slate-950 text-white space-y-3 min-h-[280px]">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <p className="text-xs font-black text-white">Your Shopping Cart (2)</p>
-                      <span className="text-[9px] text-teal-400 font-bold">Clear All</span>
+                      <span className="text-[9px] text-seller-400 font-bold">Clear All</span>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800 text-xs">

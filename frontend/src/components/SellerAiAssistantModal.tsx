@@ -54,9 +54,9 @@ export default function SellerAiAssistantModal({ store, onClose }: SellerAiAssis
       <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-200 flex flex-col max-h-[78vh] sm:max-h-[85vh] font-sans">
         
         {/* MODAL HEADER WITH TEAL & INDIGO GRADIENT */}
-        <header className="flex items-center justify-between bg-gradient-to-r from-slate-900 via-teal-950 to-indigo-950 px-4 sm:px-5 py-3.5 text-white border-b border-teal-500/30 shrink-0 shadow-md">
+        <header className="flex items-center justify-between bg-gradient-to-r from-slate-900 via-seller-950 to-seller-950 px-4 sm:px-5 py-3.5 text-white border-b border-seller-500/30 shrink-0 shadow-md">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white font-bold text-lg shadow-md border border-white/20 shrink-0">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-seller-500 to-emerald-600 text-white font-bold text-lg shadow-md border border-white/20 shrink-0">
               ✨
               <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-slate-950 animate-pulse" />
             </div>
@@ -65,11 +65,11 @@ export default function SellerAiAssistantModal({ store, onClose }: SellerAiAssis
                 <h2 className="font-extrabold text-xs sm:text-sm text-white tracking-wide">
                   Seller AI Copilot & Business Assistant
                 </h2>
-                <span className="rounded-full bg-teal-500/20 px-2 py-0.5 text-[9px] font-black text-teal-300 border border-teal-500/30">
+                <span className="rounded-full bg-seller-500/20 px-2 py-0.5 text-[9px] font-black text-seller-300 border border-seller-500/30">
                   SMART AGENT
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-teal-200 font-medium">
+              <p className="text-[10px] sm:text-[11px] text-seller-200 font-medium">
                 Sales Strategy • Pricing • Demand Analytics • Product Creation
               </p>
             </div>
@@ -90,9 +90,9 @@ export default function SellerAiAssistantModal({ store, onClose }: SellerAiAssis
             <div className="space-y-3.5 my-1">
               
               {/* HERO GREETING BANNER */}
-              <div className="rounded-2xl bg-gradient-to-r from-teal-500/10 via-indigo-500/10 to-teal-500/10 p-4 text-slate-900 border border-teal-200/80 shadow-2xs space-y-2">
+              <div className="rounded-2xl bg-gradient-to-r from-seller-500/10 via-seller-500/10 to-seller-500/10 p-4 text-slate-900 border border-seller-200/80 shadow-2xs space-y-2">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-teal-600 text-white text-xs font-black">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-seller-600 text-white text-xs font-black">
                     🤖
                   </div>
                   <p className="font-extrabold text-xs text-slate-900">
@@ -111,25 +111,25 @@ export default function SellerAiAssistantModal({ store, onClose }: SellerAiAssis
                   <button
                     type="button"
                     onClick={() => ask(undefined, 'How can I increase sales and demand for my store?')}
-                    className="flex items-center gap-1.5 rounded-xl border border-teal-200 bg-white px-3 py-1.5 text-[11px] font-bold text-teal-800 shadow-2xs hover:bg-teal-50 transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-xl border border-seller-200 bg-white px-3 py-1.5 text-[11px] font-bold text-seller-800 shadow-2xs hover:bg-seller-50 transition-all cursor-pointer"
                   >
-                    <TrendingUp className="h-3.5 w-3.5 text-teal-600" />
+                    <TrendingUp className="h-3.5 w-3.5 text-seller-600" />
                     <span>📈 Increase Sales Strategy</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => ask(undefined, 'Which products should I restock or add discount coupons to?')}
-                    className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-1.5 text-[11px] font-bold text-indigo-800 shadow-2xs hover:bg-indigo-50 transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-xl border border-seller-200 bg-white px-3 py-1.5 text-[11px] font-bold text-seller-800 shadow-2xs hover:bg-seller-50 transition-all cursor-pointer"
                   >
-                    <Package className="h-3.5 w-3.5 text-indigo-600" />
+                    <Package className="h-3.5 w-3.5 text-seller-600" />
                     <span>📦 Restock & Offer Advice</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => ask(undefined, 'Write an attractive product description and marketing tagline for my catalog')}
-                    className="flex items-center gap-1.5 rounded-xl border border-purple-200 bg-white px-3 py-1.5 text-[11px] font-bold text-purple-800 shadow-2xs hover:bg-purple-50 transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-xl border border-seller-200 bg-white px-3 py-1.5 text-[11px] font-bold text-seller-800 shadow-2xs hover:bg-seller-50 transition-all cursor-pointer"
                   >
-                    <Lightbulb className="h-3.5 w-3.5 text-purple-600" />
+                    <Lightbulb className="h-3.5 w-3.5 text-seller-600" />
                     <span>💡 Marketing & Taglines</span>
                   </button>
                 </div>
@@ -142,7 +142,7 @@ export default function SellerAiAssistantModal({ store, onClose }: SellerAiAssis
               key={index}
               className={`rounded-2xl p-3.5 shadow-2xs ${
                 item.role === 'user'
-                  ? 'ml-8 bg-gradient-to-r from-teal-700 to-indigo-700 text-white font-medium shadow-xs'
+                  ? 'ml-8 bg-gradient-to-r from-seller-700 to-seller-700 text-white font-medium shadow-xs'
                   : 'mr-4 bg-white text-slate-900 border border-slate-200 shadow-2xs font-medium'
               }`}
             >
@@ -150,8 +150,8 @@ export default function SellerAiAssistantModal({ store, onClose }: SellerAiAssis
 
               {/* Warnings */}
               {!!item.warnings?.length && (
-                <div className="mt-2 rounded-xl bg-amber-50 p-2 text-[10px] text-amber-800 border border-amber-200 flex items-center gap-1">
-                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                <div className="mt-2 rounded-xl bg-seller-50 p-2 text-[10px] text-seller-800 border border-seller-200 flex items-center gap-1">
+                  <AlertTriangle className="h-3.5 w-3.5 text-seller-600 shrink-0" />
                   <span>{item.warnings.join(' ')}</span>
                 </div>
               )}
@@ -159,8 +159,8 @@ export default function SellerAiAssistantModal({ store, onClose }: SellerAiAssis
           ))}
 
           {busy && (
-            <div className="flex items-center gap-2 text-xs text-teal-700 font-bold p-3 bg-teal-50/90 rounded-xl border border-teal-200">
-              <span className="h-2 w-2 rounded-full bg-teal-600 animate-ping" />
+            <div className="flex items-center gap-2 text-xs text-seller-700 font-bold p-3 bg-seller-50/90 rounded-xl border border-seller-200">
+              <span className="h-2 w-2 rounded-full bg-seller-600 animate-ping" />
               <span>AI Copilot is analyzing sales data & insights…</span>
             </div>
           )}
@@ -179,13 +179,13 @@ export default function SellerAiAssistantModal({ store, onClose }: SellerAiAssis
               value={text}
               onChange={e => setText(e.target.value)}
               placeholder="Ask AI Copilot for sales advice, descriptions, or pricing strategy..."
-              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-xs font-medium text-slate-900 placeholder-slate-400 focus:border-teal-600 focus:bg-white focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-xs font-medium text-slate-900 placeholder-slate-400 focus:border-seller-600 focus:bg-white focus:outline-none"
             />
 
             <button
               disabled={busy}
               type="submit"
-              className="flex h-10 px-4 items-center justify-center rounded-xl bg-gradient-to-r from-teal-600 to-indigo-600 text-xs font-black text-white shadow-md hover:opacity-95 disabled:opacity-50 transition-all shrink-0 cursor-pointer"
+              className="flex h-10 px-4 items-center justify-center rounded-xl bg-gradient-to-r from-seller-600 to-seller-600 text-xs font-black text-white shadow-md hover:opacity-95 disabled:opacity-50 transition-all shrink-0 cursor-pointer"
             >
               <Send className="h-4 w-4" />
             </button>

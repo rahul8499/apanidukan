@@ -151,7 +151,7 @@ export default function SellerSubscription() {
           contact: store?.phone_number || '',
         },
         theme: {
-          color: '#0d9488',
+          color: '#f97316',
         },
         modal: {
           ondismiss: function () {
@@ -195,7 +195,7 @@ export default function SellerSubscription() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         <div className="flex items-center gap-3">
-          <RefreshCw className="h-6 w-6 animate-spin text-teal-400" />
+          <RefreshCw className="h-6 w-6 animate-spin text-seller-400" />
           <span className="text-sm font-extrabold">Loading Subscription Vault...</span>
         </div>
       </div>
@@ -209,15 +209,15 @@ export default function SellerSubscription() {
       {/* FULL-PAGE PROFESSIONAL LOCK OVERLAY */}
       {showLockOverlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-3xl border-2 border-amber-400/60 bg-gradient-to-b from-slate-900 via-indigo-950/95 to-slate-900 p-6 sm:p-8 text-center shadow-[0_0_60px_rgba(245,158,11,0.3)] space-y-5">
+          <div className="relative w-full max-w-md rounded-3xl border-2 border-seller-400/60 bg-gradient-to-b from-slate-900 via-seller-950/95 to-slate-900 p-6 sm:p-8 text-center shadow-[0_0_60px_rgba(245,158,11,0.3)] space-y-5">
             {/* Pulsing Lock Ring Icon */}
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-400/10 border-2 border-amber-400/50 text-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.4)]">
-              <Lock className="h-10 w-10 animate-bounce text-amber-400" />
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-seller-400/10 border-2 border-seller-400/50 text-seller-400 shadow-[0_0_35px_rgba(251,191,36,0.4)]">
+              <Lock className="h-10 w-10 animate-bounce text-seller-400" />
             </div>
 
             <div className="space-y-1.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/20 px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-amber-300 border border-amber-400/40">
-                <Crown className="h-3.5 w-3.5 text-amber-400" /> ENTERPRISE VIP MEMBERSHIP
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-seller-400/20 px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-seller-300 border border-seller-400/40">
+                <Crown className="h-3.5 w-3.5 text-seller-400" /> ENTERPRISE VIP MEMBERSHIP
               </span>
               <h2 className="text-2xl font-black text-white">Full Premium Plan Active</h2>
               <p className="text-xs text-slate-300 max-w-xs mx-auto font-medium">
@@ -226,9 +226,9 @@ export default function SellerSubscription() {
             </div>
 
             {/* Premium Feature Highlights List */}
-            <div className="rounded-2xl bg-slate-950/80 border border-amber-400/20 p-4 text-left space-y-2.5 text-xs text-slate-200">
-              <div className="flex items-center gap-2.5 font-extrabold text-amber-300">
-                <CheckCircle2 className="h-4 w-4 text-amber-400 shrink-0" />
+            <div className="rounded-2xl bg-slate-950/80 border border-seller-400/20 p-4 text-left space-y-2.5 text-xs text-slate-200">
+              <div className="flex items-center gap-2.5 font-extrabold text-seller-300">
+                <CheckCircle2 className="h-4 w-4 text-seller-400 shrink-0" />
                 <span>⚡ 0% Platform Commission & Instant Direct Payouts</span>
               </div>
               <div className="flex items-center gap-2.5 font-bold">
@@ -262,9 +262,9 @@ export default function SellerSubscription() {
               <button
                 type="button"
                 disabled
-                className="w-full rounded-2xl bg-amber-500/10 border-2 border-amber-400/50 py-3.5 text-xs font-black text-amber-300 shadow-xl opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full rounded-2xl bg-seller-500/10 border-2 border-seller-400/50 py-3.5 text-xs font-black text-seller-300 shadow-xl opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Lock className="h-4 w-4 text-amber-400 animate-pulse" /> 🔒 WHITELABEL SECURITY LOCKED (DEFAULT PREMIUM)
+                <Lock className="h-4 w-4 text-seller-400 animate-pulse" /> 🔒 WHITELABEL SECURITY LOCKED (DEFAULT PREMIUM)
               </button>
               <Link
                 to={`/stores/${storeId}/manage`}
@@ -289,7 +289,7 @@ export default function SellerSubscription() {
             </Link>
             <div>
               <h1 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                <Lock className="h-5 w-5 text-amber-400 animate-pulse" /> Store Subscription & Security Vault
+                <Lock className="h-5 w-5 text-seller-400 animate-pulse" /> Store Subscription & Security Vault
               </h1>
               <p className="text-[11px] text-slate-400 font-medium truncate">
                 Razorpay Automated Recurring Payments & Whitelabel Security
@@ -300,17 +300,17 @@ export default function SellerSubscription() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowLockOverlay(true)}
-              className="hidden sm:flex items-center gap-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 px-3 py-1 text-xs font-black text-amber-300 hover:bg-amber-400/20 transition-all cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 rounded-full bg-seller-400/10 border border-seller-400/30 px-3 py-1 text-xs font-black text-seller-300 hover:bg-seller-400/20 transition-all cursor-pointer"
             >
-              <Lock className="h-3.5 w-3.5 text-amber-400" /> Vault Lock
+              <Lock className="h-3.5 w-3.5 text-seller-400" /> Vault Lock
             </button>
             <span
               className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider border flex items-center gap-1.5 ${isPremiumActive
-                ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 shadow-[0_0_12px_rgba(251,191,36,0.2)]'
-                : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
+                ? 'bg-seller-400/20 text-seller-300 border-seller-400/40 shadow-[0_0_12px_rgba(251,191,36,0.2)]'
+                : 'bg-seller-500/10 text-seller-300 border-seller-500/30'
                 }`}
             >
-              <Crown className="h-3.5 w-3.5 text-amber-400" />
+              <Crown className="h-3.5 w-3.5 text-seller-400" />
               {isPremiumActive ? '⭐ Premium Active' : 'Basic Tier'}
             </span>
           </div>
@@ -340,19 +340,19 @@ export default function SellerSubscription() {
         )}
 
         {/* Current Active Plan Status Card */}
-        <section className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-slate-900 via-indigo-950/70 to-slate-900 p-5 shadow-xl space-y-4 relative overflow-hidden">
+        <section className="rounded-2xl border border-seller-500/30 bg-gradient-to-br from-slate-900 via-seller-950/70 to-slate-900 p-5 shadow-xl space-y-4 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/90 pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-seller-400 bg-seller-400/10 border border-seller-400/30 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Lock className="h-3 w-3" /> WHITELABEL ENTERPRISE VAULT SECURED
                 </span>
               </div>
               <h2 className="text-xl font-black text-white flex items-center gap-2 mt-2">
-                {planName} PLAN {isPremiumActive && <Sparkles className="h-5 w-5 text-amber-400 fill-amber-400" />}
+                {planName} PLAN {isPremiumActive && <Sparkles className="h-5 w-5 text-seller-400 fill-seller-400" />}
               </h2>
               <p className="text-xs text-slate-400 mt-1">
-                Razorpay Automated Subscription Billing ID: <code className="text-teal-300 font-mono">{razorpaySubId || store?.subscription?.razorpay_subscription_id || 'DEFAULT-ENTERPRISE-PLAN'}</code>
+                Razorpay Automated Subscription Billing ID: <code className="text-seller-300 font-mono">{razorpaySubId || store?.subscription?.razorpay_subscription_id || 'DEFAULT-ENTERPRISE-PLAN'}</code>
               </p>
             </div>
 
@@ -371,13 +371,13 @@ export default function SellerSubscription() {
             </div>
             <div className="rounded-xl bg-slate-900/80 p-3 border border-slate-800">
               <p className="text-[10px] font-bold text-slate-400 uppercase">Current Term Start</p>
-              <p className="font-black text-teal-300 mt-1">
+              <p className="font-black text-seller-300 mt-1">
                 {currentStart ? new Date(currentStart).toLocaleDateString('en-IN') : 'Active'}
               </p>
             </div>
             <div className="rounded-xl bg-slate-900/80 p-3 border border-slate-800">
               <p className="text-[10px] font-bold text-slate-400 uppercase">Next Renewal Date</p>
-              <p className="font-black text-teal-300 mt-1">
+              <p className="font-black text-seller-300 mt-1">
                 {currentEnd ? new Date(currentEnd).toLocaleDateString('en-IN') : 'Auto-Renew'}
               </p>
             </div>
@@ -413,18 +413,18 @@ export default function SellerSubscription() {
             {/* Basic Plan with Lock Overlay */}
             <div
               className={`rounded-2xl border p-5 transition-all space-y-4 relative overflow-hidden ${planName === 'BASIC'
-                ? 'border-teal-500/60 bg-slate-900/90 shadow-lg'
+                ? 'border-seller-500/60 bg-slate-900/90 shadow-lg'
                 : 'border-slate-800 bg-slate-900/50'
                 }`}
             >
               {/* Professional Lock Overlay for Basic Tier */}
               {planName === 'PREMIUM' && (
                 <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-[3px] z-10 flex flex-col items-center justify-center text-center p-5 space-y-3 border border-slate-800">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-seller-500/20 border border-seller-500/40 text-seller-400 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
                     <Lock className="h-6 w-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md bg-seller-500/20 text-seller-300 border border-seller-500/30">
                       🔒 BASIC TIER LOCKED
                     </span>
                     <h4 className="text-sm font-black text-white mt-1.5">Default Premium Active</h4>
@@ -445,13 +445,13 @@ export default function SellerSubscription() {
 
               <ul className="space-y-2 text-xs text-slate-300">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-teal-400" /> Standard Product Catalog Setup
+                  <CheckCircle2 className="h-4 w-4 text-seller-400" /> Standard Product Catalog Setup
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-teal-400" /> Basic WhatsApp Order Notifications
+                  <CheckCircle2 className="h-4 w-4 text-seller-400" /> Basic WhatsApp Order Notifications
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-teal-400" /> General Sales Dashboard
+                  <CheckCircle2 className="h-4 w-4 text-seller-400" /> General Sales Dashboard
                 </li>
               </ul>
 
@@ -472,18 +472,18 @@ export default function SellerSubscription() {
             <div
               className={`rounded-2xl border-2 p-5 transition-all space-y-4 relative overflow-hidden ${
                 planName === 'PREMIUM'
-                  ? 'border-amber-400/80 bg-gradient-to-b from-slate-900 via-teal-950/50 to-slate-900 shadow-2xl shadow-teal-900/30'
-                  : 'border-teal-500/40 bg-slate-900/80 hover:border-teal-400 shadow-xl'
+                  ? 'border-seller-400/80 bg-gradient-to-b from-slate-900 via-seller-950/50 to-slate-900 shadow-2xl shadow-seller-900/30'
+                  : 'border-seller-500/40 bg-slate-900/80 hover:border-seller-400 shadow-xl'
               }`}
             >
-              <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[9px] uppercase px-3 py-1 rounded-bl-xl tracking-wider flex items-center gap-1 shadow-md">
+              <div className="absolute top-0 right-0 bg-gradient-to-r from-seller-400 to-seller-500 text-slate-950 font-black text-[9px] uppercase px-3 py-1 rounded-bl-xl tracking-wider flex items-center gap-1 shadow-md">
                 <Crown className="h-3 w-3 fill-slate-950" /> DEFAULT ACTIVE ENTERPRISE
               </div>
 
               <div className="flex justify-between items-start pt-1">
                 <div>
-                  <span className="rounded-md bg-amber-400/20 text-amber-300 px-2 py-0.5 text-[10px] font-black uppercase border border-amber-400/30 flex items-center gap-1 w-fit">
-                    <Lock className="h-3 w-3 text-amber-400" /> Whitelabel Unlocked
+                  <span className="rounded-md bg-seller-400/20 text-seller-300 px-2 py-0.5 text-[10px] font-black uppercase border border-seller-400/30 flex items-center gap-1 w-fit">
+                    <Lock className="h-3 w-3 text-seller-400" /> Whitelabel Unlocked
                   </span>
                   <h3 className="text-xl font-black text-white mt-1.5 flex items-center gap-2">
                     <span className="text-2xl leading-none">👑</span>
@@ -491,7 +491,7 @@ export default function SellerSubscription() {
                   </h3>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-black text-teal-300">₹ 2,000.00</p>
+                  <p className="text-2xl font-black text-seller-300">₹ 2,000.00</p>
                   <p className="text-[10px] text-slate-400 font-bold">Every Month • Indian Rupee (INR)</p>
                 </div>
               </div>
@@ -517,8 +517,8 @@ export default function SellerSubscription() {
                 onClick={() => handleSubscribe('PREMIUM')}
                 className={`w-full rounded-xl py-3 text-xs font-black shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   isPremiumActive
-                    ? 'bg-gradient-to-r from-amber-500/20 to-teal-500/20 text-amber-300 border border-amber-400/40 cursor-default'
-                    : 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white hover:from-teal-400 hover:to-emerald-500 shadow-teal-500/25 active:scale-95'
+                    ? 'bg-gradient-to-r from-seller-500/20 to-seller-500/20 text-seller-300 border border-seller-400/40 cursor-default'
+                    : 'bg-gradient-to-r from-seller-500 to-emerald-600 text-white hover:from-seller-400 hover:to-emerald-500 shadow-seller-500/25 active:scale-95'
                 }`}
               >
                 {subscribing ? (
@@ -544,7 +544,7 @@ export default function SellerSubscription() {
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                <Shield className="h-4 w-4 text-teal-400" /> Razorpay Payment Transaction History
+                <Shield className="h-4 w-4 text-seller-400" /> Razorpay Payment Transaction History
               </h3>
               <p className="text-[11px] text-slate-400">Cryptographically verified recurring auto-debit receipts</p>
             </div>
@@ -571,7 +571,7 @@ export default function SellerSubscription() {
                 <tbody className="divide-y divide-slate-800/60 font-medium">
                   {payments.map((p) => (
                     <tr key={p.id} className="hover:bg-slate-800/40">
-                      <td className="py-3 px-3 font-mono text-teal-300 text-[11px]">{p.payment_id}</td>
+                      <td className="py-3 px-3 font-mono text-seller-300 text-[11px]">{p.payment_id}</td>
                       <td className="py-3 px-3 text-slate-300">{new Date(p.created_at).toLocaleString('en-IN')}</td>
                       <td className="py-3 px-3 font-black text-white">₹{p.amount.toFixed(2)}</td>
                       <td className="py-3 px-3 text-right">

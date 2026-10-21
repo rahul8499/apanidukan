@@ -36,7 +36,7 @@ export default function SellerDeactivateModal({
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white border border-red-100 shadow-2xl transition-all z-10">
         
         {/* Top Danger Accent Bar */}
-        <div className="h-2 bg-gradient-to-r from-red-500 via-rose-500 to-amber-500" />
+        <div className="h-2 bg-gradient-to-r from-red-500 via-rose-500 to-seller-500" />
 
         {/* Close Button */}
         <button

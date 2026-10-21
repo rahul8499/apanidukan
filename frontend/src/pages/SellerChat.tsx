@@ -263,7 +263,7 @@ export default function SellerChat() {
               }`}
           >
             {/* Conversations List Header */}
-            <div className="p-3.5 border-b border-slate-100 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white space-y-2.5">
+            <div className="p-3.5 border-b border-slate-100 bg-gradient-to-r from-slate-900 via-seller-950 to-slate-900 text-white space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -282,7 +282,7 @@ export default function SellerChat() {
                       await loadStoreAndConversations()
                       setTimeout(() => setIsRefreshingData(false), 500)
                     }}
-                    className="flex items-center gap-1 rounded-xl border border-teal-400/40 bg-teal-900/60 px-2.5 py-1.5 text-xs font-bold text-teal-200 hover:bg-teal-800 hover:text-white transition-all cursor-pointer shadow-xs"
+                    className="flex items-center gap-1 rounded-xl border border-seller-400/40 bg-seller-900/60 px-2.5 py-1.5 text-xs font-bold text-seller-200 hover:bg-seller-800 hover:text-white transition-all cursor-pointer shadow-xs"
                     title="Click to fetch live fresh chat conversations"
                   >
                     <span className={`text-xs ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
@@ -291,7 +291,7 @@ export default function SellerChat() {
                   <button
                     type="button"
                     onClick={() => setShowNewModal(true)}
-                    className="rounded-xl bg-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition-all cursor-pointer"
+                    className="rounded-xl bg-seller-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all cursor-pointer"
                   >
                     {t('newChat')}
                   </button>
@@ -306,7 +306,7 @@ export default function SellerChat() {
                   value={searchConv}
                   onChange={(e) => setSearchConv(e.target.value)}
                   placeholder={t('searchBuyerPlaceholder')}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-1.5 pl-8 pr-3 text-xs font-medium text-white placeholder-slate-400 focus:outline-none focus:border-teal-400"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-800/90 py-1.5 pl-8 pr-3 text-xs font-medium text-white placeholder-slate-400 focus:outline-none focus:border-seller-400"
                 />
               </div>
             </div>
@@ -340,11 +340,11 @@ export default function SellerChat() {
                         setSelectedConv(c)
                         setMobileView('chat')
                       }}
-                      className={`w-full p-3.5 text-left transition-all flex items-start gap-3 cursor-pointer hover:bg-slate-50 ${isSelected ? 'bg-indigo-50/80 border-l-4 border-l-teal-600' : 'bg-white'
+                      className={`w-full p-3.5 text-left transition-all flex items-start gap-3 cursor-pointer hover:bg-slate-50 ${isSelected ? 'bg-seller-50/80 border-l-4 border-l-seller-600' : 'bg-white'
                         }`}
                     >
                       {/* Avatar Circle */}
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-extrabold text-xs shadow-2xs shrink-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-seller-600 to-seller-600 text-white font-extrabold text-xs shadow-2xs shrink-0">
                         {getInitials(c.customer_name)}
                       </div>
 
@@ -362,7 +362,7 @@ export default function SellerChat() {
                         </div>
 
                         {c.customer_phone && (
-                          <p className="text-[10px] font-mono font-semibold text-indigo-600">
+                          <p className="text-[10px] font-mono font-semibold text-seller-600">
                             📞 {c.customer_phone}
                           </p>
                         )}
@@ -393,7 +393,7 @@ export default function SellerChat() {
             {selectedConv ? (
               <div className="flex-1 flex flex-col h-[520px] bg-[#E5DDD5]">
                 {/* Chat Room Top Bar */}
-                <div className="flex items-center justify-between bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-4 py-3 text-white shadow-xs">
+                <div className="flex items-center justify-between bg-gradient-to-r from-slate-900 via-seller-950 to-slate-900 px-4 py-3 text-white shadow-xs">
                   <div className="flex items-center gap-3">
                     {/* Back button for mobile view */}
                     <button
@@ -404,7 +404,7 @@ export default function SellerChat() {
                       ⬅️
                     </button>
 
-                    <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 font-extrabold text-white text-xs shadow-2xs">
+                    <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-seller-600 font-extrabold text-white text-xs shadow-2xs">
                       {getInitials(selectedConv.customer_name)}
                       <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-slate-900" />
                     </div>
@@ -417,7 +417,7 @@ export default function SellerChat() {
                             ? `Customer (${selectedConv.customer_phone})`
                             : selectedConv.customer_name || 'Customer'}
                       </h3>
-                      <p className="text-[10px] text-teal-300 font-medium">
+                      <p className="text-[10px] text-seller-300 font-medium">
                         {selectedConv.customer_phone ? `📞 ${selectedConv.customer_phone}` : 'Storefront Buyer'} • Live Chat
                       </p>
                     </div>
@@ -437,15 +437,15 @@ export default function SellerChat() {
 
                 {/* Prominent Associated Order Banner */}
                 {associatedOrder ? (
-                  <div className="bg-amber-50 px-4 py-2.5 border-b border-amber-200 flex items-center justify-between text-xs text-amber-950">
+                  <div className="bg-seller-50 px-4 py-2.5 border-b border-seller-200 flex items-center justify-between text-xs text-seller-950">
                     <div>
-                      <p className="font-extrabold text-amber-950 flex items-center gap-1.5">
+                      <p className="font-extrabold text-seller-950 flex items-center gap-1.5">
                         <span>📦 Order #{associatedOrder.reference}</span>
-                        <span className="bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded text-[10px] font-bold">
+                        <span className="bg-seller-200/80 text-seller-900 px-1.5 py-0.2 rounded text-[10px] font-bold">
                           {associatedOrder.status}
                         </span>
                       </p>
-                      <p className="text-[11px] text-amber-800 font-medium mt-0.5">
+                      <p className="text-[11px] text-seller-800 font-medium mt-0.5">
                         Total: <strong>₹{associatedOrder.total}</strong> • {associatedOrder.payment_type === 'COD' ? '💵 COD' : '💳 Online'}
                       </p>
                     </div>
@@ -483,24 +483,24 @@ export default function SellerChat() {
                         >
                           <div
                             className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-3.5 py-2 text-xs shadow-2xs ${isSeller
-                              ? 'bg-teal-700 text-white rounded-tr-none'
+                              ? 'bg-seller-700 text-white rounded-tr-none'
                               : 'bg-white text-slate-900 rounded-tl-none border border-slate-200'
                               }`}
                           >
-                            <p className={`font-extrabold text-[10px] mb-0.5 ${isSeller ? 'text-teal-200' : 'text-indigo-600'}`}>
+                            <p className={`font-extrabold text-[10px] mb-0.5 ${isSeller ? 'text-seller-200' : 'text-seller-600'}`}>
                               {isSeller ? 'Store (You)' : m.sender_name || 'Customer'}
                             </p>
                             <p className="whitespace-pre-wrap leading-relaxed text-xs font-medium">
                               {m.text}
                             </p>
-                            <div className={`mt-1 flex items-center justify-end gap-1 text-[9px] ${isSeller ? 'text-teal-200' : 'text-slate-400'}`}>
+                            <div className={`mt-1 flex items-center justify-end gap-1 text-[9px] ${isSeller ? 'text-seller-200' : 'text-slate-400'}`}>
                               <span>
                                 {new Date(m.created_at).toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit',
                                 })}
                               </span>
-                              {isSeller && <span className="text-teal-300 font-black">✓✓</span>}
+                              {isSeller && <span className="text-seller-300 font-black">✓✓</span>}
                             </div>
                           </div>
                         </div>
@@ -525,7 +525,7 @@ export default function SellerChat() {
                   <button
                     type="submit"
                     disabled={!textInput.trim()}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-600 text-white font-black text-sm shadow-xs disabled:opacity-50 hover:bg-teal-700 cursor-pointer transition-all shrink-0"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-seller-600 text-white font-black text-sm shadow-xs disabled:opacity-50 hover:bg-seller-700 cursor-pointer transition-all shrink-0"
                   >
                     ➔
                   </button>
@@ -601,7 +601,7 @@ export default function SellerChat() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-xl bg-teal-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition-all cursor-pointer"
+                  className="flex-1 rounded-xl bg-seller-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all cursor-pointer"
                 >
                   {t('startChatBtn')}
                 </button>

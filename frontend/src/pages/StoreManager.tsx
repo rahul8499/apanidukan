@@ -1366,7 +1366,7 @@ export default function StoreManager() {
   if (!store && !message) return (
     <div className="flex h-screen flex-col items-center justify-center bg-slate-50/80">
       <div className="flex flex-col items-center gap-4">
-        <svg className="animate-spin h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-10 w-10 text-seller-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -1437,35 +1437,35 @@ export default function StoreManager() {
                 className="flex-1 min-w-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-900 focus:border-slate-900 focus:outline-none shadow-2xs"
                 inputMode="tel"
               />
-              <button className="rounded-lg bg-slate-900 px-3 py-1 text-xs font-bold text-white hover:bg-slate-800 shrink-0 cursor-pointer shadow-2xs">
+              <button className="rounded-lg bg-seller-500 px-3 py-1 text-xs font-bold text-white hover:bg-seller-600 shrink-0 cursor-pointer shadow-2xs">
                 Save
               </button>
             </div>
           </form>
 
           {/* Storefront Link & Action Buttons */}
-          <div className="md:col-span-7 flex flex-col justify-between bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-100 space-y-1.5">
+          <div className="md:col-span-7 flex flex-col justify-between bg-seller-50/70 p-2.5 rounded-xl border border-seller-100 space-y-1.5">
             <div className="flex items-center justify-between gap-2 min-w-0">
               <div className="min-w-0 flex items-center gap-1.5">
                 <span className="text-xs">🌐</span>
-                <span className="text-[11px] sm:text-xs font-black text-indigo-900 truncate font-mono">{publicUrl}</span>
+                <span className="text-xs sm:text-sm font-semibold text-slate-700 truncate">{publicUrl}</span>
               </div>
               <a
                 href={publicUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-lg bg-white px-2 py-0.5 text-[10px] font-black text-indigo-700 hover:bg-indigo-100 border border-indigo-200 shrink-0 shadow-2xs"
+                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-2xs transition hover:border-seller-200 hover:bg-seller-50 hover:text-seller-700 shrink-0"
               >
                 Open ↗
               </a>
             </div>
 
             {/* Quick Action Pills */}
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="grid grid-cols-1 sm:grid-cols-3 items-stretch gap-2">
               <button
                 type="button"
                 onClick={() => setShowQrModal(true)}
-                className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-2 py-1 text-[10px] font-black text-white hover:brightness-110 shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-seller-200 hover:bg-seller-50 hover:text-seller-700 cursor-pointer active:scale-[0.99] whitespace-nowrap"
               >
                 <span>🖨️ QR Standee</span>
               </button>
@@ -1474,7 +1474,7 @@ export default function StoreManager() {
                 href={whatsappShareUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-[#25D366] px-2 py-1 text-[10px] font-black text-white hover:bg-[#20ba5a] shadow-2xs cursor-pointer whitespace-nowrap"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer whitespace-nowrap"
                 title="Share on WhatsApp"
               >
                 <span>📲 WhatsApp</span>
@@ -1483,7 +1483,7 @@ export default function StoreManager() {
               <button
                 type="button"
                 onClick={copyLink}
-                className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-slate-900 px-2 py-1 text-[10px] font-black text-white hover:bg-slate-800 shadow-2xs cursor-pointer whitespace-nowrap"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-seller-200 hover:bg-seller-50 hover:text-seller-700 cursor-pointer whitespace-nowrap"
               >
                 <span>📋 Copy Link</span>
               </button>
@@ -1493,10 +1493,10 @@ export default function StoreManager() {
       </section>
 
       {/* Seller-side payment setup is temporarily hidden; customer payment flows remain unchanged. */}
-      {false && <section id="payment-setup" className="rounded-xl sm:rounded-2xl border border-indigo-200 bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/20 p-3.5 sm:p-5 shadow-xs space-y-3.5">
-        <div className="flex items-center justify-between border-b border-indigo-100 pb-2.5">
+      {false && <section id="payment-setup" className="rounded-xl sm:rounded-2xl border border-seller-200 bg-gradient-to-br from-white via-seller-50/30 to-seller-50/20 p-3.5 sm:p-5 shadow-xs space-y-3.5">
+        <div className="flex items-center justify-between border-b border-seller-100 pb-2.5">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-600 text-white text-xs font-black shadow-xs">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-seller-600 text-white text-xs font-black shadow-xs">
               💳
             </span>
             <div>
@@ -1521,10 +1521,10 @@ export default function StoreManager() {
                 value={upiId}
                 onChange={e => setUpiId(e.target.value)}
                 placeholder="e.g. 9876543210@paytm or shop@okicici"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:outline-none shadow-2xs font-mono"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-900 focus:border-seller-600 focus:outline-none shadow-2xs font-mono"
               />
               <p className="text-[9.5px] text-slate-500 mt-1">Customers will pay directly to this UPI ID on GPay, PhonePe & Paytm</p>
-              <p className="text-[9.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 p-1.5 rounded-lg mt-1">
+              <p className="text-[9.5px] font-bold text-seller-700 bg-seller-50 border border-seller-200 p-1.5 rounded-lg mt-1">
                 💡 <strong>Pro Tip:</strong> Use your Mobile-linked UPI ID (e.g. <code className="font-mono">7796216506@ybl</code> or <code className="font-mono">7796216506@paytm</code>) for 100% instant 1-click PhonePe/GPay auto-redirects!
               </p>
             </div>
@@ -1537,7 +1537,7 @@ export default function StoreManager() {
                 value={upiName}
                 onChange={e => setUpiName(e.target.value)}
                 placeholder={store?.name || "e.g. Ramesh Kirana Store"}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-900 focus:border-indigo-600 focus:outline-none shadow-2xs"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-900 focus:border-seller-600 focus:outline-none shadow-2xs"
               />
               <p className="text-[9.5px] text-slate-500 mt-1">Displayed on customer's UPI app payment confirmation screen</p>
             </div>
@@ -1589,7 +1589,7 @@ export default function StoreManager() {
                 type="checkbox"
                 checked={enableOnlinePayments}
                 onChange={e => setEnableOnlinePayments(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="h-4 w-4 rounded border-slate-300 text-seller-600 focus:ring-seller-500"
               />
               <span className="text-xs font-extrabold text-slate-800">
                 Enable Online Payment Option for Customers
@@ -1599,7 +1599,7 @@ export default function StoreManager() {
             <button
               type="submit"
               disabled={isSavingPaymentSetup}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-xs font-black text-white hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-seller-600 px-4 py-2 text-xs font-black text-white hover:bg-seller-700 shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
             >
               <span>{isSavingPaymentSetup ? 'Saving...' : '💾 Save Payment Settings'}</span>
             </button>
@@ -1608,10 +1608,10 @@ export default function StoreManager() {
       </section>}
 
       {/* DEDICATED STANDALONE SECTION: Ultra-Premium Collapsible 1-Click Bulk & CSV Product Import */}
-      <section id="bulk-import" className="relative overflow-hidden rounded-xl sm:rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-3.5 sm:p-6 text-white shadow-md sm:shadow-2xl transition-all backdrop-blur-xl group hover:border-amber-400/50">
+      <section id="bulk-import" className="relative overflow-hidden rounded-xl sm:rounded-3xl border border-seller-100 bg-gradient-to-br from-seller-50 via-white to-seller-50 p-3.5 sm:p-6 text-slate-900 shadow-sm transition-all group hover:border-seller-200">
         {/* Glow Effects */}
-        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-seller-200/35 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-seller-200/30 blur-3xl pointer-events-none" />
 
         <div
           onClick={() => {
@@ -1623,30 +1623,30 @@ export default function StoreManager() {
         >
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-slate-950 shadow-xs tracking-wider">
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-seller-400 via-seller-400 to-seller-500 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-slate-950 shadow-xs tracking-wider">
                 {t('killerFeature')}
               </span>
-              <span className="text-[10px] sm:text-xs font-extrabold text-amber-200/90 tracking-wide">
+              <span className="text-[10px] sm:text-xs font-extrabold text-seller-700 tracking-wide">
                 {t('expressEngine')}
               </span>
             </div>
-            <h2 className="mt-1 text-sm sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-200">
+            <h2 className="mt-1 text-sm sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-seller-800 to-seller-600">
               {t('bulkImportTitle')}
             </h2>
-            <p className="mt-0.5 text-[10px] sm:text-xs text-slate-300 font-medium leading-tight">
+            <p className="mt-0.5 text-[10px] sm:text-xs text-slate-600 font-medium leading-tight">
               {t('bulkImportSubtext')}
             </p>
           </div>
 
           <div className="flex items-center gap-1.5 self-start sm:self-auto flex-wrap">
             {isKillerFeatureOpen && (
-              <div onClick={e => e.stopPropagation()} className="flex rounded-lg sm:rounded-2xl bg-white/10 p-0.5 sm:p-1 border border-amber-400/20 backdrop-blur-md">
+              <div onClick={e => e.stopPropagation()} className="flex rounded-lg sm:rounded-2xl bg-white p-0.5 sm:p-1 border border-seller-100 shadow-xs">
                 <button
                   type="button"
                   onClick={() => setBulkMode('matrix')}
                   className={`rounded-md sm:rounded-xl px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-extrabold transition-all ${bulkMode === 'matrix'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
-                    : 'text-slate-300 hover:text-white'
+                    ? 'bg-seller-500 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-seller-50 hover:text-seller-700'
                     }`}
                 >
                   {t('gridMode')}
@@ -1655,8 +1655,8 @@ export default function StoreManager() {
                   type="button"
                   onClick={() => setBulkMode('text')}
                   className={`rounded-md sm:rounded-xl px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-extrabold transition-all ${bulkMode === 'text'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
-                    : 'text-slate-300 hover:text-white'
+                    ? 'bg-seller-500 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-seller-50 hover:text-seller-700'
                     }`}
                 >
                   {t('textMode')}
@@ -1665,8 +1665,8 @@ export default function StoreManager() {
                   type="button"
                   onClick={() => setBulkMode('csv')}
                   className={`rounded-md sm:rounded-xl px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-extrabold transition-all ${bulkMode === 'csv'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
-                    : 'text-slate-300 hover:text-white'
+                    ? 'bg-seller-500 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-seller-50 hover:text-seller-700'
                     }`}
                 >
                   {t('csvMode')}
@@ -1676,7 +1676,7 @@ export default function StoreManager() {
 
             <button
               type="button"
-              className="rounded-lg sm:rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-500 to-yellow-600 px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[10px] sm:text-xs font-black text-slate-950 shadow-xs hover:brightness-110 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
+              className="rounded-lg sm:rounded-2xl border border-seller-200 bg-seller-500 px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[10px] sm:text-xs font-black text-white shadow-xs hover:bg-seller-600 transition-all flex items-center gap-1 shrink-0 cursor-pointer"
             >
               <span>{isKillerFeatureOpen ? '▲ Collapse' : '⚡ Setup (Expand ▾)'}</span>
             </button>
@@ -1684,14 +1684,14 @@ export default function StoreManager() {
         </div>
 
         {isKillerFeatureOpen && (
-          <div className="pt-4 border-t border-indigo-800/50 mt-3 animate-in fade-in duration-200 text-slate-900">
+          <div className="pt-4 border-t border-seller-100 mt-3 animate-in fade-in duration-200 text-slate-900">
             {bulkMode === 'csv' ? (
               <div className="space-y-3">
                 <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                       <span>📊 CSV Columns Supported:</span>
-                      <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Multi-Image Active</span>
+                      <span className="text-[10px] bg-seller-100 text-seller-800 font-bold px-2 py-0.5 rounded-full">Multi-Image Active</span>
                     </p>
                     <p className="text-[11px] font-mono text-slate-600 mt-0.5">Category, Product Name, Price, Stock, Unit, Available Sizes, Size Stock, Description, Image URL</p>
                   </div>
@@ -1709,7 +1709,7 @@ export default function StoreManager() {
                     <button
                       type="button"
                       onClick={() => setGuideModalType('csv')}
-                      className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                      className="rounded-lg bg-seller-50 px-3 py-1.5 text-xs font-bold text-seller-700 border border-seller-200 hover:bg-seller-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
                       title="Open Multi-Image CSV Guide & Format Examples"
                     >
                       <span>📖 Multi-Image Guide</span>
@@ -1718,14 +1718,14 @@ export default function StoreManager() {
                     <button
                       type="button"
                       onClick={downloadSampleCsv}
-                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                      className="rounded-lg bg-seller-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all cursor-pointer flex items-center gap-1"
                     >
                       <span>📥 Download Sample CSV</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border-2 border-dashed border-indigo-300/80 bg-white p-5 text-center shadow-xs">
+                <div className="rounded-2xl border-2 border-dashed border-seller-300/80 bg-white p-5 text-center shadow-xs">
                   <input
                     type="file"
                     accept=".csv,.txt"
@@ -1742,12 +1742,12 @@ export default function StoreManager() {
                   </label>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-indigo-50/90 p-3 rounded-xl border border-indigo-200 gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-seller-50/90 p-3 rounded-xl border border-seller-200 gap-2">
                   <div>
                     <p className="text-xs font-bold text-slate-900">🖼️ Have local product image files on your phone/PC?</p>
                     <p className="text-[11px] text-slate-600">Select multiple image files to auto-match with CSV products!</p>
                   </div>
-                  <label className="cursor-pointer rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 whitespace-nowrap text-center transition-all">
+                  <label className="cursor-pointer rounded-lg bg-seller-500 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-seller-600 whitespace-nowrap text-center transition-all">
                     📁 Pick Local Images
                     <input type="file" accept="image/*" multiple onChange={handleLocalImagesSelect} className="hidden" />
                   </label>
@@ -1757,7 +1757,7 @@ export default function StoreManager() {
                   <div className="space-y-2 pt-1">
                     <div className="flex justify-between items-center">
                       <p className="text-xs font-bold text-slate-200">Preview ({csvPreview.length} items parsed):</p>
-                      <span className="text-[11px] text-teal-300 font-bold">
+                      <span className="text-[11px] text-seller-300 font-bold">
                         {csvPreview.filter(i => i.image_file || i.image_url).length}/{csvPreview.length} Images Attached
                       </span>
                     </div>
@@ -1773,10 +1773,10 @@ export default function StoreManager() {
                             <div className="min-w-0">
                               <p className="font-bold text-slate-900 truncate">{item.name}</p>
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                {item.category_name && <span className="text-[10px] bg-indigo-50 font-bold text-indigo-600 px-1.5 py-0.5 rounded">{item.category_name}</span>}
+                                {item.category_name && <span className="text-[10px] bg-seller-50 font-bold text-seller-600 px-1.5 py-0.5 rounded">{item.category_name}</span>}
                                 <span className="text-[10px] bg-slate-100 font-bold text-slate-700 px-1.5 py-0.5 rounded">Stock: {item.stock || '100'}</span>
-                                {item.sizes && <span className="text-[10px] bg-indigo-100 font-bold text-indigo-700 px-1.5 py-0.5 rounded">Sizes: {parseSizeList(item.sizes).join(', ') || '—'}</span>}
-                                {item.size_stock && <span className="text-[10px] bg-amber-100 font-bold text-amber-800 px-1.5 py-0.5 rounded">Size stock: {item.size_stock}</span>}
+                                {item.sizes && <span className="text-[10px] bg-seller-100 font-bold text-seller-700 px-1.5 py-0.5 rounded">Sizes: {parseSizeList(item.sizes).join(', ') || '—'}</span>}
+                                {item.size_stock && <span className="text-[10px] bg-seller-100 font-bold text-seller-800 px-1.5 py-0.5 rounded">Size stock: {item.size_stock}</span>}
                                 {item.image_file && <span className="text-[10px] bg-emerald-50 font-bold text-emerald-600 px-1 py-0.5 rounded">Local File attached</span>}
                               </div>
                             </div>
@@ -1801,7 +1801,7 @@ export default function StoreManager() {
                       type="button"
                       disabled={isImporting}
                       onClick={handleCsvImport}
-                      className="w-full rounded-xl bg-teal-600 py-3 text-xs font-black text-white shadow-md hover:bg-teal-700 disabled:opacity-50 transition-all cursor-pointer"
+                      className="w-full rounded-xl bg-seller-600 py-3 text-xs font-black text-white shadow-md hover:bg-seller-700 disabled:opacity-50 transition-all cursor-pointer"
                     >
                       {isImporting ? '⏳ Importing Products & Images...' : `🚀 Import All ${csvPreview.length} Products & Images (1-Click)`}
                     </button>
@@ -1814,7 +1814,7 @@ export default function StoreManager() {
                   <div>
                     <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                       <span>✨ Text Product Import:</span>
-                      <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Paste & Import</span>
+                      <span className="text-[10px] bg-seller-100 text-seller-800 font-bold px-2 py-0.5 rounded-full">Paste & Import</span>
                     </p>
                     <p className="text-[11px] font-mono text-slate-600 mt-0.5">Format: Product Name - Price - Stock - Unit - Sizes (S|M|L|XL)</p>
                   </div>
@@ -1823,7 +1823,7 @@ export default function StoreManager() {
                     <button
                       type="button"
                       onClick={() => setGuideModalType('text')}
-                      className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                      className="rounded-lg bg-seller-50 px-3 py-1.5 text-xs font-bold text-seller-700 border border-seller-200 hover:bg-seller-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
                       title="Open Text Import Format Guide"
                     >
                       <span>📖 Text Guide</span>
@@ -1832,7 +1832,7 @@ export default function StoreManager() {
                     <button
                       type="button"
                       onClick={downloadSampleText}
-                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                      className="rounded-lg bg-seller-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all cursor-pointer flex items-center gap-1"
                     >
                       <span>📥 Download Sample Text</span>
                     </button>
@@ -1867,7 +1867,7 @@ export default function StoreManager() {
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-slate-200">Paste product list (1 item per line):</label>
-                    <span className="text-[10px] font-bold text-indigo-300 bg-white/10 px-2 py-0.5 rounded border border-white/10">Name - Price - Stock - Unit - Sizes</span>
+                    <span className="text-[10px] font-bold text-seller-300 bg-white/10 px-2 py-0.5 rounded border border-white/10">Name - Price - Stock - Unit - Sizes</span>
                   </div>
                   <textarea
                     rows={5}
@@ -1889,7 +1889,7 @@ export default function StoreManager() {
                   <button
                     type="button"
                     onClick={handleDirectTextImport}
-                    className="flex-1 rounded-xl bg-teal-600 py-2.5 text-xs font-black text-white shadow-md hover:bg-teal-700 transition-all cursor-pointer"
+                    className="flex-1 rounded-xl bg-seller-600 py-2.5 text-xs font-black text-white shadow-md hover:bg-seller-700 transition-all cursor-pointer"
                   >
                     🚀 Instant 1-Click Import from Text
                   </button>
@@ -1901,7 +1901,7 @@ export default function StoreManager() {
                   <div>
                     <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                       <span>📝 Multi-Row Form Grid:</span>
-                      <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Direct Entry</span>
+                      <span className="text-[10px] bg-seller-100 text-seller-800 font-bold px-2 py-0.5 rounded-full">Direct Entry</span>
                     </p>
                     <p className="text-[11px] text-slate-600 mt-0.5 font-medium">Add multiple items with custom price, stock & photos directly!</p>
                   </div>
@@ -1910,7 +1910,7 @@ export default function StoreManager() {
                     <button
                       type="button"
                       onClick={() => setGuideModalType('matrix')}
-                      className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                      className="rounded-lg bg-seller-50 px-3 py-1.5 text-xs font-bold text-seller-700 border border-seller-200 hover:bg-seller-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
                       title="Open Form Grid Guide"
                     >
                       <span>📖 Form Guide</span>
@@ -1919,7 +1919,7 @@ export default function StoreManager() {
                     <button
                       type="button"
                       onClick={downloadSampleCsv}
-                      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                      className="rounded-lg bg-seller-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all cursor-pointer flex items-center gap-1"
                     >
                       <span>📥 Download Template</span>
                     </button>
@@ -1947,7 +1947,7 @@ export default function StoreManager() {
                         placeholder="Product Name"
                         value={row.name}
                         onChange={e => handleRowChange(idx, 'name', e.target.value)}
-                        className="flex-1 min-w-0 rounded-lg border border-slate-200 p-1.5 text-xs font-medium focus:outline-indigo-500"
+                        className="flex-1 min-w-0 rounded-lg border border-slate-200 p-1.5 text-xs font-medium focus:outline-seller-500"
                       />
                       <div className="relative w-20 shrink-0">
                         <span className="absolute left-1.5 top-1.5 text-xs text-slate-400">₹</span>
@@ -1956,7 +1956,7 @@ export default function StoreManager() {
                           placeholder="Price"
                           value={row.price}
                           onChange={e => handleRowChange(idx, 'price', e.target.value)}
-                          className="w-full rounded-lg border border-slate-200 p-1.5 pl-4 text-xs font-bold text-slate-800 focus:outline-indigo-500"
+                          className="w-full rounded-lg border border-slate-200 p-1.5 pl-4 text-xs font-bold text-slate-800 focus:outline-seller-500"
                         />
                       </div>
                       <div className="w-16 shrink-0">
@@ -1966,7 +1966,7 @@ export default function StoreManager() {
                           title="Stock Quantity"
                           value={row.stock}
                           onChange={e => handleRowChange(idx, 'stock', e.target.value)}
-                          className="w-full rounded-lg border border-slate-200 p-1.5 text-xs font-bold text-slate-800 focus:outline-indigo-500 text-center"
+                          className="w-full rounded-lg border border-slate-200 p-1.5 text-xs font-bold text-slate-800 focus:outline-seller-500 text-center"
                         />
                       </div>
                       <select
@@ -1983,7 +1983,7 @@ export default function StoreManager() {
                         title="Available Sizes separated by | or comma"
                         value={row.sizes}
                         onChange={e => handleRowChange(idx, 'sizes', e.target.value)}
-                        className="w-28 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-indigo-500"
+                        className="w-28 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-seller-500"
                       />
                       <input
                         type="text"
@@ -1991,7 +1991,7 @@ export default function StoreManager() {
                         title="Stock for each selected size"
                         value={row.size_stock}
                         onChange={e => handleRowChange(idx, 'size_stock', e.target.value)}
-                        className="w-32 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-indigo-500"
+                        className="w-32 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-seller-500"
                       />
                       <div className="flex items-center gap-1 shrink-0">
                         {row.image_preview_urls && row.image_preview_urls.length > 0 ? (
@@ -2046,7 +2046,7 @@ export default function StoreManager() {
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-indigo-800/50">
+                <div className="flex items-center justify-between pt-2 border-t border-seller-800/50">
                   <button
                     type="button"
                     onClick={handleAddBulkRow}
@@ -2056,7 +2056,7 @@ export default function StoreManager() {
                   </button>
                   <button
                     type="submit"
-                    className="rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-black text-white shadow-md hover:bg-teal-700 transition-all cursor-pointer"
+                    className="rounded-xl bg-seller-600 px-4 py-2.5 text-xs font-black text-white shadow-md hover:bg-seller-700 transition-all cursor-pointer"
                   >
                     🚀 Save All {bulkRows.filter(r => r.name.trim()).length} Products (1-Click)
                   </button>
@@ -2069,17 +2069,17 @@ export default function StoreManager() {
 
       {/* Business Category & Ordering Logic Customizer Section */}
       {store && (
-        <section id="business-category" className="rounded-xl sm:rounded-2xl border border-indigo-200/90 bg-gradient-to-r from-indigo-900 via-slate-900 to-slate-950 p-2.5 sm:p-4 text-white shadow-xs space-y-2 transition-all">
-          <div className="flex items-center justify-between gap-2 border-b border-indigo-800/60 pb-2">
+        <section id="business-category" className="rounded-xl sm:rounded-2xl border border-seller-100 bg-gradient-to-r from-seller-50 via-white to-seller-50 p-2.5 sm:p-4 text-slate-900 shadow-sm space-y-2 transition-all">
+          <div className="flex items-center justify-between gap-2 border-b border-seller-100 pb-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-base sm:text-xl shadow-inner border border-white/20">
+              <span className="flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-seller-100 text-base sm:text-xl text-seller-700 border border-seller-200">
                 {getBusinessType(store.business_type).icon}
               </span>
               <div className="min-w-0">
-                <span className="rounded-full bg-amber-400/20 text-amber-300 text-[8.5px] sm:text-[9px] font-black px-1.5 py-0.2 border border-amber-400/40 uppercase">
+                <span className="rounded-full bg-seller-100 text-seller-800 text-[8.5px] sm:text-[9px] font-black px-1.5 py-0.2 border border-seller-200 uppercase">
                   Category & Logic Setup
                 </span>
-                <h3 className="text-xs sm:text-sm font-black text-white truncate">
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 truncate">
                   {getBusinessTypeTitle(getBusinessType(store.business_type), i18n.language)}
                 </h3>
               </div>
@@ -2088,7 +2088,7 @@ export default function StoreManager() {
             <button
               type="button"
               onClick={requestAutoCreateSampleCategories}
-              className="rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-black text-slate-950 hover:brightness-110 shadow-2xs transition-all cursor-pointer shrink-0 active:scale-95 whitespace-nowrap"
+              className="rounded-lg bg-seller-500 px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-black text-white hover:bg-seller-600 shadow-2xs transition-all cursor-pointer shrink-0 active:scale-95 whitespace-nowrap"
             >
               <span>⚡ 1-Click Auto Categories</span>
             </button>
@@ -2096,21 +2096,21 @@ export default function StoreManager() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <div>
-              <label className="text-[9.5px] font-extrabold text-indigo-300 uppercase tracking-wider block">Store Category:</label>
-              <div className="mt-0.5 w-full rounded-lg border border-indigo-700 bg-slate-900 px-2 py-1 text-xs font-bold text-white">
+              <label className="text-[9.5px] font-extrabold text-seller-700 uppercase tracking-wider block">Store Category:</label>
+              <div className="mt-0.5 w-full rounded-lg border border-seller-200 bg-white px-2 py-1 text-xs font-bold text-slate-900">
                 {getBusinessType('GARMENTS').icon} {getBusinessTypeTitle(getBusinessType('GARMENTS'), i18n.language)}
               </div>
             </div>
 
-            <div className="rounded-lg bg-white/5 p-2 border border-white/10 space-y-0.5">
-              <p className="text-[9.5px] font-extrabold text-amber-300 uppercase tracking-wider">🎯 Checkout UX & Units:</p>
-              <p className="text-[10px] text-slate-200 font-medium leading-tight">
+            <div className="rounded-lg bg-white/80 p-2 border border-seller-100 space-y-0.5">
+              <p className="text-[9.5px] font-extrabold text-seller-700 uppercase tracking-wider">🎯 Checkout UX & Units:</p>
+              <p className="text-[10px] text-slate-600 font-medium leading-tight">
                 {getBusinessTypeCheckoutHint(getBusinessType(store.business_type), i18n.language)}
               </p>
               <div className="flex items-center gap-1 flex-wrap pt-0.5">
                 <span className="text-[9px] text-slate-400 font-bold">Units:</span>
                 {getBusinessType(store.business_type).units.map(u => (
-                  <span key={u} className="bg-indigo-950 text-indigo-300 border border-indigo-700/50 px-1 py-0.1 rounded text-[8.5px] font-bold">
+                  <span key={u} className="bg-seller-100 text-seller-800 border border-seller-200 px-1 py-0.1 rounded text-[8.5px] font-bold">
                     {u}
                   </span>
                 ))}
@@ -2125,7 +2125,7 @@ export default function StoreManager() {
           {/* Compact Header */}
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-3 py-2 sm:px-4 sm:py-2.5 gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="grid h-6 w-6 sm:h-7 sm:w-7 shrink-0 place-items-center rounded-lg bg-teal-600 text-white shadow-2xs">
+              <span className="grid h-6 w-6 sm:h-7 sm:w-7 shrink-0 place-items-center rounded-lg bg-seller-600 text-white shadow-2xs">
                 <MapPin className="h-3.5 w-3.5" />
               </span>
               <div className="min-w-0">
@@ -2154,8 +2154,8 @@ export default function StoreManager() {
                   </a>
                 </>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold shadow-2xs">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-seller-50 text-seller-800 border border-seller-200 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold shadow-2xs">
+                  <span className="h-1.5 w-1.5 rounded-full bg-seller-500 animate-pulse"></span>
                   Location not set
                 </span>
               )}
@@ -2185,7 +2185,7 @@ export default function StoreManager() {
                   value={store.address || ''}
                   onChange={event => setStore((previous: any) => ({ ...previous, address: event.target.value }))}
                   placeholder="Shop number, building name, area (e.g. Viman Nagar), city, pincode"
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 p-2 sm:p-2.5 text-xs font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-100 leading-snug transition resize-none pr-7"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 p-2 sm:p-2.5 text-xs font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:bg-white focus:border-seller-500 focus:ring-2 focus:ring-seller-100 leading-snug transition resize-none pr-7"
                 />
                 {store.address && (
                   <button
@@ -2200,7 +2200,7 @@ export default function StoreManager() {
               </div>
 
               <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium flex items-center gap-1">
-                <span className="text-amber-500">💡</span> Address mein shop number, area, city aur pincode add karein.
+                <span className="text-seller-500">💡</span> Address mein shop number, area, city aur pincode add karein.
               </p>
             </div>
 
@@ -2211,7 +2211,7 @@ export default function StoreManager() {
                 type="button"
                 disabled={isCapturingShopLocation || hasSavedStoreLocation}
                 onClick={captureStoreLocation}
-                className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-2 py-1 text-[11px] sm:text-xs font-bold text-white shadow-2xs hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer truncate"
+                className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-seller-600 to-emerald-600 px-2 py-1 text-[11px] sm:text-xs font-bold text-white shadow-2xs hover:from-seller-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer truncate"
                 title={hasSavedStoreLocation ? 'Store location saved' : 'Current location & address detect karein'}
               >
                 {isCapturingShopLocation ? (
@@ -2226,13 +2226,13 @@ export default function StoreManager() {
                 type="button"
                 disabled={isGeocodingAddress || !store.address?.trim()}
                 onClick={geocodeAndSaveStoreAddress}
-                className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] sm:text-xs font-bold text-indigo-950 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs transition active:scale-95 cursor-pointer truncate"
+                className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl border border-seller-200 bg-seller-50 px-2 py-1 text-[11px] sm:text-xs font-bold text-seller-950 hover:bg-seller-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs transition active:scale-95 cursor-pointer truncate"
                 title="Find location from address"
               >
                 {isGeocodingAddress ? (
-                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-800 shrink-0" />
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-seller-300 border-t-seller-800 shrink-0" />
                 ) : (
-                  <MapPin className="h-3.5 w-3.5 text-indigo-700 shrink-0" />
+                  <MapPin className="h-3.5 w-3.5 text-seller-700 shrink-0" />
                 )}
                 <span className="truncate">Find on Map</span>
               </button>
@@ -2240,7 +2240,7 @@ export default function StoreManager() {
               <button
                 type="button"
                 onClick={() => void saveStoreLocation()}
-                className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-slate-900 px-2 py-1 text-[11px] sm:text-xs font-bold text-white hover:bg-slate-800 shadow-2xs transition active:scale-95 cursor-pointer truncate"
+                className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-seller-500 px-2 py-1 text-[11px] sm:text-xs font-bold text-white hover:bg-seller-600 shadow-2xs transition active:scale-95 cursor-pointer truncate"
                 title="Save address"
               >
                 <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
@@ -2254,7 +2254,7 @@ export default function StoreManager() {
                 role="status"
                 className={`rounded-xl border px-2.5 py-1.5 text-[11px] leading-snug transition shadow-2xs ${
                   isCapturingShopLocation || isGeocodingAddress
-                    ? 'border-amber-200 bg-amber-50 text-amber-950'
+                    ? 'border-seller-200 bg-seller-50 text-seller-950'
                     : shopGpsStatus.includes('save') || shopGpsStatus.includes('Save')
                     ? 'border-emerald-200 bg-emerald-50 text-emerald-950 font-medium'
                     : 'border-slate-200 bg-slate-50 text-slate-800'
@@ -2272,7 +2272,7 @@ export default function StoreManager() {
                       type="button"
                       disabled={isGeocodingAddress || !store.address?.trim()}
                       onClick={geocodeAndSaveStoreAddress}
-                      className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[10px] font-bold text-white shadow-2xs hover:bg-indigo-700 disabled:opacity-50 cursor-pointer"
+                      className="inline-flex items-center gap-1 rounded-md bg-seller-600 px-2 py-1 text-[10px] font-bold text-white shadow-2xs hover:bg-seller-700 disabled:opacity-50 cursor-pointer"
                     >
                       <MapPin className="h-3 w-3" />
                       Address Pinpoint
@@ -2313,7 +2313,7 @@ export default function StoreManager() {
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xs sm:text-base font-black text-slate-900">{t('step2Title')}</h2>
                 {store && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-[10px] sm:text-[11px] font-black text-indigo-900">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-seller-50 border border-seller-200 px-2 py-0.5 text-[10px] sm:text-[11px] font-black text-seller-900">
                     <span>{getBusinessType(store.business_type).icon}</span>
                     <span>{getBusinessTypeTitle(getBusinessType(store.business_type), i18n.language)}</span>
                   </span>
@@ -2328,7 +2328,7 @@ export default function StoreManager() {
             <button
               type="button"
               onClick={requestAutoCreateSampleCategories}
-              className="rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-black text-slate-950 hover:brightness-110 shadow-2xs transition-all cursor-pointer shrink-0 active:scale-95 flex items-center gap-1"
+              className="rounded-lg bg-gradient-to-r from-seller-400 to-seller-500 px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-black text-slate-950 hover:brightness-110 shadow-2xs transition-all cursor-pointer shrink-0 active:scale-95 flex items-center gap-1"
             >
               <span>⚡ 1-Click Auto Categories</span>
             </button>
@@ -2349,7 +2349,7 @@ export default function StoreManager() {
             <div className="flex items-center gap-1 flex-wrap">
               <span className="font-extrabold text-slate-700">Units:</span>
               {getBusinessType(store.business_type).units.map(u => (
-                <span key={u} className="bg-white text-indigo-700 border border-indigo-200 px-1.5 py-0.2 rounded text-[9px] font-bold">
+                <span key={u} className="bg-white text-seller-700 border border-seller-200 px-1.5 py-0.2 rounded text-[9px] font-bold">
                   {u}
                 </span>
               ))}
@@ -2365,7 +2365,7 @@ export default function StoreManager() {
             placeholder="e.g. Shirts, Kurtis, Sarees, Jeans"
             className="flex-1 rounded-lg sm:rounded-xl border border-slate-200 bg-white p-2 text-xs font-medium text-slate-900 focus:border-slate-900 focus:outline-none transition-all shadow-2xs"
           />
-          <button disabled={isAddingCategory} className="rounded-lg sm:rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 whitespace-nowrap cursor-pointer transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
+          <button disabled={isAddingCategory} className="rounded-lg sm:rounded-xl bg-seller-500 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-seller-600 whitespace-nowrap cursor-pointer transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
             {isAddingCategory ? (
               <>
                 <svg className="animate-spin h-3.5 w-3.5 text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -2491,7 +2491,7 @@ export default function StoreManager() {
             onClick={() => setProductTab('bulk')}
             className={`flex-1 min-w-[130px] py-1.5 sm:py-2 px-3 text-xs font-black rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               productTab === 'bulk'
-                ? 'bg-slate-900 text-amber-300 shadow-xs'
+                ? 'bg-seller-500 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
@@ -2502,7 +2502,7 @@ export default function StoreManager() {
             onClick={() => setProductTab('catalog')}
             className={`flex-1 min-w-[120px] py-1.5 sm:py-2 px-3 text-xs font-black rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               productTab === 'catalog'
-                ? 'bg-white text-teal-700 shadow-xs border border-teal-200'
+                ? 'bg-white text-seller-700 shadow-xs border border-seller-200'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
@@ -2535,12 +2535,12 @@ export default function StoreManager() {
                 </select>
               </div>
               <div className="col-span-full lg:col-span-3">
-                <p className="text-[10px] text-indigo-700 font-semibold bg-indigo-50/90 p-1.5 rounded-lg border border-indigo-200/60 flex items-center gap-1">
+                <p className="text-[10px] text-seller-700 font-semibold bg-seller-50/90 p-1.5 rounded-lg border border-seller-200/60 flex items-center gap-1">
                   <span>💡</span>
                   <span><strong>{formatUnitDisplay(productUnit || getBusinessType(store?.business_type).defaultUnit)}:</strong> {getUnitHint(productUnit || getBusinessType(store?.business_type).defaultUnit, store?.business_type)}</span>
                 </p>
               </div>
-              <div className="col-span-full lg:col-span-3 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3">
+              <div className="col-span-full lg:col-span-3 rounded-xl border border-seller-200 bg-seller-50/60 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-1">
                   <label className="text-[11px] sm:text-xs font-black text-slate-800">Available Sizes (multiple select)</label>
                   <span className="text-[10px] font-semibold text-slate-500">Optional for Free Size / non-sized items</span>
@@ -2562,20 +2562,20 @@ export default function StoreManager() {
                             return next
                           })
                         }}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-black transition-all cursor-pointer ${selected ? 'border-indigo-700 bg-indigo-700 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:border-indigo-400'}`}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-black transition-all cursor-pointer ${selected ? 'border-seller-700 bg-seller-700 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:border-seller-400'}`}
                       >
                         {selected ? '✓ ' : ''}{size}
                       </button>
                     )
                   })}
                 </div>
-                {productSizes.length > 0 && <p className="mt-2 text-[10px] font-bold text-indigo-700">Selected: {productSizes.join(', ')}</p>}
+                {productSizes.length > 0 && <p className="mt-2 text-[10px] font-bold text-seller-700">Selected: {productSizes.join(', ')}</p>}
                 {productSizes.length > 0 && (
-                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-indigo-200 pt-3">
+                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-seller-200 pt-3">
                     {productSizes.map(size => (
                       <label key={size} className="text-[10px] font-black text-slate-700">
                         {size} Stock
-                        <input type="number" min="0" required value={productSizeStock[size] ?? 0} onChange={event => setProductSizeStock(current => ({ ...current, [size]: Math.max(0, Number(event.target.value)) }))} className="mt-1 w-full rounded-lg border border-indigo-200 bg-white p-2 text-xs font-bold" />
+                        <input type="number" min="0" required value={productSizeStock[size] ?? 0} onChange={event => setProductSizeStock(current => ({ ...current, [size]: Math.max(0, Number(event.target.value)) }))} className="mt-1 w-full rounded-lg border border-seller-200 bg-white p-2 text-xs font-bold" />
                       </label>
                     ))}
                   </div>
@@ -2587,7 +2587,7 @@ export default function StoreManager() {
               </div>
               <div>
                 <label className="text-[11px] sm:text-xs font-bold text-slate-700">{t('category')} <span className="text-rose-500 font-extrabold">*</span></label>
-                <select value={category} onChange={e => setCategory(e.target.value)} required className="premium-input mt-0.5 p-2 text-xs font-bold border-indigo-200">
+                <select value={category} onChange={e => setCategory(e.target.value)} required className="premium-input mt-0.5 p-2 text-xs font-bold border-seller-200">
                   <option value="">-- Select Category (Required) --</option>
                   {categories.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </select>
@@ -2628,11 +2628,11 @@ export default function StoreManager() {
                           key={idx}
                           type="button"
                           onClick={() => setProductPrimaryIndex(idx)}
-                          className={`relative h-14 rounded-lg border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${isPrimary ? 'border-teal-600 ring-1 ring-teal-300' : 'border-slate-200 opacity-70'
+                          className={`relative h-14 rounded-lg border-2 overflow-hidden shrink-0 shadow-xs flex flex-col justify-between p-0.5 cursor-pointer ${isPrimary ? 'border-seller-600 ring-1 ring-seller-300' : 'border-slate-200 opacity-70'
                             }`}
                         >
                           <img src={URL.createObjectURL(imgFile)} alt="preview" className="h-8 w-full object-cover rounded" />
-                          <span className={`text-[7px] font-black text-center py-0.2 rounded ${isPrimary ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                          <span className={`text-[7px] font-black text-center py-0.2 rounded ${isPrimary ? 'bg-seller-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
                             {isPrimary ? '⭐ Main' : 'Gallery'}
                           </span>
                         </button>
@@ -2651,7 +2651,7 @@ export default function StoreManager() {
             <button
               type="submit"
               disabled={isAddingProduct}
-              className="primary-button bg-slate-900 shadow-md hover:bg-slate-800 py-3 text-xs font-black cursor-pointer transition-all w-full flex items-center justify-center gap-2 rounded-xl text-white disabled:opacity-60 disabled:cursor-not-allowed"
+              className="primary-button bg-seller-500 shadow-md hover:bg-seller-600 py-3 text-xs font-black cursor-pointer transition-all w-full flex items-center justify-center gap-2 rounded-xl text-white disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isAddingProduct ? (
                 <>
@@ -2670,15 +2670,15 @@ export default function StoreManager() {
 
         {/* TAB 2: Bulk / CSV Import Engine */}
         {productTab === 'bulk' && (
-          <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-3.5 sm:p-5 text-white shadow-xl transition-all animate-in fade-in duration-150">
+          <div className="relative overflow-hidden rounded-2xl border border-seller-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-seller-950 p-3.5 sm:p-5 text-white shadow-xl transition-all animate-in fade-in duration-150">
             {/* Top Engine Header & Mode Switcher */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-800/50 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-seller-800/50 pb-3">
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-2 py-0.2 text-[8px] sm:text-[9px] font-black uppercase text-slate-950 shadow-xs tracking-wider">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-seller-400 via-seller-400 to-seller-500 px-2 py-0.2 text-[8px] sm:text-[9px] font-black uppercase text-slate-950 shadow-xs tracking-wider">
                     {t('killerFeature')}
                   </span>
-                  <span className="text-[10px] sm:text-xs font-extrabold text-amber-200/90 tracking-wide">
+                  <span className="text-[10px] sm:text-xs font-extrabold text-seller-200/90 tracking-wide">
                     {t('expressEngine')}
                   </span>
                 </div>
@@ -2687,12 +2687,12 @@ export default function StoreManager() {
                 </h3>
               </div>
 
-              <div className="flex rounded-xl bg-white/10 p-0.5 sm:p-1 border border-amber-400/20 backdrop-blur-md self-start sm:self-auto">
+              <div className="flex rounded-xl bg-white/10 p-0.5 sm:p-1 border border-seller-400/20 backdrop-blur-md self-start sm:self-auto">
                 <button
                   type="button"
                   onClick={() => setBulkMode('csv')}
                   className={`rounded-lg px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-extrabold transition-all cursor-pointer ${bulkMode === 'csv'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
+                    ? 'bg-gradient-to-r from-seller-400 to-seller-500 text-slate-950 shadow-xs'
                     : 'text-slate-300 hover:text-white'
                     }`}
                 >
@@ -2702,7 +2702,7 @@ export default function StoreManager() {
                   type="button"
                   onClick={() => setBulkMode('text')}
                   className={`rounded-lg px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-extrabold transition-all cursor-pointer ${bulkMode === 'text'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
+                    ? 'bg-gradient-to-r from-seller-400 to-seller-500 text-slate-950 shadow-xs'
                     : 'text-slate-300 hover:text-white'
                     }`}
                 >
@@ -2712,7 +2712,7 @@ export default function StoreManager() {
                   type="button"
                   onClick={() => setBulkMode('matrix')}
                   className={`rounded-lg px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-extrabold transition-all cursor-pointer ${bulkMode === 'matrix'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-xs'
+                    ? 'bg-gradient-to-r from-seller-400 to-seller-500 text-slate-950 shadow-xs'
                     : 'text-slate-300 hover:text-white'
                     }`}
                 >
@@ -2729,7 +2729,7 @@ export default function StoreManager() {
                     <div>
                       <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                         <span>📊 CSV Columns Supported:</span>
-                        <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Multi-Image Active</span>
+                        <span className="text-[10px] bg-seller-100 text-seller-800 font-bold px-2 py-0.5 rounded-full">Multi-Image Active</span>
                       </p>
                       <p className="text-[11px] font-mono text-slate-600 mt-0.5">Category, Product Name, Price, Stock, Unit, Available Sizes, Size Stock, Description, Image URL</p>
                     </div>
@@ -2747,7 +2747,7 @@ export default function StoreManager() {
                       <button
                         type="button"
                         onClick={() => setGuideModalType('csv')}
-                        className="rounded-lg bg-teal-50 px-2.5 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                        className="rounded-lg bg-seller-50 px-2.5 py-1.5 text-xs font-bold text-seller-700 border border-seller-200 hover:bg-seller-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
                         title="Open Multi-Image CSV Guide & Format Examples"
                       >
                         <span>📖 Multi-Image Guide</span>
@@ -2756,14 +2756,14 @@ export default function StoreManager() {
                       <button
                         type="button"
                         onClick={downloadSampleCsv}
-                        className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                        className="rounded-lg bg-seller-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all cursor-pointer flex items-center gap-1"
                       >
                         <span>📥 Download Sample CSV</span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border-2 border-dashed border-indigo-300/80 bg-white p-5 text-center shadow-xs">
+                  <div className="rounded-2xl border-2 border-dashed border-seller-300/80 bg-white p-5 text-center shadow-xs">
                     <input
                       type="file"
                       accept=".csv,.txt"
@@ -2780,12 +2780,12 @@ export default function StoreManager() {
                     </label>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-indigo-50/90 p-3 rounded-xl border border-indigo-200 gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-seller-50/90 p-3 rounded-xl border border-seller-200 gap-2">
                     <div>
                       <p className="text-xs font-bold text-slate-900">🖼️ Have local product image files on your phone/PC?</p>
                       <p className="text-[11px] text-slate-600">Select multiple image files to auto-match with CSV products!</p>
                     </div>
-                    <label className="cursor-pointer rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 whitespace-nowrap text-center transition-all">
+                    <label className="cursor-pointer rounded-lg bg-seller-500 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-seller-600 whitespace-nowrap text-center transition-all">
                       📁 Pick Local Images
                       <input type="file" accept="image/*" multiple onChange={handleLocalImagesSelect} className="hidden" />
                     </label>
@@ -2795,7 +2795,7 @@ export default function StoreManager() {
                     <div className="space-y-2 pt-1">
                       <div className="flex justify-between items-center">
                         <p className="text-xs font-bold text-slate-200">Preview ({csvPreview.length} items parsed):</p>
-                        <span className="text-[11px] text-teal-300 font-bold">
+                        <span className="text-[11px] text-seller-300 font-bold">
                           {csvPreview.filter(i => i.image_file || i.image_url).length}/{csvPreview.length} Images Attached
                         </span>
                       </div>
@@ -2811,10 +2811,10 @@ export default function StoreManager() {
                               <div className="min-w-0">
                                 <p className="font-bold text-slate-900 truncate">{item.name}</p>
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  {item.category_name && <span className="text-[10px] bg-indigo-50 font-bold text-indigo-600 px-1.5 py-0.5 rounded">{item.category_name}</span>}
+                                  {item.category_name && <span className="text-[10px] bg-seller-50 font-bold text-seller-600 px-1.5 py-0.5 rounded">{item.category_name}</span>}
                                   <span className="text-[10px] bg-slate-100 font-bold text-slate-700 px-1.5 py-0.5 rounded">Stock: {item.stock || '100'}</span>
-                                  {item.sizes && <span className="text-[10px] bg-indigo-100 font-bold text-indigo-700 px-1.5 py-0.5 rounded">Sizes: {parseSizeList(item.sizes).join(', ') || '—'}</span>}
-                                  {item.size_stock && <span className="text-[10px] bg-amber-100 font-bold text-amber-800 px-1.5 py-0.5 rounded">Size stock: {item.size_stock}</span>}
+                                  {item.sizes && <span className="text-[10px] bg-seller-100 font-bold text-seller-700 px-1.5 py-0.5 rounded">Sizes: {parseSizeList(item.sizes).join(', ') || '—'}</span>}
+                                  {item.size_stock && <span className="text-[10px] bg-seller-100 font-bold text-seller-800 px-1.5 py-0.5 rounded">Size stock: {item.size_stock}</span>}
                                   {item.image_file && <span className="text-[10px] bg-emerald-50 font-bold text-emerald-600 px-1 py-0.5 rounded">Local File attached</span>}
                                 </div>
                               </div>
@@ -2839,7 +2839,7 @@ export default function StoreManager() {
                         type="button"
                         disabled={isImporting}
                         onClick={handleCsvImport}
-                        className="w-full rounded-xl bg-teal-600 py-3 text-xs font-black text-white shadow-md hover:bg-teal-700 disabled:opacity-50 transition-all cursor-pointer"
+                        className="w-full rounded-xl bg-seller-600 py-3 text-xs font-black text-white shadow-md hover:bg-seller-700 disabled:opacity-50 transition-all cursor-pointer"
                       >
                         {isImporting ? '⏳ Importing Products & Images...' : `🚀 Import All ${csvPreview.length} Products & Images (1-Click)`}
                       </button>
@@ -2852,7 +2852,7 @@ export default function StoreManager() {
                     <div>
                       <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                         <span>✨ Text Product Import:</span>
-                        <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Paste & Import</span>
+                        <span className="text-[10px] bg-seller-100 text-seller-800 font-bold px-2 py-0.5 rounded-full">Paste & Import</span>
                       </p>
                       <p className="text-[11px] font-mono text-slate-600 mt-0.5">Format: Product Name - Price - Stock - Unit - Sizes (S|M|L|XL)</p>
                     </div>
@@ -2861,7 +2861,7 @@ export default function StoreManager() {
                       <button
                         type="button"
                         onClick={() => setGuideModalType('text')}
-                        className="rounded-lg bg-teal-50 px-2.5 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                        className="rounded-lg bg-seller-50 px-2.5 py-1.5 text-xs font-bold text-seller-700 border border-seller-200 hover:bg-seller-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
                         title="Open Text Import Format Guide"
                       >
                         <span>📖 Text Guide</span>
@@ -2870,7 +2870,7 @@ export default function StoreManager() {
                       <button
                         type="button"
                         onClick={downloadSampleText}
-                        className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                        className="rounded-lg bg-seller-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all cursor-pointer flex items-center gap-1"
                       >
                         <span>📥 Download Sample Text</span>
                       </button>
@@ -2905,7 +2905,7 @@ export default function StoreManager() {
                   <div>
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-slate-200">Paste product list (1 item per line):</label>
-                      <span className="text-[10px] font-bold text-indigo-300 bg-white/10 px-2 py-0.5 rounded border border-white/10">Name - Price - Stock - Unit - Sizes</span>
+                      <span className="text-[10px] font-bold text-seller-300 bg-white/10 px-2 py-0.5 rounded border border-white/10">Name - Price - Stock - Unit - Sizes</span>
                     </div>
                     <textarea
                       rows={5}
@@ -2927,7 +2927,7 @@ export default function StoreManager() {
                     <button
                       type="button"
                       onClick={handleDirectTextImport}
-                      className="flex-1 rounded-xl bg-teal-600 py-2.5 text-xs font-black text-white shadow-md hover:bg-teal-700 transition-all cursor-pointer"
+                      className="flex-1 rounded-xl bg-seller-600 py-2.5 text-xs font-black text-white shadow-md hover:bg-seller-700 transition-all cursor-pointer"
                     >
                       🚀 Instant 1-Click Import from Text
                     </button>
@@ -2939,7 +2939,7 @@ export default function StoreManager() {
                     <div>
                       <p className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                         <span>📝 Multi-Row Form Grid:</span>
-                        <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">Direct Entry</span>
+                        <span className="text-[10px] bg-seller-100 text-seller-800 font-bold px-2 py-0.5 rounded-full">Direct Entry</span>
                       </p>
                       <p className="text-[11px] text-slate-600 mt-0.5 font-medium">Add multiple items with custom price, stock & photos directly!</p>
                     </div>
@@ -2948,7 +2948,7 @@ export default function StoreManager() {
                       <button
                         type="button"
                         onClick={() => setGuideModalType('matrix')}
-                        className="rounded-lg bg-teal-50 px-2.5 py-1.5 text-xs font-bold text-teal-700 border border-teal-200 hover:bg-teal-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                        className="rounded-lg bg-seller-50 px-2.5 py-1.5 text-xs font-bold text-seller-700 border border-seller-200 hover:bg-seller-100 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
                         title="Open Form Grid Guide"
                       >
                         <span>📖 Form Guide</span>
@@ -2957,7 +2957,7 @@ export default function StoreManager() {
                       <button
                         type="button"
                         onClick={downloadSampleCsv}
-                        className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer flex items-center gap-1"
+                        className="rounded-lg bg-seller-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all cursor-pointer flex items-center gap-1"
                       >
                         <span>📥 Download Template</span>
                       </button>
@@ -2985,7 +2985,7 @@ export default function StoreManager() {
                           placeholder="Product Name"
                           value={row.name}
                           onChange={e => handleRowChange(idx, 'name', e.target.value)}
-                          className="flex-1 min-w-0 rounded-lg border border-slate-200 p-1.5 text-xs font-medium focus:outline-indigo-500"
+                          className="flex-1 min-w-0 rounded-lg border border-slate-200 p-1.5 text-xs font-medium focus:outline-seller-500"
                         />
                         <div className="relative w-20 shrink-0">
                           <span className="absolute left-1.5 top-1.5 text-xs text-slate-400">₹</span>
@@ -2994,7 +2994,7 @@ export default function StoreManager() {
                             placeholder="Price"
                             value={row.price}
                             onChange={e => handleRowChange(idx, 'price', e.target.value)}
-                            className="w-full rounded-lg border border-slate-200 p-1.5 pl-4 text-xs font-bold text-slate-800 focus:outline-indigo-500"
+                            className="w-full rounded-lg border border-slate-200 p-1.5 pl-4 text-xs font-bold text-slate-800 focus:outline-seller-500"
                           />
                         </div>
                         <div className="w-16 shrink-0">
@@ -3004,7 +3004,7 @@ export default function StoreManager() {
                             title="Stock Quantity"
                             value={row.stock}
                             onChange={e => handleRowChange(idx, 'stock', e.target.value)}
-                            className="w-full rounded-lg border border-slate-200 p-1.5 text-xs font-bold text-slate-800 focus:outline-indigo-500 text-center"
+                            className="w-full rounded-lg border border-slate-200 p-1.5 text-xs font-bold text-slate-800 focus:outline-seller-500 text-center"
                           />
                         </div>
                         <select
@@ -3021,7 +3021,7 @@ export default function StoreManager() {
                           title="Available Sizes separated by | or comma"
                           value={row.sizes}
                           onChange={e => handleRowChange(idx, 'sizes', e.target.value)}
-                          className="w-28 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-indigo-500"
+                          className="w-28 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-seller-500"
                         />
                         <input
                           type="text"
@@ -3029,7 +3029,7 @@ export default function StoreManager() {
                           title="Stock for each selected size"
                           value={row.size_stock}
                           onChange={e => handleRowChange(idx, 'size_stock', e.target.value)}
-                          className="w-32 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-indigo-500"
+                          className="w-32 shrink-0 rounded-lg border border-slate-200 p-1.5 text-[10px] font-bold text-slate-800 focus:outline-seller-500"
                         />
                         <div className="flex items-center gap-1 shrink-0">
                           {row.image_preview_urls && row.image_preview_urls.length > 0 ? (
@@ -3084,7 +3084,7 @@ export default function StoreManager() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-indigo-800/50">
+                  <div className="flex items-center justify-between pt-2 border-t border-seller-800/50">
                     <button
                       type="button"
                       onClick={handleAddBulkRow}
@@ -3094,7 +3094,7 @@ export default function StoreManager() {
                     </button>
                     <button
                       type="submit"
-                      className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-black text-white shadow-md hover:bg-teal-700 transition-all cursor-pointer"
+                      className="rounded-xl bg-seller-600 px-4 py-2 text-xs font-black text-white shadow-md hover:bg-seller-700 transition-all cursor-pointer"
                     >
                       🚀 Save All {bulkRows.filter(r => r.name.trim()).length} Products (1-Click)
                     </button>
@@ -3109,16 +3109,16 @@ export default function StoreManager() {
         {productTab === 'catalog' && (
           <div className="space-y-3 animate-in fade-in duration-150">
             {/* Top Catalog Access Card */}
-            <div className="rounded-xl sm:rounded-2xl border border-indigo-900/40 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-3 sm:p-4 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="rounded-xl sm:rounded-2xl border border-seller-900/40 bg-gradient-to-r from-slate-900 via-seller-950 to-slate-900 p-3 sm:p-4 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="rounded-full bg-teal-500/20 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30">
+                  <span className="rounded-full bg-seller-500/20 px-2 py-0.2 text-[8px] sm:text-[10px] font-black uppercase text-seller-300 border border-seller-400/30">
                     {t('categoryCatalog')}
                   </span>
-                  <span className="text-[10px] sm:text-xs font-bold text-indigo-200">{products.length} Products</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-seller-200">{products.length} Products</span>
                 </div>
                 <h3 className="mt-0.5 text-xs sm:text-base font-black text-white">{t('categoryCatalog')}</h3>
-                <p className="text-[10px] sm:text-xs text-indigo-200">
+                <p className="text-[10px] sm:text-xs text-seller-200">
                   {t('viewAllProducts')}
                 </p>
               </div>
@@ -3126,7 +3126,7 @@ export default function StoreManager() {
               {store && (
                 <Link
                   to={`/stores/${store.id}/catalog`}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg sm:rounded-xl bg-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-teal-700 transition-all shrink-0 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg sm:rounded-xl bg-seller-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all shrink-0 cursor-pointer"
                 >
                   <span>{t('openCategoryCatalog')} ({products.length})</span>
                   <span>➔</span>
@@ -3137,7 +3137,7 @@ export default function StoreManager() {
             {/* In-Page Products List */}
             {products.length === 0 ? (
               <div className="text-center py-8 px-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 space-y-3">
-                <div className="h-12 w-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl shadow-2xs">
+                <div className="h-12 w-12 rounded-full bg-seller-50 text-seller-600 flex items-center justify-center mx-auto text-xl shadow-2xs">
                   📦
                 </div>
                 <div className="space-y-1">
@@ -3150,14 +3150,14 @@ export default function StoreManager() {
                   <button
                     type="button"
                     onClick={() => setProductTab('single')}
-                    className="rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-slate-800 cursor-pointer shadow-xs"
+                    className="rounded-xl bg-seller-500 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-seller-600 cursor-pointer shadow-xs"
                   >
                     ⚡ Add Single Product
                   </button>
                   <button
                     type="button"
                     onClick={() => setProductTab('bulk')}
-                    className="rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 px-3.5 py-1.5 text-xs font-black text-slate-950 hover:brightness-110 cursor-pointer shadow-xs"
+                    className="rounded-xl bg-gradient-to-r from-seller-400 to-seller-500 px-3.5 py-1.5 text-xs font-black text-slate-950 hover:brightness-110 cursor-pointer shadow-xs"
                   >
                     📊 Bulk / CSV Import
                   </button>
@@ -3194,14 +3194,14 @@ export default function StoreManager() {
                               {prod.name}
                             </h4>
                             <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                              <span className="text-[10px] bg-indigo-50 font-bold text-indigo-700 px-1.5 py-0.2 rounded border border-indigo-100">
+                              <span className="text-[10px] bg-seller-50 font-bold text-seller-700 px-1.5 py-0.2 rounded border border-seller-100">
                                 {getCategoryName(prod.category)}
                               </span>
                               <span className="text-[10px] bg-slate-100 font-bold text-slate-700 px-1.5 py-0.2 rounded">
                                 Stock: {prod.stock_quantity ?? 0} {prod.unit || 'Pc'}
                               </span>
                               {Array.isArray(prod.available_sizes) && prod.available_sizes.length > 0 && (
-                                <span className="text-[9.5px] bg-amber-50 font-bold text-amber-800 px-1.5 py-0.2 rounded border border-amber-200">
+                                <span className="text-[9.5px] bg-seller-50 font-bold text-seller-800 px-1.5 py-0.2 rounded border border-seller-200">
                                   Sizes: {prod.available_sizes.join(', ')}
                                 </span>
                               )}
@@ -3248,7 +3248,7 @@ export default function StoreManager() {
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <span className="text-[10px] font-black uppercase text-amber-600 tracking-wider">Product Inventory Manager</span>
+                <span className="text-[10px] font-black uppercase text-seller-600 tracking-wider">Product Inventory Manager</span>
                 <h3 className="text-lg font-extrabold text-slate-900">Edit Product Details</h3>
               </div>
               <button onClick={() => setEditingProduct(null)} className="h-8 w-8 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 flex items-center justify-center">✕</button>
@@ -3283,7 +3283,7 @@ export default function StoreManager() {
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-3">
+              <div className="rounded-xl border border-seller-200 bg-seller-50/60 p-3">
                 <label className="text-xs font-black text-slate-800">Available Sizes (multiple select)</label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {GARMENT_SIZE_OPTIONS.map(size => {
@@ -3302,7 +3302,7 @@ export default function StoreManager() {
                             return next
                           })
                         }}
-                        className={`rounded-lg border px-2.5 py-1 text-[11px] font-black ${selected ? 'border-indigo-700 bg-indigo-700 text-white' : 'border-slate-300 bg-white text-slate-700'}`}
+                        className={`rounded-lg border px-2.5 py-1 text-[11px] font-black ${selected ? 'border-seller-700 bg-seller-700 text-white' : 'border-slate-300 bg-white text-slate-700'}`}
                       >
                         {selected ? '✓ ' : ''}{size}
                       </button>
@@ -3313,7 +3313,7 @@ export default function StoreManager() {
               </div>
               <div className="flex gap-2 pt-2 border-t border-slate-100">
                 <button type="button" onClick={() => setEditingProduct(null)} className="flex-1 rounded-xl bg-slate-100 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200">Cancel</button>
-                <button type="submit" disabled={isUpdatingProduct} className="flex-1 rounded-xl bg-amber-600 py-2.5 text-xs font-black text-white shadow-md shadow-amber-200 hover:bg-amber-700 disabled:opacity-50">
+                <button type="submit" disabled={isUpdatingProduct} className="flex-1 rounded-xl bg-seller-600 py-2.5 text-xs font-black text-white shadow-md shadow-seller-200 hover:bg-seller-700 disabled:opacity-50">
                   {isUpdatingProduct ? 'Saving...' : '💾 Save Changes'}
                 </button>
               </div>
@@ -3359,17 +3359,17 @@ export default function StoreManager() {
 
             {guideModalType === 'csv' ? (
               <div className="space-y-3 text-xs text-slate-700">
-                <div className="rounded-2xl bg-teal-50 border border-teal-200 p-3.5 space-y-2 text-teal-900">
+                <div className="rounded-2xl bg-seller-50 border border-seller-200 p-3.5 space-y-2 text-seller-900">
                   <p className="font-extrabold text-sm flex items-center gap-1.5">
                     <span>💡 How Multi-Image Works in CSV</span>
                   </p>
                   <p className="font-medium leading-relaxed">
                     Single product mein <b>Multiple Images</b> link karne ke liye, CSV file ki <code>Image URL</code> column mein saari images ke filenames ya URLs ko comma (<code>,</code>) se separate karke double quotes ke andar rakhein.
                   </p>
-                  <p className="font-bold text-teal-950">
+                  <p className="font-bold text-seller-950">
                     ⭐ Pehli Photo <u>Card Profile Main Image</u> banegi, aur baaki saari photos product ki <u>Gallery</u> mein attach hongi!
                   </p>
-                  <p className="font-bold text-indigo-900">
+                  <p className="font-bold text-seller-900">
                     👕 <code>Available Sizes</code> column mein sizes ko pipe se likhein: <code>S|M|L|XL|XXL</code>. Free-size item ke liye <code>FREE SIZE</code> likhein.
                   </p>
                 </div>
@@ -3377,7 +3377,7 @@ export default function StoreManager() {
                 <div className="space-y-2">
                   <h4 className="font-extrabold text-slate-900 text-xs">Example 1: Local Image Files (Phone/PC Files)</h4>
                   <p className="text-[11px] text-slate-500">Aap apne phone ya computer ki local image files (e.g. <code>helmet.jpg</code>) ko matching names se link kar sakte hain:</p>
-                  <div className="bg-slate-900 text-teal-300 p-3 rounded-xl font-mono text-[11px] overflow-x-auto border border-slate-800">
+                  <div className="bg-slate-900 text-seller-300 p-3 rounded-xl font-mono text-[11px] overflow-x-auto border border-slate-800">
                     "helmet.jpg, helmet-side.jpg, helmet-back.jpg"
                   </div>
                 </div>
@@ -3385,14 +3385,14 @@ export default function StoreManager() {
                 <div className="space-y-2">
                   <h4 className="font-extrabold text-slate-900 text-xs">Example 2: Online Web URLs</h4>
                   <p className="text-[11px] text-slate-500">Aap Internet image links (e.g. Unsplash, Cloudinary, AWS) bhi direct link kar sakte hain:</p>
-                  <div className="bg-slate-900 text-indigo-300 p-3 rounded-xl font-mono text-[11px] overflow-x-auto border border-slate-800">
+                  <div className="bg-slate-900 text-seller-300 p-3 rounded-xl font-mono text-[11px] overflow-x-auto border border-slate-800">
                     "https://img.com/helmet-1.jpg, https://img.com/helmet-2.jpg"
                   </div>
                 </div>
               </div>
             ) : guideModalType === 'text' ? (
               <div className="space-y-3 text-xs text-slate-700">
-                <div className="rounded-2xl bg-teal-50 border border-teal-200 p-3.5 space-y-2 text-teal-900">
+                <div className="rounded-2xl bg-seller-50 border border-seller-200 p-3.5 space-y-2 text-seller-900">
                   <p className="font-extrabold text-sm flex items-center gap-1.5">
                     <span>✨ How Text Import Works</span>
                   </p>
@@ -3413,7 +3413,7 @@ export default function StoreManager() {
               </div>
             ) : (
               <div className="space-y-3 text-xs text-slate-700">
-                <div className="rounded-2xl bg-teal-50 border border-teal-200 p-3.5 space-y-2 text-teal-900">
+                <div className="rounded-2xl bg-seller-50 border border-seller-200 p-3.5 space-y-2 text-seller-900">
                   <p className="font-extrabold text-sm flex items-center gap-1.5">
                     <span>📝 How Multi-Row Form Grid Works</span>
                   </p>
@@ -3438,7 +3438,7 @@ export default function StoreManager() {
               <button
                 type="button"
                 onClick={guideModalType === 'text' ? downloadSampleText : downloadSampleCsv}
-                className="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all flex items-center gap-1.5"
+                className="rounded-xl bg-seller-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-seller-700 transition-all flex items-center gap-1.5"
               >
                 <span>
                   {guideModalType === 'text' ? '📥 Download Sample Text' : '📥 Download Sample CSV / Template'}
@@ -3485,11 +3485,11 @@ export default function StoreManager() {
             </div>
 
             <div className="space-y-3 overflow-y-auto pr-1 text-xs text-slate-700">
-              <div className="rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200/80 p-3.5 space-y-1.5 text-teal-950">
-                <p className="font-extrabold text-xs flex items-center gap-1.5 text-teal-900">
+              <div className="rounded-2xl bg-gradient-to-r from-seller-50 to-emerald-50 border border-seller-200/80 p-3.5 space-y-1.5 text-seller-950">
+                <p className="font-extrabold text-xs flex items-center gap-1.5 text-seller-900">
                   <span>💡 ही खरीखुरी CSV फाईल अपलोड केल्यावर काय घडते त्याचा डेमो आहे!</span>
                 </p>
-                <p className="font-medium text-[11px] leading-relaxed text-teal-800">
+                <p className="font-medium text-[11px] leading-relaxed text-seller-800">
                   खालील तक्त्यात दाखवल्याप्रमाणे <b>Category, Product Name, Price, Stock, Unit, Available Sizes, Description, Image URL</b> हे कॉलम असतात. <b>"🚀 1-Click Auto-Import This Demo CSV"</b> वर क्लिक करताच प्रॉडक्ट्स त्यांच्या अचूक युनिट्स आणि साइजसह तयार होतात.
                 </p>
               </div>
@@ -3501,7 +3501,7 @@ export default function StoreManager() {
                     type="button"
                     onClick={() => setDemoCsvViewMode('table')}
                     className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${demoCsvViewMode === 'table'
-                        ? 'bg-white text-indigo-700 shadow-xs border border-indigo-100'
+                        ? 'bg-white text-seller-700 shadow-xs border border-seller-100'
                         : 'text-slate-600 hover:text-slate-900'
                       }`}
                   >
@@ -3511,7 +3511,7 @@ export default function StoreManager() {
                     type="button"
                     onClick={() => setDemoCsvViewMode('raw')}
                     className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${demoCsvViewMode === 'raw'
-                        ? 'bg-white text-indigo-700 shadow-xs border border-indigo-100'
+                        ? 'bg-white text-seller-700 shadow-xs border border-seller-100'
                         : 'text-slate-600 hover:text-slate-900'
                       }`}
                   >
@@ -3553,7 +3553,7 @@ export default function StoreManager() {
                         return items.map((sp, idx) => (
                           <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
                             <td className="p-2.5 font-bold text-slate-900 whitespace-nowrap">
-                              <span className="bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded-md border border-indigo-200 text-[11px]">
+                              <span className="bg-seller-50 text-seller-800 px-2 py-0.5 rounded-md border border-seller-200 text-[11px]">
                                 {sp.category}
                               </span>
                             </td>
@@ -3565,19 +3565,19 @@ export default function StoreManager() {
                               </span>
                             </td>
                             <td className="p-2.5 text-center whitespace-nowrap">
-                              <span className="bg-amber-100 text-amber-900 font-extrabold px-2 py-0.5 rounded-full text-[10px] border border-amber-300">
+                              <span className="bg-seller-100 text-seller-900 font-extrabold px-2 py-0.5 rounded-full text-[10px] border border-seller-300">
                                 {sp.unit}
                               </span>
                             </td>
                             <td className="p-2.5 whitespace-nowrap">
                               <div className="flex flex-wrap gap-1 min-w-[120px]">
-                                {(sp.sizes || []).map(size => <span key={size} className="rounded border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black text-indigo-700">{size}</span>)}
+                                {(sp.sizes || []).map(size => <span key={size} className="rounded border border-seller-200 bg-seller-50 px-1.5 py-0.5 text-[9px] font-black text-seller-700">{size}</span>)}
                                 {!sp.sizes?.length && <span className="text-slate-400">—</span>}
                               </div>
                             </td>
                             <td className="p-2.5 text-slate-500 font-mono text-[10px] max-w-[150px] truncate" title={sp.image || 'None'}>
                               {sp.image ? (
-                                <span className="text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 font-sans font-bold flex items-center gap-1 w-fit">
+                                <span className="text-seller-700 bg-seller-50 px-2 py-0.5 rounded border border-seller-200 font-sans font-bold flex items-center gap-1 w-fit">
                                   <span>📷</span>
                                   <span className="truncate max-w-[120px]">{sp.image}</span>
                                 </span>
@@ -3624,7 +3624,7 @@ export default function StoreManager() {
                 type="button"
                 onClick={handleDemoCsvImport}
                 disabled={isImporting}
-                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2.5 text-xs font-black text-white shadow-lg hover:from-emerald-500 hover:to-teal-500 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-emerald-600 to-seller-600 px-5 py-2.5 text-xs font-black text-white shadow-lg hover:from-emerald-500 hover:to-seller-500 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>{isImporting ? '⏳ Importing Demo...' : '🚀 1-Click Auto-Import Demo CSV Data'}</span>
               </button>
@@ -3746,9 +3746,9 @@ export default function StoreManager() {
             </button>
 
             <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl shadow-md ${confirmModal.variant === 'danger' ? 'bg-rose-100 text-rose-600' :
-                confirmModal.variant === 'warning' ? 'bg-amber-100 text-amber-600' :
+                confirmModal.variant === 'warning' ? 'bg-seller-100 text-seller-600' :
                   confirmModal.variant === 'success' ? 'bg-emerald-100 text-emerald-600' :
-                    'bg-indigo-100 text-indigo-600'
+                    'bg-seller-100 text-seller-600'
               }`}>
               {confirmModal.variant === 'danger' ? <Trash2 className="h-7 w-7" /> :
                 confirmModal.variant === 'success' ? <span className="text-2xl">🚀</span> :
@@ -3781,9 +3781,9 @@ export default function StoreManager() {
                   await action()
                 }}
                 className={`flex-1 rounded-xl py-2.5 text-xs font-bold shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${confirmModal.variant === 'danger' ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-500 hover:to-red-500' :
-                    confirmModal.variant === 'success' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500' :
-                      confirmModal.variant === 'warning' ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black hover:brightness-110' :
-                        'bg-indigo-600 text-white hover:bg-indigo-700'
+                    confirmModal.variant === 'success' ? 'bg-gradient-to-r from-emerald-600 to-seller-600 text-white hover:from-emerald-500 hover:to-seller-500' :
+                      confirmModal.variant === 'warning' ? 'bg-gradient-to-r from-seller-400 to-seller-500 text-slate-950 font-black hover:brightness-110' :
+                        'bg-seller-600 text-white hover:bg-seller-700'
                   }`}
               >
                 {confirmModal.confirmText || 'Confirm'}

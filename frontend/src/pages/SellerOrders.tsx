@@ -345,9 +345,9 @@ export default function SellerOrders() {
       case 'DELIVERED':
         return 'border-l-4 border-l-emerald-500'
       case 'CONFIRMED':
-        return 'border-l-4 border-l-indigo-500'
+        return 'border-l-4 border-l-seller-500'
       case 'NEW':
-        return 'border-l-4 border-l-amber-500'
+        return 'border-l-4 border-l-seller-500'
       case 'CANCELLED':
         return 'border-l-4 border-l-rose-500'
       default:
@@ -361,9 +361,9 @@ export default function SellerOrders() {
       case 'DELIVERED':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200'
       case 'CONFIRMED':
-        return 'bg-teal-50 text-teal-700 border-teal-200'
+        return 'bg-seller-50 text-seller-700 border-seller-200'
       case 'NEW':
-        return 'bg-amber-50 text-amber-700 border-amber-200'
+        return 'bg-seller-50 text-seller-700 border-seller-200'
       case 'CANCELLED':
         return 'bg-rose-50 text-rose-700 border-rose-200'
       default:
@@ -385,15 +385,15 @@ export default function SellerOrders() {
 
       <div className="space-y-3 sm:space-y-5 p-2.5 sm:p-6">
         {/* Enterprise Dark Hero Header — Modernized & Compact for Mobile */}
-        <div className="relative overflow-hidden rounded-xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-3 sm:p-5 text-white shadow-md sm:shadow-xl border border-indigo-500/30 backdrop-blur-xl">
+        <div className="relative overflow-hidden rounded-xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-seller-950 to-slate-900 p-3 sm:p-5 text-white shadow-md sm:shadow-xl border border-seller-500/30 backdrop-blur-xl">
           {/* Neon Glow background reflections */}
-          <div className="absolute -top-12 -right-12 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -top-12 -right-12 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-seller-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-seller-500/10 blur-3xl pointer-events-none" />
 
           <div className="relative z-10 space-y-2.5 sm:space-y-3">
             {/* Top Bar: Status Badge + Refresh + Connection Pill */}
             <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-teal-500/20 px-2 py-0.5 text-[8px] sm:text-[10px] font-black uppercase text-teal-300 border border-teal-400/30 tracking-wider shadow-xs">
+              <span className="inline-flex items-center gap-1 rounded-full bg-seller-500/20 px-2 py-0.5 text-[8px] sm:text-[10px] font-black uppercase text-seller-300 border border-seller-400/30 tracking-wider shadow-xs">
                 {t('ordersControl')}
               </span>
 
@@ -401,10 +401,10 @@ export default function SellerOrders() {
                 <button
                   type="button"
                   onClick={() => setShowStandeeModal(true)}
-                  className="flex items-center gap-1 rounded-lg sm:rounded-xl border border-indigo-400/40 bg-indigo-950/80 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs font-extrabold text-indigo-200 hover:bg-indigo-900 transition-all cursor-pointer shadow-xs active:scale-95"
+                  className="flex items-center gap-1 rounded-lg sm:rounded-xl border border-seller-400/40 bg-seller-950/80 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs font-extrabold text-seller-200 hover:bg-seller-900 transition-all cursor-pointer shadow-xs active:scale-95"
                   title="Print Shop QR Standee & Posters"
                 >
-                  <QrCode className="h-3 w-3 text-amber-400" />
+                  <QrCode className="h-3 w-3 text-seller-400" />
                   <span className="font-extrabold">🪧 Standee QR</span>
                 </button>
 
@@ -415,7 +415,7 @@ export default function SellerOrders() {
                     await load()
                     setTimeout(() => setIsRefreshingData(false), 500)
                   }}
-                  className="flex items-center gap-1 rounded-lg sm:rounded-xl border border-teal-500/40 bg-teal-950/70 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs font-extrabold text-teal-300 hover:bg-teal-900 transition-all cursor-pointer shadow-xs active:scale-95"
+                  className="flex items-center gap-1 rounded-lg sm:rounded-xl border border-seller-500/40 bg-seller-950/70 px-2 sm:px-2.5 py-1 text-[10px] sm:text-xs font-extrabold text-seller-300 hover:bg-seller-900 transition-all cursor-pointer shadow-xs active:scale-95"
                   title="Refresh live orders"
                 >
                   <span className={`text-xs ${isRefreshingData ? 'animate-spin' : ''}`}>🔄</span>
@@ -426,12 +426,12 @@ export default function SellerOrders() {
                   className={`inline-flex items-center gap-1 rounded-full px-2 sm:px-2.5 py-0.5 text-[8px] sm:text-[10px] font-extrabold ${
                     wsConnected
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                      : 'bg-seller-500/20 text-seller-300 border border-seller-400/30'
                   }`}
                 >
                   <span
                     className={`h-1.5 w-1.5 rounded-full ${
-                      wsConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
+                      wsConnected ? 'bg-emerald-400 animate-ping' : 'bg-seller-400'
                     }`}
                   />
                   <span>{wsConnected ? t('liveSync') : t('syncing')}</span>
@@ -444,7 +444,7 @@ export default function SellerOrders() {
               <div className="flex items-baseline gap-3">
                 <div>
                   <p className="text-xl sm:text-3xl font-black text-white leading-none">{orders.length}</p>
-                  <p className="text-[9px] sm:text-xs text-indigo-200/90 font-bold mt-0.5">{t('totalOrdersCount')}</p>
+                  <p className="text-[9px] sm:text-xs text-seller-200/90 font-bold mt-0.5">{t('totalOrdersCount')}</p>
                 </div>
                 <div className="h-6 w-[1px] bg-slate-800 mx-1 hidden xs:block" />
                 <div className="hidden xs:block">
@@ -454,11 +454,11 @@ export default function SellerOrders() {
               </div>
 
               <div className="flex flex-col items-end gap-0.5">
-                <span className="text-[8px] sm:text-[10px] uppercase font-bold tracking-wider text-indigo-200">{t('mode')}</span>
+                <span className="text-[8px] sm:text-[10px] uppercase font-bold tracking-wider text-seller-200">{t('mode')}</span>
                 <span
                   className={`font-black px-2 py-0.5 rounded-lg sm:rounded-xl text-[9px] sm:text-[11px] border shadow-xs ${
                     isManageInAppOn
-                      ? 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+                      ? 'bg-seller-500/20 text-seller-300 border-seller-500/40'
                       : 'bg-slate-900 text-slate-300 border-slate-700'
                   }`}
                 >
@@ -477,13 +477,13 @@ export default function SellerOrders() {
             <span className="text-[7.5px] sm:text-xs text-emerald-600 font-bold truncate">{t('validOrders')}</span>
           </div>
 
-          <div className="rounded-lg sm:rounded-2xl border border-amber-200/80 bg-amber-50/50 py-1 px-1.5 sm:p-4 shadow-2xs flex flex-col justify-between min-w-0">
+          <div className="rounded-lg sm:rounded-2xl border border-seller-200/80 bg-seller-50/50 py-1 px-1.5 sm:p-4 shadow-2xs flex flex-col justify-between min-w-0">
             <div className="flex justify-between items-center min-w-0">
-              <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-amber-800 tracking-tight truncate">{t('pending')}</span>
-              {newOrdersCount > 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping shrink-0"></span>}
+              <span className="text-[7.5px] sm:text-[10px] font-black uppercase text-seller-800 tracking-tight truncate">{t('pending')}</span>
+              {newOrdersCount > 0 && <span className="h-1.5 w-1.5 rounded-full bg-seller-500 animate-ping shrink-0"></span>}
             </div>
-            <p className="my-0 text-[10px] xs:text-xs sm:text-2xl font-black text-amber-950 leading-tight">{newOrdersCount}</p>
-            <span className="text-[7.5px] sm:text-xs text-amber-700 font-bold truncate">{t('actionNeeded')}</span>
+            <p className="my-0 text-[10px] xs:text-xs sm:text-2xl font-black text-seller-950 leading-tight">{newOrdersCount}</p>
+            <span className="text-[7.5px] sm:text-xs text-seller-700 font-bold truncate">{t('actionNeeded')}</span>
           </div>
 
           <div className="rounded-lg sm:rounded-2xl border border-emerald-200/80 bg-emerald-50/50 py-1 px-1.5 sm:p-4 shadow-2xs flex flex-col justify-between min-w-0">
@@ -527,7 +527,7 @@ export default function SellerOrders() {
             onClick={() => setShowFilterModal(true)}
             className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer shrink-0 shadow-2xs ${
               statusFilter !== 'ALL' || sortBy !== 'latest'
-                ? 'bg-indigo-600 text-white border-indigo-700'
+                ? 'bg-seller-600 text-white border-seller-700'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
             }`}
             title="Open Filter & Sort Options"
@@ -589,17 +589,17 @@ export default function SellerOrders() {
 
         {/* Manage in App OFF Alert Banner */}
         {!isManageInAppOn && (
-          <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-4 text-amber-950 shadow-2xs">
+          <div className="rounded-2xl border border-seller-300 bg-seller-50/80 p-4 text-seller-950 shadow-2xs">
             <div className="flex items-start gap-3">
               <span className="text-xl">💡</span>
               <div>
-                <p className="font-extrabold text-xs text-amber-950">In-App Status Control Disabled</p>
-                <p className="mt-0.5 text-xs text-amber-800 leading-relaxed font-medium">
+                <p className="font-extrabold text-xs text-seller-950">In-App Status Control Disabled</p>
+                <p className="mt-0.5 text-xs text-seller-800 leading-relaxed font-medium">
                   Enable <strong>'Manage in App'</strong> in Store Setup to directly change order status, trigger customer updates & live chat.
                 </p>
                 <Link
                   to={`/stores/${store.id}/manage`}
-                  className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-indigo-700 hover:text-indigo-900 underline"
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-seller-700 hover:text-seller-900 underline"
                 >
                   Go to Store Setup ➔
                 </Link>
@@ -634,11 +634,11 @@ export default function SellerOrders() {
                     <button
                       type="button"
                       onClick={() => copyRefToClipboard(order.reference)}
-                      className="rounded-md bg-indigo-50 border border-indigo-100 px-1 sm:px-1.5 py-0.2 sm:py-0.5 text-[9px] sm:text-[11px] font-mono font-black text-indigo-700 hover:bg-indigo-100 transition-all flex items-center gap-0.5 sm:gap-1 cursor-pointer"
+                      className="rounded-md bg-seller-50 border border-seller-100 px-1 sm:px-1.5 py-0.2 sm:py-0.5 text-[9px] sm:text-[11px] font-mono font-black text-seller-700 hover:bg-seller-100 transition-all flex items-center gap-0.5 sm:gap-1 cursor-pointer"
                       title="Click to Copy Order #"
                     >
                       <span>#{order.reference}</span>
-                      <span className="text-[8px] sm:text-[9px] text-indigo-400">{copiedRef === order.reference ? '✓' : '📋'}</span>
+                      <span className="text-[8px] sm:text-[9px] text-seller-400">{copiedRef === order.reference ? '✓' : '📋'}</span>
                     </button>
                     <span className="text-[8.5px] sm:text-[10px] font-medium text-slate-400">
                       {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -655,7 +655,7 @@ export default function SellerOrders() {
                       <select
                         value={order.status}
                         onChange={(e) => updateStatus(order.id, e.target.value)}
-                        className="rounded-md sm:rounded-lg border border-slate-300 bg-slate-900 px-1 sm:px-1.5 py-0.2 sm:py-0.5 text-[9px] sm:text-[11px] font-bold text-white shadow-xs focus:ring-1 focus:ring-teal-500 focus:outline-none cursor-pointer"
+                        className="rounded-md sm:rounded-lg border border-slate-300 bg-slate-900 px-1 sm:px-1.5 py-0.2 sm:py-0.5 text-[9px] sm:text-[11px] font-bold text-white shadow-xs focus:ring-1 focus:ring-seller-500 focus:outline-none cursor-pointer"
                       >
                         {[order.status, ...(nextStatuses[currentStatusUpper] || []).filter(status => {
                           if (status === 'READY_FOR_PICKUP') return order.order_type === 'STORE_PICKUP'
@@ -681,7 +681,7 @@ export default function SellerOrders() {
                 )}
                 <div className="flex items-center justify-between gap-1 text-xs">
                   <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
-                    <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-black text-[8px] sm:text-[9px] shrink-0">
+                    <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-md bg-gradient-to-tr from-seller-600 to-seller-600 text-white font-black text-[8px] sm:text-[9px] shrink-0">
                       {getInitials(order.customer_name)}
                     </div>
                     <div className="min-w-0">
@@ -689,7 +689,7 @@ export default function SellerOrders() {
                         {order.customer_name || 'Customer'}
                       </span>
                       {order.customer_phone && (
-                        <a href={`tel:${order.customer_phone}`} className="font-mono text-[8.5px] sm:text-[10px] text-indigo-700 font-bold hover:underline block leading-tight">
+                        <a href={`tel:${order.customer_phone}`} className="font-mono text-[8.5px] sm:text-[10px] text-seller-700 font-bold hover:underline block leading-tight">
                           📞 {order.customer_phone}
                         </a>
                       )}
@@ -699,8 +699,8 @@ export default function SellerOrders() {
                   <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                     <span className={`text-[8.5px] sm:text-[9px] font-black px-1 py-0.1 sm:px-1.5 sm:py-0.2 rounded border ${
                       order.order_type === 'STORE_PICKUP'
-                        ? 'bg-amber-50 text-amber-800 border-amber-200'
-                        : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                        ? 'bg-seller-50 text-seller-800 border-seller-200'
+                        : 'bg-seller-50 text-seller-800 border-seller-200'
                     }`}>
                       {order.order_type === 'STORE_PICKUP' ? t('pickup') : t('delivery')}
                     </span>
@@ -712,20 +712,20 @@ export default function SellerOrders() {
 
                 {/* 3. Delivery Address or Pickup Notice */}
                 {order.order_type === 'STORE_PICKUP' ? (
-                  <p className="text-[9px] sm:text-[11px] text-amber-900 font-medium bg-amber-50/70 px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-md border border-amber-200/60 truncate leading-tight">
+                  <p className="text-[9px] sm:text-[11px] text-seller-900 font-medium bg-seller-50/70 px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-md border border-seller-200/60 truncate leading-tight">
                     <span className="font-bold">{t('pickup')}: </span>Customer will collect from shop
                   </p>
                 ) : order.delivery_address ? (
                   <p className="text-[9px] sm:text-[11px] text-slate-600 font-medium bg-slate-50 px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-md border border-slate-100 truncate leading-tight">
                     <span className="font-bold text-slate-700">📍 </span>{order.delivery_address}
                     {Number(order.delivery_fee) > 0 && (
-                      <span className="font-bold text-indigo-600 ml-1">(Delivery: ₹{Number(order.delivery_fee).toFixed(0)})</span>
+                      <span className="font-bold text-seller-600 ml-1">(Delivery: ₹{Number(order.delivery_fee).toFixed(0)})</span>
                     )}
                   </p>
                 ) : null}
 
                 {order.customer_note && (
-                  <p className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[9px] sm:text-[11px] font-semibold text-indigo-900">📝 Customer note: {order.customer_note}</p>
+                  <p className="rounded-md border border-seller-200 bg-seller-50 px-2 py-1 text-[9px] sm:text-[11px] font-semibold text-seller-900">📝 Customer note: {order.customer_note}</p>
                 )}
 
                 {/* UTR Payment Verification Badge */}
@@ -778,18 +778,18 @@ export default function SellerOrders() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 text-[7.5px] sm:text-[9px] font-extrabold text-slate-500 pt-0.2">
-                    <span className={currentStatusUpper === 'NEW' ? 'text-amber-600 font-black' : 'text-slate-400'}>{t('placed')}</span>
+                    <span className={currentStatusUpper === 'NEW' ? 'text-seller-600 font-black' : 'text-slate-400'}>{t('placed')}</span>
                     <div className="flex-1 h-0.5 sm:h-1 rounded-full bg-slate-200 overflow-hidden">
                       <div
                         className={`h-full transition-all duration-300 ${
-                          currentStatusUpper === 'NEW' ? 'w-1/4 bg-amber-500' :
-                          currentStatusUpper === 'CONFIRMED' ? 'w-2/4 bg-indigo-600' :
-                          currentStatusUpper === 'PAID' ? 'w-3/4 bg-teal-500' :
+                          currentStatusUpper === 'NEW' ? 'w-1/4 bg-seller-500' :
+                          currentStatusUpper === 'CONFIRMED' ? 'w-2/4 bg-seller-600' :
+                          currentStatusUpper === 'PAID' ? 'w-3/4 bg-seller-500' :
                           'w-full bg-emerald-500'
                         }`}
                       />
                     </div>
-                    <span className={currentStatusUpper === 'DELIVERED' ? 'text-emerald-600 font-black' : currentStatusUpper === 'PAID' ? 'text-teal-600 font-black' : 'text-slate-400'}>
+                    <span className={currentStatusUpper === 'DELIVERED' ? 'text-emerald-600 font-black' : currentStatusUpper === 'PAID' ? 'text-seller-600 font-black' : 'text-slate-400'}>
                       {currentStatusUpper === 'PAID' ? 'Paid (75%)' : currentStatusUpper === 'DELIVERED' ? `${t('delivered')} ✓` : t('delivered')}
                     </span>
                   </div>
@@ -800,17 +800,17 @@ export default function SellerOrders() {
                   <button
                     type="button"
                     onClick={() => setSelectedOrderForReceipt(order)}
-                    className="rounded-md sm:rounded-lg bg-teal-700 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-teal-800 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
+                    className="rounded-md sm:rounded-lg bg-seller-700 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-seller-800 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
                     title="Print POS Thermal Receipt / Invoice"
                   >
-                    <Printer className="h-3 w-3 text-teal-300 hidden sm:inline" />
+                    <Printer className="h-3 w-3 text-seller-300 hidden sm:inline" />
                     <span>🖨️ Bill</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => startDirectChat(order)}
-                    className="rounded-md sm:rounded-lg bg-indigo-600 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
+                    className="rounded-md sm:rounded-lg bg-seller-600 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-seller-700 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
                   >
                     {t('chatBtn')}
                   </button>
@@ -838,7 +838,7 @@ export default function SellerOrders() {
                   <Link
                     to={`/store/${store.slug}/order/${order.reference}?token=${order.tracking_token}`}
                     target="_blank"
-                    className="rounded-md sm:rounded-lg bg-slate-900 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-slate-800 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
+                    className="rounded-md sm:rounded-lg bg-seller-600 py-0.5 sm:py-1 px-1 sm:px-2 text-[9px] sm:text-[11px] font-bold text-white shadow-2xs hover:bg-seller-700 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
                   >
                     <span className="sm:hidden">📍 Track</span>
                     <span className="hidden sm:inline">{t('trackBtn')}</span>
@@ -859,7 +859,7 @@ export default function SellerOrders() {
           <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-5 text-slate-900 animate-in slide-in-from-bottom-5 sm:zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+                <SlidersHorizontal className="h-4 w-4 text-seller-600" />
                 <h3 className="text-base font-black text-slate-900">Filter & Sort Orders</h3>
               </div>
               <button
@@ -885,7 +885,7 @@ export default function SellerOrders() {
                       onClick={() => setStatusFilter(st)}
                       className={`rounded-xl px-2.5 py-2 text-xs font-bold transition-all flex items-center justify-between cursor-pointer border ${
                         isActive
-                          ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                          ? 'bg-seller-600 text-white border-seller-700 shadow-sm'
                           : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
@@ -940,7 +940,7 @@ export default function SellerOrders() {
               <button
                 type="button"
                 onClick={() => setShowFilterModal(false)}
-                className="w-full py-2.5 rounded-xl bg-indigo-600 font-extrabold text-xs text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-md text-center"
+                className="w-full py-2.5 rounded-xl bg-seller-600 font-extrabold text-xs text-white hover:bg-seller-700 transition-all cursor-pointer shadow-md text-center"
               >
                 Apply Filters ({processedOrders.length})
               </button>
@@ -970,13 +970,13 @@ export default function SellerOrders() {
       {deliveryOtpOrder && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/65 p-4">
           <div className="w-full max-w-sm space-y-4 rounded-3xl bg-white p-5 shadow-2xl">
-            <div className="flex items-start justify-between"><div><p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Secure fulfilment</p><h2 className="mt-1 text-base font-black text-slate-950">Confirm Delivery with OTP</h2></div><button onClick={() => { setDeliveryOtpOrder(null); sessionStorage.removeItem(`delivery_otp_order_${storeId}`) }} className="rounded-full bg-slate-100 px-2 py-1 font-bold">✕</button></div>
-            <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-950"><p className="font-bold">Order #{deliveryOtpOrder.reference}</p><p className="mt-1 text-[11px]">OTP will be sent only to the customer number saved with this order. The number cannot be changed here.</p></div>
-            {!deliveryOtpSent ? <button disabled={deliveryOtpLoading} onClick={sendDeliveryOtp} className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Sending…' : 'Send Delivery OTP'}</button> : <>
+            <div className="flex items-start justify-between"><div><p className="text-[10px] font-black uppercase tracking-wider text-seller-600">Secure fulfilment</p><h2 className="mt-1 text-base font-black text-slate-950">Confirm Delivery with OTP</h2></div><button onClick={() => { setDeliveryOtpOrder(null); sessionStorage.removeItem(`delivery_otp_order_${storeId}`) }} className="rounded-full bg-slate-100 px-2 py-1 font-bold">✕</button></div>
+            <div className="rounded-xl border border-seller-200 bg-seller-50 p-3 text-xs text-seller-950"><p className="font-bold">Order #{deliveryOtpOrder.reference}</p><p className="mt-1 text-[11px]">OTP will be sent only to the customer number saved with this order. The number cannot be changed here.</p></div>
+            {!deliveryOtpSent ? <button disabled={deliveryOtpLoading} onClick={sendDeliveryOtp} className="w-full rounded-xl bg-seller-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Sending…' : 'Send Delivery OTP'}</button> : <>
               <label className="block text-xs font-bold text-slate-700">Enter OTP told by customer<input autoFocus value={deliveryOtp} onChange={e => setDeliveryOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" placeholder="6-digit OTP" className="mt-1.5 w-full rounded-xl border p-3 text-center text-xl font-black tracking-[0.4em]"/></label>
               {deliveryOtpOrder.order_type === 'HOME_DELIVERY' && <label className="block rounded-xl border border-dashed p-3 text-xs font-bold">Delivery proof photo (Required)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setDeliveryProof(e.target.files?.[0] || null)} className="mt-2 block w-full text-xs"/></label>}
               <button disabled={deliveryOtpLoading || deliveryOtp.length !== 6 || (deliveryOtpOrder.order_type === 'HOME_DELIVERY' && !deliveryProof)} onClick={verifyDeliveryOtp} className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-black text-white disabled:opacity-50">{deliveryOtpLoading ? 'Verifying…' : 'Verify OTP & Mark Delivered'}</button>
-              <button disabled={deliveryOtpLoading || otpResendSeconds > 0} onClick={sendDeliveryOtp} className="w-full text-xs font-bold text-indigo-700 disabled:text-slate-400">{otpResendSeconds > 0 ? `Resend OTP in ${otpResendSeconds}s` : 'Resend OTP'}</button>
+              <button disabled={deliveryOtpLoading || otpResendSeconds > 0} onClick={sendDeliveryOtp} className="w-full text-xs font-bold text-seller-700 disabled:text-slate-400">{otpResendSeconds > 0 ? `Resend OTP in ${otpResendSeconds}s` : 'Resend OTP'}</button>
             </>}
             {deliveryOtpMessage && <p className={`rounded-xl p-3 text-xs font-bold ${deliveryOtpMessage.toLowerCase().includes('sent') ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-700'}`}>{deliveryOtpMessage}</p>}
           </div>

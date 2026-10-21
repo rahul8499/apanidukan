@@ -85,11 +85,11 @@ export default function StoreSetupProgressWidget({
   }
 
   return (
-    <section className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white shadow-md transition-all">
+    <section className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl border border-seller-100 bg-gradient-to-r from-seller-50 via-white to-seller-50 text-slate-900 shadow-sm transition-all">
       {/* Subtle background glow */}
       <div
         className={`pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl transition-all ${
-          isAllComplete ? 'bg-emerald-500/10' : 'bg-amber-500/10'
+          isAllComplete ? 'bg-emerald-500/10' : 'bg-seller-500/10'
         }`}
       />
 
@@ -101,11 +101,11 @@ export default function StoreSetupProgressWidget({
           <div
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full p-[2.5px] shadow-sm transition-transform hover:scale-105"
             style={{
-              background: `conic-gradient(${isAllComplete ? '#10b981' : '#f59e0b'} ${setupPercent}%, rgba(255,255,255,0.12) ${setupPercent}% 100%)`
+              background: `conic-gradient(${isAllComplete ? '#10b981' : '#f97316'} ${setupPercent}%, rgba(148,163,184,0.22) ${setupPercent}% 100%)`
             }}
           >
-            <div className="grid h-full w-full place-items-center rounded-full bg-slate-950 text-center">
-              <span className={`text-[10px] font-black leading-none ${isAllComplete ? 'text-emerald-400' : 'text-amber-300'}`}>
+            <div className="grid h-full w-full place-items-center rounded-full bg-white text-center">
+              <span className={`text-[10px] font-black leading-none ${isAllComplete ? 'text-emerald-600' : 'text-seller-600'}`}>
                 {setupPercent}%
               </span>
             </div>
@@ -114,14 +114,14 @@ export default function StoreSetupProgressWidget({
           {/* Title & Status */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[8px] font-black uppercase text-amber-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-seller-200 bg-seller-100 px-1.5 py-0.5 text-[8px] font-black uppercase text-seller-800">
                 <Sparkles className="h-2.5 w-2.5" /> {launcherLabel || '1-Sec Launcher'}
               </span>
-              <h2 className="text-xs sm:text-sm font-black text-white truncate">
+              <h2 className="text-xs sm:text-sm font-black text-slate-900 truncate">
                 {isAllComplete ? '🎉 Express Setup 100% Ready!' : launchTitle}
               </h2>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
+            <p className="text-[10px] text-slate-600 font-medium truncate mt-0.5">
               {isAllComplete
                 ? 'Store live hai aur customer orders lene ke liye ready hai.'
                 : `${completedCount} of ${totalTasks} setup steps complete`}
@@ -143,17 +143,17 @@ export default function StoreSetupProgressWidget({
                 }}
                 className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold transition-all cursor-pointer ${
                   task.isCompleted
-                    ? 'border border-emerald-500/25 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
-                    : 'border border-amber-400/35 bg-amber-400/15 text-amber-200 hover:bg-amber-400/25 animate-pulse'
+                    ? 'border border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100'
+                    : 'border border-seller-200 bg-seller-50 text-seller-800 hover:bg-seller-100'
                 }`}
                 title={`Go to ${task.title}`}
               >
                 <span className="text-[10px]">{task.icon}</span>
                 <span>{task.title}</span>
                 {task.isCompleted ? (
-                  <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="h-3 w-3 text-sky-600 shrink-0" />
                 ) : (
-                  <ArrowUpRight className="h-2.5 w-2.5 text-amber-300 shrink-0" />
+                  <ArrowUpRight className="h-2.5 w-2.5 text-seller-600 shrink-0" />
                 )}
               </button>
             ))}
@@ -164,9 +164,9 @@ export default function StoreSetupProgressWidget({
             <button
               type="button"
               onClick={onOpenOnboardingTour}
-              className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/10 px-2 py-1 text-[10px] font-bold text-slate-200 hover:bg-white/15 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 hover:bg-seller-50 transition-colors cursor-pointer"
             >
-              <HelpCircle className="h-3 w-3 text-amber-300" />
+              <HelpCircle className="h-3 w-3 text-seller-600" />
               <span className="hidden sm:inline">Tour</span>
             </button>
           )}
@@ -175,7 +175,7 @@ export default function StoreSetupProgressWidget({
           <button
             type="button"
             onClick={() => setShowDetails(!showDetails)}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-500 hover:text-seller-700 hover:bg-seller-50 transition-colors cursor-pointer"
             title={showDetails ? 'Compress' : 'Show details'}
           >
             <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showDetails ? 'rotate-180' : ''}`} />
@@ -185,9 +185,9 @@ export default function StoreSetupProgressWidget({
 
       {/* Optional Details Drawer (Collapsible) */}
       {showDetails && (
-        <div className="border-t border-white/10 bg-black/25 px-3 py-2 sm:px-4 sm:py-2.5 text-xs text-slate-300 animate-fadeIn">
+        <div className="border-t border-seller-100 bg-white/80 px-3 py-2 sm:px-4 sm:py-2.5 text-xs text-slate-600 animate-fadeIn">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <p className="text-[10px] sm:text-[11px] font-medium text-slate-300 leading-relaxed max-w-2xl">
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-600 leading-relaxed max-w-2xl">
               {launchSubtext}
             </p>
             {isAllComplete && (

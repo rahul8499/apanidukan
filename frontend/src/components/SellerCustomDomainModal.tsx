@@ -65,7 +65,7 @@ export default function SellerCustomDomainModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200 shadow-2xs">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-seller-50 text-seller-600 border border-seller-200 shadow-2xs">
               <Globe className="h-5 w-5" />
             </div>
             <div>
@@ -115,25 +115,25 @@ export default function SellerCustomDomainModal({
                 value={domainInput}
                 onChange={(e) => setDomainInput(e.target.value)}
                 placeholder="e.g. rahulstore.com or shop.rahulstore.com"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 py-3 pl-18 pr-4 text-xs font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 py-3 pl-18 pr-4 text-xs font-bold text-slate-900 focus:border-seller-500 focus:bg-white focus:outline-none transition-all"
               />
             </div>
             <p className="mt-1 text-[10px] text-slate-500 font-medium">
-              Do not include http:// or https:// (e.g. use <code className="font-bold text-indigo-600">rahulstore.com</code>)
+              Do not include http:// or https:// (e.g. use <code className="font-bold text-seller-600">rahulstore.com</code>)
             </p>
           </div>
 
           {/* DNS Setup Card */}
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 to-purple-50/40 p-4 space-y-2.5 text-xs">
-            <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
-              <span className="font-black text-indigo-900 flex items-center gap-1.5">
-                <ShieldCheck className="h-4 w-4 text-indigo-600" />
+          <div className="rounded-2xl border border-seller-100 bg-gradient-to-br from-seller-50/70 to-seller-50/40 p-4 space-y-2.5 text-xs">
+            <div className="flex items-center justify-between border-b border-seller-100 pb-2">
+              <span className="font-black text-seller-900 flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-seller-600" />
                 <span>DNS Configuration Instructions</span>
               </span>
               <button
                 type="button"
                 onClick={() => copyDnsRecord('stores.quickstore.com')}
-                className="text-[10px] font-black text-indigo-700 bg-white border border-indigo-200 px-2 py-0.5 rounded-lg hover:bg-indigo-100 transition-all flex items-center gap-1 cursor-pointer"
+                className="text-[10px] font-black text-seller-700 bg-white border border-seller-200 px-2 py-0.5 rounded-lg hover:bg-seller-100 transition-all flex items-center gap-1 cursor-pointer"
               >
                 {copiedRecord ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
                 <span>{copiedRecord ? 'Copied!' : 'Copy CNAME'}</span>
@@ -144,10 +144,10 @@ export default function SellerCustomDomainModal({
               Log in to your domain registrar (GoDaddy, Namecheap, Cloudflare, Hostinger) and add the following record:
             </p>
 
-            <div className="bg-white p-2.5 rounded-xl border border-indigo-100 space-y-1.5 font-mono text-[11px]">
+            <div className="bg-white p-2.5 rounded-xl border border-seller-100 space-y-1.5 font-mono text-[11px]">
               <div className="flex justify-between items-center text-slate-700">
                 <span className="font-bold text-slate-500 text-[10px]">RECORD TYPE:</span>
-                <span className="font-black text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded">CNAME</span>
+                <span className="font-black text-seller-700 bg-seller-50 px-1.5 py-0.2 rounded">CNAME</span>
               </div>
               <div className="flex justify-between items-center text-slate-700">
                 <span className="font-bold text-slate-500 text-[10px]">HOST / NAME:</span>
@@ -194,7 +194,7 @@ export default function SellerCustomDomainModal({
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-2xl bg-indigo-600 py-3 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+              className="w-full rounded-2xl bg-seller-600 py-3 text-xs font-black text-white hover:bg-seller-700 transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5"
             >
               {saving ? 'Connecting Domain...' : 'Connect & Verify Domain 🚀'}
             </button>

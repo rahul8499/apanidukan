@@ -459,12 +459,12 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
   return (
     <>
       {/* Hyper-Luxurious Glassmorphic Enterprise Header */}
-      <header className="sticky top-0 z-30 w-full border-b border-slate-800/80 bg-slate-950/95 px-3 sm:px-6 py-0 text-white backdrop-blur-2xl shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-all">
+      <header className="sticky top-0 z-30 w-full border-b border-slate-200 bg-white/95 px-3 sm:px-6 py-0 text-slate-900 backdrop-blur-2xl shadow-sm transition-all">
         {/* Animated Neon Ambient Gradient Top Stroke */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-teal-500/0 via-teal-400/80 via-cyan-400/80 to-indigo-500/0 shadow-[0_0_10px_#14b8a6]" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-seller-300 via-seller-500 to-seller-400" />
 
         {/* Subtle Bottom Accent Reflection */}
-        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-slate-800/80 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
         <div className="mx-auto w-full max-w-7xl space-y-1  sm:space-y-0">
           {/* Main Top Row */}
@@ -473,7 +473,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <div className="flex items-center gap-0 sm:gap-0 min-w-0">
               {/* Logo Avatar with Radial Ambient Glow */}
               <div className="relative group shrink-0 transition-transform duration-300 group-hover:scale-105">
-                <img src="/apanidukan.png" alt="Apani Dukan" className="h-16 sm:h-20 md:h-24 w-auto scale-110 sm:scale-125 origin-left" />
+                <img src="/apanidukan-logo-horizontal.png" alt="Apani Dukan" className="h-9 sm:h-11 md:h-12 w-auto object-contain origin-left" />
 
 
               </div>
@@ -481,7 +481,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <div className="min-w-0 ml-2 sm:ml-4 md:ml-6">
                 {/* Store Name & Badges */}
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <h1 className="hidden sm:block text-xs sm:text-base md:text-lg font-black text-white truncate tracking-tight drop-shadow-sm max-w-[140px] sm:max-w-xs">
+                  <h1 className="hidden sm:block text-xs sm:text-base md:text-lg font-black text-slate-900 truncate tracking-tight max-w-[140px] sm:max-w-xs">
                     {store.name}
                   </h1>
 
@@ -490,15 +490,15 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     <Link
                       to={`/stores/${store.id}/subscription`}
                       title={`Current Plan: ${subStatus.plan_name} (${subStatus.status})`}
-                      className={`hidden sm:inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black shrink-0 border transition-all cursor-pointer hover:scale-105 shadow-xs ${subStatus.plan_name === 'PREMIUM'
-                        ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 hover:border-amber-300'
-                        : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500'
+                      className={`hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-1 text-[8px] sm:text-[9px] font-extrabold shrink-0 border transition-colors cursor-pointer ${subStatus.plan_name === 'PREMIUM'
+                        ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 hover:border-amber-300'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
                         }`}
                     >
                       {subStatus.plan_name === 'PREMIUM' ? (
                         <>
-                          <Crown className="h-2 w-2 text-amber-400" />
-                          <span className="tracking-wide">PREMIUM</span>
+                          <Crown className="h-3 w-3 text-amber-600" />
+                          <span className="tracking-[0.08em]">PREMIUM</span>
                         </>
                       ) : (
                         <>
@@ -511,11 +511,11 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 </div>
 
                 {/* Desktop Inline Tagline */}
-                <p className="hidden sm:flex items-center gap-1.5 text-[11px] font-extrabold tracking-tight text-amber-300 mt-0.5 truncate">
-                  <Sparkles className="h-2.5 w-2.5 text-amber-400 shrink-0 animate-pulse" />
-                  <span className="text-amber-300 text-[10px] sm:text-[11px] font-black uppercase tracking-widest drop-shadow-sm">Demand Dekho. Product Lao. Sell Karo.</span>
+                <p className="hidden sm:flex items-center gap-1.5 text-[11px] font-extrabold tracking-tight text-seller-700 mt-0.5 truncate">
+                  <Sparkles className="h-2.5 w-2.5 text-seller-500 shrink-0 animate-pulse" />
+                  <span className="text-seller-700 text-[10px] sm:text-[11px] font-black uppercase tracking-widest">Demand Dekho. Product Lao. Sell Karo.</span>
                   {activeTabTitle && (
-                    <span className="font-bold text-teal-300">
+                  <span className="font-bold text-seller-600">
                       <span className="text-slate-500 mx-1">•</span>
                       {activeTabTitle}
                     </span>
@@ -534,10 +534,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <Link
                   to={`/s/${store.slug}`}
                   target="_blank"
-                  className="flex h-7 w-7 sm:h-8 sm:w-auto items-center justify-center gap-1 rounded-lg border border-teal-500/40 bg-teal-500/10 sm:px-2 text-xs font-black text-teal-300 hover:bg-teal-500/20 transition-all cursor-pointer"
+                  className="flex h-7 w-7 sm:h-8 sm:w-auto items-center justify-center gap-1 rounded-lg border border-seller-200 bg-seller-50 sm:px-2 text-xs font-black text-seller-700 hover:bg-seller-100 transition-all cursor-pointer"
                   title="Preview Storefront"
                 >
-                  <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-teal-300" />
+                  <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-seller-600" />
                   <span className="hidden lg:inline font-extrabold tracking-wide">Storefront ↗</span>
                 </Link>
               )}
@@ -546,10 +546,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(true)}
-                className="flex h-7 w-7 sm:h-8 sm:w-auto items-center justify-center gap-1 rounded-lg border border-slate-800 bg-slate-900 sm:px-2 text-xs font-extrabold text-slate-200 hover:border-teal-500/50 hover:text-teal-300 transition-all cursor-pointer"
+                className="flex h-7 w-7 sm:h-8 sm:w-auto items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white sm:px-2 text-xs font-extrabold text-slate-700 hover:border-seller-200 hover:text-seller-700 transition-all cursor-pointer"
                 title="Settings"
               >
-                <Settings className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-300" />
+                <Settings className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-600" />
                 <span className="hidden lg:inline font-extrabold tracking-wide">Settings</span>
               </button>
 
@@ -559,13 +559,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* Dedicated Full-Width Slim Mobile Tagline Strip (Zero Extra Space Wasted) */}
-          <div className="sm:hidden flex items-center justify-between bg-amber-500/10 border border-amber-400/25 rounded-md px-2 py-0.5 text-[9px] font-black text-amber-300">
+          <div className="sm:hidden flex items-center justify-between bg-seller-50 border border-seller-100 rounded-md px-2 py-0.5 text-[9px] font-black text-seller-700">
             <span className="flex items-center gap-1 min-w-0 truncate">
-              <Sparkles className="h-2.5 w-2.5 text-amber-400 shrink-0 animate-pulse" />
-              <span className="truncate font-black uppercase tracking-widest text-[8px] drop-shadow-sm">Demand Dekho. Product Lao. Sell Karo.</span>
+              <Sparkles className="h-2.5 w-2.5 text-seller-500 shrink-0 animate-pulse" />
+              <span className="truncate font-black uppercase tracking-widest text-[8px]">Demand Dekho. Product Lao. Sell Karo.</span>
             </span>
             {activeTabTitle && (
-              <span className="text-[8px] font-bold text-teal-300 shrink-0 ml-1">
+              <span className="text-[8px] font-bold text-seller-700 shrink-0 ml-1">
                 {activeTabTitle}
               </span>
             )}
@@ -576,10 +576,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       {/* Live Broadcast Platform Announcement Banner */}
       {platformAnnouncement && (
         <div className={`w-full px-4 py-2 text-xs font-bold flex items-center justify-between shadow-md border-b backdrop-blur-md ${
-          platformAnnouncement.level === 'WARNING' ? 'bg-amber-950/90 text-amber-200 border-amber-800/80' :
+          platformAnnouncement.level === 'WARNING' ? 'bg-seller-950/90 text-seller-200 border-seller-800/80' :
           platformAnnouncement.level === 'URGENT' ? 'bg-rose-950/90 text-rose-200 border-rose-800/80' :
           platformAnnouncement.level === 'SUCCESS' ? 'bg-emerald-950/90 text-emerald-200 border-emerald-800/80' :
-          'bg-indigo-950/90 text-indigo-200 border-indigo-800/80'
+          'bg-seller-950/90 text-seller-200 border-seller-800/80'
         }`}>
           <div className="mx-auto flex items-center gap-2 max-w-7xl">
             <span className="text-base shrink-0">
@@ -620,7 +620,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
         {/* Ultra-Premium Mobile App Header with Store Identity */}
         <div className="relative shrink-0 overflow-hidden bg-slate-950 px-4 sm:px-5 py-4 text-white border-b border-slate-800 shadow-md">
           {/* Subtle Ambient Glow */}
-          <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none" />
+          <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-seller-500/20 blur-2xl pointer-events-none" />
 
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
@@ -635,13 +635,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
               <div className="relative shrink-0">
                 <img src="/apanidukan.png" alt="Apani Dukan" className="h-12 sm:h-14 w-auto scale-110 sm:scale-125 origin-left" />
-                <span className={`absolute bottom-0 -right-2 h-3 w-3 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                <span className={`absolute bottom-0 -right-2 h-3 w-3 rounded-full border-2 border-slate-950 ${store.is_published ? 'bg-emerald-400' : 'bg-seller-400'}`} />
               </div>
 
               <div className="min-w-0 ml-3 sm:ml-4">
                 <h2 className="font-black text-sm text-white truncate tracking-tight">{store.name}</h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.2 rounded-full border ${store.is_published ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.2 rounded-full border ${store.is_published ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-seller-500/20 text-seller-300 border-seller-500/30'
                     }`}>
                     {store.is_published ? '● Live Online' : '○ Draft Mode'}
                   </span>
@@ -654,7 +654,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <Link
                   to={`/s/${store.slug}`}
                   target="_blank"
-                  className="flex h-8 px-2.5 items-center justify-center gap-1 rounded-xl bg-indigo-600/80 text-white text-[11px] font-bold hover:bg-indigo-600 active:scale-95 transition-all cursor-pointer border border-indigo-500/30"
+                  className="flex h-8 px-2.5 items-center justify-center gap-1 rounded-xl bg-seller-600/80 text-white text-[11px] font-bold hover:bg-seller-600 active:scale-95 transition-all cursor-pointer border border-seller-500/30"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Store</span>
@@ -677,31 +677,31 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               setIsSettingsOpen(false)
               setShowOnboardingModal(true)
             }}
-            className="w-full flex items-center justify-between rounded-2xl border border-indigo-200/90 bg-gradient-to-r from-indigo-50 to-purple-50 p-3 text-xs font-black text-indigo-950 hover:border-indigo-300 transition-all cursor-pointer shadow-xs"
+            className="w-full flex items-center justify-between rounded-2xl border border-seller-200/90 bg-gradient-to-r from-seller-50 to-seller-50 p-3 text-xs font-black text-seller-950 hover:border-seller-300 transition-all cursor-pointer shadow-xs"
           >
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white text-sm font-bold shadow-xs">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-seller-600 text-white text-sm font-bold shadow-xs">
                 📖
               </span>
               <div className="text-left">
-                <p className="font-black text-indigo-950">Store Setup Guide & Tour</p>
-                <p className="text-[10px] text-indigo-700 font-semibold">दुकान कशी वापरावी ते शिका (मार्गदर्शक)</p>
+                <p className="font-black text-seller-950">Store Setup Guide & Tour</p>
+                <p className="text-[10px] text-seller-700 font-semibold">दुकान कशी वापरावी ते शिका (मार्गदर्शक)</p>
               </div>
             </div>
-            <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-black text-white">OPEN</span>
+            <span className="rounded-full bg-seller-600 px-2 py-0.5 text-[9px] font-black text-white">OPEN</span>
           </button>
 
           {/* 2. 🏪 STORE PROFILE & IDENTITY */}
           <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-3 shadow-xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-indigo-600" />
+                <User className="h-4 w-4 text-seller-600" />
                 <span className="font-extrabold text-xs text-slate-900">{t('storeProfile')}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsProfileEditing(!isProfileEditing)}
-                className="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-extrabold text-seller-600 hover:text-seller-800 flex items-center gap-1 cursor-pointer"
               >
                 <Edit3 className="h-3 w-3" />
                 <span>{isProfileEditing ? t('cancel') : t('edit')}</span>
@@ -734,7 +734,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     type="text"
                     value={storeName}
                     onChange={e => setStoreName(e.target.value)}
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:border-seller-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -746,7 +746,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     value={phoneNumber}
                     onChange={e => setPhoneNumber(e.target.value)}
                     placeholder="919876543210"
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:border-indigo-500 focus:outline-none"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:border-seller-500 focus:outline-none"
                   />
                 </div>
 
@@ -760,7 +760,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <button
                   type="submit"
                   disabled={isSavingProfile}
-                  className="w-full rounded-xl bg-indigo-600 py-2 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1"
+                  className="w-full rounded-xl bg-seller-600 py-2 text-xs font-black text-white hover:bg-seller-700 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1"
                 >
                   <Check className="h-3.5 w-3.5" />
                   <span>{isSavingProfile ? t('saving') : t('save')}</span>
@@ -774,7 +774,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 </div>
                 <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
                   <span className="text-[10px] text-slate-500 font-bold">Business Type</span>
-                  <span className="font-extrabold text-indigo-700 flex items-center gap-1">
+                  <span className="font-extrabold text-seller-700 flex items-center gap-1">
                     <span>{getBusinessType(store.business_type).icon}</span>
                     <span>{getBusinessType(store.business_type).name}</span>
                   </span>
@@ -789,7 +789,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
 
           <div className="rounded-2xl border border-slate-200/80 bg-white p-3 space-y-2.5 shadow-xs">
             <p className="text-[9.5px] font-black uppercase tracking-wider text-slate-400 px-1 flex items-center gap-1.5">
-              <FolderKanban className="h-3.5 w-3.5 text-indigo-600" />
+              <FolderKanban className="h-3.5 w-3.5 text-seller-600" />
               <span>{t('workspaceModules')}</span>
             </p>
 
@@ -797,9 +797,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <Link
                 to={`/stores/${store.id}/orders`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-seller-50 hover:border-seller-200 hover:text-seller-900 transition-all cursor-pointer"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100/70 text-indigo-700 font-bold text-xs shrink-0">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-seller-100/70 text-seller-700 font-bold text-xs shrink-0">
                   🛍️
                 </div>
                 <span className="truncate">{t('orders')}</span>
@@ -808,7 +808,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <Link
                 to={`/stores/${store.id}/catalog`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-seller-50 hover:border-seller-200 hover:text-seller-900 transition-all cursor-pointer"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100/70 text-emerald-700 font-bold text-xs shrink-0">
                   📦
@@ -819,9 +819,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <Link
                 to={`/stores/${store.id}/requests`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-seller-50 hover:border-seller-200 hover:text-seller-900 transition-all cursor-pointer"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100/70 text-amber-700 font-bold text-xs shrink-0">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-seller-100/70 text-seller-700 font-bold text-xs shrink-0">
                   💡
                 </div>
                 <span className="truncate">{t('demand')}</span>
@@ -830,7 +830,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <Link
                 to={`/stores/${store.id}/coupons`}
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-900 transition-all cursor-pointer"
+                className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2 text-xs font-bold text-slate-800 hover:bg-seller-50 hover:border-seller-200 hover:text-seller-900 transition-all cursor-pointer"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100/70 text-rose-700 font-bold text-xs shrink-0">
                   🏷️
@@ -841,23 +841,23 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 4. 🚚 CHECKOUT FULFILLMENT & DELIVERY MODES */}
-          <div className="rounded-xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3 space-y-2.5 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-indigo-100/80 pb-1.5">
+          <div className="rounded-xl border border-seller-200/90 bg-gradient-to-br from-seller-50/60 to-seller-50/40 p-3 space-y-2.5 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-seller-100/80 pb-1.5">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-wider text-indigo-600">{t('checkoutFulfillment')}</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-seller-600">{t('checkoutFulfillment')}</p>
                 <h4 className="text-[11px] font-black text-slate-900 flex items-center gap-1 mt-0.5">
-                  <Truck className="h-3 w-3 text-indigo-600" />
+                  <Truck className="h-3 w-3 text-seller-600" />
                   <span>{t('orderFulfillmentModes')}</span>
                 </h4>
               </div>
               <div className="flex items-center gap-1.5">
                 {isUpdatingDeliverySettings && (
-                  <span className="text-[9px] font-extrabold text-indigo-600 animate-pulse">Saving...</span>
+                  <span className="text-[9px] font-extrabold text-seller-600 animate-pulse">Saving...</span>
                 )}
                 <button
                   type="button"
                   onClick={() => { setDeliveryModalSection('general'); setShowDeliveryModal(true) }}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-600 text-white text-[9px] font-black hover:bg-indigo-700 transition-all cursor-pointer shadow-xs"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-seller-600 text-white text-[9px] font-black hover:bg-seller-700 transition-all cursor-pointer shadow-xs"
                 >
                   <SlidersHorizontal className="h-2.5 w-2.5" />
                   <span>{t('configureRules')}</span>
@@ -898,7 +898,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                       type="button"
                       onClick={() => { setDeliveryModalSection('general'); setShowDeliveryModal(true) }}
                       title="Edit Delivery Pricing & Radius"
-                      className="text-[9px] font-black text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-lg transition-all"
+                      className="text-[9px] font-black text-seller-600 hover:text-seller-800 bg-seller-50 hover:bg-seller-100 border border-seller-200 px-2 py-0.5 rounded-lg transition-all"
                     >
                       {t('editRates')}
                     </button>
@@ -925,7 +925,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                     <span className="bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200 text-slate-700">
                       📍 Max: {store?.delivery_radius_km || 10} km
                     </span>
-                    <span className="bg-indigo-50 px-1.5 py-0.5 rounded-md border border-indigo-200 text-indigo-700">
+                    <span className="bg-seller-50 px-1.5 py-0.5 rounded-md border border-seller-200 text-seller-700">
                       {store?.delivery_charge_type === 'FREE'
                         ? '🟢 Free Delivery'
                         : store?.delivery_charge_type === 'PER_KM'
@@ -993,53 +993,53 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 5. 🚀 SELLER NAVIGATION & MARKETING TOOLS */}
-          <div className="rounded-2xl border-2 border-violet-300 bg-gradient-to-br from-violet-50 to-white p-3.5 shadow-sm">
+          <div className="rounded-2xl border-2 border-seller-300 bg-gradient-to-br from-seller-50 to-white p-3.5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-wider text-violet-600">Garments After-Sales</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-seller-600">Garments After-Sales</p>
                 <h4 className="mt-1 text-xs font-black text-slate-950">🔄 Exchange Settings</h4>
                 <p className="mt-1 text-[10px] font-medium text-slate-600">Toggle, days, evidence, reasons and customer policy</p>
                 <span className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[9px] font-black ${store?.exchange_enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>{store?.exchange_enabled ? `ON · ${store?.exchange_window_days || 7} days` : 'OFF'}</span>
               </div>
-              <button type="button" onClick={() => { setDeliveryModalSection('exchange'); setShowDeliveryModal(true) }} className="shrink-0 rounded-xl bg-violet-600 px-3 py-2 text-[10px] font-black text-white shadow-sm hover:bg-violet-700">Configure Exchange</button>
+              <button type="button" onClick={() => { setDeliveryModalSection('exchange'); setShowDeliveryModal(true) }} className="shrink-0 rounded-xl bg-seller-600 px-3 py-2 text-[10px] font-black text-white shadow-sm hover:bg-seller-700">Configure Exchange</button>
             </div>
           </div>
 
           {/* 5. 🚀 SELLER NAVIGATION & MARKETING TOOLS */}
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5 shadow-2xs">
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5 px-1">
-              <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
+              <ShieldCheck className="h-3.5 w-3.5 text-seller-600" />
               <span>{t('sellerNavMarketing')}</span>
             </p>
 
             <Link
               to={`/stores/${store.id}/catalog`}
               onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
+              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-seller-500 hover:bg-seller-50/40 hover:text-seller-900 transition-all shadow-2xs"
             >
               <span className="flex items-center gap-3">
-                <FolderKanban className="h-4.5 w-4.5 text-indigo-600" />
+                <FolderKanban className="h-4.5 w-4.5 text-seller-600" />
                 <span>{t('productCatalogInventory')}</span>
               </span>
-              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
+              <span className="text-slate-400 group-hover:text-seller-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
 
             <Link
               to={`/stores/${store.id}/requests`}
               onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
+              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-seller-500 hover:bg-seller-50/40 hover:text-seller-900 transition-all shadow-2xs"
             >
               <span className="flex items-center gap-3">
-                <Inbox className="h-4.5 w-4.5 text-indigo-600" />
+                <Inbox className="h-4.5 w-4.5 text-seller-600" />
                 <span>{t('productRequestsQueue')}</span>
               </span>
-              <span className="text-slate-400 group-hover:text-indigo-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
+              <span className="text-slate-400 group-hover:text-seller-600 font-bold transition-transform group-hover:translate-x-1">➔</span>
             </Link>
 
             <Link
               to={`/stores/${store.id}/coupons`}
               onClick={() => setIsSettingsOpen(false)}
-              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-indigo-500 hover:bg-indigo-50/40 hover:text-indigo-900 transition-all shadow-2xs"
+              className="group flex items-center justify-between rounded-xl bg-white p-3 text-xs font-bold text-slate-800 border border-slate-200/90 hover:border-seller-500 hover:bg-seller-50/40 hover:text-seller-900 transition-all shadow-2xs"
             >
               <span className="flex items-center gap-3">
                 <Tag className="h-4.5 w-4.5 text-emerald-600" />
@@ -1053,15 +1053,15 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 6. 👑 PRO ENTERPRISE SUITE (GOLD VIP) */}
-          <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/50 p-3.5 space-y-3 shadow-lg relative overflow-hidden text-white">
-            <div className="flex items-center justify-between border-b border-amber-500/30 pb-2">
+          <div className="rounded-2xl border border-seller-500/40 bg-gradient-to-br from-slate-950 via-slate-900 to-seller-950/50 p-3.5 space-y-3 shadow-lg relative overflow-hidden text-white">
+            <div className="flex items-center justify-between border-b border-seller-500/30 pb-2">
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-lg text-slate-950 font-black text-xs shadow-xs">
                   👑
                 </span>
-                <span className="font-black text-xs text-amber-300 tracking-wide uppercase">{t('proEnterprise')}</span>
+                <span className="font-black text-xs text-seller-300 tracking-wide uppercase">{t('proEnterprise')}</span>
               </div>
-              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-seller-500/20 text-seller-300 border border-seller-500/40">
                 {t('vipSuite')}
               </span>
             </div>
@@ -1074,31 +1074,31 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   setIsSettingsOpen(false)
                   setIsLangModalOpen(true)
                 }}
-                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-amber-400/50 hover:border-amber-300 transition-all cursor-pointer shadow-md"
+                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-seller-500/20 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-seller-400/50 hover:border-seller-300 transition-all cursor-pointer shadow-md"
               >
                 <span className="flex items-center gap-2.5">
-                  <Globe className="h-4 w-4 text-amber-400 shrink-0" />
-                  <span className="font-extrabold text-amber-200">{t('switchLangTitle')}</span>
+                  <Globe className="h-4 w-4 text-seller-400 shrink-0" />
+                  <span className="font-extrabold text-seller-200">{t('switchLangTitle')}</span>
                 </span>
-                <span className="text-[10px] font-black text-amber-400 flex items-center gap-0.5">
+                <span className="text-[10px] font-black text-seller-400 flex items-center gap-0.5">
                   <span>{t('change')}</span> ➔
                 </span>
               </button>
 
               {/* 1. Hindi Voice Soundbox Toggle */}
-              <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-950 border border-amber-400/50 text-white shadow-md">
+              <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gradient-to-r from-seller-500/20 via-slate-900 to-slate-950 border border-seller-400/50 text-white shadow-md">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-sm shadow-sm ${soundboxOn ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 shadow-amber-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-sm shadow-sm ${soundboxOn ? 'bg-gradient-to-tr from-seller-500 to-seller-400 text-slate-950 shadow-seller-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
                     {soundboxOn ? <Volume2 className="h-4.5 w-4.5 text-slate-950 font-black" /> : <VolumeX className="h-4.5 w-4.5 text-slate-400" />}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-xs font-black text-white truncate">{t('hindiVoiceSoundbox')}</p>
-                      <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                      <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-gradient-to-r from-seller-500 to-seller-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
                         <Crown className="h-2 w-2" /> PRO
                       </span>
                     </div>
-                    <p className="text-[10px] text-amber-200/90 font-medium truncate">{t('speaksLiveOrders')}</p>
+                    <p className="text-[10px] text-seller-200/90 font-medium truncate">{t('speaksLiveOrders')}</p>
                   </div>
                 </div>
 
@@ -1124,13 +1124,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   setIsSettingsOpen(false)
                   setShowThemeModal(true)
                 }}
-                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-amber-500/40 hover:border-amber-300 transition-all cursor-pointer shadow-md"
+                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-seller-500/15 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-seller-500/40 hover:border-seller-300 transition-all cursor-pointer shadow-md"
               >
                 <span className="flex items-center gap-2.5">
-                  <Palette className="h-4 w-4 text-amber-400 shrink-0" />
+                  <Palette className="h-4 w-4 text-seller-400 shrink-0" />
                   <span className="font-extrabold text-white">{t('storeThemeCustomizer')}</span>
                 </span>
-                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
+                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-seller-500 to-seller-500 text-slate-950 shadow-xs flex items-center gap-0.5 shrink-0">
                   <Crown className="h-2.5 w-2.5" /> PRO
                 </span>
               </button>
@@ -1142,13 +1142,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   setIsSettingsOpen(false)
                   setShowPosterModal(true)
                 }}
-                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-purple-900/40 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-purple-400/40 hover:border-purple-300 transition-all shadow-md cursor-pointer text-left"
+                className="w-full group flex items-center justify-between rounded-xl bg-gradient-to-r from-seller-900/40 via-slate-900 to-slate-950 p-2.5 sm:p-3 text-xs font-black text-white border border-seller-400/40 hover:border-seller-300 transition-all shadow-md cursor-pointer text-left"
               >
                 <span className="flex items-center gap-2.5">
-                  <ImageIcon className="h-4 w-4 text-purple-400 shrink-0" />
+                  <ImageIcon className="h-4 w-4 text-seller-400 shrink-0" />
                   <span>{t('aiPosterGenerator')}</span>
                 </span>
-                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xs flex items-center gap-0.5 shrink-0">
+                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-seller-500 to-seller-500 text-white shadow-xs flex items-center gap-0.5 shrink-0">
                   <Crown className="h-2.5 w-2.5" /> PRO
                 </span>
               </button>
@@ -1164,8 +1164,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   <Sparkles className="h-4 w-4 text-slate-500 shrink-0" />
                   <span>{t('aiSalesCopilot')}</span>
                 </span>
-                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-slate-700 flex items-center gap-1 shrink-0">
-                  <Lock className="h-2.5 w-2.5 text-amber-400" /> Locked
+                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-seller-400 border border-slate-700 flex items-center gap-1 shrink-0">
+                  <Lock className="h-2.5 w-2.5 text-seller-400" /> Locked
                 </span>
               </button>
 
@@ -1180,8 +1180,8 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                   <Globe className="h-4 w-4 text-slate-500 shrink-0" />
                   <span>{t('customDomainBrand')}</span>
                 </div>
-                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-slate-700 flex items-center gap-1 shrink-0">
-                  <Lock className="h-2.5 w-2.5 text-amber-400" /> Locked
+                <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-seller-400 border border-slate-700 flex items-center gap-1 shrink-0">
+                  <Lock className="h-2.5 w-2.5 text-seller-400" /> Locked
                 </span>
               </button>
             </div>
@@ -1193,7 +1193,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
-                    <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-600" />
+                    <SlidersHorizontal className="h-3.5 w-3.5 text-seller-600" />
                     <span>{t('manageAppMode')}</span>
                   </h3>
                   <p className="text-[10px] text-slate-500 font-medium">{t('orderProcessingMode')}</p>
@@ -1265,10 +1265,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-indigo-600" />
+                <Bell className="h-4 w-4 text-seller-600" />
                 <span className="font-extrabold text-xs text-slate-900">{t('realtimePushAlerts')}</span>
               </div>
-              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${notificationPermission === 'granted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-seller-100 text-seller-800 border border-seller-300'
                 }`}>
                 {notificationPermission === 'granted' ? 'ACTIVE' : 'DISABLED'}
               </span>
@@ -1285,7 +1285,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 <button
                   type="button"
                   onClick={requestNotificationPermission}
-                  className="shrink-0 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-black text-white hover:bg-indigo-700 transition-all cursor-pointer shadow-2xs"
+                  className="shrink-0 rounded-xl bg-seller-600 px-3 py-1.5 text-xs font-black text-white hover:bg-seller-700 transition-all cursor-pointer shadow-2xs"
                 >
                   Enable 🔔
                 </button>
@@ -1298,25 +1298,25 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 9. 🎧 PLATFORM TECHNICAL SUPPORT */}
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-purple-50/40 p-3.5 space-y-2.5 shadow-xs">
+          <div className="rounded-2xl border border-seller-100 bg-gradient-to-br from-seller-50/60 to-seller-50/40 p-3.5 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4 text-indigo-600" />
+                <HelpCircle className="h-4 w-4 text-seller-600" />
                 <span className="font-extrabold text-xs text-slate-900">{t('technicalSupport')}</span>
               </div>
-              <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-black text-white">24/7 LIVE</span>
+              <span className="rounded-full bg-seller-600 px-2 py-0.5 text-[9px] font-black text-white">24/7 LIVE</span>
             </div>
 
             <div className="space-y-1.5 pt-0.5">
               <a
                 href="mailto:rahulkolhe90.rk.kr@gmail.com"
-                className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-indigo-50/80 border border-slate-100 transition-all text-xs font-bold text-slate-800"
+                className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-seller-50/80 border border-slate-100 transition-all text-xs font-bold text-slate-800"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <Mail className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                  <Mail className="h-3.5 w-3.5 text-seller-600 shrink-0" />
                   <span className="truncate">{t('emailSupport')}</span>
                 </div>
-                <span className="text-[9.5px] text-indigo-600 font-extrabold shrink-0">{t('sendEmail')}</span>
+                <span className="text-[9.5px] text-seller-600 font-extrabold shrink-0">{t('sendEmail')}</span>
               </a>
 
               <a
@@ -1346,13 +1346,13 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
           </div>
 
           {/* 10. 💳 ACTIVE SUBSCRIPTION */}
-          <div className="rounded-2xl border border-indigo-500/30 bg-slate-950 p-3.5 space-y-2.5 shadow-md text-white">
+          <div className="rounded-2xl border border-seller-500/30 bg-slate-950 p-3.5 space-y-2.5 shadow-md text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Crown className="h-4 w-4 text-amber-400" />
-                <span className="text-xs font-black uppercase text-indigo-200">{t('activeSubscription')}</span>
+                <Crown className="h-4 w-4 text-seller-400" />
+                <span className="text-xs font-black uppercase text-seller-200">{t('activeSubscription')}</span>
               </div>
-              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-seller-400/20 text-seller-300 border border-seller-400/30">
                 {subStatus?.plan_name || 'PREMIUM'} PLAN
               </span>
             </div>
@@ -1362,10 +1362,10 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               className="w-full flex items-center justify-between rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 p-2.5 text-xs font-bold text-white transition-all shadow-2xs"
             >
               <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-teal-300" />
+                <CreditCard className="h-4 w-4 text-seller-300" />
                 <span>{t('managePlan')}</span>
               </div>
-              <span className="text-[10px] font-extrabold text-teal-300">Open ➔</span>
+              <span className="text-[10px] font-extrabold text-seller-300">Open ➔</span>
             </Link>
           </div>
 
@@ -1377,7 +1377,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
                 setIsSettingsOpen(false)
                 setShowQrModal(true)
               }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-2.5 text-xs font-black text-white hover:from-indigo-500 hover:to-violet-500 active:scale-98 transition-all shadow-md cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-seller-600 to-seller-600 py-2.5 text-xs font-black text-white hover:from-seller-500 hover:to-seller-500 active:scale-98 transition-all shadow-md cursor-pointer"
             >
               <span>{t('printQrStandee')}</span>
             </button>
@@ -1404,9 +1404,9 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
             <Link
               to={`/s/${store.slug}`}
               target="_blank"
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 py-2.5 px-3 text-xs font-black text-indigo-700 hover:bg-indigo-100 active:scale-95 transition-all shadow-xs"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-seller-200 bg-seller-50 py-2.5 px-3 text-xs font-black text-seller-700 hover:bg-seller-100 active:scale-95 transition-all shadow-xs"
             >
-              <ExternalLink className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+              <ExternalLink className="h-3.5 w-3.5 text-seller-600 shrink-0" />
               <span className="truncate">{t('openStorefront')}</span>
             </Link>
           )}
@@ -1426,7 +1426,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
       {showUnpublishConfirm && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 text-slate-900 animate-in zoom-in-95">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 mx-auto">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-seller-100 text-seller-600 mx-auto">
               <AlertTriangle className="h-6 w-6" />
             </div>
 
@@ -1476,7 +1476,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
               <button
                 type="button"
                 onClick={() => executePublish(false)}
-                className="w-full py-2.5 rounded-xl bg-amber-600 font-extrabold text-xs text-white hover:bg-amber-700 transition-all cursor-pointer shadow-md"
+                className="w-full py-2.5 rounded-xl bg-seller-600 font-extrabold text-xs text-white hover:bg-seller-700 transition-all cursor-pointer shadow-md"
               >
                 Yes, Set to Draft
               </button>
@@ -1596,7 +1596,7 @@ export default function SellerHeader({ store, activeTabTitle, onStoreUpdate }: S
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         style={{ transform: `translate(${fabPos.x}px, ${fabPos.y}px)`, touchAction: 'none' }}
-        className="fixed bottom-[150px] right-3 sm:bottom-[100px] sm:right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-teal-400 text-white shadow-[0_4px_20px_rgba(20,184,166,0.4)] hover:scale-110 active:scale-95 transition-transform cursor-grab active:cursor-grabbing group"
+        className="fixed bottom-[150px] right-3 sm:bottom-[100px] sm:right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-seller-500 to-seller-400 text-white shadow-[0_4px_20px_rgba(20,184,166,0.4)] hover:scale-110 active:scale-95 transition-transform cursor-grab active:cursor-grabbing group"
         title="Seller AI Copilot"
       >
         <Sparkles className="h-6 w-6 animate-pulse group-hover:animate-none" />

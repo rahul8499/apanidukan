@@ -30,7 +30,7 @@ export default function SellerSplashLoader({
         <div className="space-y-2">
           <h2 className="text-xl font-black text-slate-900 tracking-tight">Apani Dukan</h2>
           <div className="flex items-center justify-center gap-2">
-            <div className="h-4 w-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+            <div className="h-4 w-4 rounded-full border-2 border-seller-600 border-t-transparent animate-spin" />
             <p className="text-xs font-bold text-slate-500 animate-pulse">{label}</p>
           </div>
         </div>

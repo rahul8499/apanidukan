@@ -27,10 +27,10 @@ export default function SellerOnboardingGuideModal({
       title: '🌐 WhatsApp & Counter QR Standee',
       subtitle: 'Order phone save karein & Official Standee Poster print karein.',
       icon: QrCode,
-      gradient: 'from-blue-600 to-indigo-600',
-      badgeBg: 'bg-blue-50 text-blue-700 border-blue-200',
-      accentColor: 'text-blue-600',
-      iconBg: 'bg-blue-50',
+      gradient: 'from-seller-600 to-seller-600',
+      badgeBg: 'bg-seller-50 text-seller-700 border-seller-200',
+      accentColor: 'text-seller-600',
+      iconBg: 'bg-seller-50',
       bullets: [
         'WhatsApp Order Number save karein jisse direct customer orders aayenge.',
         'Official Store Link copy karke customers ya WhatsApp status par share karein.',
@@ -43,10 +43,10 @@ export default function SellerOnboardingGuideModal({
       title: '📦 Product Categories (वर्गीकरण)',
       subtitle: 'Dukaan ke items ko categories me organize karein.',
       icon: Package,
-      gradient: 'from-amber-500 to-orange-600',
-      badgeBg: 'bg-amber-50 text-amber-800 border-amber-200',
-      accentColor: 'text-amber-600',
-      iconBg: 'bg-amber-50',
+      gradient: 'from-seller-500 to-seller-600',
+      badgeBg: 'bg-seller-50 text-seller-800 border-seller-200',
+      accentColor: 'text-seller-600',
+      iconBg: 'bg-seller-50',
       bullets: [
         'Category name type karke instant category create karein.',
         'Electronics, Kirana, Mobiles, Garments jaisi multiple categories add karein.',
@@ -59,7 +59,7 @@ export default function SellerOnboardingGuideModal({
       title: '⚡ Add & Publish Products',
       subtitle: 'Single product instantly publish karein (Photo optional).',
       icon: Sparkles,
-      gradient: 'from-emerald-500 to-teal-600',
+      gradient: 'from-emerald-500 to-seller-600',
       badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
       accentColor: 'text-emerald-600',
       iconBg: 'bg-emerald-50',
@@ -75,10 +75,10 @@ export default function SellerOnboardingGuideModal({
       title: '📲 1-Click WhatsApp Share & Orders',
       subtitle: 'Har product ki direct share link aur sound order alerts.',
       icon: Share2,
-      gradient: 'from-purple-600 to-pink-600',
-      badgeBg: 'bg-purple-50 text-purple-800 border-purple-200',
-      accentColor: 'text-purple-600',
-      iconBg: 'bg-purple-50',
+      gradient: 'from-seller-600 to-pink-600',
+      badgeBg: 'bg-seller-50 text-seller-800 border-seller-200',
+      accentColor: 'text-seller-600',
+      iconBg: 'bg-seller-50',
       bullets: [
         'Seller Catalog me har product par 📲 Share button se WhatsApp par promo bhejein.',
         '📋 Copy Link se single product URL kisi ko bhi directly bhejein.',
@@ -178,12 +178,12 @@ export default function SellerOnboardingGuideModal({
           </div>
 
           {/* Pro Tip Callout Card */}
-          <div className="rounded-2xl bg-amber-50/90 border border-amber-200/90 p-3.5 text-xs text-amber-900 space-y-1 shadow-2xs">
-            <div className="flex items-center gap-1.5 font-extrabold text-amber-800">
-              <Lightbulb className="h-4 w-4 text-amber-600 shrink-0" />
+          <div className="rounded-2xl bg-seller-50/90 border border-seller-200/90 p-3.5 text-xs text-seller-900 space-y-1 shadow-2xs">
+            <div className="flex items-center gap-1.5 font-extrabold text-seller-800">
+              <Lightbulb className="h-4 w-4 text-seller-600 shrink-0" />
               <span>Pro Tip for Sellers:</span>
             </div>
-            <p className="text-[11px] text-amber-900/90 leading-relaxed font-medium pl-5">
+            <p className="text-[11px] text-seller-900/90 leading-relaxed font-medium pl-5">
               Dukaan ko hamesha <strong className="text-emerald-700">🟢 LIVE</strong> mode me rakhein aur WhatsApp number updated rakhein taaki customer orders direct aap तक pahuche!
             </p>
           </div>
@@ -200,7 +200,7 @@ export default function SellerOnboardingGuideModal({
                   key={idx}
                   onClick={() => setActiveStep(idx)}
                   className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    idx === activeStep ? 'w-5 bg-indigo-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                    idx === activeStep ? 'w-5 bg-seller-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'
                   }`}
                 />
               ))}
@@ -223,7 +223,7 @@ export default function SellerOnboardingGuideModal({
               <button
                 type="button"
                 onClick={() => setActiveStep(prev => prev + 1)}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-xs font-black text-white hover:bg-indigo-700 transition-all shadow-md cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-seller-600 py-2.5 text-xs font-black text-white hover:bg-seller-700 transition-all shadow-md cursor-pointer"
               >
                 <span>Next Step</span>
                 <ChevronRight className="h-4 w-4" />
@@ -233,7 +233,7 @@ export default function SellerOnboardingGuideModal({
                 type="button"
                 disabled={saving}
                 onClick={handleFinish}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-2.5 text-xs font-black text-white hover:opacity-95 transition-all shadow-md cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-seller-600 py-2.5 text-xs font-black text-white hover:opacity-95 transition-all shadow-md cursor-pointer"
               >
                 <span>🚀 Start Managing Shop</span>
                 <ArrowRight className="h-4 w-4" />

@@ -32,10 +32,10 @@ export default function SellerPayments(){
       <SellerHeader store={store} activeTabTitle="Payments Setup" onStoreUpdate={loadData} />
 
       <div className="space-y-5 p-4 sm:p-6">
-        <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 p-6 text-white shadow-xl border border-indigo-700/30">
-          <span className="rounded-full bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 text-xs font-bold text-indigo-200">PAYMENTS</span>
+        <section className="overflow-hidden rounded-2xl border border-seller-100 bg-gradient-to-br from-seller-50 via-white to-seller-50 p-6 text-slate-900 shadow-sm">
+          <span className="rounded-full border border-seller-200 bg-seller-100 px-3 py-1 text-xs font-bold text-seller-800">PAYMENTS</span>
           <h2 className="mt-4 text-2xl font-bold">Get paid for every order.</h2>
-          <p className="mt-2 text-sm text-indigo-100">Connect a payment gateway to receive money directly in your account.</p>
+          <p className="mt-2 text-sm text-slate-600">Connect a payment gateway to receive money directly in your account.</p>
         </section>
 
         <section className="premium-card p-5">
@@ -44,7 +44,7 @@ export default function SellerPayments(){
               <p className="font-bold text-slate-900">Payment gateway</p>
               <p className="mt-1 text-sm text-slate-500">Razorpay / Stripe integration</p>
             </div>
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 border border-amber-200">Setup pending</span>
+            <span className="rounded-full bg-seller-50 px-3 py-1 text-xs font-bold text-seller-700 border border-seller-200">Setup pending</span>
           </div>
           <div className="mt-5 rounded-xl bg-slate-50 p-4 text-xs font-medium text-slate-600 border border-slate-100">
             Payment collection is not enabled yet. Orders can be created only after a real payment gateway is connected by the platform owner.

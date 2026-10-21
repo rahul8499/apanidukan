@@ -24,7 +24,7 @@ export default function CustomerAppHeader({
             <img
               src="/apanidukan-customer-logo.png"
               alt="Apani Dukan"
-              className="h-7 w-auto max-w-[148px] object-contain transition-transform group-hover:scale-102 sm:h-9 sm:max-w-none"
+              className="h-9 w-auto max-w-[180px] object-contain transition-transform group-hover:scale-102 sm:h-11 sm:max-w-none"
             />
           </Link>
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">

@@ -68,9 +68,24 @@
   <body style="margin:0;padding:0;background-color:#f8fafc;">
     <div id="root">
       <div style="min-height:100vh;width:100%;background-color:#f8fafc;display:flex;align-items:center;justify-content:center;">
-        <img src="/customer-icon-512.png" alt="Apani Dukan" style="width:96px;height:96px;object-fit:contain;" />
+        <img id="initial-brand-logo" src="/apanidukan-brand-logo.png" alt="Apani Dukan" style="width:min(320px,82vw);height:auto;object-fit:contain;" />
       </div>
     </div>
+    <script>
+      (function () {
+        var path = window.location.pathname;
+        var params = new URLSearchParams(window.location.search);
+        var isCustomer = path === '/' || path === '/customer-home' || path === '/customer-stores' ||
+          path === '/customer-orders' || path === '/customer-account' || path.startsWith('/store/') ||
+          path.startsWith('/s/') || params.get('source') === 'customer-app';
+        if (isCustomer) {
+          var logo = document.getElementById('initial-brand-logo');
+          logo.src = '/customer-icon-512.png';
+          logo.style.width = '96px';
+          logo.style.height = '96px';
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

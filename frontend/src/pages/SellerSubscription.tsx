@@ -4,6 +4,7 @@ import { ShieldCheck, Zap, CheckCircle2, RefreshCw, AlertCircle, ArrowLeft, Cred
 import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
 import SellerBottomNav from '../components/SellerBottomNav'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 
 declare global {
   interface Window {
@@ -191,16 +192,7 @@ export default function SellerSubscription() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
-        <div className="flex items-center gap-3">
-          <RefreshCw className="h-6 w-6 animate-spin text-seller-400" />
-          <span className="text-sm font-extrabold">Loading Subscription Vault...</span>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <SellerSplashLoader label="Loading Subscription Vault..." />
 
   const isPremiumActive = planName === 'PREMIUM' && subscriptionStatus === 'active'
 

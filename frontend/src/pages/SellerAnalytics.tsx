@@ -7,6 +7,7 @@ import {
 import api from '../services/api'
 import { getWebSocketUrl } from '../utils/websocket'
 import SellerHeader from '../components/SellerHeader'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import WhatsAppMarketingCrmModal from '../components/WhatsAppMarketingCrmModal'
 import SellerDeliveryConfigModal from '../components/SellerDeliveryConfigModal'
@@ -874,6 +875,8 @@ export default function SellerAnalytics() {
     printWindow.document.write(htmlContent)
     printWindow.document.close()
   }
+
+  if (!store && loading) return <SellerSplashLoader label="Loading Executive Analytics..." />
 
   if (!store) return (
     <div className="grid min-h-screen place-items-center p-6 text-center">

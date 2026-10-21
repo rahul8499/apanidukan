@@ -7,6 +7,7 @@ import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
 import NotificationBellHeader from '../components/NotificationBellHeader'
 import CustomerOrderCancelModal from '../components/CustomerOrderCancelModal'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 import {
   ArrowLeft, CheckCircle2, Clock, Truck, ShieldCheck, MapPin, Phone,
   Share2, RefreshCw, MessageSquare, ShoppingBag, AlertCircle, Copy, ExternalLink, Zap, XCircle
@@ -280,16 +281,7 @@ function CustomerOrderTrackingContent() {
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto min-h-screen w-full bg-slate-50 p-6 pb-32 text-center flex items-center justify-center">
-        <div className="space-y-3">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 animate-spin">
-            ↻
-          </div>
-          <p className="text-xs font-bold text-slate-600">Loading live order tracking...</p>
-        </div>
-      </div>
-    )
+    return <SellerSplashLoader label="Loading live order tracking..." variant="customer" />
   }
 
   if (storeOffline) {

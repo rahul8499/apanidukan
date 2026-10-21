@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { useTranslation } from 'react-i18next'
@@ -405,7 +406,7 @@ export default function SellerCatalog() {
   }
 
 
-  if (!store) return <div className="p-6">Loading catalog...</div>
+  if (!store) return <SellerSplashLoader label="Loading catalog..." />
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-md bg-slate-50/90 pb-28 lg:max-w-none lg:w-full">

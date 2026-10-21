@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
@@ -22,6 +22,7 @@ import api from '../services/api'
 import CustomerAppBottomNav from '../components/CustomerAppBottomNav'
 import CustomerAppHeader from '../components/CustomerAppHeader'
 import CustomerLocationPrompt from '../components/CustomerLocationPrompt'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 import { BUSINESS_TYPES, getBusinessTypeTitle } from '../utils/businessTypes'
 import { useCustomerFavorites, FavoriteStoreItem } from '../utils/customerFavorites'
 import { captureAccurateLocation } from '../utils/accurateLocation'
@@ -38,6 +39,7 @@ export default function CustomerHome() {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationLabel, setLocationLabel] = useState('Location select karein')
   const [loading, setLoading] = useState(true)
+  const isInitialLoad = useRef(true)
   const [locating, setLocating] = useState(false)
   const [error, setError] = useState('')
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
@@ -90,6 +92,7 @@ export default function CustomerHome() {
     } catch {
       setError('Stores load nahi ho paaye. Internet connection check karke dobara try karein.')
     } finally {
+      isInitialLoad.current = false
       setLoading(false)
     }
   }
@@ -200,6 +203,8 @@ export default function CustomerHome() {
   }, [search, stores])
 
   const storePreview = visibleStores.slice(0, 6)
+
+  if (loading && isInitialLoad.current) return <SellerSplashLoader variant="customer" />
 
   return (
     <main className="min-h-screen w-full bg-[#f8fafc] pt-16 sm:pt-18 pb-24 text-slate-950">

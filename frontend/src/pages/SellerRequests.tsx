@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
 import { getWebSocketUrl } from '../utils/websocket'
 import SellerHeader from '../components/SellerHeader'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 import { formatPhoneForWhatsApp } from '../utils/phoneUtils'
@@ -119,7 +120,7 @@ export default function SellerRequests() {
     picker.click()
   }
 
-  if (!store) return <div className="p-6">Loading product requests...</div>
+  if (!store) return <SellerSplashLoader label="Loading product requests..." />
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-md bg-slate-50 pb-28 lg:max-w-none lg:w-full">

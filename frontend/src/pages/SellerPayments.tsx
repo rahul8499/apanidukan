@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
 import SellerHeader from '../components/SellerHeader'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 import SellerBottomNav from '../components/SellerBottomNav'
 import { getCachedStore, setCachedStore } from '../utils/storeCache'
 
@@ -24,7 +25,7 @@ export default function SellerPayments(){
 
   useEffect(() => { loadData() }, [storeId, navigate])
 
-  if (!store) return <div className="p-6">Loading payment setup...</div>
+  if (!store) return <SellerSplashLoader label="Loading payment setup..." />
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-md bg-slate-50 pb-28 lg:max-w-none lg:w-full">

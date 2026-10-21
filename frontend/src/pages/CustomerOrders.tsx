@@ -7,6 +7,7 @@ import CustomerBottomNav from '../components/CustomerBottomNav'
 import CustomerChatWidget from '../components/CustomerChatWidget'
 import NotificationBellHeader from '../components/NotificationBellHeader'
 import CustomerOrderCancelModal from '../components/CustomerOrderCancelModal'
+import SellerSplashLoader from '../components/SellerSplashLoader'
 import {
   ArrowLeft, Search, Clock, CheckCircle2,
   ChevronRight, MessageSquare, ShoppingBag, Truck, XCircle, Package,
@@ -261,6 +262,8 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
         }
     }
   }
+
+  if (isSyncing && orders.length === 0) return <SellerSplashLoader variant="customer" />
 
   return (
     <div className={`mx-auto min-h-screen w-full ${storeTheme.page_bg_class} pb-32 text-xs sm:text-sm font-sans transition-colors duration-300`}>

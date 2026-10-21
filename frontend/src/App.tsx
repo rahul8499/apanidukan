@@ -4,6 +4,7 @@ import { useAuth, AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { resetGenericPlatformPwa } from './pwa/pwaManager'
 import { isStandaloneMode } from './utils/browser'
+import SellerSplashLoader from './components/SellerSplashLoader'
 import StoreHome from './pages/StoreHome'
 import ProductPage from './pages/ProductPage'
 import Login from './pages/Login'
@@ -101,11 +102,7 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
   // Do not render protected pages (including any locally cached store data)
   // until the saved token has been validated by /auth/me/.
   if (auth.loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" aria-label="Checking session" />
-      </div>
-    )
+    return <SellerSplashLoader label="Checking session..." />
   }
 
   if (!auth.user) {
@@ -119,11 +116,7 @@ function AdminRoute({ children }: { children: React.ReactElement }) {
   const auth = useAuth()
 
   if (auth.loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-700 border-t-indigo-400" aria-label="Checking administrator session" />
-      </div>
-    )
+    return <SellerSplashLoader label="Checking administrator session..." />
   }
 
   if (!auth.user) return <Navigate to="/login" replace />

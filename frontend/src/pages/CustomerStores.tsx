@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useLocation as useRouteLocation, useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
   ChevronRight,
@@ -22,7 +22,6 @@ import api from '../services/api'
 import CustomerAppBottomNav from '../components/CustomerAppBottomNav'
 import CustomerAppHeader from '../components/CustomerAppHeader'
 import CustomerLocationPrompt from '../components/CustomerLocationPrompt'
-import SellerSplashLoader from '../components/SellerSplashLoader'
 import { BUSINESS_TYPES, getBusinessTypeTitle } from '../utils/businessTypes'
 import { useCustomerFavorites } from '../utils/customerFavorites'
 import { captureAccurateLocation } from '../utils/accurateLocation'
@@ -31,6 +30,7 @@ import i18n from '../i18n'
 type FulfilmentFilter = 'all' | 'delivery' | 'pickup'
 
 export default function CustomerStores() {
+  const routeLocation = useRouteLocation()
   const navigate = useNavigate()
   const [stores, setStores] = useState<any[]>([])
   const [search, setSearch] = useState('')
@@ -42,7 +42,6 @@ export default function CustomerStores() {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationLabel, setLocationLabel] = useState('')
   const [loading, setLoading] = useState(true)
-  const isInitialLoad = useRef(true)
   const [locating, setLocating] = useState(false)
   const [error, setError] = useState('')
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
@@ -113,7 +112,6 @@ export default function CustomerStores() {
     } catch {
       setError('Stores load nahi ho paaye. Internet connection check karke dobara retry karein.')
     } finally {
-      isInitialLoad.current = false
       setLoading(false)
     }
   }
@@ -122,6 +120,11 @@ export default function CustomerStores() {
     const storedRadius = Number(localStorage.getItem('customer-search-radius-km'))
     const initialRadius = Number.isFinite(storedRadius) && storedRadius >= 1 && storedRadius <= 100 ? storedRadius : 10
     if (initialRadius !== 10) setRadius(initialRadius)
+    if (routeLocation.state?.showAllStores) {
+      setLocationLabel('All locations')
+      loadStores(null, '', initialRadius)
+      return
+    }
     const saved = localStorage.getItem('customer-location')
     if (saved) {
       try {
@@ -231,8 +234,6 @@ export default function CustomerStores() {
   }, [fulfilment, search, stores, onlyFavorites, isFavorite])
 
   const activeFilterCount = Number(onlyFavorites) + Number(fulfilment !== 'all') + Number(!!category) + Number(radius !== 10)
-
-  if (loading && isInitialLoad.current) return <SellerSplashLoader variant="customer" />
 
   return (
     <main className="min-h-screen bg-[#f8fafc] pt-16 sm:pt-18 pb-24 text-slate-950">
@@ -475,15 +476,15 @@ export default function CustomerStores() {
                   : category
                   ? 'Is category me abhi koi store nahi mila'
                   : location
-                  ? `Is ${radius} km area me abhi koi store nahi mila`
-                  : 'Abhi koi verified store uplabdh nahi hai'}
+                  ? `Aapke ${radius} km ke daayre mein koi store nahi mila`
+                  : 'Abhi koi verified store available nahi hai'}
               </h3>
               <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
                 {onlyFavorites
                   ? 'Kisi store card par star icon dabakar favorite karein.'
                   : search || category || fulfilment !== 'all'
                   ? 'Filters ya search clear karke sabhi stores dekhein.'
-                  : 'Radius badhayein ya sabhi platform stores explore karein.'}
+                  : 'Nearby stores nahi mile. Aap sabhi locations ke stores browse kar sakte hain.'}
               </p>
 
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
@@ -506,10 +507,18 @@ export default function CustomerStores() {
                 {location && (
                   <button
                     type="button"
-                    onClick={() => loadStores(null, category, radius)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 shadow-xs transition active:scale-95 cursor-pointer"
+                    onClick={() => {
+                      setLocation(null)
+                      setLocationLabel('All locations')
+                      setSearch('')
+                      setCategory('')
+                      setFulfilment('all')
+                      setOnlyFavorites(false)
+                      loadStores(null, '', radius)
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-white hover:bg-orange-600 shadow-xs transition active:scale-95 cursor-pointer"
                   >
-                    <Compass className="h-3.5 w-3.5 text-orange-500" /> Sabhi Stores Dekhein
+                    <Compass className="h-3.5 w-3.5" /> Sabhi Stores Dekhein
                   </button>
                 )}
 
@@ -528,7 +537,7 @@ export default function CustomerStores() {
                   onClick={() => loadStores(location, category, radius)}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 shadow-xs transition active:scale-95 cursor-pointer"
                 >
-                  <RefreshCw className="h-3.5 w-3.5 text-slate-500" /> Refresh
+                  <RefreshCw className="h-3.5 w-3.5 text-slate-500" /> Dobara Koshish Karein
                 </button>
               </div>
             </div>

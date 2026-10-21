@@ -4,7 +4,7 @@ import uuid
 
 
 def generate_session_id():
-    return uuid.uuid4().hex[:16]
+    return uuid.uuid4().hex
 
 
 class ChatConversation(models.Model):

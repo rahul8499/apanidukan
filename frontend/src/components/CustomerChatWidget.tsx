@@ -29,7 +29,7 @@ function playCustomerChime() {
 
 export default function CustomerChatWidget({ storeSlug, orderReference }: CustomerChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [sessionId, setSessionId] = useState('')
+  const [chatToken, setChatToken] = useState('')
   const [conversation, setConversation] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [text, setText] = useState('')
@@ -42,14 +42,12 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Initialize or retrieve customer session ID
+  // Load the server-issued, store-scoped chat credential. Old client-generated
+  // session IDs are discarded and can no longer be used to retrieve history.
   useEffect(() => {
-    let sid = localStorage.getItem(`qs_chat_session_${storeSlug}`)
-    if (!sid) {
-      sid = 'cust_' + Math.random().toString(36).substring(2, 11)
-      localStorage.setItem(`qs_chat_session_${storeSlug}`, sid)
-    }
-    setSessionId(sid)
+    const tokenKey = `qs_chat_token_${storeSlug}`
+    setChatToken(localStorage.getItem(tokenKey) || '')
+    localStorage.removeItem(`qs_chat_session_${storeSlug}`)
 
     const savedName = localStorage.getItem('qs_chat_name') || ''
     const savedPhone = localStorage.getItem('qs_chat_phone') || ''
@@ -64,21 +62,45 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
         Notification.requestPermission()
       }
     }
+    const handleChatTokenUpdate = (event: Event) => {
+      const updatedToken = (event as CustomEvent<string>).detail || localStorage.getItem(tokenKey) || ''
+      if (updatedToken) setChatToken(updatedToken)
+    }
     window.addEventListener('qs-open-chat', handleOpenEvent)
-    return () => window.removeEventListener('qs-open-chat', handleOpenEvent)
+    window.addEventListener('qs-chat-token-updated', handleChatTokenUpdate)
+    return () => {
+      window.removeEventListener('qs-open-chat', handleOpenEvent)
+      window.removeEventListener('qs-chat-token-updated', handleChatTokenUpdate)
+    }
   }, [storeSlug])
 
   // Load conversation & message history
   const initChat = async () => {
-    if (!sessionId || !storeSlug) return
+    if (!storeSlug) return null
     try {
-      const res = await api.post(`/public/stores/${storeSlug}/chat/`, {
-        session_id: sessionId,
+      const tokenKey = `qs_chat_token_${storeSlug}`
+      let token = chatToken || localStorage.getItem(tokenKey) || ''
+      let res
+      const payload = () => ({
+        ...(token ? { chat_token: token } : {}),
         customer_name: customerName,
         customer_phone: customerPhone,
         order_reference: orderReference,
         init_chat: true,
       })
+      try {
+        res = await api.post(`/public/stores/${storeSlug}/chat/`, payload())
+      } catch (error: any) {
+        if (error?.response?.status !== 401 || !token) throw error
+        token = ''
+        localStorage.removeItem(tokenKey)
+        res = await api.post(`/public/stores/${storeSlug}/chat/`, payload())
+      }
+      const nextToken = res.data?.chat_token || ''
+      if (nextToken) {
+        localStorage.setItem(tokenKey, nextToken)
+        setChatToken(nextToken)
+      }
       if (res.data && res.data.id) {
         setConversation(res.data)
         setMessages(res.data.messages || [])
@@ -86,16 +108,18 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
         setConversation(null)
         setMessages([])
       }
+      return res.data
     } catch (err) {
       console.error('Failed to init customer chat:', err)
+      return null
     }
   }
 
   useEffect(() => {
-    if (isOpen && sessionId) {
+    if (isOpen && storeSlug) {
       initChat()
     }
-  }, [isOpen, sessionId, storeSlug, orderReference])
+  }, [isOpen, chatToken, storeSlug, orderReference])
 
   useEffect(() => {
     if (isOpen) {
@@ -115,7 +139,8 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
   useEffect(() => {
     if (!conversation?.id) return
 
-    const wsUrl = getWebSocketUrl(`/ws/chat/${conversation.id}/?session_id=${encodeURIComponent(sessionId)}`)
+    if (!chatToken) return
+    const wsUrl = getWebSocketUrl(`/ws/chat/${conversation.id}/?chat_token=${encodeURIComponent(chatToken)}`)
 
     let socket: WebSocket | null = null
     try {
@@ -171,7 +196,7 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
       if (!isOpen || wsConnected || document.hidden) return
       try {
         const res = await api.post(`/public/stores/${storeSlug}/chat/`, {
-          session_id: sessionId,
+          chat_token: chatToken,
           customer_phone: customerPhone,
           order_reference: orderReference,
         })
@@ -193,7 +218,7 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
       if (socket) socket.close()
       clearInterval(interval)
     }
-  }, [conversation?.id, isOpen, storeSlug, sessionId, customerPhone, orderReference])
+  }, [conversation?.id, isOpen, storeSlug, chatToken, customerPhone, orderReference])
 
   // Save customer details
   const saveDetails = () => {
@@ -206,13 +231,19 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
   // Send message from customer
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!text.trim() || !sessionId) return
+    if (!text.trim()) return
     const textToSend = text
     setText('')
 
     try {
+      let activeToken = chatToken || localStorage.getItem(`qs_chat_token_${storeSlug}`) || ''
+      if (!activeToken) {
+        const initialized = await initChat()
+        activeToken = initialized?.chat_token || ''
+      }
+      if (!activeToken) throw new Error('Chat could not be initialized.')
       const res = await api.post(`/public/stores/${storeSlug}/chat/messages/`, {
-        session_id: sessionId,
+        chat_token: activeToken,
         text: textToSend,
         customer_name: customerName,
         customer_phone: customerPhone,
@@ -409,6 +440,7 @@ export default function CustomerChatWidget({ storeSlug, orderReference }: Custom
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
+              maxLength={4000}
               placeholder="Type a message..."
               className="flex-1 rounded-full border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-900 shadow-inner focus:border-[#075E54] focus:outline-none"
             />

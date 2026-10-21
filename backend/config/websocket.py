@@ -45,10 +45,20 @@ def _can_access_delivery_agent_topic(raw_token: str, agent_id: str) -> bool:
 
 
 @sync_to_async
-def _can_access_customer_chat(conversation_id: str, session_id: str) -> bool:
+def _can_access_customer_chat(conversation_id: str, chat_token: str) -> bool:
     try:
+        from django.core import signing
         from chat.models import ChatConversation
-        return bool(session_id and ChatConversation.objects.filter(id=conversation_id, session_id=session_id).exists())
+        payload = signing.loads(chat_token, salt='customer-chat-access', max_age=60 * 60 * 24 * 90)
+        return bool(
+            len(str(payload.get('session_id') or '')) == 32
+            and ChatConversation.objects.filter(
+                id=conversation_id,
+                store_id=payload.get('store_id'),
+                session_id=payload.get('session_id'),
+                store__is_published=True,
+            ).exists()
+        )
     except Exception:
         return False
 
@@ -172,8 +182,8 @@ async def websocket_application(scope, receive, send):
                 await send({'type': 'websocket.close', 'code': 4403})
                 return
         elif topic_type == 'chat':
-            session_id = query.get('session_id', [''])[0]
-            if not await _can_access_customer_chat(topic_id, session_id):
+            chat_token = query.get('chat_token', [''])[0]
+            if not await _can_access_customer_chat(topic_id, chat_token):
                 await send({'type': 'websocket.close', 'code': 4403})
                 return
         else:

@@ -404,19 +404,34 @@ function Storefront() {
     const sellerNumber = String(store?.phone_number || '').replace(/\D/g, '')
 
     try {
-      let sid = localStorage.getItem(`qs_chat_session_${storeSlug}`)
-      if (!sid) {
-        sid = 'cust_' + Math.random().toString(36).substring(2, 11)
-        localStorage.setItem(`qs_chat_session_${storeSlug}`, sid)
+      const tokenKey = `qs_chat_token_${storeSlug}`
+      const savedChatToken = localStorage.getItem(tokenKey) || ''
+      const chatPayload = (chatToken?: string) => ({
+        ...(chatToken ? { chat_token: chatToken } : {}),
+        customer_name: trimmedName,
+        customer_phone: trimmedPhone,
+      })
+      let chatInit
+      try {
+        chatInit = await api.post(`/public/stores/${storeSlug}/chat/`, chatPayload(savedChatToken))
+      } catch (error: any) {
+        if (error?.response?.status !== 401 || !savedChatToken) throw error
+        localStorage.removeItem(tokenKey)
+        chatInit = await api.post(`/public/stores/${storeSlug}/chat/`, chatPayload())
       }
+      const chatToken = chatInit.data?.chat_token
+      if (!chatToken) throw new Error('Customer chat could not be initialized.')
+      localStorage.setItem(tokenKey, chatToken)
 
-      await api.post(`/public/stores/${storeSlug}/chat/auto-reply/`, {
-        session_id: sid,
+      const autoReply = await api.post(`/public/stores/${storeSlug}/chat/auto-reply/`, {
+        chat_token: chatToken,
         product_name: requestedItem,
         customer_name: trimmedName,
         customer_phone: trimmedPhone,
         message: requestMessage.trim() || 'Hello, I want to request this product.'
       })
+      if (autoReply.data?.chat_token) localStorage.setItem(tokenKey, autoReply.data.chat_token)
+      window.dispatchEvent(new CustomEvent('qs-chat-token-updated', { detail: autoReply.data?.chat_token || chatToken }))
     } catch (err) {
       console.error('Failed to send auto-reply', err)
     }

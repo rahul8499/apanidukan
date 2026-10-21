@@ -3,10 +3,55 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.core import signing
 from stores.models import Store
 from .models import ChatConversation, ChatMessage, generate_session_id
 from .serializers import ChatConversationSerializer, ChatMessageSerializer
 from config.websocket import broadcast_order_event_sync
+
+
+CUSTOMER_CHAT_TOKEN_SALT = 'customer-chat-access'
+CUSTOMER_CHAT_TOKEN_MAX_AGE = 60 * 60 * 24 * 90
+
+
+def issue_customer_chat_token(store_id, session_id):
+    return signing.dumps({
+        'session_id': session_id,
+        'store_id': store_id,
+    }, salt=CUSTOMER_CHAT_TOKEN_SALT)
+
+
+def resolve_customer_chat_token(store, token):
+    if not isinstance(token, str) or not token:
+        return None
+    try:
+        payload = signing.loads(token, salt=CUSTOMER_CHAT_TOKEN_SALT, max_age=CUSTOMER_CHAT_TOKEN_MAX_AGE)
+        if int(payload.get('store_id')) != store.id:
+            return None
+        session_id = str(payload.get('session_id') or '')
+        if len(session_id) != 32:
+            return None
+        conversation = store.conversations.filter(session_id=session_id).first()
+        return {'session_id': session_id, 'conversation': conversation}
+    except (signing.BadSignature, signing.SignatureExpired, AttributeError, TypeError, ValueError):
+        return None
+
+
+def customer_chat_response(store, conversation, token):
+    if conversation:
+        data = ChatConversationSerializer(conversation).data
+        # Never expose the database's internal chat session identifier to customers.
+        data.pop('session_id', None)
+    else:
+        data = {
+            'id': None,
+            'store': store.id,
+            'store_name': store.name,
+            'store_phone': store.phone_number,
+            'messages': [],
+        }
+    data['chat_token'] = token
+    return data
 
 
 class PublicStoreChatView(APIView):
@@ -15,82 +60,32 @@ class PublicStoreChatView(APIView):
 
     def post(self, request, slug):
         store = get_object_or_404(Store, slug=slug, is_published=True)
-        session_id = request.data.get('session_id') or generate_session_id()
-        cust_phone = (request.data.get('customer_phone') or '').strip()
-        cust_name = (request.data.get('customer_name') or '').strip()
-        conversation = store.conversations.filter(session_id=session_id).first()
-
-        if not conversation and cust_phone:
-            conversation = store.conversations.filter(customer_phone=cust_phone).first()
+        cust_phone = str(request.data.get('customer_phone') or '').strip()[:40]
+        cust_name = str(request.data.get('customer_name') or '').strip()[:150]
+        token = request.data.get('chat_token', '')
+        chat_session = resolve_customer_chat_token(store, token) if token else None
+        if token and not chat_session:
+            return Response({'detail': 'Chat session expired. Start a new chat to continue.'}, status=status.HTTP_401_UNAUTHORIZED)
+        session_id = chat_session['session_id'] if chat_session else generate_session_id()
+        conversation = chat_session['conversation'] if chat_session else None
+        active_token = token or issue_customer_chat_token(store.id, session_id)
 
         if cust_name and cust_name.lower() != 'customer' and not cust_name.startswith('Guest Buyer'):
-            effective_name = cust_name
+            effective_name = cust_name[:150]
         elif cust_phone:
-            effective_name = cust_name if (cust_name and cust_name.lower() != 'customer') else f"Customer ({cust_phone})"
+            effective_name = f"Customer ({cust_phone})"[:150]
         else:
-            effective_name = f"Guest Buyer #{session_id[:6]}"
+            effective_name = 'Customer'
 
-        if not conversation:
-            if not request.data.get('text'):
-                return Response({'conversation': None, 'messages': []}, status=status.HTTP_200_OK)
-
-            conversation = ChatConversation.objects.create(
-                store=store,
-                session_id=session_id,
-                customer_name=effective_name,
-                customer_phone=cust_phone,
-            )
-
-            message = ChatMessage.objects.create(
-                conversation=conversation,
-                sender_type=ChatMessage.SENDER_CUSTOMER,
-                sender_name=effective_name or 'Customer',
-                text=request.data.get('text', '').strip(),
-                is_read=False
-            )
-
-            conversation.last_message = message.text
-            conversation.last_message_at = message.created_at
-            conversation.save()
-
-            message_data = ChatMessageSerializer(message).data
-
-            broadcast_order_event_sync(f"chat_{conversation.id}", {
-                "type": "new_chat_message",
-                "message": message_data,
-                "conversation_id": conversation.id
-            })
-            from stores.models import SellerNotification
-            SellerNotification.objects.create(
-                store=store,
-                notification_type='message',
-                title=f"💬 Message from {effective_name or 'Customer'}",
-                body=f'"{message.text}" ({cust_phone or "No phone"})',
-                link=f"/stores/{store.id}/chat"
-            )
-
-            broadcast_order_event_sync(f"store_{store.id}", {
-                "type": "new_customer_message",
-                "customer_name": effective_name or "Customer",
-                "customer_phone": cust_phone,
-                "text": message.text,
-                "conversation_id": conversation.id
-            })
-
-            return Response(ChatConversationSerializer(conversation).data, status=status.HTTP_201_CREATED)
-        else:
-            if session_id and conversation.session_id != session_id and not conversation.session_id.startswith('seller_init'):
-                conversation.session_id = session_id
+        if conversation:
             if cust_name and cust_name.lower() != 'customer' and not cust_name.startswith('Guest Buyer'):
-                conversation.customer_name = cust_name
-            elif conversation.customer_name.startswith('Guest Buyer') and cust_phone:
+                conversation.customer_name = cust_name[:150]
+            if cust_phone:
                 conversation.customer_name = effective_name
-            if cust_phone and not conversation.customer_phone:
-                conversation.customer_phone = cust_phone
-            conversation.save()
+                conversation.customer_phone = cust_phone[:40]
+            conversation.save(update_fields=['customer_name', 'customer_phone'])
 
-        data = ChatConversationSerializer(conversation).data
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(customer_chat_response(store, conversation, active_token), status=status.HTTP_200_OK)
 
 
 class PublicSendChatMessageView(APIView):
@@ -99,33 +94,32 @@ class PublicSendChatMessageView(APIView):
 
     def post(self, request, slug):
         store = get_object_or_404(Store, slug=slug, is_published=True)
-        session_id = request.data.get('session_id')
-        text = request.data.get('text', '').strip()
+        token = request.data.get('chat_token', '')
+        text = str(request.data.get('text', '')).strip()
 
-        if not session_id or not text:
-            return Response({'detail': 'session_id and text are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not token or not text:
+            return Response({'detail': 'chat_token and text are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(text) > 4000:
+            return Response({'detail': 'Message must be 4,000 characters or fewer.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        conversation = store.conversations.filter(session_id=session_id).first()
+        chat_session = resolve_customer_chat_token(store, token)
+        if not chat_session:
+            return Response({'detail': 'Chat session expired. Start a new chat to continue.'}, status=status.HTTP_401_UNAUTHORIZED)
+        conversation = chat_session['conversation']
 
-        customer_name = request.data.get('customer_name') or ''
-        customer_phone = (request.data.get('customer_phone') or '').strip()
-
+        customer_name = str(request.data.get('customer_name') or '').strip()[:150]
+        customer_phone = str(request.data.get('customer_phone') or '').strip()[:40]
         if not conversation:
-            effective_name = customer_name if customer_name else (f"Customer ({customer_phone})" if customer_phone else f"Guest Buyer #{session_id[:6]}")
             conversation = ChatConversation.objects.create(
                 store=store,
-                session_id=session_id,
-                customer_name=effective_name,
-                customer_phone=customer_phone,
+                session_id=chat_session['session_id'],
+                customer_name=str(customer_name or 'Customer').strip()[:150],
+                customer_phone=customer_phone[:40],
             )
-        else:
-            if customer_name and customer_name.lower() != 'customer' and not customer_name.startswith('Guest Buyer'):
-                conversation.customer_name = customer_name
-            elif conversation.customer_name.startswith('Guest Buyer') and customer_phone:
-                conversation.customer_name = f"Customer ({customer_phone})"
-            if customer_phone and not conversation.customer_phone:
-                conversation.customer_phone = customer_phone
-            conversation.save()
+        elif customer_name:
+            conversation.customer_name = str(customer_name).strip()[:150]
+        if customer_phone:
+            conversation.customer_phone = customer_phone[:40]
 
         conversation.last_message = text
         conversation.last_message_at = timezone.now()
@@ -293,46 +287,46 @@ class PublicProductRequestAutoReplyView(APIView):
 
     def post(self, request, slug):
         store = get_object_or_404(Store, slug=slug, is_published=True)
-        session_id = request.data.get('session_id')
-        product_name = request.data.get('product_name', 'a product').strip()
-        cust_phone = (request.data.get('customer_phone') or '').strip()
-        cust_name = (request.data.get('customer_name') or '').strip()
+        product_name = str(request.data.get('product_name') or 'a product').strip()[:150]
+        cust_phone = str(request.data.get('customer_phone') or '').strip()[:40]
+        cust_name = str(request.data.get('customer_name') or '').strip()[:150]
 
-        if not session_id or not cust_phone:
-            return Response({'detail': 'session_id and customer_phone are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not cust_phone:
+            return Response({'detail': 'customer_phone is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create Product Request in DB
+        # Ensure conversation exists
+        effective_name = cust_name if cust_name else f"Customer ({cust_phone})"
+        token = request.data.get('chat_token', '')
+        chat_session = resolve_customer_chat_token(store, token) if token else None
+        if token and not chat_session:
+            return Response({'detail': 'Chat session expired. Start a new chat to continue.'}, status=status.HTTP_401_UNAUTHORIZED)
+        session_id = chat_session['session_id'] if chat_session else generate_session_id()
+        conversation = chat_session['conversation'] if chat_session else None
+        active_token = token or issue_customer_chat_token(store.id, session_id)
+
+        # Create the product request only after the submitted chat credential
+        # has been validated, so an expired token cannot create a partial request.
         from stores.models import ProductRequest
         ProductRequest.objects.create(
             store=store,
-            customer_name=cust_name,
-            customer_phone=cust_phone,
-            product_name=product_name,
-            message=request.data.get('message', '')
+            customer_name=cust_name[:150],
+            customer_phone=cust_phone[:40],
+            product_name=product_name[:150],
+            message=str(request.data.get('message', ''))[:2000],
         )
-
-        # Ensure conversation exists
-        conversation = store.conversations.filter(session_id=session_id).first()
-        if not conversation:
-            conversation = store.conversations.filter(customer_phone=cust_phone).first()
-
-        effective_name = cust_name if cust_name else f"Customer ({cust_phone})"
 
         if not conversation:
             conversation = ChatConversation.objects.create(
                 store=store,
                 session_id=session_id,
                 customer_name=effective_name,
-                customer_phone=cust_phone,
+                customer_phone=cust_phone[:40],
             )
         else:
-            if conversation.session_id != session_id:
-                conversation.session_id = session_id
             if cust_name:
-                conversation.customer_name = cust_name
-            if cust_phone and not conversation.customer_phone:
-                conversation.customer_phone = cust_phone
-            conversation.save()
+                conversation.customer_name = cust_name[:150]
+            conversation.customer_phone = cust_phone[:40]
+            conversation.save(update_fields=['customer_name', 'customer_phone'])
 
         text = f"Hi {effective_name}, thanks for requesting {product_name}. We will contact you soon with options."
 
@@ -372,6 +366,7 @@ class PublicProductRequestAutoReplyView(APIView):
             "product_name": product_name
         })
 
+        message_data['chat_token'] = active_token
         return Response(message_data, status=status.HTTP_201_CREATED)
 
 class SellerChatCountView(APIView):

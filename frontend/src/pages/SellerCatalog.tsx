@@ -10,6 +10,8 @@ import { useTranslation } from 'react-i18next'
 import { X, Trash2, Copy, Share2 } from 'lucide-react'
 import { getBusinessType, UNIT_LABEL_MAP, formatUnitDisplay, getUnitDisplayLabel, getUnitHint, getStockLabel } from '../utils/businessTypes'
 
+const GARMENT_SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '28', '30', '32', '34', '36', '38', '40', '42', '44', '46', 'FREE SIZE']
+
 const errorMessage = (error: any) =>
   error?.response?.data?.detail || Object.values(error?.response?.data || {}).flat().join(' ') || 'Error processing request.'
 
@@ -87,6 +89,7 @@ export default function SellerCatalog() {
   // Custom Delete Modal State
   const [productToDelete, setProductToDelete] = useState<{ id: number; name: string } | null>(null)
   const [isDeletingProduct, setIsDeletingProduct] = useState(false)
+  const [publishingProductId, setPublishingProductId] = useState<number | null>(null)
 
   // Edit Modal State
   const [editingProduct, setEditingProduct] = useState<any | null>(null)
@@ -103,6 +106,8 @@ export default function SellerCatalog() {
   const [newProdName, setNewProdName] = useState('')
   const [newProdPrice, setNewProdPrice] = useState('0')
   const [newProdStock, setNewProdStock] = useState('100')
+  const [newProdSizes, setNewProdSizes] = useState<string[]>([])
+  const [newProdSizeStock, setNewProdSizeStock] = useState<Record<string, number>>({})
   const [newProdCat, setNewProdCat] = useState('')
   const [newProdUnit, setNewProdUnit] = useState('Pc')
   const [newProdFile, setNewProdFile] = useState<File | null>(null)
@@ -336,6 +341,19 @@ export default function SellerCatalog() {
     }
   }
 
+  async function publishProduct(product: any) {
+    setPublishingProductId(product.id)
+    try {
+      await api.patch(`/products/${product.id}/`, { is_published: true })
+      toast.success(`'${product.name}' is now visible to customers.`)
+      await loadData()
+    } catch (error) {
+      toast.error(errorMessage(error))
+    } finally {
+      setPublishingProductId(null)
+    }
+  }
+
   function requestAddSingleProduct(e: React.FormEvent) {
     e.preventDefault()
     if (!store) return
@@ -375,8 +393,16 @@ export default function SellerCatalog() {
       formData.append('store', String(store.id))
       formData.append('name', newProdName)
       formData.append('price', newProdPrice)
-      formData.append('stock_quantity', newProdStock)
+      formData.append('stock_quantity', newProdSizes.length
+        ? String(newProdSizes.reduce((total, size) => total + Number(newProdSizeStock[size] || 0), 0))
+        : newProdStock)
       formData.append('unit', newProdUnit || getBusinessType(store?.business_type).defaultUnit)
+      formData.append('available_sizes', JSON.stringify(newProdSizes))
+      formData.append('size_stock', JSON.stringify(newProdSizes.reduce<Record<string, number>>((result, size) => ({
+        ...result,
+        [size]: Math.max(0, Number(newProdSizeStock[size] || 0)),
+      }), {})))
+      formData.append('is_published', 'true')
       if (newProdCat) formData.append('category', newProdCat)
       if (newProdFile) formData.append('digital_file', newProdFile)
 
@@ -400,6 +426,9 @@ export default function SellerCatalog() {
       setNewProdName('')
       setNewProdPrice('0')
       setNewProdStock('100')
+      setNewProdSizes([])
+      setNewProdSizeStock({})
+      setNewProdCat('')
       setNewProdFile(null)
       setNewProdImage(null)
       setNewProdImages([])
@@ -727,6 +756,19 @@ export default function SellerCatalog() {
                                 </span>
                               )}
                             </div>
+                            {!prod.is_published && (
+                              <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2">
+                                <span className="text-[10px] font-bold text-amber-800">Draft · hidden from customers</span>
+                                <button
+                                  type="button"
+                                  onClick={() => publishProduct(prod)}
+                                  disabled={publishingProductId === prod.id}
+                                  className="rounded-md bg-seller-600 px-2.5 py-1.5 text-[10px] font-extrabold text-white hover:bg-seller-700 disabled:opacity-60"
+                                >
+                                  {publishingProductId === prod.id ? 'Publishing…' : 'Publish'}
+                                </button>
+                              </div>
+                            )}
                           </div>
 
                           {/* Action Buttons Row */}
@@ -1069,6 +1111,57 @@ export default function SellerCatalog() {
                 <span><strong>{formatUnitDisplay(newProdUnit)}:</strong> {getUnitHint(newProdUnit, store?.business_type)}</span>
               </p>
 
+              <div className="rounded-xl border border-seller-200 bg-seller-50/60 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <label className="text-xs font-black text-slate-800">Available Sizes</label>
+                  <span className="text-[10px] font-semibold text-slate-500">Optional for free-size / non-sized items</span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {GARMENT_SIZE_OPTIONS.map(size => {
+                    const selected = newProdSizes.includes(size)
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => {
+                          setNewProdSizes(current => selected ? current.filter(item => item !== size) : [...current, size])
+                          setNewProdSizeStock(current => {
+                            const next = { ...current }
+                            if (selected) delete next[size]
+                            else next[size] = 0
+                            return next
+                          })
+                        }}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-black transition-all ${selected ? 'border-seller-700 bg-seller-700 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:border-seller-400'}`}
+                      >
+                        {selected ? '✓ ' : ''}{size}
+                      </button>
+                    )
+                  })}
+                </div>
+                {newProdSizes.length > 0 && (
+                  <>
+                    <p className="mt-2 text-[10px] font-bold text-seller-700">Selected: {newProdSizes.join(', ')}</p>
+                    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-seller-200 pt-3 sm:grid-cols-4">
+                      {newProdSizes.map(size => (
+                        <label key={size} className="text-[10px] font-black text-slate-700">
+                          {size} Stock
+                          <input
+                            type="number"
+                            min="0"
+                            required
+                            value={newProdSizeStock[size] ?? 0}
+                            onChange={event => setNewProdSizeStock(current => ({ ...current, [size]: Math.max(0, Number(event.target.value)) }))}
+                            className="mt-1 w-full rounded-lg border border-seller-200 bg-white p-2 text-xs font-bold"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-700">{getStockLabel(store?.business_type, i18n.language, newProdUnit)}</label>
@@ -1076,6 +1169,7 @@ export default function SellerCatalog() {
                     type="number"
                     value={newProdStock}
                     onChange={(e) => setNewProdStock(e.target.value)}
+                    disabled={newProdSizes.length > 0}
                     className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-medium focus:border-seller-600 focus:outline-none"
                     required
                   />

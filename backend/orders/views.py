@@ -882,8 +882,11 @@ class SellerDeliveryOTPView(SellerWhatsAppOrdersView):
     def post(self, request, store_id, order_id):
         store = self.get_store(request, store_id)
         order = get_object_or_404(WhatsAppOrder, id=order_id, store=store)
-        if order.status not in (WhatsAppOrder.STATUS_READY_FOR_PICKUP, WhatsAppOrder.STATUS_OUT_FOR_DELIVERY):
-            return Response({'detail': 'OTP can be sent only when an order is ready for pickup or out for delivery.'}, status=400)
+        seller_delivery_from_packed = (
+            order.order_type == 'HOME_DELIVERY' and order.status == WhatsAppOrder.STATUS_PACKED
+        )
+        if not seller_delivery_from_packed and order.status not in (WhatsAppOrder.STATUS_READY_FOR_PICKUP, WhatsAppOrder.STATUS_OUT_FOR_DELIVERY):
+            return Response({'detail': 'For home delivery, mark the order Packed first. Pickup orders must be Ready for Pickup.'}, status=400)
         phone = normalize_phone(order.customer_phone)
         if len(phone) != 10:
             return Response({'detail': 'This order does not have a valid verified customer number.'}, status=400)
@@ -921,7 +924,10 @@ class SellerDeliveryOTPView(SellerWhatsAppOrdersView):
             return Response({'detail': 'Enter the 6-digit OTP received by the customer.'}, status=400)
         with transaction.atomic():
             order = get_object_or_404(WhatsAppOrder.objects.select_for_update(), id=order_id, store=store)
-            if order.status not in (WhatsAppOrder.STATUS_READY_FOR_PICKUP, WhatsAppOrder.STATUS_OUT_FOR_DELIVERY):
+            seller_delivery_from_packed = (
+                order.order_type == 'HOME_DELIVERY' and order.status == WhatsAppOrder.STATUS_PACKED
+            )
+            if not seller_delivery_from_packed and order.status not in (WhatsAppOrder.STATUS_READY_FOR_PICKUP, WhatsAppOrder.STATUS_OUT_FOR_DELIVERY):
                 return Response({'detail': 'Order is not ready for delivery confirmation.'}, status=400)
             otp = OrderDeliveryOTP.objects.select_for_update().filter(order=order).first()
             if not otp or otp.is_verified or otp.expires_at < timezone.now():
@@ -954,11 +960,22 @@ class SellerDeliveryOTPView(SellerWhatsAppOrdersView):
             if proof:
                 order.delivery_proof = proof
             order.save(update_fields=['status', 'delivered_at', 'delivery_proof', 'updated_at'])
+            assignment = DeliveryAssignment.objects.select_for_update().filter(order=order).first()
+            if assignment and assignment.status not in (DeliveryAssignment.STATUS_DELIVERED, DeliveryAssignment.STATUS_CANCELLED):
+                assignment.status = DeliveryAssignment.STATUS_DELIVERED
+                assignment.completed_at = order.delivered_at
+                assignment.save(update_fields=['status', 'completed_at', 'updated_at'])
             OrderStatusEvent.objects.create(
                 order=order, from_status=previous_status, to_status=order.status,
                 actor_type='SELLER', actor_id=str(request.user.id), note='Customer delivery OTP verified.',
             )
         order_data = WhatsAppOrderSerializer(order).data
+        if assignment:
+            broadcast_delivery_agent_event_sync(assignment.agent_id, {
+                'type': 'delivery_assignment_removed',
+                'order_id': order.id,
+                'reference': order.reference,
+            })
         broadcast_order_event_sync(f'order_{order.reference}', {'type': 'order_status_updated', 'order': order_data})
         broadcast_order_event_sync(f'store_{store.id}', {'type': 'order_status_updated', 'order': order_data})
         return Response({'success': True, 'message': 'OTP verified. Order marked delivered.', 'order': order_data})

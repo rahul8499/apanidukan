@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next'
 const statuses = ['NEW', 'CONFIRMED', 'PACKED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'PAID', 'DELIVERED', 'CANCELLED']
 const nextStatuses: Record<string, string[]> = {
   NEW: ['CONFIRMED', 'CANCELLED'], CONFIRMED: ['PACKED', 'PAID', 'CANCELLED'],
-  PACKED: ['READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'CANCELLED'],
+  PACKED: ['READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'],
   READY_FOR_PICKUP: ['PAID', 'DELIVERED'], OUT_FOR_DELIVERY: ['PAID', 'DELIVERED'],
   PAID: ['PACKED', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED'], DELIVERED: [], CANCELLED: [],
 }
@@ -671,6 +671,7 @@ export default function SellerOrders() {
                         {[order.status, ...(nextStatuses[currentStatusUpper] || []).filter(status => {
                           if (status === 'READY_FOR_PICKUP') return order.order_type === 'STORE_PICKUP'
                           if (status === 'OUT_FOR_DELIVERY') return order.order_type === 'HOME_DELIVERY'
+                          if (status === 'DELIVERED' && currentStatusUpper === 'PACKED') return order.order_type === 'HOME_DELIVERY'
                           return true
                         })].map((status) => (
                           <option key={status} value={status} className="bg-white text-slate-900 font-bold">

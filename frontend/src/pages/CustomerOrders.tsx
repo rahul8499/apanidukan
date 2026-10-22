@@ -233,8 +233,24 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
 
   const storeTheme = getStoreTheme(store)
 
-  const getStatusDisplay = (status: string, createdAt: string) => {
+  const getStatusDisplay = (status: string, createdAt: string, assignmentStatus?: string) => {
     const formattedDate = createdAt ? new Date(createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Today'
+    const riderStatus = (assignmentStatus || '').toUpperCase()
+    if (riderStatus === 'ACCEPTED') return {
+      icon: <Truck className="h-4 w-4 text-sky-500 shrink-0" />,
+      title: 'Delivery partner accepted your order',
+      badgeBg: 'bg-sky-500/10 text-sky-600 border-sky-500/20'
+    }
+    if (riderStatus === 'PICKED_UP') return {
+      icon: <Package className="h-4 w-4 text-indigo-500 shrink-0" />,
+      title: 'Picked up by delivery partner',
+      badgeBg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20'
+    }
+    if (riderStatus === 'FAILED') return {
+      icon: <XCircle className="h-4 w-4 text-rose-500 shrink-0" />,
+      title: 'Delivery attempt failed · store notified',
+      badgeBg: 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+    }
     switch (status) {
       case 'DELIVERED':
         return {
@@ -251,8 +267,32 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
       case 'CONFIRMED':
         return {
           icon: <Truck className="h-4 w-4 text-sky-500 shrink-0 animate-bounce" />,
-          title: 'Preparing & Packing',
+          title: 'Order confirmed · preparing',
           badgeBg: 'bg-sky-500/10 text-sky-600 border-sky-500/20'
+        }
+      case 'PACKED':
+        return {
+          icon: <Package className="h-4 w-4 text-indigo-500 shrink-0" />,
+          title: riderStatus === 'ASSIGNED' ? 'Packed · delivery partner assigned' : 'Order packed',
+          badgeBg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20'
+        }
+      case 'READY_FOR_PICKUP':
+        return {
+          icon: <ShoppingBag className="h-4 w-4 text-amber-500 shrink-0" />,
+          title: 'Ready for pickup',
+          badgeBg: 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+        }
+      case 'OUT_FOR_DELIVERY':
+        return {
+          icon: <Truck className="h-4 w-4 text-emerald-500 shrink-0" />,
+          title: 'Out for delivery',
+          badgeBg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+        }
+      case 'PAID':
+        return {
+          icon: <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />,
+          title: 'Payment received · order processing',
+          badgeBg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
         }
       default:
         return {
@@ -545,7 +585,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
           /* CLEAN ADAPTIVE RETAIL ORDER CARDS */
           <div className="space-y-3">
             {paginatedOrders.map((order) => {
-              const statusInfo = getStatusDisplay(order.status, order.created_at)
+              const statusInfo = getStatusDisplay(order.status, order.created_at, order.delivery_assignment_status)
               const itemsList = Array.isArray(order.items) ? order.items : []
               const firstItem = itemsList[0]
 
@@ -699,7 +739,7 @@ function CustomerOrdersContent({ storeSlug }: { storeSlug: string }) {
                           <span>Need Help?</span>
                         </button>
 
-                        {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && (
+                        {order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && !order.payment_verified && order.status !== 'PAID' && (
                           <button
                             type="button"
                             onClick={() => setCancelOrderTarget(order)}

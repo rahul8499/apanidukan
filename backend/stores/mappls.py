@@ -90,6 +90,18 @@ def _extract_coordinates_from_item(item: dict):
     return None, None
 
 
+def _has_local_address_detail(item: dict) -> bool:
+    """Reject city/street-only results so reverse geocoding can try OSM for locality."""
+    if not isinstance(item, dict):
+        return False
+    detail_keys = (
+        'houseNumber', 'house_number', 'houseName', 'house_name',
+        'subSubLocality', 'subsubLocality', 'sub_sub_locality',
+        'subLocality', 'sub_locality', 'locality', 'village',
+    )
+    return any(str(item.get(key) or '').strip() for key in detail_keys)
+
+
 def mappls_geocode(address: str) -> dict | None:
     """
     Geocode an Indian street address using Mappls Static Key.
@@ -207,7 +219,7 @@ def mappls_reverse_geocode(latitude: float, longitude: float) -> dict | None:
     except (TypeError, ValueError):
         return None
 
-    cache_key = f"mappls:rev:v2:{lat:.6f}:{lng:.6f}"
+    cache_key = f"mappls:rev:v3:{lat:.6f}:{lng:.6f}"
     cached = cache.get(cache_key)
     if cached:
         return {**cached, 'cached': True}
@@ -219,12 +231,12 @@ def mappls_reverse_geocode(latitude: float, longitude: float) -> dict | None:
 
     endpoints = [
         (
-            f"{getattr(settings, 'MAPPLS_API_BASE_URL', 'https://apis.mappls.com/advancedmaps/v1')}/{static_key}/rev_geocode",
-            {'lat': lat, 'lng': lng},
-        ),
-        (
             f"{getattr(settings, 'MAPPLS_SEARCH_BASE_URL', 'https://search.mappls.com/search/address')}/rev-geocode",
             {'access_token': static_key, 'lat': lat, 'lng': lng},
+        ),
+        (
+            f"{getattr(settings, 'MAPPLS_API_BASE_URL', 'https://apis.mappls.com/advancedmaps/v1')}/{static_key}/rev_geocode",
+            {'lat': lat, 'lng': lng},
         ),
         (
             f"https://apis.mapmyindia.com/advancedmaps/v1/{static_key}/rev_geocode",
@@ -260,6 +272,8 @@ def mappls_reverse_geocode(latitude: float, longitude: float) -> dict | None:
                 candidates.append(cop_results)
 
             for item in candidates:
+                if not _has_local_address_detail(item):
+                    continue
                 addr = _extract_address_from_item(item)
                 if addr:
                     result = {

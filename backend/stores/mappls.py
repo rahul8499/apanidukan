@@ -21,38 +21,50 @@ def get_mappls_static_key() -> str:
 
 
 def _extract_address_from_item(item: dict) -> str:
-    """Extract or assemble a complete human-readable address from a Mappls result item."""
+    """Build an address from the most specific Mappls fields available."""
     if not isinstance(item, dict):
         return ''
 
-    # Check for direct pre-formatted address string
-    for key in ('formatted_address', 'formattedAddress', 'display_name', 'address'):
-        val = item.get(key)
-        if val and isinstance(val, str) and val.strip():
-            return val.strip()
-
-    # Build compounded address from structured components if formatted_address is absent
     parts = []
-    poi = item.get('poi') or item.get('houseName')
-    if poi and str(poi).strip():
-        parts.append(str(poi).strip())
+    def append(value):
+        clean = str(value or '').strip()
+        if clean and clean.casefold() not in {part.casefold() for part in parts}:
+            parts.append(clean)
 
-    house = item.get('houseNumber') or item.get('house_number')
-    street = item.get('street')
-    sub_locality = item.get('subSubLocality') or item.get('subLocality') or item.get('sub_locality')
-    locality = item.get('locality')
-    city = item.get('city') or item.get('village') or item.get('district') or item.get('subDistrict')
-    state = item.get('state')
+    # Prefer street/building/locality fields over formatted_address, which may
+    # overemphasize administrative district labels for the actual GPS point.
+    append(item.get('houseName') or item.get('house_name'))
+    append(item.get('houseNumber') or item.get('house_number'))
+    append(item.get('street'))
+    append(item.get('subSubLocality') or item.get('subsubLocality') or item.get('sub_sub_locality'))
+    append(item.get('subLocality') or item.get('sub_locality'))
+    append(item.get('locality'))
+
+    # Some Mappls results return a village instead of a city/locality.
+    locality_parts_present = any(
+        item.get(key)
+        for key in ('subSubLocality', 'subsubLocality', 'sub_sub_locality', 'subLocality', 'sub_locality', 'locality')
+    )
+    village_or_city = item.get('village') or item.get('city')
+    if not locality_parts_present:
+        append(village_or_city)
+    if not locality_parts_present and not village_or_city:
+        append(item.get('subDistrict') or item.get('sub_district'))
+        append(item.get('district'))
+
     pincode = item.get('pincode') or item.get('pin_code')
-
-    for piece in (house, street, sub_locality, locality, city, state, pincode):
-        if piece and str(piece).strip():
-            clean_piece = str(piece).strip()
-            if clean_piece not in parts:
-                parts.append(clean_piece)
+    append(item.get('state'))
+    append(pincode)
 
     if parts:
         return ', '.join(parts)
+
+    # Keep a provider-formatted result only as a last resort when no structured
+    # address components are present.
+    for key in ('formatted_address', 'formattedAddress', 'display_name', 'address'):
+        value = item.get(key)
+        if value and isinstance(value, str) and value.strip():
+            return value.strip()
     return ''
 
 
@@ -195,7 +207,7 @@ def mappls_reverse_geocode(latitude: float, longitude: float) -> dict | None:
     except (TypeError, ValueError):
         return None
 
-    cache_key = f"mappls:rev:{lat:.6f}:{lng:.6f}"
+    cache_key = f"mappls:rev:v2:{lat:.6f}:{lng:.6f}"
     cached = cache.get(cache_key)
     if cached:
         return {**cached, 'cached': True}

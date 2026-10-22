@@ -84,7 +84,7 @@ def _resolve_reverse_geocoding(latitude: float, longitude: float):
     except (TypeError, ValueError):
         return None, 'Invalid GPS coordinates.', status.HTTP_400_BAD_REQUEST
 
-    cache_key = f'geo:rev:{lat:.6f}:{lng:.6f}'
+    cache_key = f'geo:rev:v2:{lat:.6f}:{lng:.6f}'
     cached = cache.get(cache_key)
     if cached:
         return {**cached, 'cached': True}, None, status.HTTP_200_OK

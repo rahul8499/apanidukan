@@ -102,6 +102,7 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
     utr_number = serializers.CharField(required=False, allow_blank=True, max_length=64, default='')
     payment_gateway_ref = serializers.CharField(required=False, allow_blank=True, max_length=128, default='')
     delivery_address = serializers.CharField(required=False, allow_blank=True, max_length=1000)
+    delivery_pincode = serializers.CharField(required=False, allow_blank=True, max_length=6, trim_whitespace=True)
     delivery_fee = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=Decimal('0.00'))
     delivery_distance_km = serializers.DecimalField(max_digits=6, decimal_places=2, required=False, allow_null=True)
     delivery_latitude = RoundedCoordinateField(max_digits=9, decimal_places=6, required=False, allow_null=True)
@@ -120,6 +121,12 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
             raise serializers.ValidationError('Enter a valid 10-digit WhatsApp phone number.')
         return value
 
+    def validate_delivery_pincode(self, value):
+        value = value.strip()
+        if value and not re.fullmatch(r'\d{6}', value):
+            raise serializers.ValidationError('Enter a valid 6-digit PIN code.')
+        return value
+
     def validate(self, attrs):
         coupon_code = str(attrs.get('coupon_code') or '').strip()
         if ',' in coupon_code:
@@ -134,17 +141,20 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                 raise serializers.ValidationError({'delivery_address': 'Enter a complete delivery address.'})
             serviceable_pincodes = self.context['store'].serviceable_pincodes or []
             if serviceable_pincodes:
-                address_pincodes = re.findall(r'(?<!\d)\d{6}(?!\d)', address)
-                # PIN code is optional at checkout. If supplied, honor the store's
-                # configured service area; otherwise GPS radius validation applies below.
-                if address_pincodes and address_pincodes[-1] not in {str(code) for code in serviceable_pincodes}:
-                    raise serializers.ValidationError({'delivery_address': 'This pincode is not serviceable by the store.'})
+                # Only validate a PIN the customer entered explicitly. GPS-geocoded
+                # addresses can contain unrelated postcodes and should not block checkout.
+                delivery_pincode = attrs.get('delivery_pincode', '')
+                if delivery_pincode and delivery_pincode not in {str(code) for code in serviceable_pincodes}:
+                    raise serializers.ValidationError({'delivery_pincode': 'This pincode is not serviceable by the store.'})
             # Distance and fees are server-calculated; never trust browser values.
             attrs['delivery_distance_km'] = None
         return attrs
 
     def create(self, validated_data):
         store = self.context['store']
+        delivery_pincode = validated_data.pop('delivery_pincode', '')
+        if delivery_pincode and delivery_pincode not in validated_data.get('delivery_address', ''):
+            validated_data['delivery_address'] = f"{validated_data.get('delivery_address', '').strip()} · PIN {delivery_pincode}"
         idemp_key = validated_data.pop('idempotency_key', '').strip() or None
         verification_token = validated_data.pop('checkout_verification_token')
         requested = validated_data['items']

@@ -43,6 +43,7 @@ function CartContent() {
   const [paymentType, setPaymentType] = useState('COD')
   const [orderType, setOrderType] = useState<'HOME_DELIVERY' | 'STORE_PICKUP'>('HOME_DELIVERY')
   const [deliveryAddress, setDeliveryAddress] = useState(() => localStorage.getItem('multistore_user_delivery_address') || '')
+  const [deliveryPincode, setDeliveryPincode] = useState('')
   const [locationUrl, setLocationUrl] = useState('')
   const [deliveryCoordinates, setDeliveryCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationLoading, setLocationLoading] = useState(false)
@@ -405,6 +406,10 @@ function CartContent() {
       setError('Enter a complete delivery address.')
       return
     }
+    if (orderType === 'HOME_DELIVERY' && deliveryPincode.trim() && !/^\d{6}$/.test(deliveryPincode.trim())) {
+      setError('Enter a valid 6-digit PIN code, or leave it blank.')
+      return
+    }
     if (orderType === 'HOME_DELIVERY' && store?.latitude != null && store?.longitude != null && !deliveryCoordinates) {
       setError('Use current GPS location so delivery availability can be verified.')
       return
@@ -451,6 +456,7 @@ function CartContent() {
         order_type: orderType,
         utr_number: utrInput.trim(),
         delivery_address: finalDeliveryAddress,
+        delivery_pincode: orderType === 'HOME_DELIVERY' ? deliveryPincode.trim() : '',
         location_url: locationUrl,
         // Browser GPS returns 10-15 decimal places, while the API stores a
         // stable 6-decimal coordinate (~11 cm precision).
@@ -1021,6 +1027,21 @@ function CartContent() {
                       value={deliveryAddress}
                       onChange={e => setDeliveryAddress(e.target.value)}
                     />
+                    <label htmlFor="delivery-pincode" className="mt-2 block text-[11px] font-bold text-slate-700">
+                      PIN code <span className="font-medium text-slate-500">(optional)</span>
+                    </label>
+                    <input
+                      id="delivery-pincode"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="postal-code"
+                      maxLength={6}
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-semibold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none"
+                      placeholder="6-digit PIN code, if known"
+                      value={deliveryPincode}
+                      onChange={e => setDeliveryPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    />
+                    <p className="mt-1 text-[10px] text-slate-500">Leave blank to check delivery availability using your GPS location.</p>
                     {locationLoading && (
                       <p role="status" className="mt-1 flex items-center gap-2 text-[10px] font-semibold text-indigo-700">
                         <span className="h-3 w-3 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />

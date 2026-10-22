@@ -16,6 +16,7 @@ import StoreOfflinePage from './StoreOfflinePage'
 import { isStoreOffline } from '../utils/storeStatus'
 import { getBusinessType, formatUnitDisplay, getCartLabels } from '../utils/businessTypes'
 import { isStandaloneMode } from '../utils/browser'
+import { captureAccurateLocation } from '../utils/accurateLocation'
 
 export default function StoreCart() {
   const { storeSlug } = useParams()
@@ -45,6 +46,7 @@ function CartContent() {
   const [locationUrl, setLocationUrl] = useState('')
   const [deliveryCoordinates, setDeliveryCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationLoading, setLocationLoading] = useState(false)
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
   const [checkoutOtp, setCheckoutOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [otpLoading, setOtpLoading] = useState(false)
@@ -316,50 +318,49 @@ function CartContent() {
     }
   }
 
-  function useCurrentLocation() {
-    if (!navigator.geolocation) {
-      setError('Your browser does not support location access.')
-      return
-    }
+  async function useCurrentLocation() {
     setError('')
     setLocationLoading(true)
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        const { latitude, longitude } = coords
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
-        setLocationUrl(mapsUrl)
-        setDeliveryCoordinates({ latitude, longitude })
-        try {
-          const res = await api.get('/public/reverse-geocode/', { params: { lat: latitude, lng: longitude } })
-          const detected = res.data?.display_name || `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-          setDeliveryAddress(detected)
-          localStorage.setItem('multistore_user_delivery_address', detected)
-        } catch {
-          try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
-            const place = await response.json()
-            const detected = place.display_name || `Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-            setDeliveryAddress(detected)
-            localStorage.setItem('multistore_user_delivery_address', detected)
-          } catch {
-            const fallback = `Location: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-            setDeliveryAddress(fallback)
-            localStorage.setItem('multistore_user_delivery_address', fallback)
-          }
-        } finally {
-          setLocationLoading(false)
-        }
-      },
-      (positionError) => {
-        setLocationLoading(false)
-        if (positionError.code === positionError.PERMISSION_DENIED)
-          setError('Location permission denied. Please allow GPS access in settings.')
-        else if (positionError.code === positionError.TIMEOUT)
-          setError('Location request timed out. Please try again.')
-        else setError('Current location could not be fetched.')
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
+    setGpsAccuracy(null)
+    try {
+      // Use the shared GPS refinement used by store setup: wait briefly for a precise fix,
+      // then fall back to the best available position if the device only has coarse GPS.
+      const position = await captureAccurateLocation(accuracy => setGpsAccuracy(accuracy))
+      const latitude = Number(position.coords.latitude.toFixed(6))
+      const longitude = Number(position.coords.longitude.toFixed(6))
+      const coordinates = { latitude, longitude }
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
+      setDeliveryCoordinates(coordinates)
+      setLocationUrl(mapsUrl)
+      setGpsAccuracy(position.coords.accuracy)
+
+      let detectedAddress = ''
+      try {
+        // The backend tries Mappls first, then OpenStreetMap when Mappls has no result.
+        const response = await api.get('/public/reverse-geocode/', {
+          params: { lat: latitude, lng: longitude },
+        })
+        detectedAddress = String(response.data?.display_name || '').trim()
+      } catch {
+        // Keep the captured GPS point usable even if reverse geocoding is temporarily down.
+      }
+
+      if (!detectedAddress) {
+        detectedAddress = `GPS location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`
+      }
+      setDeliveryAddress(detectedAddress)
+      localStorage.setItem('multistore_user_delivery_address', detectedAddress)
+    } catch (locationError: any) {
+      if (locationError?.locationErrorCode === 1 || locationError?.code === 1) {
+        setError('Location permission denied. Allow location access in your browser settings, then try again.')
+      } else if (locationError?.locationErrorCode === 3 || locationError?.code === 3) {
+        setError('Could not get your location. Check GPS and try again, or enter the address manually.')
+      } else {
+        setError(locationError?.message || 'Current location could not be fetched. Enter your address manually or try again.')
+      }
+    } finally {
+      setLocationLoading(false)
+    }
   }
 
   async function sendCheckoutOtp() {
@@ -1003,7 +1004,7 @@ function CartContent() {
                         className="text-[10px] font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <MapPin className="h-3 w-3" />
-                        <span>{locationLoading ? 'Locating...' : 'Use GPS Location'}</span>
+                        <span>{locationLoading ? 'Finding location…' : deliveryCoordinates ? 'Update GPS location' : 'Use GPS Location'}</span>
                       </button>
                     </div>
                     <textarea
@@ -1013,6 +1014,22 @@ function CartContent() {
                       value={deliveryAddress}
                       onChange={e => setDeliveryAddress(e.target.value)}
                     />
+                    {locationLoading && (
+                      <p role="status" className="mt-1 flex items-center gap-2 text-[10px] font-semibold text-indigo-700">
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
+                        Finding your precise location and address…
+                      </p>
+                    )}
+                    {!locationLoading && deliveryCoordinates && (
+                      <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[10px]">
+                        <span className="font-semibold text-emerald-700">
+                          GPS location attached{gpsAccuracy ? ` · accuracy ±${Math.round(gpsAccuracy)} m` : ''}
+                        </span>
+                        <a href={locationUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-indigo-600 hover:underline">
+                          View pinned location on map
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
 

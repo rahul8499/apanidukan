@@ -46,6 +46,7 @@ function CartContent() {
   const [locationUrl, setLocationUrl] = useState('')
   const [deliveryCoordinates, setDeliveryCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationLoading, setLocationLoading] = useState(false)
+  const [locationError, setLocationError] = useState('')
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
   const [checkoutOtp, setCheckoutOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
@@ -320,15 +321,16 @@ function CartContent() {
 
   async function useCurrentLocation() {
     setError('')
+    setLocationError('')
     if (!window.isSecureContext) {
-      setError('GPS needs a secure connection. Open this store over HTTPS and allow location access in your browser.')
+      setLocationError('GPS needs a secure connection. Open this store over HTTPS and allow location access in your browser.')
       return
     }
     setLocationLoading(true)
     setGpsAccuracy(null)
     try {
-      // Checkout requires a fresh GPS fix, never a cached location from an earlier visit.
-      const position = await captureAccurateLocation(accuracy => setGpsAccuracy(accuracy), 75, 45000, true)
+      // Match the shared location flow used elsewhere, refining the best available GPS fix.
+      const position = await captureAccurateLocation(accuracy => setGpsAccuracy(accuracy))
       const latitude = Number(position.coords.latitude.toFixed(6))
       const longitude = Number(position.coords.longitude.toFixed(6))
       const coordinates = { latitude, longitude }
@@ -355,13 +357,13 @@ function CartContent() {
       localStorage.setItem('multistore_user_delivery_address', detectedAddress)
     } catch (locationError: any) {
       if (locationError?.locationErrorCode === 1 || locationError?.code === 1) {
-        setError('Location permission denied. Allow location access in your browser settings, then try again.')
+        setLocationError('Location permission denied. Allow location access in your browser settings, then try again.')
       } else if (locationError?.locationErrorCode === 3 || locationError?.code === 3) {
-        setError('Could not get a fresh GPS fix. Turn on device location, allow browser access, and try again.')
+        setLocationError('Could not get your current location. Turn on device location, allow browser access, and try again.')
       } else if (locationError?.code === 2) {
-        setError('Your device could not determine its location. Turn on GPS and try again, preferably outdoors.')
+        setLocationError('Your device could not determine its location. Turn on GPS and try again, preferably outdoors.')
       } else {
-        setError(locationError?.message || 'Current location could not be fetched. Check GPS and browser location permission, then try again.')
+        setLocationError(locationError?.message || 'Current location could not be fetched. Check GPS and browser location permission, then try again.')
       }
     } finally {
       setLocationLoading(false)
@@ -1022,9 +1024,10 @@ function CartContent() {
                     {locationLoading && (
                       <p role="status" className="mt-1 flex items-center gap-2 text-[10px] font-semibold text-indigo-700">
                         <span className="h-3 w-3 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
-                        Requesting a fresh GPS fix and finding your address…
+                        Finding your current location and address…
                       </p>
                     )}
+                    {locationError && <p role="alert" className="mt-1 text-[10px] font-semibold text-rose-600">{locationError}</p>}
                     {!locationLoading && deliveryCoordinates && (
                       <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[10px]">
                         <span className="font-semibold text-emerald-700">

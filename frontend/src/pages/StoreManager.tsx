@@ -2200,10 +2200,10 @@ export default function StoreManager() {
               {/* Primary Current Location Auto-Detect Button */}
               <button
                 type="button"
-                disabled={isCapturingShopLocation || hasSavedStoreLocation}
+                disabled={isCapturingShopLocation}
                 onClick={captureStoreLocation}
                 className="inline-flex min-h-[36px] sm:min-h-[38px] items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-seller-600 to-emerald-600 px-2 py-1 text-[11px] sm:text-xs font-bold text-white shadow-2xs hover:from-seller-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer truncate"
-                title={hasSavedStoreLocation ? 'Store location saved' : 'Current location & address detect karein'}
+                title={hasSavedStoreLocation ? 'Current location save ho chuki hai; click karke update karein' : 'Current location & address detect karein'}
               >
                 {isCapturingShopLocation ? (
                   <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white shrink-0" />

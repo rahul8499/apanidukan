@@ -12,6 +12,7 @@ export function captureAccurateLocation(
   onAccuracy?: (accuracy: number) => void,
   accuracyThreshold = 200,
   timeoutMs = 30000,
+  fresh = false,
 ): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -65,26 +66,28 @@ export function captureAccurateLocation(
           if (bestPosition && !resolved) {
             finish(bestPosition)
           }
-        }, 10000)
+        }, fresh ? 20000 : 10000)
       }
     }
 
-    // Stage 1: Fast attempt with network/cached accuracy (returns in 100-300ms on mobile)
-    try {
-      navigator.geolocation.getCurrentPosition(
-        pos => onPos(pos),
-        err => {
-          if (err.code === err.PERMISSION_DENIED && !resolved) {
-            resolved = true
-            if (timeoutTimer !== null) clearTimeout(timeoutTimer)
-            const permError = new Error('Location permission denied hai.') as AccurateLocationError
-            permError.locationErrorCode = 1
-            reject(permError)
-          }
-        },
-        { enableHighAccuracy: false, maximumAge: 600000, timeout: Math.min(timeoutMs, 15000) },
-      )
-    } catch { }
+    // Browsing can use a recent network fix. Checkout can opt into a fresh GPS-only request.
+    if (!fresh) {
+      try {
+        navigator.geolocation.getCurrentPosition(
+          pos => onPos(pos),
+          err => {
+            if (err.code === err.PERMISSION_DENIED && !resolved) {
+              resolved = true
+              if (timeoutTimer !== null) clearTimeout(timeoutTimer)
+              const permError = new Error('Location permission denied hai.') as AccurateLocationError
+              permError.locationErrorCode = 1
+              reject(permError)
+            }
+          },
+          { enableHighAccuracy: false, maximumAge: 600000, timeout: Math.min(timeoutMs, 15000) },
+        )
+      } catch { }
+    }
 
     // Stage 2: Parallel high-accuracy attempt for satellite refinement
     try {
@@ -99,7 +102,7 @@ export function captureAccurateLocation(
             reject(permError)
           }
         },
-        { enableHighAccuracy: true, maximumAge: 60000, timeout: timeoutMs },
+        { enableHighAccuracy: true, maximumAge: fresh ? 0 : 60000, timeout: timeoutMs },
       )
     } catch { }
 
@@ -108,7 +111,7 @@ export function captureAccurateLocation(
       watchId = navigator.geolocation.watchPosition(
         pos => onPos(pos),
         () => {},
-        { enableHighAccuracy: true, maximumAge: 60000, timeout: timeoutMs },
+        { enableHighAccuracy: true, maximumAge: fresh ? 0 : 60000, timeout: timeoutMs },
       )
     } catch { }
 

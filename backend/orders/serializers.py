@@ -135,9 +135,9 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
             serviceable_pincodes = self.context['store'].serviceable_pincodes or []
             if serviceable_pincodes:
                 address_pincodes = re.findall(r'(?<!\d)\d{6}(?!\d)', address)
-                if not address_pincodes:
-                    raise serializers.ValidationError({'delivery_address': 'Include the 6-digit delivery pincode.'})
-                if address_pincodes[-1] not in {str(code) for code in serviceable_pincodes}:
+                # PIN code is optional at checkout. If supplied, honor the store's
+                # configured service area; otherwise GPS radius validation applies below.
+                if address_pincodes and address_pincodes[-1] not in {str(code) for code in serviceable_pincodes}:
                     raise serializers.ValidationError({'delivery_address': 'This pincode is not serviceable by the store.'})
             # Distance and fees are server-calculated; never trust browser values.
             attrs['delivery_distance_km'] = None

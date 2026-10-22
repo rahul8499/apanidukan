@@ -320,12 +320,15 @@ function CartContent() {
 
   async function useCurrentLocation() {
     setError('')
+    if (!window.isSecureContext) {
+      setError('GPS needs a secure connection. Open this store over HTTPS and allow location access in your browser.')
+      return
+    }
     setLocationLoading(true)
     setGpsAccuracy(null)
     try {
-      // Use the shared GPS refinement used by store setup: wait briefly for a precise fix,
-      // then fall back to the best available position if the device only has coarse GPS.
-      const position = await captureAccurateLocation(accuracy => setGpsAccuracy(accuracy))
+      // Checkout requires a fresh GPS fix, never a cached location from an earlier visit.
+      const position = await captureAccurateLocation(accuracy => setGpsAccuracy(accuracy), 75, 45000, true)
       const latitude = Number(position.coords.latitude.toFixed(6))
       const longitude = Number(position.coords.longitude.toFixed(6))
       const coordinates = { latitude, longitude }
@@ -354,9 +357,11 @@ function CartContent() {
       if (locationError?.locationErrorCode === 1 || locationError?.code === 1) {
         setError('Location permission denied. Allow location access in your browser settings, then try again.')
       } else if (locationError?.locationErrorCode === 3 || locationError?.code === 3) {
-        setError('Could not get your location. Check GPS and try again, or enter the address manually.')
+        setError('Could not get a fresh GPS fix. Turn on device location, allow browser access, and try again.')
+      } else if (locationError?.code === 2) {
+        setError('Your device could not determine its location. Turn on GPS and try again, preferably outdoors.')
       } else {
-        setError(locationError?.message || 'Current location could not be fetched. Enter your address manually or try again.')
+        setError(locationError?.message || 'Current location could not be fetched. Check GPS and browser location permission, then try again.')
       }
     } finally {
       setLocationLoading(false)
@@ -1004,7 +1009,7 @@ function CartContent() {
                         className="text-[10px] font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <MapPin className="h-3 w-3" />
-                        <span>{locationLoading ? 'Finding location…' : deliveryCoordinates ? 'Update GPS location' : 'Use GPS Location'}</span>
+                        <span>{locationLoading ? 'Finding accurate location…' : deliveryCoordinates ? 'Update GPS location' : 'Use GPS Location'}</span>
                       </button>
                     </div>
                     <textarea
@@ -1017,7 +1022,7 @@ function CartContent() {
                     {locationLoading && (
                       <p role="status" className="mt-1 flex items-center gap-2 text-[10px] font-semibold text-indigo-700">
                         <span className="h-3 w-3 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
-                        Finding your precise location and address…
+                        Requesting a fresh GPS fix and finding your address…
                       </p>
                     )}
                     {!locationLoading && deliveryCoordinates && (

@@ -23,7 +23,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_phone_number(self, value):
         if not value:
-            raise serializers.ValidationError('Valid 10-digit mobile number is required.')
+            return None
         from .services import normalize_phone
         from .models import PhoneOTP
         from django.utils import timezone

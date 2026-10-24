@@ -58,8 +58,8 @@ export default function Register() {
     setError(null)
 
     const cleanPhone = phone.replace(/\D/g, '')
-    if (cleanPhone.length !== 10) {
-      setError('Kripya 10-digit valid mobile number enter karein.')
+    if (cleanPhone && cleanPhone.length !== 10) {
+      setError('Mobile number dena ho to 10-digit valid number enter karein, ya field blank chhodein.')
       return
     }
 
@@ -72,11 +72,11 @@ export default function Register() {
     try {
       // Pre-check duplicates before registration
       const check = await api.post('/auth/check-availability/', {
-        phone_number: cleanPhone,
+        ...(cleanPhone ? { phone_number: cleanPhone } : {}),
         email: email.trim().toLowerCase()
       })
 
-      if (check.data?.phone_exists) {
+      if (cleanPhone && check.data?.phone_exists) {
         setError('An account with this mobile number already exists. Ek number se do account nahi ban sakte. Kripya login karein.')
         setPhoneError('Is number se account pehle hi bana hua hai.')
         setLoading(false)
@@ -90,8 +90,12 @@ export default function Register() {
         return
       }
 
-      // Redirect to /start with phone and email prefilled for seamless OTP verification & store creation
-      navigate(`/start?phone=${cleanPhone}`)
+      if (!cleanPhone) {
+        await auth.register({ email: email.trim().toLowerCase(), password, first_name: firstName.trim(), last_name: lastName.trim() })
+        navigate('/start?method=email')
+      } else {
+        navigate(`/start?phone=${cleanPhone}`)
+      }
     } catch (err: any) {
       const data = err?.response?.data
       if (typeof data?.detail === 'string') {
@@ -174,7 +178,7 @@ export default function Register() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Mobile Number * <span className="text-slate-400 font-normal">(10 digits)</span>
+                Mobile Number <span className="text-slate-400 font-normal">(optional, 10 digits)</span>
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">+91</span>
@@ -186,7 +190,6 @@ export default function Register() {
                     if (val.length === 10) checkPhoneAvailability(val)
                   }}
                   onBlur={() => checkPhoneAvailability(phone)}
-                  required
                   maxLength={10}
                   placeholder="9876543210"
                   className={`w-full pl-12 pr-3.5 py-2.5 rounded-xl border text-sm font-mono focus:outline-none focus:ring-2 ${
@@ -194,6 +197,7 @@ export default function Register() {
                   }`}
                 />
               </div>
+              <p className="mt-1.5 text-[11px] text-slate-500">Phone number optional hai. Blank chhodne par email aur password se account bana sakte hain.</p>
               {phoneError && (
                 <p className="text-xs text-red-600 font-bold mt-1.5 flex items-center gap-1">
                   <span>❌</span> {phoneError}

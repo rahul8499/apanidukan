@@ -19,6 +19,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showEmailFallback, setShowEmailFallback] = useState(false)
 
   const auth = useAuth()
   const navigate = useNavigate()
@@ -62,6 +63,7 @@ export default function Login() {
     if (e) e.preventDefault()
     setError(null)
     setSuccessMsg(null)
+    setShowEmailFallback(false)
 
     const cleanPhone = phone.replace(/\D/g, '')
     if (cleanPhone.length < 10) {
@@ -77,10 +79,8 @@ export default function Login() {
       setSuccessMsg(res.message || 'OTP sent successfully!')
     } catch (err: any) {
       const detail = err?.response?.data?.detail || err?.message
-      const isDailyOtpLimit = /daily otp limit reached/i.test(detail || '')
-      setError(isDailyOtpLimit
-        ? 'Is number se aaj login OTP ki limit poori ho gayi hai (24 ghante mein maximum 10). Kripya baad mein dobara try karein.'
-        : detail || 'Failed to send OTP. Try again.')
+      setError(`OTP bhejne mein dikkat aa rahi hai${detail ? `: ${detail}` : '.'} Aap email aur password se login kar sakte hain.`)
+      setShowEmailFallback(true)
       const retryAfter = Number(err?.response?.data?.retry_after || 0)
       if (retryAfter > 0 && retryAfter <= 60) setCountdown(retryAfter)
     } finally {
@@ -174,8 +174,9 @@ export default function Login() {
           </div>
 
           {error && (
-            <div role="alert" className="mt-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
-              <span aria-hidden="true">⚠️</span><span>{error}</span>
+            <div role="alert" className="mt-4 flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+              <div className="flex items-start gap-2"><span aria-hidden="true">⚠️</span><span>{error}</span></div>
+              {showEmailFallback && <button type="button" onClick={() => { setAuthMethod('email'); setError(null); setShowEmailFallback(false) }} className="self-start rounded-lg bg-orange-600 px-3 py-2 text-xs font-bold text-white hover:bg-orange-700">Email aur password se login karein</button>}
             </div>
           )}
 

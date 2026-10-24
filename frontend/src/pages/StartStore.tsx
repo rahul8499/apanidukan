@@ -23,7 +23,7 @@ export default function StartStore() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  const [regMode, setRegMode] = useState<'otp' | 'email'>('otp')
+  const [regMode, setRegMode] = useState<'otp' | 'email'>(() => searchParams.get('method') === 'email' ? 'email' : 'otp')
 
   // Common store fields
   const [name, setName] = useState('')
@@ -319,11 +319,11 @@ export default function StartStore() {
       return
     }
     const cleanPhone = phone.replace(/\D/g, '')
-    if (!cleanPhone || cleanPhone.length < 10) {
-      setError('10-digit mobile number enter karna mandatory hai.')
+    if (cleanPhone && cleanPhone.length !== 10) {
+      setError('Mobile number dena ho to valid 10-digit number enter karein, ya blank chhodein.')
       return
     }
-    if (!otpVerified) {
+    if (cleanPhone && !otpVerified) {
       setError('Please verify your mobile number with OTP first.')
       return
     }
@@ -334,13 +334,15 @@ export default function StartStore() {
 
     setLoading(true)
     try {
-      await auth.register({
-        email,
-        password,
-        first_name: parsedFirstName,
-        last_name: parsedLastName,
-        phone_number: cleanPhone
-      })
+      if (!auth.user) {
+        await auth.register({
+          email,
+          password,
+          first_name: parsedFirstName,
+          last_name: parsedLastName,
+          ...(cleanPhone ? { phone_number: cleanPhone } : {}),
+        })
+      }
       const store = await api.post('/stores/', {
         name,
         description,
@@ -348,7 +350,7 @@ export default function StartStore() {
         address,
         latitude,
         longitude,
-        phone_number: cleanPhone,
+        phone_number: cleanPhone || auth.user?.phone_number || '',
         allow_home_delivery: allowHomeDelivery,
         allow_store_pickup: allowStorePickup,
         min_delivery_order: Number(minDeliveryOrder) || 0,
@@ -378,7 +380,11 @@ export default function StartStore() {
     setError('')
     if (step === 1) {
       if (regMode === 'otp' && !otpVerified) return setError('Please verify your mobile number with OTP first.')
-      if (regMode === 'email' && (!otpVerified || !email.trim() || password.length < 8)) return setError('Verify your mobile number and enter a valid email and password (minimum 8 characters).')
+      if (regMode === 'email') {
+        if (!auth.user && (!email.trim() || password.length < 8)) return setError('Enter a valid email and password (minimum 8 characters).')
+        const cleanPhone = phone.replace(/\D/g, '')
+        if (cleanPhone && (cleanPhone.length !== 10 || !otpVerified)) return setError('Mobile number dena ho to 10 digits enter karke OTP verify karein, ya field blank chhodein.')
+      }
       if (!name.trim()) return setError('Store name is required.')
     }
     if (step === 2 && (!address.trim() || !fullName.trim())) return setError('Store address and owner full name are required.')
@@ -431,7 +437,7 @@ export default function StartStore() {
               <div className="mt-2 flex gap-2"><div className="relative flex-1"><span className="absolute left-3.5 top-3 text-sm font-semibold text-slate-500">+91</span><input value={phone} onChange={event => { setPhone(event.target.value.replace(/\D/g, '').slice(0, 10)); setOtpVerified(false) }} disabled={otpVerified} required type="tel" inputMode="numeric" maxLength={10} placeholder="9876543210" className="premium-input w-full pl-14" /></div>{!otpVerified && <button type="button" onClick={handleSendOTP} disabled={loading || countdown > 0} className="rounded-xl bg-orange-600 px-4 text-xs font-bold text-white disabled:opacity-60">{countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP →'}</button>}</div>
             {otpSent && !otpVerified && <div className="mt-3 flex gap-2"><input value={otp} onChange={event => { const code = event.target.value.replace(/\D/g, '').slice(0, 6); setOtp(code); if (code.length === 6) handleVerifyOTP(code) }} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="Enter 6-digit OTP" className="premium-input min-w-0 flex-1 text-center tracking-widest" /><button type="button" onClick={() => handleVerifyOTP()} disabled={isVerifyingOtp} className="inline-flex min-w-28 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white disabled:opacity-70">{isVerifyingOtp && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}{isVerifyingOtp ? 'Verifying…' : 'Verify OTP'}</button></div>}
               {otpVerified && <p className="mt-2 text-xs font-bold text-emerald-700">✓ Mobile verified</p>}
-            </div> : <div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-semibold text-slate-700">Email address *<input type="email" value={email} onChange={event => setEmail(event.target.value)} required className={fieldClass} /></label><label className="text-xs font-semibold text-slate-700">Password *<input type="password" value={password} onChange={event => setPassword(event.target.value)} required minLength={8} className={fieldClass} /></label><label className="text-xs font-semibold text-slate-700 sm:col-span-2">Mobile number *<div className="mt-1 flex gap-2"><input value={phone} onChange={event => setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))} disabled={otpVerified} required maxLength={10} placeholder="9876543210" className="premium-input min-w-0 flex-1" />{!otpVerified && <button type="button" onClick={handleSendOTP} disabled={loading || countdown > 0} className="rounded-xl bg-orange-600 px-3 text-xs font-bold text-white">{countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP'}</button>}</div>{otpSent && !otpVerified && <div className="mt-2 flex gap-2"><input value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Enter OTP" maxLength={6} className="premium-input min-w-0 flex-1" /><button type="button" onClick={() => handleVerifyOTP()} disabled={isVerifyingOtp} className="inline-flex min-w-28 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white disabled:opacity-70">{isVerifyingOtp && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}{isVerifyingOtp ? 'Verifying…' : 'Verify OTP'}</button></div>}{otpVerified && <span className="mt-1 block text-emerald-700">✓ Mobile verified</span>}</label></div>}
+            </div> : <div className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-semibold text-slate-700">Email address *<input type="email" value={email} onChange={event => setEmail(event.target.value)} required={!auth.user} className={fieldClass} /></label>{!auth.user && <label className="text-xs font-semibold text-slate-700">Password *<input type="password" value={password} onChange={event => setPassword(event.target.value)} required minLength={8} className={fieldClass} /></label>}<label className="text-xs font-semibold text-slate-700 sm:col-span-2">Mobile number (optional)<div className="mt-1 flex gap-2"><input value={phone} onChange={event => { setPhone(event.target.value.replace(/\D/g, '').slice(0, 10)); setOtpVerified(false) }} disabled={otpVerified} maxLength={10} placeholder="9876543210" className="premium-input min-w-0 flex-1" />{!otpVerified && <button type="button" onClick={handleSendOTP} disabled={loading || countdown > 0 || phone.replace(/\D/g, '').length !== 10} className="rounded-xl bg-orange-600 px-3 text-xs font-bold text-white disabled:opacity-50">{countdown > 0 ? `Resend (${countdown}s)` : otpSent ? 'Resend OTP' : 'Send OTP'}</button>}</div>{otpSent && !otpVerified && <div className="mt-2 flex gap-2"><input value={otp} onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Enter OTP" maxLength={6} className="premium-input min-w-0 flex-1" /><button type="button" onClick={() => handleVerifyOTP()} disabled={isVerifyingOtp} className="inline-flex min-w-28 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white disabled:opacity-70">{isVerifyingOtp && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}{isVerifyingOtp ? 'Verifying…' : 'Verify OTP'}</button></div>}{otpVerified && <span className="mt-1 block text-emerald-700">✓ Mobile verified</span>}</label></div>}
             <label className="block text-xs font-semibold text-slate-700">Store name *<input value={name} onChange={event => setName(event.target.value)} required placeholder="Store name" className={fieldClass} /></label>
             <div><span className="block text-xs font-semibold text-slate-700">Store category</span><div className="mt-1 flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50/60 p-3"><span className="text-sm font-bold text-slate-900">👗 {DEFAULT_CATEGORY}</span><span className="rounded-lg bg-orange-600 px-2 py-1 text-[10px] font-bold text-white">Selected</span></div></div>
           </section>}

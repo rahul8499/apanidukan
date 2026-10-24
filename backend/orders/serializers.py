@@ -96,7 +96,7 @@ class RoundedCoordinateField(serializers.DecimalField):
 class WhatsAppOrderCreateSerializer(serializers.Serializer):
     items = serializers.ListField(child=serializers.DictField(), min_length=1)
     customer_name = serializers.CharField(max_length=150, required=True, allow_blank=False, trim_whitespace=True)
-    customer_phone = serializers.CharField(max_length=40, required=True, allow_blank=False, trim_whitespace=True)
+    customer_phone = serializers.CharField(max_length=40, required=False, allow_blank=True, default='', trim_whitespace=True)
     order_type = serializers.ChoiceField(choices=('HOME_DELIVERY', 'STORE_PICKUP'), required=False, default='HOME_DELIVERY')
     payment_type = serializers.ChoiceField(choices=('COD', 'ONLINE'), required=False, default='COD')
     utr_number = serializers.CharField(required=False, allow_blank=True, max_length=64, default='')
@@ -111,11 +111,13 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
     coupon_code = serializers.CharField(required=False, allow_blank=True, max_length=50)
     discount_amount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, default=Decimal('0.00'))
     wallet_points_to_redeem = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, default=Decimal('0.00'))
-    checkout_verification_token = serializers.UUIDField(write_only=True)
+    checkout_verification_token = serializers.UUIDField(write_only=True, required=False, allow_null=True)
     idempotency_key = serializers.CharField(max_length=64, required=False, allow_blank=True, default='')
     customer_note = serializers.CharField(required=False, allow_blank=True, max_length=1000, default='')
 
     def validate_customer_phone(self, value):
+        if not value:
+            return ''
         value = normalize_phone(value)
         if len(value) != 10:
             raise serializers.ValidationError('Enter a valid 10-digit WhatsApp phone number.')
@@ -156,7 +158,7 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
         if delivery_pincode and delivery_pincode not in validated_data.get('delivery_address', ''):
             validated_data['delivery_address'] = f"{validated_data.get('delivery_address', '').strip()} · PIN {delivery_pincode}"
         idemp_key = validated_data.pop('idempotency_key', '').strip() or None
-        verification_token = validated_data.pop('checkout_verification_token')
+        verification_token = validated_data.pop('checkout_verification_token', None)
         requested = validated_data['items']
         product_ids = [item.get('id') for item in requested]
         line_keys = [(item.get('id'), str(item.get('selected_size') or '').strip().upper()) for item in requested]
@@ -169,12 +171,14 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
         with transaction.atomic():
             # Lock the one-time OTP proof and stock rows. This prevents two
             # concurrent requests from reusing a token or overselling stock.
-            verification = CheckoutPhoneVerification.objects.select_for_update().filter(
-                token=verification_token,
-                store=store,
-                customer_phone=validated_data.get('customer_phone', '').strip(),
-            ).first()
-            if not verification or not verification.is_valid():
+            verification = None
+            if verification_token:
+                verification = CheckoutPhoneVerification.objects.select_for_update().filter(
+                    token=verification_token,
+                    store=store,
+                    customer_phone=validated_data.get('customer_phone', '').strip(),
+                ).first()
+            if verification_token and (not verification or not verification.is_valid()):
                 raise serializers.ValidationError({'checkout_verification_token': 'Verify this phone number before placing the order.'})
 
             products = list(Product.objects.select_for_update().filter(
@@ -343,16 +347,18 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
             requested_wallet_points = Decimal(str(validated_data.get('wallet_points_to_redeem', 0) or 0))
             wallet_redeemed = Decimal('0.00')
 
-            wallet, _ = CustomerWallet.objects.get_or_create(
-                store=store,
-                customer_phone=c_phone,
-                defaults={'customer_name': c_name, 'balance': Decimal('0.00')}
-            )
-            if c_name and not wallet.customer_name:
+            wallet = None
+            if c_phone and verification:
+                wallet, _ = CustomerWallet.objects.get_or_create(
+                    store=store,
+                    customer_phone=c_phone,
+                    defaults={'customer_name': c_name, 'balance': Decimal('0.00')}
+                )
+            if wallet and c_name and not wallet.customer_name:
                 wallet.customer_name = c_name
                 wallet.save(update_fields=['customer_name'])
 
-            if requested_wallet_points > Decimal('0.00') and wallet.balance > Decimal('0.00'):
+            if wallet and requested_wallet_points > Decimal('0.00') and wallet.balance > Decimal('0.00'):
                 # Max redeemable is min of requested, available balance, and net payable before delivery fee
                 wallet_redeemed = min(requested_wallet_points, wallet.balance, net_amount_before_wallet)
                 if wallet_redeemed > Decimal('0.00'):
@@ -368,7 +374,7 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
             cashback_pct = Decimal(str(getattr(store, 'loyalty_cashback_percent', Decimal('5.00')) or Decimal('0.00')))
             min_order_for_loyalty = Decimal(str(getattr(store, 'loyalty_min_order_amount', Decimal('0.00')) or Decimal('0.00')))
 
-            if loyalty_enabled and cashback_pct > Decimal('0.00') and subtotal >= min_order_for_loyalty:
+            if wallet and loyalty_enabled and cashback_pct > Decimal('0.00') and subtotal >= min_order_for_loyalty:
                 cashback_earned = (net_paid_for_items * (cashback_pct / Decimal('100.00'))).quantize(Decimal('0.01'))
                 if cashback_earned > Decimal('0.00'):
                     wallet.balance = wallet.balance + cashback_earned
@@ -388,7 +394,7 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                 order_type=order_type,
                 customer_name=c_name,
                 customer_phone=c_phone,
-                customer_phone_verified=True,
+                customer_phone_verified=bool(verification),
                 payment_type=validated_data.get('payment_type', 'COD'),
                 utr_number=validated_data.get('utr_number', '').strip(),
                 payment_gateway_ref=validated_data.get('payment_gateway_ref', '').strip(),
@@ -408,8 +414,9 @@ class WhatsAppOrderCreateSerializer(serializers.Serializer):
                 wallet_cashback_earned=cashback_earned,
                 customer_note=validated_data.get('customer_note', '').strip(),
             )
-            verification.is_used = True
-            verification.save(update_fields=['is_used'])
+            if verification:
+                verification.is_used = True
+                verification.save(update_fields=['is_used'])
         return order
 
 
@@ -446,7 +453,7 @@ class WhatsAppOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = WhatsAppOrder
         fields = (
-            'id', 'reference', 'idempotency_key', 'tracking_token', 'order_type', 'customer_name', 'customer_phone',
+            'id', 'reference', 'idempotency_key', 'tracking_token', 'order_type', 'customer_name', 'customer_phone', 'customer_phone_verified',
             'payment_type', 'utr_number', 'payment_gateway_ref', 'payment_verified', 'payment_verified_at',
             'delivery_address', 'delivery_fee', 'delivery_distance_km', 'delivery_latitude', 'delivery_longitude',
             'location_url', 'coupon_code', 'discount_amount', 'wallet_points_redeemed',

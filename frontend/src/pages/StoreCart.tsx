@@ -394,8 +394,8 @@ function CartContent() {
     const trimmedPhone = customerPhone.trim()
     const number = String(store?.phone_number || '').replace(/\D/g, '')
 
-    if (!trimmedPhone) {
-      setError('Mobile phone number is required to place your order.')
+    if (trimmedPhone && !/^\d{10}$/.test(trimmedPhone.replace(/\D/g, ''))) {
+      setError('Enter a valid 10-digit phone number, or leave it blank.')
       return
     }
     if (!trimmedName) {
@@ -414,11 +414,6 @@ function CartContent() {
       setError('Use current GPS location so delivery availability can be verified.')
       return
     }
-    if (!checkoutVerificationToken) {
-      setError('Verify your phone number with OTP before placing the order.')
-      return
-    }
-
     setIsPlacingOrder(true)
     setError('')
 
@@ -432,7 +427,7 @@ function CartContent() {
 
     try {
       localStorage.setItem('qs_chat_name', trimmedName)
-      localStorage.setItem('qs_chat_phone', trimmedPhone)
+      if (trimmedPhone) localStorage.setItem('qs_chat_phone', trimmedPhone)
 
       const flashSaleDiscount = (flashSale?.active && flashSale?.discount > 0)
         ? (cart.total * (flashSale.discount / 100))
@@ -451,7 +446,7 @@ function CartContent() {
         items: cart.items.map(item => ({ id: item.id, quantity: item.quantity, selected_size: item.selectedSize || '' })),
         customer_name: trimmedName,
         customer_phone: trimmedPhone,
-        checkout_verification_token: checkoutVerificationToken,
+        ...(checkoutVerificationToken ? { checkout_verification_token: checkoutVerificationToken } : {}),
         payment_type: paymentType,
         order_type: orderType,
         utr_number: utrInput.trim(),
@@ -489,7 +484,7 @@ function CartContent() {
           '',
           '*Customer details*',
           `Name: ${order.customer_name || 'Customer'}`,
-          `Phone: ${order.customer_phone || trimmedPhone} (Verified ✓)`,
+          ...(order.customer_phone ? [`Phone: ${order.customer_phone}${order.customer_phone_verified ? ' (Verified ✓)' : ''}`] : []),
           ...(customNote.trim() && bTypeConfig.customFieldLabel ? [`*${bTypeConfig.customFieldLabel}*: ${customNote.trim()}`] : []),
           '',
           '*Order items*',
@@ -848,16 +843,17 @@ function CartContent() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700">WhatsApp Phone Number *</label>
+                    <label className="text-[11px] font-bold text-slate-700">WhatsApp Phone Number (optional)</label>
                     <input
                       className="w-full mt-1 rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-semibold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none"
                       inputMode="tel"
-                      placeholder="e.g. 9876543210"
+                      placeholder="e.g. 9876543210 (optional)"
                       value={customerPhone}
                       onChange={(e) => { setCustomerPhone(e.target.value); setCheckoutVerificationToken(''); setOtpSent(false) }}
                     />
+                    <p className="mt-1 text-[10px] text-slate-500">Phone aur OTP verification dono optional hain. Aap bina phone verify kiye order place kar sakte hain.</p>
                     {checkoutVerificationToken ? <p className="mt-1 text-[10px] font-bold text-emerald-600">✓ Phone number verified</p> : !otpSent ? (
-                      <button type="button" onClick={sendCheckoutOtp} disabled={otpLoading} className="mt-1 text-[10px] font-extrabold text-indigo-600 hover:underline disabled:opacity-50">{otpLoading ? 'Sending OTP…' : 'Verify phone with OTP'}</button>
+                      <button type="button" onClick={sendCheckoutOtp} disabled={otpLoading || !/^\d{10}$/.test(customerPhone.replace(/\D/g, ''))} className="mt-1 text-[10px] font-extrabold text-indigo-600 hover:underline disabled:opacity-50">{otpLoading ? 'Sending OTP…' : 'Verify phone with OTP (optional)'}</button>
                     ) : (
                       <div className="mt-1 flex gap-1.5"><input value={checkoutOtp} onChange={(e) => setCheckoutOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" placeholder="Enter OTP" className="min-w-0 flex-1 rounded-lg border border-indigo-200 p-2 text-xs" /><button type="button" onClick={verifyCheckoutOtp} disabled={otpLoading || checkoutOtp.length < 4} className="rounded-lg bg-indigo-600 px-2 text-[10px] font-bold text-white disabled:opacity-50">{otpLoading ? '…' : 'Verify'}</button></div>
                     )}

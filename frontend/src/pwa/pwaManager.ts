@@ -109,9 +109,17 @@ export function setupCustomerStorePwa(store: { id?: string | number; name: strin
   }
   localStorage.setItem('multistore-installed-type', 'customer')
 
-  // The customer Play Store app is shared by every store. Store identity is
-  // carried by the URL, never by the installed app manifest.
-  resetGenericPlatformPwa()
+  updateDynamicManifest({
+    name: store.name,
+    shortName: store.name,
+    description: `Shop from ${store.name} using its official online store app.`,
+    startUrl: `/?store=${encodeURIComponent(store.slug)}`,
+    themeColor: '#f8fafc',
+    backgroundColor: '#f8fafc',
+    iconUrl: store.logo || '/customer-icon-512.png',
+    icon192Url: store.logo || '/customer-icon-192.png',
+    id: `customer-store-${store.slug}`,
+  })
 }
 
 /**
@@ -124,8 +132,8 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
   localStorage.setItem('multistore-installed-seller-id', String(store.id))
 
   updateDynamicManifest({
-    name: 'Apani Dukan Seller',
-    shortName: 'Apani Dukan Seller',
+    name: 'Dukan Seller',
+    shortName: 'Dukan Seller',
     description: 'Manage store orders, catalog, coupons & customer chats in real-time.',
     startUrl: `/stores/${store.id}/orders`,
     themeColor: '#f8fafc',
@@ -154,8 +162,8 @@ export function resetGenericPlatformPwa() {
   const isSellerApp = appRole === 'seller'
 
   updateDynamicManifest({
-    name: isSellerApp ? 'Apani Dukan Seller' : 'Apani Dukan',
-    shortName: isSellerApp ? 'Apani Dukan Seller' : 'Apani Dukan',
+    name: isSellerApp ? 'Dukan Seller' : 'Apani Dukan',
+    shortName: isSellerApp ? 'Dukan Seller' : 'Apani Dukan',
     description: isSellerApp
       ? 'Create and launch your online store in seconds.'
       : 'Shop from local stores with one customer app.',

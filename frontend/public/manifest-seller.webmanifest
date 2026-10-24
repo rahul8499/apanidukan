@@ -1,7 +1,7 @@
 {
   "id": "/seller",
-  "name": "Apani Dukan Seller",
-  "short_name": "Apani Dukan Seller",
+  "name": "Dukan Seller",
+  "short_name": "Dukan Seller",
   "description": "Manage your Apani Dukan store, products and orders.",
   "start_url": "/seller",
   "scope": "/",

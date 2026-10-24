@@ -197,7 +197,7 @@ export default function Register() {
                   }`}
                 />
               </div>
-              <p className="mt-1.5 text-[11px] text-slate-500">Phone number optional hai. Blank chhodne par email aur password se account bana sakte hain.</p>
+              <p className="mt-1.5 text-[11px] text-slate-500">Phone optional hai. Number bharne par agle step mein OTP bhejkar verify karein; is form par OTP nahi bheja jayega. Blank chhodne par email/password se continue karein.</p>
               {phoneError && (
                 <p className="text-xs text-red-600 font-bold mt-1.5 flex items-center gap-1">
                   <span>❌</span> {phoneError}

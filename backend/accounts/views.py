@@ -374,6 +374,7 @@ class SendOTPView(APIView):
     def post(self, request):
         phone_number = request.data.get('phone_number', '')
         purpose = request.data.get('purpose', '')
+        is_login = purpose == 'login'
         if not phone_number:
             return Response({'detail': 'Phone number is required.'}, status=400)
         
@@ -389,7 +390,7 @@ class SendOTPView(APIView):
         if not cache.add(cooldown_key, 1, timeout=45):
             return Response({'detail': 'Please wait 45 seconds before requesting another OTP.', 'retry_after': 45}, status=429)
 
-        daily_key = f'otp-send-daily:{phone_key}'
+        daily_key = f"otp-send-daily:{'login' if is_login else 'default'}:{phone_key}"
         if cache.add(daily_key, 1, timeout=24 * 60 * 60):
             daily_count = 1
         else:
@@ -398,9 +399,10 @@ class SendOTPView(APIView):
             except ValueError:
                 cache.add(daily_key, 1, timeout=24 * 60 * 60)
                 daily_count = 1
-        if daily_count > 5:
+        daily_limit = 10 if is_login else 5
+        if daily_count > daily_limit:
             cache.delete(cooldown_key)
-            return Response({'detail': 'Daily OTP limit reached for this number (maximum 5 per 24 hours). Please try again later.', 'retry_after': 24 * 60 * 60}, status=429)
+            return Response({'detail': f'Daily OTP limit reached for this number (maximum {daily_limit} per 24 hours). Please try again later.', 'retry_after': 24 * 60 * 60}, status=429)
 
         user_exists = User.objects.filter(phone_number=clean_phone).exists()
 

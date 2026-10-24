@@ -7,7 +7,7 @@ import App from './App'
 
 const appRole = (import.meta as any).env?.VITE_APP_ROLE || 'customer'
 const manifestPath = appRole === 'seller'
-  ? '/manifest-seller.webmanifest?v=5'
+  ? '/manifest-seller.webmanifest?v=6'
   : '/manifest-customer.webmanifest?v=3'
 const manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null
 if (manifestLink) manifestLink.href = manifestPath
@@ -16,8 +16,8 @@ const customerBrandIcon = '/customer-icon-512.png?v=2'
 const browserIcon = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null
 const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null
 if (appRole === 'seller') {
-  if (browserIcon) browserIcon.href = '/seller-icon-512.png?v=3'
-  if (appleTouchIcon) appleTouchIcon.href = '/seller-icon-512.png?v=3'
+  if (browserIcon) browserIcon.href = '/customer-icon-512.png?v=3'
+  if (appleTouchIcon) appleTouchIcon.href = '/customer-icon-512.png?v=3'
 } else {
   if (browserIcon) browserIcon.href = customerBrandIcon
   if (appleTouchIcon) appleTouchIcon.href = customerBrandIcon

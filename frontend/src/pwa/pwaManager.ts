@@ -138,8 +138,8 @@ export function setupSellerStorePwa(store: { id: string | number; name: string }
     startUrl: `/stores/${store.id}/orders`,
     themeColor: '#f8fafc',
     backgroundColor: '#f8fafc',
-    iconUrl: '/seller-icon-512.png',
-    icon192Url: '/seller-icon-192.png',
+    iconUrl: '/customer-icon-512.png',
+    icon192Url: '/customer-icon-192.png',
     id: `seller-hub-${store.id}`,
   })
 }
@@ -170,10 +170,8 @@ export function resetGenericPlatformPwa() {
     startUrl: isSellerApp ? '/start' : '/?source=customer-app',
     themeColor: '#f8fafc',
     backgroundColor: '#f8fafc',
-    // Keep the seller branding unchanged; only the customer build gets its
-    // dedicated launcher icon.
-    iconUrl: isSellerApp ? '/seller-icon-512.png' : '/customer-icon-512.png',
-    icon192Url: isSellerApp ? '/seller-icon-192.png' : '/customer-icon-192.png',
+    iconUrl: '/customer-icon-512.png',
+    icon192Url: '/customer-icon-192.png',
     id: isSellerApp ? 'platform-generic' : '/',
   })
 }

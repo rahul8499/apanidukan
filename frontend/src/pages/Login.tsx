@@ -77,7 +77,7 @@ export default function Login() {
       setSuccessMsg(res.message || 'OTP sent successfully!')
     } catch (err: any) {
       const detail = err?.response?.data?.detail || err?.message
-      const isDailyOtpLimit = err?.response?.status === 429 || /daily otp limit reached/i.test(detail || '')
+      const isDailyOtpLimit = /daily otp limit reached/i.test(detail || '')
       setError(isDailyOtpLimit
         ? 'Is number se aaj login OTP ki limit poori ho gayi hai (24 ghante mein maximum 10). Kripya baad mein dobara try karein.'
         : detail || 'Failed to send OTP. Try again.')

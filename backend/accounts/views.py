@@ -383,26 +383,26 @@ class SendOTPView(APIView):
             return Response({'detail': 'Please enter a valid 10-digit mobile number.'}, status=400)
 
         # Gate the provider call before the browser sends an SMS through MSG91.
-        # PhoneRateThrottle adds a short burst limit; these counters also enforce
-        # a 45-second cooldown and a rolling five-send/24-hour cap per number.
+        # PhoneRateThrottle adds a short burst limit; the cache enforces a
+        # 45-second cooldown and a daily cap for non-login OTP flows.
         phone_key = hashlib.sha256(clean_phone.encode('utf-8')).hexdigest()
         cooldown_key = f'otp-send-cooldown:{phone_key}'
         if not cache.add(cooldown_key, 1, timeout=45):
             return Response({'detail': 'Please wait 45 seconds before requesting another OTP.', 'retry_after': 45}, status=429)
 
-        daily_key = f"otp-send-daily:{'login' if is_login else 'default'}:{phone_key}"
-        if cache.add(daily_key, 1, timeout=24 * 60 * 60):
-            daily_count = 1
-        else:
-            try:
-                daily_count = cache.incr(daily_key)
-            except ValueError:
-                cache.add(daily_key, 1, timeout=24 * 60 * 60)
+        if not is_login:
+            daily_key = f'otp-send-daily:default:{phone_key}'
+            if cache.add(daily_key, 1, timeout=24 * 60 * 60):
                 daily_count = 1
-        daily_limit = 10 if is_login else 5
-        if daily_count > daily_limit:
-            cache.delete(cooldown_key)
-            return Response({'detail': f'Daily OTP limit reached for this number (maximum {daily_limit} per 24 hours). Please try again later.', 'retry_after': 24 * 60 * 60}, status=429)
+            else:
+                try:
+                    daily_count = cache.incr(daily_key)
+                except ValueError:
+                    cache.add(daily_key, 1, timeout=24 * 60 * 60)
+                    daily_count = 1
+            if daily_count > 5:
+                cache.delete(cooldown_key)
+                return Response({'detail': 'Daily OTP limit reached for this number (maximum 5 per 24 hours). Please try again later.', 'retry_after': 24 * 60 * 60}, status=429)
 
         user_exists = User.objects.filter(phone_number=clean_phone).exists()
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function Register() {
   const [firstName, setFirstName] = useState('')
@@ -9,6 +10,7 @@ export default function Register() {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [phoneError, setPhoneError] = useState('')
@@ -230,15 +232,20 @@ export default function Register() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Password * (min 8 characters)</label>
-              <input
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={8}
-                placeholder="••••••••"
-                type="password"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              <div className="relative">
+                <input
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  placeholder="••••••••"
+                  type={showPassword ? 'text' : 'password'}
+                  className="w-full px-3.5 pr-12 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button type="button" onClick={() => setShowPassword(visible => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800">
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
 
             <button

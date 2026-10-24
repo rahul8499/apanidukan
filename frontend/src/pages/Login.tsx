@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { ArrowRight, Mail, ShieldCheck, Smartphone, Store } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Mail, ShieldCheck, Smartphone, Store } from 'lucide-react'
 
 export default function Login() {
   const [authMethod, setAuthMethod] = useState<'otp' | 'email'>('otp') // Default to fast OTP login
@@ -9,6 +9,7 @@ export default function Login() {
   // Email state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   // OTP state
   const [phone, setPhone] = useState('')
@@ -299,16 +300,21 @@ export default function Login() {
               </div>
               <div>
                 <label htmlFor="login-password" className="mb-1.5 block text-sm font-semibold text-slate-700">Password</label>
-                <input
-                  id="login-password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  placeholder="••••••••••"
-                  type="password"
-                  className="min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                />
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    placeholder="••••••••••"
+                    type={showPassword ? 'text' : 'password'}
+                    className="min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3 pr-12 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                  />
+                  <button type="button" onClick={() => setShowPassword(visible => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800">
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
 
               <button
